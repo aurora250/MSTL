@@ -14,7 +14,7 @@ namespace MSTL {
 	public:
 		cstring _info;
 		cstring _type; 
-		void _show_data_only(std::ostream& _out) const;
+		void __show_data_only(std::ostream& _out) const;
 
 		explicit Error(cstring _info = __type__, cstring _type = __type__) noexcept;
 		virtual ~Error();
@@ -43,7 +43,7 @@ namespace MSTL {
 
 	class MemoryError : public Error {   // ÄÚ´æ²Ù×÷Ê§°Ü
 	public:
-		explicit MemoryError(cstring _info = "Memory operation falied!") noexcept;
+		explicit MemoryError(cstring _info = "Allocate or Deallocate falied!") noexcept;
 		static const_cstring __type__;
 	};
 
@@ -59,13 +59,17 @@ namespace MSTL {
 		static const_cstring __type__;
 	};
 
-	static std::map<const char* const, Error*> error_map {
-		{StopIterator::__type__,	new StopIterator()}, 
-		{AssertError::__type__,		new AssertError()},
-		{AttributeError::__type__,	new AttributeError()},
-		{MemoryError::__type__,		new MemoryError()},
-		{ValueError::__type__,		new ValueError()},
-		{RangeError::__type__,		new RangeError()}
+	enum __error {
+		StopIter, AssertErr, AttriErr, MemErr, ValErr, RangeErr
+	};
+
+	static std::map<__error, Error*> error_map {
+		{__error::StopIter,		new StopIterator()}, 
+		{__error::AssertErr,	new AssertError()},
+		{__error::AttriErr,		new AttributeError()},
+		{__error::MemErr,		new MemoryError()},
+		{__error::ValErr,		new ValueError()},
+		{__error::RangeErr,		new RangeError()}
 	};
 
 	extern void Exception(Error* _err);

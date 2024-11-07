@@ -42,7 +42,7 @@
     <ClCompile Include="math.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="iterator_adapter.cpp">
+    <ClCompile Include="rb_tree.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -108,6 +108,24 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="adapter.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="deque.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="basemstlc++.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="alloc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stack.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="queue.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="rb_tree.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

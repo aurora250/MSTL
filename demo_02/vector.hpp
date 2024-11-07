@@ -3,18 +3,19 @@
 #include "iterable.h"
 #include "basiclib.h"
 #include <iostream>
+#include <memory>
 
 namespace MSTL {
-	template<typename T>
+	template<typename T, typename Alloc = std::allocator<T>>
 	class vector : public sciterable {
 	public:
-		typedef T* iterator;
-		typedef const T* const_iterator;
+		typedef T*			iterator;
+		typedef const T*	const_iterator;
 		static const char* __type__;
 		void __det__(std::ostream& _out = std::cout) const {
 			split_line(_out);
 			_out << "type: " << __type__ << std::endl;
-			this->_show_sc_only(_out);
+			this->__show_sc_only(_out);
 			_out << "data: " << std::flush;
 			this->_show_data_only(_out);
 			_out << std::endl;
@@ -29,9 +30,9 @@ namespace MSTL {
 			}
 		}
 		inline void _range_check(int _pos) const {
-			Exception(this->_in_boundary(_pos));
+			Exception(this->__in_boundary(_pos));
 		}
-		inline bool _in_boundary(int _pos) const {
+		inline bool __in_boundary(int _pos) const {
 			if (_pos < 0)return false;
 			else return _pos < this->_size ? true : false;
 		}
@@ -82,8 +83,8 @@ namespace MSTL {
 		bool operator ==(const vector<T>& _vec) const;
 		friend std::ostream& operator <<(std::ostream& _out, const vector<T>& _vec);
 	};
-	template <typename T>
-	const char* vector<T>::__type__ = "vector";
+	template <typename T, typename Alloc>
+	const char* vector<T, Alloc>::__type__ = "vector";
 
 	template <typename T>
 	inline size_t origin_arr_len(const T* _ptr) {

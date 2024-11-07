@@ -1,6 +1,7 @@
 #ifndef LINKEDLIST_HPP
 #define LINKEDLIST_HPP
 #include "iterable.h"
+#include <memory>
 
 namespace MSTL {
     template <typename T>
@@ -19,8 +20,7 @@ namespace MSTL {
     };
 
     template <typename T, typename Ref = T&, typename Ptr = T*>
-    class doublylist_iterator {
-    public:
+    struct doublylist_iterator {
         // iterator_traits: 
         typedef std::bidirectional_iterator_tag  iterator_category;
         typedef ptrdiff_t                        difference_type;
@@ -38,12 +38,8 @@ namespace MSTL {
         doublylist_iterator(const iterator& x) : _node(x._node) {}
         ~doublylist_iterator() = default;
 
-        reference operator *() const {
-            return this->_node->_data;
-        }
-        pointer operator ->() const {
-            return &(this->_node->_data);
-        }
+        reference operator *() const { return this->_node->_data; }
+        pointer operator ->() const { return &(this->_node->_data); }
         self& operator ++() {
             this->_node = this->_node->_next;
             return *this;
@@ -62,12 +58,8 @@ namespace MSTL {
             --(*this);
             return _old;
         }
-        bool operator ==(const self& _iter) const {
-            return this->_node == _iter._node;
-        }
-        bool operator !=(const self& _iter) const {
-            return this->_node != _iter._node;
-        }
+        bool operator ==(const self& _iter) const { return this->_node == _iter._node; }
+        bool operator !=(const self& _iter) const { return this->_node != _iter._node; }
     };
 
     template <typename T>
@@ -76,7 +68,7 @@ namespace MSTL {
         return &new_node;
     }
 
-    template <typename T>
+    template <typename T, typename Alloc = std::allocator<T>>
     class doublylist : public siterable {
     public:
         typedef T                       value_type;
@@ -91,22 +83,21 @@ namespace MSTL {
         static const char* const __type__;
 
     private:
-        inline void _range_check(int _pos) const {
-            Exception(this->_in_boundary(_pos), error_map["RangeError"]);
+        inline void __range_check(int _pos) const {
+            Exception(this->__in_boundary(_pos), error_map[__error::RangeErr]);
         }
-
         link_type _node;
     public:
         void __det__(std::ostream& _out = std::cout) const {
             split_line(_out);
             _out << "type: " << __type__ << std::endl;
-            this->_show_size_only(_out);
+            this->__show_size_only(_out);
             _out << "data: " << std::flush;
-            this->_show_data_only(_out);
+            this->__show_data_only(_out);
             _out << std::endl;
             split_line(_out);
         }
-        void _show_data_only(std::ostream& _out) const {
+        void __show_data_only(std::ostream& _out) const {
             _out << '[' << std::flush;
             const_iterator band = const_iterator(this->_node->_prev);
             for (const_iterator iter = const_begin(); iter != const_end(); ++iter) {
@@ -181,7 +172,8 @@ namespace MSTL {
             return this->_node;
         }
         bool empty() const {
-            return this->_node->_next == this->_node;
+            return this->_node->_next == this->_node ||
+                link_type(this->_node->_next)->_next == this->_node;
         }
         reference_const front() const {
             return this->_node->_next->_data;
@@ -220,13 +212,16 @@ namespace MSTL {
             this->_size = 0;
         }
         const_iterator erase(iterator _pos) {
-            if (this->_node->_next == this->_node) return this->_node;
+            if (empty()) return this->_node;
             _pos._node->_prev->_next = _pos._node->_next;
             _pos._node->_next->_prev = _pos._node->_prev;
             link_type temp = _pos._node->_next;
             delete _pos._node;
             this->_size--;
             return temp;
+        }
+        void swap(self& _lis) noexcept {
+            std::swap(_lis._node, this->_node);
         }
         void transfer(iterator _pos, iterator _first, iterator _last) {
             if (_pos == _last) return;
@@ -250,15 +245,48 @@ namespace MSTL {
             if (_start == _end) return;
             transfer(_pos, _start, _end);
         }
+        void merge(self& x) {
+            iterator first1 = this->begin();
+            iterator last1 = this->end();
+            iterator first2 = x.begin();
+            iterator last2 = x.end();
+            while (first1 != last1 && first2 != last2) {
+                if (*first2 < *first1) {
+                    iterator next = first2;
+                    transfer(first1, first2, ++next);
+                    first2 = next;
+                }
+                else ++first1;
+            }
+            if (first2 != last2) transfer(end(), first2, last2);
+        }
         void reverse() {
-            if (_node->_next == _node || _node->_next->_next == _node) return;
+            if (empty()) return;
             for (iterator first = ++begin(); first != end(); ) {
-                iterator temp = first++;
-                transfer(begin(), temp, first);
+                iterator old = first++;
+                this->transfer(begin(), old, first);
             }
         }
+        void sort() {
+            if(empty()) return;
+            self carry;
+            self counter[64];
+            int fill = 0;
+            while (not empty()) {
+                carry.splice(carry.begin(), *this, this->begin());
+                int i = 0;
+                while (i < fill && !counter[i].empty()) {
+                    counter[i].merge(carry);
+                    carry.swap(counter[i++]);
+                }
+                carry.swap(counter[i]);
+                if (i == fill) ++fill;
+            }
+            for (int i = 1; i < fill; ++i) counter[i].merge(counter[i - 1]);
+            swap(counter[fill - 1]);
+        }
         reference_const at(int _pos) const {
-            this->_range_check(_pos);
+            this->__range_check(_pos);
             const_iterator iter = const_begin();
             while (_pos--) iter++;
             return iter._node->_data;
@@ -275,12 +303,12 @@ namespace MSTL {
             return this->at(_pos);
         }
     };
-    template <typename T>
-    const char* const doublylist<T>::__type__ = "linkedlist";
+    template <typename T, typename Alloc>
+    const char* const doublylist<T, Alloc>::__type__ = "linkedlist";
 
-    template<typename T>
-    std::ostream& operator <<(std::ostream& _out, const doublylist<T>& _list) {
-        _list._show_data_only(_out);
+    template<typename T, typename Alloc>
+    std::ostream& operator <<(std::ostream& _out, const doublylist<T, Alloc>& _list) {
+        _list.__show_data_only(_out);
         return _out;
     }
 }

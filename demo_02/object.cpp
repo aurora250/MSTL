@@ -13,11 +13,11 @@ namespace MSTL {
 		split_line(_out);
 		_out << "type: " << __type__ << std::endl;
 		_out << "data: " << std::flush;
-		this->_show_data_only(_out);
+		this->__show_data_only(_out);
 		_out << std::endl;
 		split_line(_out);
 	}
-	void NaN::_show_data_only(std::ostream& _out) const {
+	void NaN::__show_data_only(std::ostream& _out) const {
 		_out << "NaN" << std::flush;
 	}
 }

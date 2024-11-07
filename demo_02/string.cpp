@@ -7,24 +7,24 @@ namespace MSTL {
 	void string::__det__(std::ostream& _out) const {
 		split_line(_out);
 		_out << "type: " << __type__ << std::endl;
-		this->_show_sc_only(_out);
+		this->__show_sc_only(_out);
 		_out << "data: " << std::flush;
-		this->_show_data_only(_out);
+		this->__show_data_only(_out);
 		_out << std::endl;
 		split_line(_out);
 	}
 
-	inline void string::_show_data_only(std::ostream& _out) const {
+	inline void string::__show_data_only(std::ostream& _out) const {
 		for (size_t i = 0; i < this->_size; i++) {
 			_out << this->_data[i];
 		}
 	}
-	inline void string::_range_check(int _pos) const throw(RangeError) {
+	inline void string::__range_check(int _pos) const throw(RangeError) {
 		RangeError* e = new RangeError();
-		MSTL::Exception(this->_in_boundary(_pos), e);
+		MSTL::Exception(this->__in_boundary(_pos), e);
 		delete e;
 	}
-	inline bool string::_in_boundary(int _pos) const {
+	inline bool string::__in_boundary(int _pos) const {
 		if (_pos < 0) return false;
 		else return _pos < this->_size + 1 ? true : false;
 	}
@@ -99,7 +99,7 @@ namespace MSTL {
 		this->_size += _len;
 	}
 	void string::insert(int _pos, int _cpte, char _chr) throw(RangeError) {
-		this->_range_check(_pos);
+		this->__range_check(_pos);
 		if (this->_size + _cpte > this->_capacity) this->reserve(this->_size + _cpte);
 		int _end = this->_size;
 		while (_end >= _pos && _end != this->epos) {
@@ -110,7 +110,7 @@ namespace MSTL {
 		this->_size += _cpte;
 	}
 	void string::insert(int _pos, const char* _str) throw(RangeError) {
-		this->_range_check(_pos);
+		this->__range_check(_pos);
 		int _len = strlen(_str);
 		if (this->_size + _len > this->_capacity) this->reserve(this->_size + _len);
 		int _end = this->_size;
@@ -122,7 +122,7 @@ namespace MSTL {
 		this->_size += _len;
 	}
 	void string::insert(int _pos, const string& _str) throw(RangeError) {
-		this->_range_check(_pos);
+		this->__range_check(_pos);
 		int _len = _str._size;
 		if (this->_size + _len > this->_capacity) this->reserve(this->_size + _len);
 		int _end = this->_size;
@@ -134,7 +134,7 @@ namespace MSTL {
 		this->_size += _len;
 	}
 	void string::erase(int _pos, int _len) throw(RangeError) {
-		this->_range_check(_pos);
+		this->__range_check(_pos);
 		if (_len == this->epos || _pos + _len >= this->_size) {
 			this->_data[_pos] = '\0';
 			this->_size = _pos;
@@ -150,10 +150,10 @@ namespace MSTL {
 		this->_size = 0;
 	}
 	decltype(auto) string::copy(int _pos, int _len) throw(RangeError) {
-		this->_range_check(_pos);
+		this->__range_check(_pos);
 		string _str;
 		size_t _n = _len;
-		if (not this->_in_boundary(_pos + _len) || _len == this->epos) _n = this->_size - _pos;
+		if (not this->__in_boundary(_pos + _len) || _len == this->epos) _n = this->_size - _pos;
 		for (size_t i = 0; i < _n; i++)	_str += this->_data[_pos + i];
 		return (_str);
 	}
@@ -181,14 +181,14 @@ namespace MSTL {
 		}
 	}
 	int string::find(char _chr, int _pos) throw(RangeError) {
-		this->_range_check(_pos);
+		this->__range_check(_pos);
 		for (size_t i = 0; i < this->_size; i++) {
 			if (this->_data[i] == _chr) return i;
 		}
 		return this->epos;
 	}
 	int string::find(const char* _str, int _pos) throw(RangeError) {
-		this->_range_check(_pos);
+		this->__range_check(_pos);
 		const char* _p = MSTL::strstr(this->begin() + _pos, _str);
 		if (_p) return _p - this->begin();
 		else return this->epos;
@@ -199,7 +199,7 @@ namespace MSTL {
 			);
 	}
 	const char& string::operator [](int _pos) const throw(RangeError) {
-		this->_range_check(_pos);
+		this->__range_check(_pos);
 		if (_pos == this->epos) return _data[_size - 1];
 		else return _data[_pos];
 	}
@@ -241,7 +241,7 @@ namespace MSTL {
 		return this->_size == _str._size && memcpy(this->_data, _str._data, this->_size);
 	}
 	std::ostream& operator <<(std::ostream& _out, const string& _str) {
-		_str._show_data_only(_out);
+		_str.__show_data_only(_out);
 		return _out;
 	}
 

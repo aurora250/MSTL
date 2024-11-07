@@ -8,7 +8,7 @@ namespace MSTL {
 		static const char* const __type__;
 		virtual void __det__(std::ostream& _out = std::cout) const = 0;
 	protected:
-		virtual void _show_data_only(std::ostream& _out) const = 0;
+		virtual void __show_data_only(std::ostream& _out) const = 0;
 	public:
 		explicit object() noexcept;
 		virtual ~object();
@@ -19,7 +19,7 @@ namespace MSTL {
 		static const char* const __type__;
 		virtual void __det__(std::ostream& _out = std::cout) const;
 	protected:
-		virtual void _show_data_only(std::ostream& _out) const;
+		virtual void __show_data_only(std::ostream& _out) const;
 	public:
 		explicit NaN() noexcept;
 		virtual ~NaN();

@@ -5,11 +5,11 @@
 namespace MSTL {
 	// 为同STL算法协同工作， iterator_tag与iterator_traits仅仅写明，并不使用
 	namespace iterator_tag {
-		struct input_iterator_tag;
-		struct output_iterator_tag;
-		struct forward_iterator_tag;
-		struct bidirectional_iterator_tag;
-		struct random_access_iterator_tag;
+		struct input_iterator_tag {};
+		struct output_iterator_tag {};
+		struct forward_iterator_tag : public input_iterator_tag {};
+		struct bidirectional_iterator_tag : public forward_iterator_tag {};
+		struct random_access_iterator_tag : public bidirectional_iterator_tag {};
 
 		template <class T, class Distance> struct input_iterator {
 			typedef input_iterator_tag iterator_category;
@@ -46,8 +46,7 @@ namespace MSTL {
 			typedef T* pointer;
 			typedef T& reference;
 		};
-	}
-	namespace iterator_traits {
+
 		template <class Iterator>
 		struct iterator_traits {
 			typedef typename Iterator::iterator_category iterator_category;
@@ -94,8 +93,8 @@ namespace MSTL {
 	}
 
 	// __type_traits:
-	struct __true_type;
-	struct __false_type;
+	struct __true_type {};
+	struct __false_type {};
 
 	template <class type>
 	struct __type_traits {

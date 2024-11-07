@@ -7,16 +7,16 @@
 namespace MSTL {
 	class string : public sciterable {
 	public:
-		typedef char* iterator;
+		typedef char*		iterator;
 		typedef const char* const_iterator;
 		static const char* const __type__;
 		void __det__(std::ostream& _out = std::cout) const;
 	private:
 		char* _data;
 
-		void _show_data_only(std::ostream& _out) const;
-		void _range_check(int _pos) const;
-		bool _in_boundary(int _pos) const;
+		void __show_data_only(std::ostream& _out) const;
+		void __range_check(int _pos) const;
+		bool __in_boundary(int _pos) const;
 	public:
 		explicit string(const char* _str = "");
 		explicit string(const string& _str);

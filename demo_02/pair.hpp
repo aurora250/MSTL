@@ -5,27 +5,28 @@
 
 namespace MSTL {
 	template <typename T1, typename T2>
-	struct pair : public object {
+	struct pair : private object {
 	public:
 		typedef T1				first_type;
 		typedef T2				second_type;
 		typedef pair<T1, T2>	self;
 
 		static const char* const __type__;
-		inline void _show_data_only(std::ostream& _out) const {
+		inline void __show_data_only(std::ostream& _out) const {
 			_out << "first: " << this->first << std::endl;
 			_out << "second: " << this->second;
 		}
 		void __det__(std::ostream& _out = std::cout) const {
 			split_line(_out);
 			_out << "type: " << __type__ << std::endl;
-			this->_show_data_only(_out);
+			this->__show_data_only(_out);
 			_out << std::endl;
 			split_line(_out);
 		}
 		first_type first;
 		second_type second;
-		explicit pair(const first_type& _f = first_type(), const second_type& _s = second_type()) : first(_f), second(_s) {}
+		explicit pair(const first_type& _f = first_type(), const second_type& _s = second_type()) :
+			first(_f), second(_s) {}
 		explicit pair(const self& _p) : first(_p.first), second(_p.second) {}
 		explicit pair(self&& _p) {
 			this->swap(std::forward<self>(_p));
@@ -77,7 +78,7 @@ namespace MSTL {
 
 	template <typename T1, typename T2>
 	std::ostream& operator <<(std::ostream& _out, const pair<T1, T2>& _p) {
-		_p._show_data_only(_out);
+		_p.__show_data_only(_out);
 		return _out;
 	}
 	template <typename T1, typename T2>

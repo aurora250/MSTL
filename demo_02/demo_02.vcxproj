@@ -136,12 +136,12 @@
     <ClCompile Include="basiclib.cpp" />
     <ClCompile Include="check_type.cpp" />
     <ClCompile Include="depositary.cpp" />
-    <ClCompile Include="iterator_adapter.cpp" />
     <ClCompile Include="math.cpp" />
     <ClCompile Include="demo_02.cpp" />
     <ClCompile Include="error.cpp" />
     <ClCompile Include="iterable.cpp" />
     <ClCompile Include="object.cpp" />
+    <ClCompile Include="rb_tree.cpp" />
     <ClCompile Include="string.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -149,11 +149,14 @@
     <ClInclude Include="algo.hpp" />
     <ClInclude Include="algobase.hpp" />
     <ClInclude Include="algorithm.hpp" />
+    <ClInclude Include="alloc.h" />
     <ClInclude Include="array.hpp" />
+    <ClInclude Include="basemstlc++.h" />
     <ClInclude Include="basiclib.h" />
     <ClInclude Include="concepts.hpp" />
     <ClInclude Include="depositary.h" />
     <ClInclude Include="check_type.h" />
+    <ClInclude Include="deque.hpp" />
     <ClInclude Include="error.h" />
     <ClInclude Include="function_adapter.hpp" />
     <ClInclude Include="functor.hpp" />
@@ -164,6 +167,9 @@
     <ClInclude Include="numeric.hpp" />
     <ClInclude Include="object.h" />
     <ClInclude Include="pair.hpp" />
+    <ClInclude Include="queue.hpp" />
+    <ClInclude Include="rb_tree.h" />
+    <ClInclude Include="stack.hpp" />
     <ClInclude Include="string.h" />
     <ClInclude Include="vector.hpp" />
   </ItemGroup>

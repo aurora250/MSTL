@@ -8,11 +8,11 @@ namespace MSTL {
 	void Error::__det__(std::ostream& _out) const {
 		split_line(_out);
 		_out << "type: " << this->_type << std::endl;
-		this->_show_data_only(_out);
+		this->__show_data_only(_out);
 		_out << std::endl;
 		split_line(_out);
 	}
-	inline void Error::_show_data_only(std::ostream& _out) const {
+	inline void Error::__show_data_only(std::ostream& _out) const {
 		_out << this->_info << std::flush;
 	}
 	const_cstring Error::__type__ = "Error";

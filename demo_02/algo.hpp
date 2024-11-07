@@ -187,35 +187,35 @@ namespace MSTL {
 		return n;
 	}
 
-	template <class InputIterator, class Distance>
+	template <typename InputIterator, typename Distance>
 	inline void __distance(InputIterator first, InputIterator last, Distance& n, std::input_iterator_tag) {
 		while (first != last) { ++first; ++n; }
 	}
-	template <class RandomAccessIterator, class Distance>
+	template <typename RandomAccessIterator, typename Distance>
 	inline void __distance(RandomAccessIterator first, RandomAccessIterator last,
 						   Distance& n, std::random_access_iterator_tag) {
 		n += last - first;
 	}
-	template <class InputIterator, class Distance>
+	template <typename InputIterator, typename Distance>
 	inline void distance(InputIterator first, InputIterator last, Distance& n) {
 		__distance(first, last, n, iterator_category(first));
 	}
-	template <class InputIterator>
+	template <typename InputIterator>
 	inline typename std::iterator_traits<InputIterator>::difference_type
 		__distance(InputIterator first, InputIterator last, std::input_iterator_tag) {
 		typename std::iterator_traits<InputIterator>::difference_type n = 0;
 		while (first != last) {	++first; ++n; }
 		return n;
 	}
-	template <class RandomAccessIterator>
+	template <typename RandomAccessIterator>
 	inline typename std::iterator_traits<RandomAccessIterator>::difference_type
 		__distance(RandomAccessIterator first, RandomAccessIterator last, std::random_access_iterator_tag) {
 		return last - first;
 	}
-	template <class InputIterator>
+	template <typename InputIterator>
 	inline typename std::iterator_traits<InputIterator>::difference_type
 		distance(InputIterator first, InputIterator last) {
-		typedef typename std::iterator_traits<InputIterator>::iterator_category category;
+		using category = std::iterator_traits<InputIterator>::iterator_category;
 		return __distance(first, last, category());
 	}
 
@@ -270,16 +270,23 @@ namespace MSTL {
 			if (new_result == last1) return result;
 			result = new_result;
 			first1 = new_result;
-			++first;
+			++first1;
 		}
 	}
 	template <typename BidirectionalIterator1, typename BidirectionalIterator2>
 	BidirectionalIterator1 __find_end(BidirectionalIterator1 first1, BidirectionalIterator1 last1,
 						   BidirectionalIterator2 first2, BidirectionalIterator2 last2,
 						   std::bidirectional_iterator_tag, std::bidirectional_iterator_tag) {
-		
+		using reviter1 = std::reverse_iterator<BidirectionalIterator1>;
+		using reviter2 = std::reverse_iterator<BidirectionalIterator2>;
+		reviter1 rlast1(first1);
+		reviter2 rlast2(first2);
+		reviter1 rresult = search(reviter1(last1), rlast1, reviter2(last2), rlast2);
+		if (rresult == rlast1) return last1;
+		BidirectionalIterator1 result = rresult.base();
+		advance(result, -distance(first2, last2));
+		return result;
 	}
-	
 	template <typename ForwardIterator1, typename ForwardIterator2>
 	inline ForwardIterator1 find_end(ForwardIterator1 first1, ForwardIterator1 last1,
 									 ForwardIterator2 first2, ForwardIterator2 last2) {

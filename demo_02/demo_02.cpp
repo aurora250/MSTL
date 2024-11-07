@@ -1,13 +1,8 @@
 ﻿#include "mstlc++.h"
-#include "array.hpp"
-#include "string.h"
-#include "pair.hpp"
-#include "vector.hpp"
-#include "linkedlist.hpp"
 #include <iostream>
 
 void try_lls();
-inline void try_arr() {
+void try_arr() {
     MSTL::array<size_t, 3> arr{ 1,2,3 };
     MSTL::array<size_t, 3> arr2(arr);
     std::cout << arr.size() << ' ' << arr.back() << ' ' << arr.find(3) << std::endl;
@@ -18,7 +13,7 @@ inline void try_arr() {
     //std::cout << arr;
     arr.__det__();
 }
-inline void try_exc() {
+void try_exc() {
     try {
         MSTL::Exception(false, new MSTL::AttributeError());
     }
@@ -30,7 +25,7 @@ inline void try_exc() {
         try_lls();
     }
 }
-inline void try_lls() {
+void try_lls() {
     using namespace MSTL;
     doublylist<int> lls;
     lls.__det__();
@@ -49,7 +44,7 @@ inline void try_lls() {
     lls.pop_back();
     std::cout << lls.empty();
 }
-inline void try_str() {
+void try_str() {
     MSTL::string str("abc");
     MSTL::string str2("def");
     str.__det__();
@@ -60,7 +55,7 @@ inline void try_str() {
     str.insert(3, str2);
     str.__det__();
 }
-inline void try_pir() {
+void try_pir() {
     MSTL::string s("hello!");
     MSTL::pair<int, MSTL::string> p(1, s);
     MSTL::pair<int, MSTL::string> p2(p);
@@ -70,7 +65,7 @@ inline void try_pir() {
     p2.__det__();
 }
 class Foo {};
-inline void try_che() {
+void try_che() {
     using namespace MSTL;
     std::cout << check_type<string>() << std::endl;
     std::cout << check_type<const volatile void* const*&>() << std::endl;
@@ -93,7 +88,7 @@ inline void try_che() {
     std::cout << check_type<decltype(sr)>() << std::endl;
     split_line();
 }
-inline void try_dep() {
+void try_dep() {
     using namespace MSTL;
     depositary manager;
     auto add = [](int a, double b, double& c)->double {
@@ -109,7 +104,7 @@ inline void try_dep() {
 
 #include <vector>
 #include <deque>
-inline void try_copy() {
+void try_copy() {
     //int ia[] = { 0,1,2,3,4,5,6,7,8 };
     ////输出区间的终点和输入区间出现重叠 没有问题
     //MSTL::copy(ia + 2, ia + 7, ia);
@@ -156,10 +151,39 @@ inline void try_copy() {
     ////但是实际没有出现错误
     //std::cout << std::endl;
 }
+void try_deq() {
+    using namespace MSTL;
+    deque<int> a;
+    a.push_back(2);
+    a.__det__();
+    a.push_front(10);
+    a.__det__();
+    a.push_back(3);
+    a.push_back(7);
+    a.push_back(6);
+    a.__det__();
+    a.pop_back();
+    a.pop_front();
+    a.__det__();
+    deque<int> b{ 1,2,3,4,5 };
+    b.__det__();
+}
+void try_stack() {
+    using namespace MSTL;
+    stack<int> s;
+    s.push(2);
+    s.push(3);
+    s.__det__();
+    s.push(5);
+    s.push(4);
+    s.__det__();
+    s.pop();
+    s.__det__();
+}
 
 int main()
 {
-    try_copy();
+    try_stack();
     /*int a[3] = { 1, 2 ,3 };
     std::copy(a, a + 3, std::ostream_iterator<int>(std::cout, " "));*/
 }

@@ -2,6 +2,7 @@
 #define ALGOBASE_H
 #include <type_traits>
 #include "iterator_adapter.h"
+#include "basiclib.h"
 
 namespace MSTL {
 	template <typename InputIterator1, typename InputIterator2>
@@ -106,18 +107,6 @@ namespace MSTL {
 	}
 
 	// copy: 
-	template <typename InputIterator, typename OutputIterator>
-	inline OutputIterator copy(InputIterator first, InputIterator last, OutputIterator result) {
-		return __copy_dispatch<InputIterator, OutputIterator>()(first, last, result);
-	}
-	inline char* copy(const char* first, const char* last, char* result) {
-		memmove(result, first, last - first);
-		return result + (last - first);
-	}
-	inline wchar_t* copy(const wchar_t* first, const wchar_t* last, wchar_t* result) {
-		memmove(result, first, sizeof(wchar_t) * (last - first));
-		return result + (last - first);
-	}
 	template <typename RandomAccessIterator, typename OutputIterator, typename Distance>
 	inline OutputIterator __copy_d(RandomAccessIterator first, RandomAccessIterator last,
 		OutputIterator result, Distance*) {
@@ -166,6 +155,63 @@ namespace MSTL {
 			return __copy_t(first, last, result, t());
 		}
 	};
+	template <typename InputIterator, typename OutputIterator>
+	inline OutputIterator copy(InputIterator first, InputIterator last, OutputIterator result) {
+		return __copy_dispatch<InputIterator, OutputIterator>()(first, last, result);
+	}
+	inline char* copy(const char* first, const char* last, char* result) {
+		memmove(result, first, last - first);
+		return result + (last - first);
+	}
+	inline wchar_t* copy(const wchar_t* first, const wchar_t* last, wchar_t* result) {
+		memmove(result, first, sizeof(wchar_t) * (last - first));
+		return result + (last - first);
+	}
+
+	// copy_backward:
+	template <class BidirectionalIterator1, class BidirectionalIterator2>
+	BidirectionalIterator2 __copy_backward(BidirectionalIterator1 first,
+		BidirectionalIterator1 last, BidirectionalIterator2 result) {
+		while (first != last) *--result = *--last;
+		return result;
+	}
+	template <class T>
+	T* __copy_backward_t(const T* first, const T* last, T* result, __true_type) {
+		const ptrdiff_t N = last - first;
+		memmove(result - N, first, sizeof(T) * N);
+		return result - N;
+	}
+	template <class T>
+	inline T* __copy_backward_t(const T* first, const T* last, T* result, __false_type) {
+		return __copy_backward(first, last, result);
+	}
+	template <class BidirectionalIterator1, class BidirectionalIterator2>
+	struct __copy_backward_dispatch { 
+		BidirectionalIterator2 operator()(BidirectionalIterator1 first,
+			BidirectionalIterator1 last, BidirectionalIterator2 result) {
+			return __copy_backward(first, last, result);
+		}
+	};
+	template <class T>
+	struct __copy_backward_dispatch<T*, T*> { 
+		T* operator()(T* first, T* last, T* result) {
+			using t = __type_traits<T>::has_trivial_assignment_operator;
+			return __copy_backward_t(first, last, result, t());
+		}
+	};
+	template <class T>
+	struct __copy_backward_dispatch<const T*, T*> { 
+		T* operator()(const T* first, const T* last, T* result) {
+			using t = __type_traits<T>::has_trivial_assignment_operator;
+			return __copy_backward_t(first, last, result, t());
+		}
+	};
+	template <class BidirectionalIterator1, class BidirectionalIterator2>
+	inline BidirectionalIterator2 copy_backward(BidirectionalIterator1 first,
+		BidirectionalIterator1 last, BidirectionalIterator2 result) {
+		return __copy_backward_dispatch<BidirectionalIterator1, BidirectionalIterator2>()
+			(first, last, result);
+	}
 }
 
 #endif // ALGOBASE_H
