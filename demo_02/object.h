@@ -23,7 +23,6 @@ namespace MSTL {
 	public:
 		explicit NaN() noexcept;
 		virtual ~NaN();
-		virtual bool empty() const;
 	};
 }
 

@@ -1,7 +1,7 @@
 #ifndef STRING_H
 #define STRING_H
 #include "iterable.h"
-#include "vector.h"
+#include "vector.hpp"
 #include <initializer_list>
 
 namespace MSTL {
@@ -22,7 +22,6 @@ namespace MSTL {
 		explicit string(const string& _str);
 		explicit string(string&& _str);
 		explicit string(const vector<char>& _vec);
-		explicit string(const std::initializer_list<char>& _lis);
 		string& operator =(const string& _str);
 		~string();
 		const char* const ctype() const;
@@ -58,7 +57,7 @@ namespace MSTL {
 		bool operator >=(const string& _str) const;
 		bool operator !=(const string& _str) const;
 		bool operator ==(const string& _str) const;
-		friend std::ostream& operator <<(std::ostream& _out, const MSTL::string& _str);
+		friend std::ostream& operator <<(std::ostream& _out, const string& _str);
 	};
 
 	size_t strlen(const char* _str);

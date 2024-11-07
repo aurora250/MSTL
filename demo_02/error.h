@@ -3,6 +3,7 @@
 #include <iostream>
 #include <initializer_list>
 #include <functional>
+#include <map>
 #include "object.h"
 
 namespace MSTL {
@@ -58,10 +59,18 @@ namespace MSTL {
 		static const_cstring __type__;
 	};
 
+	static std::map<const char* const, Error*> error_map {
+		{StopIterator::__type__,	new StopIterator()}, 
+		{AssertError::__type__,		new AssertError()},
+		{AttributeError::__type__,	new AttributeError()},
+		{MemoryError::__type__,		new MemoryError()},
+		{ValueError::__type__,		new ValueError()},
+		{RangeError::__type__,		new RangeError()}
+	};
+
 	extern void Exception(Error* _err);
 	extern void Exception(bool _boolean, Error* _err = nullptr);
 	extern void Assert(bool _boolean, const char* const _info = "Assert false!");
-
 	extern void Exit(bool _abort = false, void(__cdecl* _func)(void) = nullptr);
 	// just allow void(void) function to run before progess exit
 }

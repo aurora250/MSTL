@@ -2,7 +2,6 @@
 #define CHECK_TYPE_H
 #include <iostream>
 #include <sstream>
-#include <any>
 
 namespace MSTL{
     class output {
@@ -232,26 +231,21 @@ CHECK_TYPE_MEM_FUNC__(const volatile)
 
 namespace MSTL {
     template <typename T>
-    inline std::string check_type() {
+    std::string check_type() {
             // check_type<decltype(_obj)>()
         std::string str;
         check<T> { str };
         return std::move(str);
     }
-
-    std::string check_type(auto& _val) {    
+#ifdef _HAS_CXX20
+#include "concepts.hpp"
+    using namespace MSTL::concepts;
+    std::string check_type(auto _val) {    
              // std::remove_reference<decltype(_val)>::type -> non-&   else, & would be stay
         return check_type<
             typename std::remove_reference<decltype(_val)>::type
-            >();
-    }
-
-    std::string check_type(auto&& _val) {
-        return check_type<decltype(
-            std::forward<
-            typename std::remove_reference<decltype(_val)>::type>(_val)
-            )>();
+        >();
     }
 }
-
-#endif
+#endif // _HAS_CXX20
+#endif // CHECK_TYPE_H

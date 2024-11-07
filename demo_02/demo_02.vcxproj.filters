@@ -42,9 +42,12 @@
     <ClCompile Include="math.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="iterator_adapter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="array.h">
+    <ClInclude Include="array.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="iterable.h">
@@ -53,16 +56,13 @@
     <ClInclude Include="error.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="vector.h">
+    <ClInclude Include="vector.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="string.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="pair.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="math.h">
+    <ClInclude Include="pair.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="check_type.h">
@@ -75,6 +75,39 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="depositary.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="linkedlist.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithm.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="numeric.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="algobase.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="concepts.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="algo.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="functor.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="mstlc++.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="function_adapter.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="iterator_adapter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="adapter.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

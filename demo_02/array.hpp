@@ -1,5 +1,5 @@
-#ifndef ARRAY_H
-#define ARRAY_H
+#ifndef ARRAY_HPP
+#define ARRAY_HPP
 #include "iterable.h"
 #include "error.h"
 #include "basiclib.h"
@@ -36,10 +36,10 @@ namespace MSTL {
 			}
 		}
 		inline void _range_check(int _pos) const {
-			MSTL::Exception(this->_in_boundary(_pos), new RangeError());
+			Exception(this->_in_boundary(_pos), new RangeError());
 		}
 		inline void _show_data_only(std::ostream& _out) const {
-			auto _band = this->_size - 1;
+			size_t _band = this->_size - 1;
 			_out << '[' << std::flush;
 			for (size_t i = 0; i < this->_size; i++) {
 				_out << this->_data[i] << std::flush;
@@ -75,7 +75,7 @@ namespace MSTL {
 			return *this;
 		}
 		~array() {
-			this->_clear_sc_only();
+			this->_size = this->_capacity = 0;
 			delete[] this->_data;
 			this->_data = nullptr;
 		}
@@ -144,17 +144,15 @@ namespace MSTL {
 		bool operator !=(const array<T, N>& _arr) const {
 			return not (*this == _arr);
 		}
-
-		friend std::ostream& operator <<(std::ostream& _out, const array<T, N>& _arr);
 	};
 	template<typename T, size_t N>
 	const char* const array<T, N>::__type__ = "array";
+}
 
-	template <typename T, size_t N>
-	std::ostream& operator <<(std::ostream& _out, const array<T, N>& _arr) {
-		_arr._show_data_only(_out);
-		return _out;
-	}
+template <typename T, size_t N>
+std::ostream& operator <<(std::ostream& _out, const MSTL::array<T, N>& _arr) {
+	_arr._show_data_only(_out);
+	return _out;
 }
 
 #endif

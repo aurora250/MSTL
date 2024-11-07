@@ -8,21 +8,12 @@ namespace MSTL {
 	sciterable::sciterable(size_t _size, size_t _capacity) noexcept : _size(_size), _capacity(_capacity) {}
 
 	sciterable::~sciterable() {
-		this->_clear_sc_only();
-	}
-
-	inline void sciterable::_clear_sc_only() {
 		this->_size = this->_capacity = 0;
 	}
 
 	inline void sciterable::_show_sc_only(std::ostream& _out) const {
 		_out << "size: " << this->_size << std::endl;
 		_out << "capacity: " << this->_capacity << std::endl;
-	}
-
-	inline void sciterable::_set_sc_only(size_t _size, size_t _cap) {
-		this->_size = _size;
-		this->_capacity = _cap;
 	}
 
 	inline bool sciterable::_in_boundary(int _pos) const {
@@ -37,6 +28,24 @@ namespace MSTL {
 		return this->_capacity;
 	}
 	bool sciterable::empty() const {
+		return this->_size == 0;
+	}
+
+	void siterable::_show_size_only(std::ostream& _out) const {
+		_out << "size: " << this->_size << std::endl;
+	}
+	bool siterable::_in_boundary(int _pos) const {
+		if (_pos < 0) return false;
+		else return _pos < this->_size ? true : false;
+	}
+	siterable::siterable(size_t _size) noexcept : _size(_size) {}
+	siterable::~siterable() {
+		this->_size = 0;
+	}
+	size_t siterable::size() const {
+		return this->_size;
+	}
+	bool siterable::empty() const {
 		return this->_size == 0;
 	}
 }

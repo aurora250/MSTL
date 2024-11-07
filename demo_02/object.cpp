@@ -9,7 +9,7 @@ namespace MSTL {
 	const char* const NaN::__type__ = "NaN";
 	NaN::NaN() noexcept {};
 	NaN::~NaN() = default;
-	void NaN::__det__(std::ostream& _out = std::cout) const {
+	void NaN::__det__(std::ostream& _out) const {
 		split_line(_out);
 		_out << "type: " << __type__ << std::endl;
 		_out << "data: " << std::flush;
@@ -19,8 +19,5 @@ namespace MSTL {
 	}
 	void NaN::_show_data_only(std::ostream& _out) const {
 		_out << "NaN" << std::flush;
-	}
-	bool NaN::empty() const {
-		return true;
 	}
 }

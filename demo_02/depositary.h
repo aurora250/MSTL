@@ -3,7 +3,7 @@
 #include <functional>
 #include <unordered_map>
 #include <string>
-#include "basiclib.h"
+#include "concepts.hpp"
 
 #if _HAS_CXX20    // concepts
 namespace MSTL {
@@ -41,7 +41,7 @@ namespace MSTL {
 				return run_depos_ptr->run(std::forward<Args>(_args)...);
 			}
 			else {
-				std::cout << "Invalid register_name, return a default value." << std::endl;
+				std::cout << "Invalid register name, return a default value." << std::endl;
 				return T();
 			}
 		}

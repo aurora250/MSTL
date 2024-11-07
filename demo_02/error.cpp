@@ -35,13 +35,13 @@ namespace MSTL {
 	RangeError::RangeError(cstring _info) noexcept : Error(_info, __type__) {}
 	const_cstring RangeError::__type__ = "RangeError";
 
-	inline void Exception(Error* _err) {
+	void Exception(Error* _err) {
 		// _out_set<const char*>({ "Exception : (" , _err->_type, ") ",_err->_info }, true, std::cerr);
 		std::cerr << "Exception : (" << _err->_type << ") " << _err->_info << std::endl;
 		throw* _err;
 	}
 
-	void Exception(bool _boolean, Error* _err) {
+	inline void Exception(bool _boolean, Error* _err) {
 		if (_boolean) return;
 		else {
 			if (_err == nullptr) Assert(false);

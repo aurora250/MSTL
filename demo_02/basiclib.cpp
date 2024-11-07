@@ -43,7 +43,7 @@ namespace MSTL {
 				_rsc = (char*)_rsc + 1;
 			}
 		}
-		else {
+		else if (_dest > _rsc) {
 			while (_byte--) {
 				*((char*)_dest + _byte) = *((char*)_rsc + _byte);
 			}
