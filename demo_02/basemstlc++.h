@@ -4,6 +4,7 @@
 #include "basiclib.h"
 //#include "object.h"
 #include "error.h"
+#include "memmory.hpp"
 #include "check_type.h"
 //#include "concepts.hpp"
 #include "depositary.h"

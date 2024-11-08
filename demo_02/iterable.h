@@ -30,7 +30,7 @@ namespace MSTL {
 	public:
 		virtual void __show_size_only(std::ostream& _out) const;
 		virtual bool __in_boundary(int _pos) const;
-		explicit siterable(size_t _size = 1) noexcept;
+		explicit siterable(size_t _size = 0) noexcept;
 		virtual ~siterable() = 0;
 		virtual size_t size() const;
 		virtual bool empty() const;

@@ -10,6 +10,7 @@ namespace MSTL {
         typedef typename Sequence::size_type        size_type;
         typedef typename Sequence::reference        reference;
         typedef typename Sequence::reference_const  reference_const;
+        typedef queue<T, Sequence>                  self;
 
         static const char* const __type__;
     private:
@@ -18,6 +19,7 @@ namespace MSTL {
         void __det__(std::ostream& _out = std::cout) const {
             split_line(_out);
             _out << "type: " << __type__ << std::endl;
+            _out << "check type: " << check_type<self>() << std::endl;
             seq.__show_size_only(_out);
             _out << "data: " << std::flush;
             seq.__show_data_only(_out);

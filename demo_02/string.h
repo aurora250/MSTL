@@ -7,8 +7,11 @@
 namespace MSTL {
 	class string : public sciterable {
 	public:
+		typedef char		value_type;
+		typedef string		self;
 		typedef char*		iterator;
 		typedef const char* const_iterator;
+
 		static const char* const __type__;
 		void __det__(std::ostream& _out = std::cout) const;
 	private:

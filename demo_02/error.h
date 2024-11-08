@@ -10,8 +10,8 @@ namespace MSTL {
 	typedef const char* cstring;
 	typedef cstring const const_cstring;
 
-	class Error : public object {
-	public:
+	struct Error : public object {
+		typedef Error self;
 		cstring _info;
 		cstring _type; 
 		void __show_data_only(std::ostream& _out) const;
@@ -23,38 +23,38 @@ namespace MSTL {
 		// friend void Exception(Error* _err);   use non-mumber instead of friend function
 	};
 
-	class StopIterator : public Error {  // 迭代器越界或无值
-	public:
+	struct StopIterator : public Error {  // 迭代器越界或无值
+		typedef StopIterator self;
 		explicit StopIterator(cstring _info = "Iterator out of range or is NULL.") noexcept;
 		static const_cstring __type__;
 	};
 
-	class AssertError : public Error {  // 断言错误 断言错误太宽泛，不爱用
-	public:
+	struct AssertError : public Error {  // 断言错误 断言错误太宽泛，不爱用
+		typedef AssertError self;
 		explicit AssertError(cstring _info = "Assert false!") noexcept;
 		static const_cstring __type__;
 	};
 
-	class AttributeError : public Error {   // 对象无此属性
-	public:
+	struct AttributeError : public Error {   // 对象无此属性
+		typedef AttributeError self;
 		explicit AttributeError(cstring _info = "No this attriubte in the object.") noexcept;
 		static const_cstring __type__;
 	};
 
-	class MemoryError : public Error {   // 内存操作失败
-	public:
+	struct MemoryError : public Error {   // 内存操作失败
+		typedef MemoryError self;
 		explicit MemoryError(cstring _info = "Allocate or Deallocate falied!") noexcept;
 		static const_cstring __type__;
 	};
 
-	class ValueError : public Error {   // 函数的参数非法
-	public:
+	struct ValueError : public Error {   // 函数的参数非法
+		typedef ValueError self;
 		explicit ValueError(cstring _info = "Function refused this value.") noexcept;
 		static const_cstring __type__;
 	};
 
-	class RangeError : public Error {   // 数组越界或无值
-	public:
+	struct RangeError : public Error {   // 数组越界或无值
+		typedef RangeError self;
 		explicit RangeError(cstring _info = "Index out of range or value is NULL.") noexcept;
 		static const_cstring __type__;
 	};

@@ -8,13 +8,14 @@
 
 #include "basemstlc++.h"
 
-#include "linkedlist.hpp"
+#include "list.hpp"
 #include "array.hpp"
 #include "vector.hpp"
 #include "string.h"
 #include "deque.hpp"
 #include "stack.hpp"
 #include "queue.hpp"
+#include "priority_queue.hpp"
 
 #include "pair.hpp"
 

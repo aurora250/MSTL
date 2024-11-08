@@ -149,7 +149,8 @@
     <ClInclude Include="algo.hpp" />
     <ClInclude Include="algobase.hpp" />
     <ClInclude Include="algorithm.hpp" />
-    <ClInclude Include="alloc.h" />
+    <ClInclude Include="database.h" />
+    <ClInclude Include="memmory.hpp" />
     <ClInclude Include="array.hpp" />
     <ClInclude Include="basemstlc++.h" />
     <ClInclude Include="basiclib.h" />
@@ -161,16 +162,18 @@
     <ClInclude Include="function_adapter.hpp" />
     <ClInclude Include="functor.hpp" />
     <ClInclude Include="iterable.h" />
-    <ClInclude Include="iterator_adapter.h" />
-    <ClInclude Include="linkedlist.hpp" />
+    <ClInclude Include="iterator_adapter.hpp" />
+    <ClInclude Include="list.hpp" />
     <ClInclude Include="mstlc++.h" />
     <ClInclude Include="numeric.hpp" />
     <ClInclude Include="object.h" />
     <ClInclude Include="pair.hpp" />
+    <ClInclude Include="priority_queue.hpp" />
     <ClInclude Include="queue.hpp" />
     <ClInclude Include="rb_tree.h" />
     <ClInclude Include="stack.hpp" />
     <ClInclude Include="string.h" />
+    <ClInclude Include="iterator.hpp" />
     <ClInclude Include="vector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

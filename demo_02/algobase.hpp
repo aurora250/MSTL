@@ -1,8 +1,9 @@
 #ifndef ALGOBASE_H
 #define ALGOBASE_H
 #include <type_traits>
-#include "iterator_adapter.h"
+#include "iterator_adapter.hpp"
 #include "basiclib.h"
+#include "pair.hpp"
 
 namespace MSTL {
 	template <typename InputIterator1, typename InputIterator2>
@@ -13,7 +14,8 @@ namespace MSTL {
 		return true;
 	}
 	template <typename InputIterator1, typename InputIterator2, typename BinaryPredicate>
-	inline bool equal(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2, BinaryPredicate binary_pred) {
+	inline bool equal(InputIterator1 first1, InputIterator1 last1,
+					  InputIterator2 first2, BinaryPredicate binary_pred) {
 		for (; first1 != last1; ++first1, ++first2) {
 			if (!binary_pred(*first1, *first2)) return false;
 		}
@@ -82,21 +84,21 @@ namespace MSTL {
 	}
 
 	template <typename InputIterator1, typename InputIterator2>
-	std::pair<InputIterator1, InputIterator2> 
+	pair<InputIterator1, InputIterator2> 
 		mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2) {
 		while (first1 != last1 && *first1 == *first2) {
 			++first1; ++first2;
 		}
-		return std::pair<InputIterator1, InputIterator2>(first1, first2);
+		return pair<InputIterator1, InputIterator2>(first1, first2);
 	}
 	template <typename InputIterator1, typename InputIterator2, typename Compare>
-	std::pair<InputIterator1, InputIterator2>
+	pair<InputIterator1, InputIterator2>
 		mismatch(InputIterator1 first1, InputIterator1 last1,
 				 InputIterator2 first2, Compare comp) {
 		while (first1 != last1 && comp(*first1, *first2)) {
 			++first1; ++first2;
 		}
-		return std::pair<InputIterator1, InputIterator2>(first1, first2);
+		return pair<InputIterator1, InputIterator2>(first1, first2);
 	}
 
 	template <typename T>

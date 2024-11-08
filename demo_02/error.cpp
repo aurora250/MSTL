@@ -8,6 +8,7 @@ namespace MSTL {
 	void Error::__det__(std::ostream& _out) const {
 		split_line(_out);
 		_out << "type: " << this->_type << std::endl;
+		_out << "check type: " << check_type<self>() << std::endl;
 		this->__show_data_only(_out);
 		_out << std::endl;
 		split_line(_out);

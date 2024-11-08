@@ -1,5 +1,6 @@
 #ifndef OBJECT_H
 #define OBJECT_H
+#include "check_type.h"
 #include <iostream>
 
 namespace MSTL {

@@ -27,7 +27,7 @@ void try_exc() {
 }
 void try_lls() {
     using namespace MSTL;
-    doublylist<int> lls;
+    list<int> lls{ 1,2,3,4,5,6,7 };
     lls.__det__();
     lls.push_back(3);
     lls.push_back(4);
@@ -35,14 +35,15 @@ void try_lls() {
     lls.__det__();
     lls.reverse();
     lls.__det__();
+    lls.sort();
     std::cout << lls << std::endl;
     lls.pop_back();
     lls.pop_front();
     lls.__det__();
     std::cout << lls.at(0) << ':' << lls[0] << std::endl;
     std::cout << lls.front() << ':' << lls.back() << std::endl;
-    lls.pop_back();
-    std::cout << lls.empty();
+    lls.clear();
+    std::cout << lls.empty() <<std::endl;
 }
 void try_str() {
     MSTL::string str("abc");
@@ -65,7 +66,7 @@ void try_pir() {
     p2.__det__();
 }
 class Foo {};
-void try_che() {
+void try_check() {
     using namespace MSTL;
     std::cout << check_type<string>() << std::endl;
     std::cout << check_type<const volatile void* const*&>() << std::endl;
@@ -167,6 +168,10 @@ void try_deq() {
     a.__det__();
     deque<int> b{ 1,2,3,4,5 };
     b.__det__();
+    std::cout << b << std::endl;
+    std::cout << b.front() << std::endl;
+    b.clear();
+    b.__det__();
 }
 void try_stack() {
     using namespace MSTL;
@@ -179,11 +184,14 @@ void try_stack() {
     s.__det__();
     s.pop();
     s.__det__();
+    queue<int> q;
+    q.push(2);
+    q.__det__();
 }
 
 int main()
 {
-    try_stack();
+    try_str();
     /*int a[3] = { 1, 2 ,3 };
     std::copy(a, a + 3, std::ostream_iterator<int>(std::cout, " "));*/
 }

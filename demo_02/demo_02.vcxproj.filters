@@ -77,7 +77,7 @@
     <ClInclude Include="depositary.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="linkedlist.hpp">
+    <ClInclude Include="list.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="algorithm.hpp">
@@ -104,7 +104,7 @@
     <ClInclude Include="function_adapter.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="iterator_adapter.h">
+    <ClInclude Include="iterator_adapter.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="adapter.hpp">
@@ -116,7 +116,7 @@
     <ClInclude Include="basemstlc++.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="alloc.h">
+    <ClInclude Include="memmory.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="stack.hpp">
@@ -126,6 +126,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="rb_tree.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="database.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="priority_queue.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="iterator.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

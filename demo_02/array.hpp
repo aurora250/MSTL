@@ -11,12 +11,17 @@ namespace MSTL {
 	template <typename T, size_t N, typename Alloc = std::allocator<T>>
 	class array : public siterable {
 	public:
-		typedef T*			iterator;
-		typedef const T*	const_iterator;
+		typedef T					value_type;
+		typedef T&					reference;
+		typedef T* iterator;
+		typedef const T* const_iterator;
+		typedef const T&			const_reference;
+		typedef array<T, N, Alloc>	self;
 		static const char* const __type__;
 		void __det__(std::ostream& _out = std::cout) const {
 			split_line(_out);
 			_out << "type: " << __type__ << std::endl;
+			_out << "check type: " << check_type<self>() << std::endl;
 			this->__show_size_only(_out);
 			_out << "data: " << std::flush;
 			this->__show_data_only(_out);

@@ -1,5 +1,5 @@
-#ifndef ITERATOR_ADAPTER_H
-#define ITERATOR_ADAPTER_H
+#ifndef ITERATOR_H
+#define ITERATOR_H
 #include <iterator>
 
 namespace MSTL {
@@ -125,35 +125,35 @@ namespace MSTL {
 		typedef __true_type is_POD_type; \
 	};
 	DEFAULT_TYPE_TRAITS__(char)
-	DEFAULT_TYPE_TRAITS__(signed char)
-	DEFAULT_TYPE_TRAITS__(unsigned char)
-	DEFAULT_TYPE_TRAITS__(short)
-	DEFAULT_TYPE_TRAITS__(unsigned short)
-	DEFAULT_TYPE_TRAITS__(int)
-	DEFAULT_TYPE_TRAITS__(unsigned int)
-	DEFAULT_TYPE_TRAITS__(long)
-	DEFAULT_TYPE_TRAITS__(unsigned long)
-	DEFAULT_TYPE_TRAITS__(float)
-	DEFAULT_TYPE_TRAITS__(double)
-	DEFAULT_TYPE_TRAITS__(long double)
+		DEFAULT_TYPE_TRAITS__(signed char)
+		DEFAULT_TYPE_TRAITS__(unsigned char)
+		DEFAULT_TYPE_TRAITS__(short)
+		DEFAULT_TYPE_TRAITS__(unsigned short)
+		DEFAULT_TYPE_TRAITS__(int)
+		DEFAULT_TYPE_TRAITS__(unsigned int)
+		DEFAULT_TYPE_TRAITS__(long)
+		DEFAULT_TYPE_TRAITS__(unsigned long)
+		DEFAULT_TYPE_TRAITS__(float)
+		DEFAULT_TYPE_TRAITS__(double)
+		DEFAULT_TYPE_TRAITS__(long double)
 #if _WIN64
-	DEFAULT_TYPE_TRAITS__(__int64)
-	DEFAULT_TYPE_TRAITS__(unsigned __int64)
+		DEFAULT_TYPE_TRAITS__(__int64)
+		DEFAULT_TYPE_TRAITS__(unsigned __int64)
 #endif // _WIN64
 
-	template <class InputIterator, class Distance>
+		template <class InputIterator, class Distance>
 	inline void __advance(InputIterator& i, Distance n, std::input_iterator_tag) {
 		while (n--) ++i;
 	}
 	template <class BidirectionalIterator, class Distance>
 	inline void __advance(BidirectionalIterator& i, Distance n, std::bidirectional_iterator_tag) {
-		if (n >= 0) 
+		if (n >= 0)
 			while (n--) ++i;
-		else 
+		else
 			while (n++) --i;
 	}
 	template <class RandomAccessIterator, class Distance>
-	inline void __advance(RandomAccessIterator& i, Distance n, std::random_access_iterator_tag) { 
+	inline void __advance(RandomAccessIterator& i, Distance n, std::random_access_iterator_tag) {
 		i += n;
 	}
 	template <class InputIterator, class Distance>
@@ -161,7 +161,38 @@ namespace MSTL {
 		__advance(iter, n, iterator_category(iter));
 	}
 
+	template <typename InputIterator, typename Distance>
+	inline void __distance(InputIterator first, InputIterator last, Distance& n, std::input_iterator_tag) {
+		while (first != last) { ++first; ++n; }
+	}
+	template <typename RandomAccessIterator, typename Distance>
+	inline void __distance(RandomAccessIterator first, RandomAccessIterator last,
+		Distance& n, std::random_access_iterator_tag) {
+		n += last - first;
+	}
+	template <typename InputIterator, typename Distance>
+	inline void distance(InputIterator first, InputIterator last, Distance& n) {
+		__distance(first, last, n, iterator_category(first));
+	}
+	template <typename InputIterator>
+	inline typename std::iterator_traits<InputIterator>::difference_type
+		__distance(InputIterator first, InputIterator last, std::input_iterator_tag) {
+		typename std::iterator_traits<InputIterator>::difference_type n = 0;
+		while (first != last) { ++first; ++n; }
+		return n;
+	}
+	template <typename RandomAccessIterator>
+	inline typename std::iterator_traits<RandomAccessIterator>::difference_type
+		__distance(RandomAccessIterator first, RandomAccessIterator last, std::random_access_iterator_tag) {
+		return last - first;
+	}
+	template <typename InputIterator>
+	inline typename std::iterator_traits<InputIterator>::difference_type
+		distance(InputIterator first, InputIterator last) {
+		using category = std::iterator_traits<InputIterator>::iterator_category;
+		return __distance(first, last, category());
+	}
 
 }
 
-#endif // ITERATOR_ADAPTER_H
+#endif // ITERATOR_H

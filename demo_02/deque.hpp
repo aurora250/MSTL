@@ -1,10 +1,8 @@
 #ifndef DEQUE_H
 #define DEQUE_H
-#include <memory>
 #include <iterator>
 #include "iterable.h"
-#include "algobase.hpp"
-#include "alloc.h"
+#include "memmory.hpp"
 
 namespace MSTL {
     inline size_t deque_buf_size(size_t n, size_t sz) {
@@ -42,7 +40,7 @@ namespace MSTL {
         }
 
         deque_iterator(link_type cur = nullptr, link_type first = nullptr,
-            link_type last = nullptr, map_pointer node = nullptr) :
+                       link_type last = nullptr, map_pointer node = nullptr) :
             cur(cur), first(first), last(last), node(node) {}
         deque_iterator(const iterator& x) :
             cur(x.cur), first(x.first), last(x.last), node(x.node) {}
@@ -119,7 +117,7 @@ namespace MSTL {
         bool operator <(const self& x)const { return node == x.node ? (cur < x.cur) : (node < x.node); }
     };
     
-    template<typename T, typename Alloc = std::allocator<T>, size_t BufSize = 0>
+    template<typename T, typename Alloc = simple_alloc<T>, size_t BufSize = 0>
     class deque : private siterable {
     public:
         typedef T                           value_type;
@@ -136,7 +134,7 @@ namespace MSTL {
 
     private:
         typedef pointer*                    map_pointer;
-        typedef simple_alloc<value_type>    data_allocator;
+        typedef Alloc                       data_allocator;
         typedef simple_alloc<pointer>       map_allocator;
 
         data_allocator data_alloc;
@@ -171,8 +169,8 @@ namespace MSTL {
             __create_map_and_nodes(n);
             map_pointer cur;
             for (cur = start.node; cur < finish.node; ++cur) 
-                std::uninitialized_fill(*cur, *cur + buff_size(), x);
-            std::uninitialized_fill(finish.first, finish.cur, x);
+                uninitialized_fill(*cur, *cur + buff_size(), x);
+            uninitialized_fill(finish.first, finish.cur, x);
         }
         void __reallocate_map(size_type nodes_to_add, bool add_at_front) {
             size_type old_num_nodes = finish.node - start.node + 1;
@@ -270,7 +268,7 @@ namespace MSTL {
                     map_pointer cur = start.node - 1;
                     for (; needs > 0; --cur, --needs) {
                         *cur = data_alloc.allocate(buff_size());
-                        std::uninitialized_fill_n(*cur, buff_size(), *start);
+                        uninitialized_fill_n(*cur, buff_size(), *start);
                     }
                     iterator new_start = start - n;
                     copy(start, pos, new_start);
@@ -294,7 +292,7 @@ namespace MSTL {
                     map_pointer cur = finish.node + 1;
                     for (; needs > 0; ++cur, --needs) {
                         *cur = data_alloc.allocate(buff_size());
-                        std::uninitialized_fill_n(*cur, buff_size(), *start);
+                        uninitialized_fill_n(*cur, buff_size(), *start);
                     }
                     iterator new_finish = finish + n;
                     copy_backward(pos, finish, new_finish);
@@ -322,7 +320,7 @@ namespace MSTL {
                     map_pointer cur = start.node - 1;
                     for (; needs > 0; --cur, --needs) {
                         *cur = data_alloc.allocate(buff_size());
-                        std::uninitialized_fill_n(*cur, buff_size(), x);
+                        uninitialized_fill_n(*cur, buff_size(), x);
                     }
                     iterator new_start = start - n;
                     copy(start, pos, new_start);
@@ -346,7 +344,7 @@ namespace MSTL {
                     map_pointer cur = finish.node + 1;
                     for (; needs > 0; ++cur, --needs) {
                         *cur = data_alloc.allocate(buff_size());
-                        std::uninitialized_fill_n(*cur, buff_size(), *start);
+                        uninitialized_fill_n(*cur, buff_size(), *start);
                     }
                     iterator new_finish = finish + n;
                     copy_backward(pos, finish, new_finish);
@@ -374,6 +372,7 @@ namespace MSTL {
         void __det__(std::ostream& _out = std::cout) const {
             split_line(_out);
             _out << "type: " << __type__ << std::endl;
+            _out << "check type: " << check_type<self>() << std::endl;
             this->__show_size_only(_out);
             _out << "data: " << std::flush;
             this->__show_data_only(_out);
@@ -400,10 +399,10 @@ namespace MSTL {
             difference_type n = last - first;
             __create_map_and_nodes(n);
             for (map_pointer cur = start.node; cur < finish.node; ++cur) {
-                std::uninitialized_copy(first, first + buff_size(), *cur);
+                uninitialized_copy(first, first + buff_size(), *cur);
                 first = first + buff_size();
             }
-            std::uninitialized_copy(first, last, finish.first);
+            uninitialized_copy(first, last, finish.first);
         }
         deque(self& x) : deque(x.begin(), x.end()) {}
         deque(self&& x) : map(x.map), map_size(x.map_size),

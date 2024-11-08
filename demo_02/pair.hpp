@@ -19,6 +19,7 @@ namespace MSTL {
 		void __det__(std::ostream& _out = std::cout) const {
 			split_line(_out);
 			_out << "type: " << __type__ << std::endl;
+			_out << "check type: " << check_type<self>() << std::endl;
 			this->__show_data_only(_out);
 			_out << std::endl;
 			split_line(_out);
@@ -88,8 +89,8 @@ namespace MSTL {
 	}
 
 	template <typename T1, typename T2>
-	pair<T1, T2>* make_pair(T1 _f, T2 _s) {
-		return &pair<T1, T2>(_f, _s);
+	pair<T1, T2> make_pair(T1 _f, T2 _s) {
+		return pair<T1, T2>(_f, _s);
 	}
 }
 

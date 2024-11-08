@@ -7,6 +7,7 @@ namespace MSTL {
 	void string::__det__(std::ostream& _out) const {
 		split_line(_out);
 		_out << "type: " << __type__ << std::endl;
+		_out << "check type: " << check_type<self>() << std::endl;
 		this->__show_sc_only(_out);
 		_out << "data: " << std::flush;
 		this->__show_data_only(_out);
@@ -21,7 +22,7 @@ namespace MSTL {
 	}
 	inline void string::__range_check(int _pos) const throw(RangeError) {
 		RangeError* e = new RangeError();
-		MSTL::Exception(this->__in_boundary(_pos), e);
+		Exception(this->__in_boundary(_pos), e);
 		delete e;
 	}
 	inline bool string::__in_boundary(int _pos) const {
@@ -189,7 +190,7 @@ namespace MSTL {
 	}
 	int string::find(const char* _str, int _pos) throw(RangeError) {
 		this->__range_check(_pos);
-		const char* _p = MSTL::strstr(this->begin() + _pos, _str);
+		const char* _p = strstr(this->begin() + _pos, _str);
 		if (_p) return _p - this->begin();
 		else return this->epos;
 	}
@@ -246,7 +247,7 @@ namespace MSTL {
 	}
 
 	size_t strlen(const char* _str) {
-		if (*_str != '\0') return MSTL::strlen(_str + 1) + 1;
+		if (*_str != '\0') return strlen(_str + 1) + 1;
 		else return 0;
 	}
 	char* strcpy(char* _dest, const char* _sou) {

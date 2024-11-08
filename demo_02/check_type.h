@@ -246,6 +246,6 @@ namespace MSTL {
             typename std::remove_reference<decltype(_val)>::type
         >();
     }
-}
 #endif // _HAS_CXX20
+}
 #endif // CHECK_TYPE_H

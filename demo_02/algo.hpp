@@ -187,38 +187,6 @@ namespace MSTL {
 		return n;
 	}
 
-	template <typename InputIterator, typename Distance>
-	inline void __distance(InputIterator first, InputIterator last, Distance& n, std::input_iterator_tag) {
-		while (first != last) { ++first; ++n; }
-	}
-	template <typename RandomAccessIterator, typename Distance>
-	inline void __distance(RandomAccessIterator first, RandomAccessIterator last,
-						   Distance& n, std::random_access_iterator_tag) {
-		n += last - first;
-	}
-	template <typename InputIterator, typename Distance>
-	inline void distance(InputIterator first, InputIterator last, Distance& n) {
-		__distance(first, last, n, iterator_category(first));
-	}
-	template <typename InputIterator>
-	inline typename std::iterator_traits<InputIterator>::difference_type
-		__distance(InputIterator first, InputIterator last, std::input_iterator_tag) {
-		typename std::iterator_traits<InputIterator>::difference_type n = 0;
-		while (first != last) {	++first; ++n; }
-		return n;
-	}
-	template <typename RandomAccessIterator>
-	inline typename std::iterator_traits<RandomAccessIterator>::difference_type
-		__distance(RandomAccessIterator first, RandomAccessIterator last, std::random_access_iterator_tag) {
-		return last - first;
-	}
-	template <typename InputIterator>
-	inline typename std::iterator_traits<InputIterator>::difference_type
-		distance(InputIterator first, InputIterator last) {
-		using category = std::iterator_traits<InputIterator>::iterator_category;
-		return __distance(first, last, category());
-	}
-
 	template <typename ForwardIterator1, typename ForwardIterator2, typename Distance1, typename Distance2>
 	ForwardIterator1 __search(ForwardIterator1 first1, ForwardIterator1 last1,
 	   					      ForwardIterator2 first2, ForwardIterator2 last2, Distance1*, Distance2*) {
