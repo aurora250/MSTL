@@ -21,7 +21,7 @@
     <ClCompile Include="error.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="iterable.cpp">
+    <ClCompile Include="base_container.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="string.cpp">
@@ -50,7 +50,7 @@
     <ClInclude Include="array.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="iterable.h">
+    <ClInclude Include="base_container.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="error.h">

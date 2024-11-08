@@ -139,7 +139,7 @@
     <ClCompile Include="math.cpp" />
     <ClCompile Include="demo_02.cpp" />
     <ClCompile Include="error.cpp" />
-    <ClCompile Include="iterable.cpp" />
+    <ClCompile Include="base_container.cpp" />
     <ClCompile Include="object.cpp" />
     <ClCompile Include="rb_tree.cpp" />
     <ClCompile Include="string.cpp" />
@@ -161,7 +161,7 @@
     <ClInclude Include="error.h" />
     <ClInclude Include="function_adapter.hpp" />
     <ClInclude Include="functor.hpp" />
-    <ClInclude Include="iterable.h" />
+    <ClInclude Include="base_container.h" />
     <ClInclude Include="iterator_adapter.hpp" />
     <ClInclude Include="list.hpp" />
     <ClInclude Include="mstlc++.h" />

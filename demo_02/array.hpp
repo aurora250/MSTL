@@ -1,23 +1,25 @@
 #ifndef ARRAY_HPP
 #define ARRAY_HPP
-#include "iterable.h"
+#include "base_container.h"
 #include "error.h"
 #include "basiclib.h"
+#include "memmory.hpp"
 #include <iostream>
 #include <initializer_list>
-#include <memory>
 
 namespace MSTL {
-	template <typename T, size_t N, typename Alloc = std::allocator<T>>
-	class array : public siterable {
+	template <typename T, size_t N, typename Alloc = simple_alloc<T>>
+	class array : public container {
 	public:
 		typedef T					value_type;
 		typedef T&					reference;
-		typedef T* iterator;
-		typedef const T* const_iterator;
+		typedef T*					iterator;
+		typedef const T*			const_iterator;
 		typedef const T&			const_reference;
 		typedef array<T, N, Alloc>	self;
+
 		static const char* const __type__;
+
 		void __det__(std::ostream& _out = std::cout) const {
 			split_line(_out);
 			_out << "type: " << __type__ << std::endl;
@@ -29,7 +31,10 @@ namespace MSTL {
 			split_line(_out);
 		}
 	private:
+		typedef Alloc data_allocator;
+
 		T* _data;
+		data_allocator alloc;
 
 		inline void __copy_ptr_only(array<T, N>&& _arr) {
 			for (size_t i = 0; i < _arr._size; i++) {
@@ -54,10 +59,10 @@ namespace MSTL {
 			_out << ']' << std::flush;
 		}
 	public:
-		explicit array() noexcept : siterable(N == 0 ? 1 : N) {
+		explicit array() noexcept : container(N == 0 ? 1 : N) {
 			this->_data = new T[N == 0 ? 1 : N];
 		}
-		explicit array(const std::initializer_list<T>& _lis) noexcept : siterable(N == 0 ? 1 : N) {
+		explicit array(const std::initializer_list<T>& _lis) noexcept : container(N == 0 ? 1 : N) {
 			this->_data = new T[N == 0 ? 1 : N];
 			auto _iter = _lis.begin();
 			for (size_t i = 0; i < this->_size; i++) {
@@ -66,11 +71,11 @@ namespace MSTL {
 			}
 			
 		}
-		explicit array(array<T, N>&& _arr) noexcept : siterable(_arr._size) {
+		explicit array(array<T, N>&& _arr) noexcept : container(_arr._size) {
 			this->_data = new T[N == 0 ? 1 : N];
 			this->_copy_ptr_only(std::forward<array<T, N>>(_arr));
 		}
-		explicit array(const array<T, N>& _arr) noexcept : siterable(_arr._size) {
+		explicit array(const array<T, N>& _arr) noexcept : container(_arr._size) {
 			this->_data = new T[N == 0 ? 1 : N];
 			this->__copy_ptr_only(_arr);
 		}

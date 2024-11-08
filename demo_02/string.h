@@ -1,23 +1,25 @@
 #ifndef STRING_H
 #define STRING_H
-#include "iterable.h"
+#include "base_container.h"
 #include "vector.hpp"
 #include <initializer_list>
 
 namespace MSTL {
-	class string : public sciterable {
+	class string : public container {
 	public:
 		typedef char		value_type;
 		typedef string		self;
 		typedef char*		iterator;
 		typedef const char* const_iterator;
+		typedef size_t		size_type;
 
 		static const char* const __type__;
 		void __det__(std::ostream& _out = std::cout) const;
+		void __show_data_only(std::ostream& _out) const;
 	private:
 		char* _data;
+		size_type _capacity;
 
-		void __show_data_only(std::ostream& _out) const;
 		void __range_check(int _pos) const;
 		bool __in_boundary(int _pos) const;
 	public:

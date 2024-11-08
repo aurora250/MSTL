@@ -188,10 +188,16 @@ void try_stack() {
     q.push(2);
     q.__det__();
 }
+void try_vec() {
+    using namespace MSTL;
+    vector<int> v{ 1,2,3,4 };
+    v.__det__();
+}
+
 
 int main()
 {
-    try_str();
+    try_vec();
     /*int a[3] = { 1, 2 ,3 };
     std::copy(a, a + 3, std::ostream_iterator<int>(std::cout, " "));*/
 }

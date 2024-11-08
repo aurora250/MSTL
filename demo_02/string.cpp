@@ -8,7 +8,7 @@ namespace MSTL {
 		split_line(_out);
 		_out << "type: " << __type__ << std::endl;
 		_out << "check type: " << check_type<self>() << std::endl;
-		this->__show_sc_only(_out);
+		this->__show_size_only(_out);
 		_out << "data: " << std::flush;
 		this->__show_data_only(_out);
 		_out << std::endl;
@@ -30,11 +30,11 @@ namespace MSTL {
 		else return _pos < this->_size + 1 ? true : false;
 	}
 
-	string::string(const char* _str) : sciterable(strlen(_str), strlen(_str)) {
+	string::string(const char* _str) : container(strlen(_str)), _capacity(strlen(_str)) {
 		this->_data = new char[this->_capacity + 1];
 		strcpy(this->_data, _str);
 	}
-	string::string(const string& _str) : sciterable(_str._size, _str._capacity) {
+	string::string(const string& _str) : container(_str._size), _capacity(_str._capacity) {
 		this->_data = new char[this->_capacity + 1];
 		memcpy(this->_data, _str._data, this->_size + 1);
 	}

@@ -1,7 +1,7 @@
 #ifndef DEQUE_H
 #define DEQUE_H
 #include <iterator>
-#include "iterable.h"
+#include "base_container.h"
 #include "memmory.hpp"
 
 namespace MSTL {
@@ -118,7 +118,7 @@ namespace MSTL {
     };
     
     template<typename T, typename Alloc = simple_alloc<T>, size_t BufSize = 0>
-    class deque : private siterable {
+    class deque : private container {
     public:
         typedef T                           value_type;
         typedef value_type*                 pointer;
@@ -380,7 +380,7 @@ namespace MSTL {
             split_line(_out);
         }
 
-        deque() : map(0), map_size(1), start(), finish(), data_alloc(), map_alloc() {
+        explicit deque() : map(0), map_size(1), start(), finish(), data_alloc(), map_alloc() {
             map = map_alloc.allocate(1);
             *map = data_alloc.allocate(buff_size());
             start.set_node(map);
@@ -388,11 +388,11 @@ namespace MSTL {
             start.cur = start.first;
             finish.cur = finish.first;
         }
-        deque(size_type n, reference_const x = T()) :
+        explicit deque(size_type n, reference_const x = T()) :
               map(0), map_size(0), start(), finish(), data_alloc(), map_alloc() {
             __fill_initialize(n, x); 
         }
-        deque(const std::initializer_list<T>& _lls) : deque(_lls.begin(), _lls.end()) {}
+        explicit deque(const std::initializer_list<T>& _lls) : deque(_lls.begin(), _lls.end()) {}
         template<typename InputIterator>
         deque(InputIterator first, InputIterator last) :
               map(0), map_size(0), start(), finish(), data_alloc(), map_alloc() {
@@ -404,12 +404,16 @@ namespace MSTL {
             }
             uninitialized_copy(first, last, finish.first);
         }
-        deque(self& x) : deque(x.begin(), x.end()) {}
-        deque(self&& x) : map(x.map), map_size(x.map_size),
+        explicit deque(self& x) : deque(x.begin(), x.end()) {}
+        explicit deque(self&& x) : map(x.map), map_size(x.map_size),
               start(x.start), finish(x.finish), data_alloc(), map_alloc() {
             x.map = 0;
             x.map_size = 0;
             x.finish = x.start;
+        }
+        ~deque() {
+            clear();
+            destroy(*map); destroy(map);
         }
 
         iterator begin() { return iterator(start); }
