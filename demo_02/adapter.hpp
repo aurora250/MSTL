@@ -1,6 +1,6 @@
-#ifndef ADAPTER_H
-#define ADAPTER_H
+#ifndef MSTL_ADAPTER_H
+#define MSTL_ADAPTER_H
 #include "function_adapter.hpp"
 #include "iterator_adapter.hpp"
 
-#endif // ADAPTER_H
+#endif // MSTL_ADAPTER_H

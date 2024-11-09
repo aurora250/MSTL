@@ -136,10 +136,9 @@
     <ClCompile Include="basiclib.cpp" />
     <ClCompile Include="check_type.cpp" />
     <ClCompile Include="depositary.cpp" />
-    <ClCompile Include="math.cpp" />
     <ClCompile Include="demo_02.cpp" />
     <ClCompile Include="error.cpp" />
-    <ClCompile Include="base_container.cpp" />
+    <ClCompile Include="container.cpp" />
     <ClCompile Include="object.cpp" />
     <ClCompile Include="rb_tree.cpp" />
     <ClCompile Include="string.cpp" />
@@ -150,6 +149,7 @@
     <ClInclude Include="algobase.hpp" />
     <ClInclude Include="algorithm.hpp" />
     <ClInclude Include="database.h" />
+    <ClInclude Include="heap.hpp" />
     <ClInclude Include="memmory.hpp" />
     <ClInclude Include="array.hpp" />
     <ClInclude Include="basemstlc++.h" />
@@ -161,7 +161,7 @@
     <ClInclude Include="error.h" />
     <ClInclude Include="function_adapter.hpp" />
     <ClInclude Include="functor.hpp" />
-    <ClInclude Include="base_container.h" />
+    <ClInclude Include="container.h" />
     <ClInclude Include="iterator_adapter.hpp" />
     <ClInclude Include="list.hpp" />
     <ClInclude Include="mstlc++.h" />

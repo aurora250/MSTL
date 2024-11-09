@@ -21,7 +21,7 @@
     <ClCompile Include="error.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="base_container.cpp">
+    <ClCompile Include="container.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="string.cpp">
@@ -39,9 +39,6 @@
     <ClCompile Include="depositary.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="math.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="rb_tree.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -50,7 +47,7 @@
     <ClInclude Include="array.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="base_container.h">
+    <ClInclude Include="container.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="error.h">
@@ -135,6 +132,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="iterator.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="heap.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

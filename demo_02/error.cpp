@@ -2,68 +2,70 @@
 #include "basiclib.h"
 #include "depositary.h"
 
-namespace MSTL {
-	Error::Error(cstring _info, cstring _type) noexcept : _info(_info), _type(_type) {}
-	Error::~Error() {};
-	void Error::__det__(std::ostream& _out) const {
-		split_line(_out);
-		_out << "type: " << this->_type << std::endl;
-		_out << "check type: " << check_type<self>() << std::endl;
-		this->__show_data_only(_out);
-		_out << std::endl;
-		split_line(_out);
-	}
-	inline void Error::__show_data_only(std::ostream& _out) const {
-		_out << this->_info << std::flush;
-	}
-	const_cstring Error::__type__ = "Error";
+MSTL_BEGIN_NAMESPACE__
 
-	StopIterator::StopIterator(cstring _info) noexcept : Error(_info, __type__) {}
-	const_cstring StopIterator::__type__ = "StopIterator";
+Error::Error(cstring _info, cstring _type) noexcept : _info(_info), _type(_type) {}
+Error::~Error() {};
+void Error::__det__(std::ostream& _out) const {
+	split_line(_out);
+	_out << "type: " << this->_type << std::endl;
+	_out << "check type: " << check_type<self>() << std::endl;
+	this->__show_data_only(_out);
+	_out << std::endl;
+	split_line(_out);
+}
+inline void Error::__show_data_only(std::ostream& _out) const {
+	_out << this->_info << std::flush;
+}
+const_cstring Error::__type__ = "Error";
 
-	AssertError::AssertError(cstring _info) noexcept : Error(_info, __type__) {}
-	const_cstring AssertError::__type__ = "AssertError";
+StopIterator::StopIterator(cstring _info) noexcept : Error(_info, __type__) {}
+const_cstring StopIterator::__type__ = "StopIterator";
 
-	AttributeError::AttributeError(cstring _info) noexcept : Error(_info, __type__) {}
-	const_cstring AttributeError::__type__ = "AttributeError";
+AssertError::AssertError(cstring _info) noexcept : Error(_info, __type__) {}
+const_cstring AssertError::__type__ = "AssertError";
 
-	MemoryError::MemoryError(cstring _info) noexcept : Error(_info, __type__) {}
-	const_cstring MemoryError::__type__ = "MemoryError";
+AttributeError::AttributeError(cstring _info) noexcept : Error(_info, __type__) {}
+const_cstring AttributeError::__type__ = "AttributeError";
 
-	ValueError::ValueError(cstring _info) noexcept : Error(_info, __type__) {}
-	const_cstring ValueError::__type__ = "ValueError";
+MemoryError::MemoryError(cstring _info) noexcept : Error(_info, __type__) {}
+const_cstring MemoryError::__type__ = "MemoryError";
 
-	RangeError::RangeError(cstring _info) noexcept : Error(_info, __type__) {}
-	const_cstring RangeError::__type__ = "RangeError";
+ValueError::ValueError(cstring _info) noexcept : Error(_info, __type__) {}
+const_cstring ValueError::__type__ = "ValueError";
 
-	void Exception(Error* _err) {
-		// _out_set<const char*>({ "Exception : (" , _err->_type, ") ",_err->_info }, true, std::cerr);
-		std::cerr << "Exception : (" << _err->_type << ") " << _err->_info << std::endl;
-		throw* _err;
-	}
+RangeError::RangeError(cstring _info) noexcept : Error(_info, __type__) {}
+const_cstring RangeError::__type__ = "RangeError";
 
-	inline void Exception(bool _boolean, Error* _err) {
-		if (_boolean) return;
-		else {
-			if (_err == nullptr) Assert(false);
-			else Exception(_err);
-		}
-	}
+void Exception(Error* _err) {
+	// _out_set<const char*>({ "Exception : (" , _err->_type, ") ",_err->_info }, true, std::cerr);
+	std::cerr << "Exception : (" << _err->_type << ") " << _err->_info << std::endl;
+	throw* _err;
+}
 
-	void Assert(bool _boolean, const char* _info) {
-		if (_boolean) return;
-		else Exception(new AssertError(_info));
-	}
-
-	void Exit(bool _abort, void(__cdecl* _func)(void)) {
-		if (_func) {
-			if (_abort)
-				std::cout << "Abort failed! Function should be called first." << std::endl;
-			std::atexit(_func);
-		}
-		else {
-			if (_abort) std::abort();
-			else std::exit(1);
-		}
+inline void Exception(bool _boolean, Error* _err) {
+	if (_boolean) return;
+	else {
+		if (_err == nullptr) Assert(false);
+		else Exception(_err);
 	}
 }
+
+void Assert(bool _boolean, const char* _info) {
+	if (_boolean) return;
+	else Exception(new AssertError(_info));
+}
+
+void Exit(bool _abort, void(__cdecl* _func)(void)) {
+	if (_func) {
+		if (_abort)
+			std::cout << "Abort failed! Function should be called first." << std::endl;
+		std::atexit(_func);
+	}
+	else {
+		if (_abort) std::abort();
+		else std::exit(1);
+	}
+}
+
+MSTL_END_NAMESPACE__

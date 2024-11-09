@@ -1,7 +1,8 @@
 #include "object.h"
-#include "basiclib.h"
 
-namespace MSTL {
-	object::object() noexcept {};
-	object::~object() = default;
-}
+MSTL_BEGIN_NAMESPACE__
+
+object::object() noexcept {};
+object::~object() {}
+
+MSTL_END_NAMESPACE__

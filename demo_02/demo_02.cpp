@@ -67,7 +67,7 @@ void try_pir() {
 }
 class Foo {};
 void try_check() {
-    using namespace MSTL;
+    MSTL_USE_SPACE__
     std::cout << check_type<string>() << std::endl;
     std::cout << check_type<const volatile void* const*&>() << std::endl;
     std::cout << check_type<int(*)[]>() << std::endl;
@@ -77,7 +77,6 @@ void try_check() {
                                                                                       // 返回char数组指针
     std::cout << check_type<int (Foo::* const)[3]>() << std::endl;   // 常类成员指针，指向Foo里的int[3]成员
     std::cout << check_type<int (Foo::* const)(int, Foo&&, int) volatile>() << std::endl;   // 常类成员函数指针，指向Foo里的volatile成员函数
-    SPLIT_LINE;
     const int a = 0;
     string cstr("const string");
     const string* sr = new string("hai");
@@ -189,15 +188,47 @@ void try_stack() {
     q.__det__();
 }
 void try_vec() {
-    using namespace MSTL;
-    vector<int> v{ 1,2,3,4 };
-    v.__det__();
+    MSTL_USE_SPACE__
+    MSTL_TRY__{
+        vector<int> v;  //{ 1,2,3,4 }
+        v.__det__();
+        v.push_back(3);
+        v.push_back(4);
+        v.__det__();
+        vector<int> v2(v);
+        display_endl<int> out;
+        out(v.front());
+        MSTL_TRY__{
+            out(v[10]);
+        }
+        MSTL_CATCH_ERROR__();
+        v.insert(v.end(), v2.const_begin(), v2.const_end());
+        v2.__det__();
+        v.__det__();
+        v.pop_back();
+        v.__det__();
+        v.clear();
+        std::cout << v.empty() << std::endl;
+        v.insert(v.end(), v2.const_begin(), v2.const_end());
+        container* c = &v;
+        c->__det__();
+        MSTL_EXEC_MEMORY__
+    }
+    MSTL_CATCH_ERROR__(std::cout << "err")
 }
-
+void try_pque() {
+    MSTL_USE_SPACE__;
+    priority_queue<int> q;
+    q.push(3);
+    q.push(5);
+    q.__det__();
+    q.pop();
+    q.__det__();
+}
 
 int main()
 {
-    try_vec();
+    try_deq();
     /*int a[3] = { 1, 2 ,3 };
     std::copy(a, a + 3, std::ostream_iterator<int>(std::cout, " "));*/
 }

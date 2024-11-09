@@ -2,13 +2,13 @@
 #define PRIORITY_QUEUE_H
 #include "functor.hpp"
 #include "vector.hpp"
-#include "algo.hpp"
-#include <algorithm>
+#include "heap.hpp"
 
-namespace MSTL {
-    template<typename T, typename Sequence = vector<T>, 
-        typename Compare = greater<typename Sequence::value_type>>
-    class priority_queue {
+MSTL_BEGIN_NAMESPACE__
+
+template<typename T, typename Sequence = vector<T>,
+typename Compare = greater<typename Sequence::value_type>>
+class priority_queue {
     public:
         typedef typename Sequence::value_type       value_type;
         typedef typename Sequence::size_type        size_type;
@@ -36,31 +36,38 @@ namespace MSTL {
             seq.__show_data_only(_out);
         }
 
-        priority_queue() : seq(Sequence()) {}
+        priority_queue() : seq(), comp() {}
         explicit priority_queue(const Compare& x) :seq(), comp(x) {}
         template<typename InputIterator>
         priority_queue(InputIterator first, InputIterator last) : seq(first, last) {
-            std::make_heap(seq.begin(), seq.end(), comp);
+            make_heap(seq.begin(), seq.end(), comp);
         }
         template<typename InputIterator>
         priority_queue(InputIterator first, InputIterator last, const Compare& x) :
             seq(first, last), comp(x) {
-            std::make_heap(seq.begin(), seq.end(), comp);
+            make_heap(seq.begin(), seq.end(), comp);
         }
         bool empty() const { return seq.empty(); }
         size_type size() const { return seq.size(); }
         const_reference top() const { return seq.front(); }
-        void push(const value_type& x) {
-            seq.push_back(x);
-            std::push_heap(seq.begin(), seq.end(), comp);
+        void push(const_reference x) {
+            MSTL_TRY__{
+                seq.push_back(x);
+                push_heap(seq.begin(), seq.end(), comp);
+            }
+                MSTL_CATCH_UNWIND_THROW_M__(seq.clear())
         }
         void pop() {
-            std::pop_heap(seq.begin(), seq.end(), comp);
-            seq.pop_back();
+            MSTL_TRY__{
+                pop_heap(seq.begin(), seq.end(), comp);
+                seq.pop_back();
+            }
+                MSTL_CATCH_UNWIND_THROW_M__(seq.clear())
         }
-    };
-    template <typename T, typename Sequence, typename Compare>
-    const char* const priority_queue<T, Sequence, Compare>::__type__ = "priority_queue";
-}
+};
+template <typename T, typename Sequence, typename Compare>
+const char* const priority_queue<T, Sequence, Compare>::__type__ = "priority_queue";
+
+MSTL_END_NAMESPACE__
 
 #endif
