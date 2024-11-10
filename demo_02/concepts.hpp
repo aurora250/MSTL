@@ -1,5 +1,5 @@
-#ifndef CONCEPTS_H
-#define CONCEPTS_H
+#ifndef MSTL_CONCEPTS_HPP__
+#define MSTL_CONCEPTS_HPP__
 #include <concepts>
 #include <type_traits>
 #include <iostream>
@@ -79,4 +79,4 @@ namespace concepts {
 
 MSTL_END_NAMESPACE__
 
-#endif // CONCEPTS_H
+#endif // MSTL_CONCEPTS_HPP__

@@ -1,6 +1,7 @@
-#ifndef HEAP_H
-#define HEAP_H
+#ifndef MSTL_HEAP_HPP__
+#define MSTL_HEAP_HPP__
 #include "basiclib.h"
+#include "iterator.hpp"
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -156,4 +157,4 @@ inline void make_heap(RandomAccessIterator first, RandomAccessIterator last,
 
 MSTL_END_NAMESPACE__
 
-#endif // HEAP_H
+#endif // HEAP_HPP__

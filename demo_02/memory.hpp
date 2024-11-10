@@ -1,5 +1,5 @@
-#ifndef ALLOC_H
-#define ALLOC_H
+#ifndef MSTL_MEMORY_HPP__
+#define MSTL_MEMORY_HPP__
 #include "iterator.hpp"
 #include "algobase.hpp"
 #include "error.h"
@@ -200,4 +200,4 @@ inline void __uninitialized_copy_fill(InputIterator first1, InputIterator last1,
 }
 MSTL_END_NAMESPACE__
 
-#endif // ALLOC_H
+#endif // MSTL_MEMORY_HPP__

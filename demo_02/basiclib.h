@@ -1,5 +1,5 @@
-#ifndef BASICLIB_H
-#define BASICLIB_H
+#ifndef MSTL_BASICLIB_H__
+#define MSTL_BASICLIB_H__
 #include <initializer_list>
 #include <iostream>
 
@@ -22,15 +22,21 @@
 
 MSTL_BEGIN_NAMESPACE__
 
-#ifdef _WIN64
+#if defined(_WIN64) || defined(_WIN32)
+#ifdef _MSC_VER
 typedef unsigned __int64 size_t;
 typedef __int64 ptrdiff_t;
 typedef __int64 intptr_t;
-#else
-typedef unsigned int size_t;
-typedef int ptrdiff_t;
-typedef int intptr_t;
-#endif
+#else  // not define _MSC_VER   // FOR __GNUC__
+typedef unsigned long long size_t;
+typedef long long  ptrdiff_t;
+typedef long long  intptr_t;
+#endif // _MSC_VER
+#elif defined(__linux__)  // not define _WIN64 || _WIN32   // FOR __linux__
+typedef unsigned long long size_t;
+typedef long long  ptrdiff_t;
+typedef long long  intptr_t;
+#endif // __linux__
 extern void repect_ostm_str(const char* _str, std::ostream& _out = std::cout, size_t _size = 10);
 extern void repect_ostm_chr(char _chr, std::ostream& _out = std::cout, size_t _size = 10);
 extern void split_line(std::ostream& _out = std::cout, size_t _size = 10);
@@ -67,4 +73,4 @@ void ostream_set(const std::initializer_list<T>& _vals,
 
 MSTL_END_NAMESPACE__
 
-#endif // BASICLIB_H
+#endif // MSTL_BASICLIB_H__

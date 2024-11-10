@@ -1,5 +1,5 @@
-#ifndef ALGO_H
-#define ALGO_H
+#ifndef MSTL_ALGO_HPP__
+#define MSTL_ALGO_HPP__
 #include "algobase.hpp"
 #include "heap.hpp"
 #include "basiclib.h"
@@ -201,4 +201,4 @@ Function for_each(InputIterator first, InputIterator last, Function f) {
 }
 MSTL_END_NAMESPACE__
 
-#endif // ALGO_H
+#endif // MSTL_ALGO_HPP__

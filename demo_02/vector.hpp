@@ -1,11 +1,11 @@
-#ifndef VECTOR_H
-#define VECTOR_H
+#ifndef MSTL_VECTOR_HPP__
+#define MSTL_VECTOR_HPP__
 #include "container.h"
 #include "basiclib.h"
 #include <iostream>
 #include <iterator>
 #include "initializer_list"
-#include "memmory.hpp"
+#include "memory.hpp"
 #include "error.h"
 
 MSTL_BEGIN_NAMESPACE__
@@ -366,4 +366,4 @@ const char* vector<T, Alloc>::__type__ = "vector";
 
 MSTL_END_NAMESPACE__
 
-#endif
+#endif // MSTL_VECTOR_HPP__

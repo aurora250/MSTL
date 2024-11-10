@@ -1,5 +1,5 @@
-#ifndef ERROR_H
-#define ERROR_H
+#ifndef MSTL_ERROR_H__
+#define MSTL_ERROR_H__
 #include <iostream>
 #include <initializer_list>
 #include <functional>
@@ -98,4 +98,4 @@ extern void Exit(bool _abort = false, void(__cdecl* _func)(void) = nullptr);
 
 MSTL_END_NAMESPACE__
 
-#endif
+#endif // MSTL_ERROR_H__

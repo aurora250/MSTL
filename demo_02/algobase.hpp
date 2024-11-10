@@ -1,11 +1,12 @@
-#ifndef ALGOBASE_H
-#define ALGOBASE_H
+#ifndef MSTL_ALGOBASE_HPP__
+#define MSTL_ALGOBASE_HPP__
 #include <type_traits>
-#include "iterator_adapter.hpp"
+#include "iterator.hpp"
 #include "basiclib.h"
 #include "pair.hpp"
 
 MSTL_BEGIN_NAMESPACE__
+
 template <typename InputIterator1, typename InputIterator2>
 inline bool equal(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2) {
 	for (; first1 != last1; ++first1, ++first2) {
@@ -216,5 +217,5 @@ inline BidirectionalIterator2 copy_backward(BidirectionalIterator1 first,
 }
 MSTL_END_NAMESPACE__
 
-#endif // ALGOBASE_H
+#endif // MSTL_ALGOBASE_HPP__
 

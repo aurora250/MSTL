@@ -1,5 +1,5 @@
-#ifndef CHECK_TYPE_H
-#define CHECK_TYPE_H
+#ifndef MSTL_CHECK_TYPE_H
+#define MSTL_CHECK_TYPE_H
 #include <iostream>
 #include <sstream>
 #include "basiclib.h"
@@ -251,4 +251,4 @@ namespace MSTL {
 
 MSTL_END_NAMESPACE__
 
-#endif // CHECK_TYPE_H
+#endif // MSTL_CHECK_TYPE_H

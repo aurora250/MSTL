@@ -1,5 +1,5 @@
-#ifndef STRING_H
-#define STRING_H
+#ifndef MSTL_STRING_H__
+#define MSTL_STRING_H__
 #include "container.h"
 #include "vector.hpp"
 #include <initializer_list>
@@ -74,4 +74,4 @@ char* memstr(char* _data, size_t _len, char* _sub);
 
 MSTL_END_NAMESPACE__
 
-#endif 
+#endif // MSTL_STRING_H__

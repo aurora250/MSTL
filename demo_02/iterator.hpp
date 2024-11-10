@@ -1,6 +1,7 @@
-#ifndef ITERATOR_H
-#define ITERATOR_H
+#ifndef MSTL_ITERATOR_HPP__
+#define MSTL_ITERATOR_HPP__
 #include <iterator>
+#include "basiclib.h"
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -196,4 +197,4 @@ distance(InputIterator first, InputIterator last) {
 
 MSTL_END_NAMESPACE__
 
-#endif // ITERATOR_H
+#endif // MSTL_ITERATOR_HPP__

@@ -1,6 +1,6 @@
-#ifndef ALGORITHM_H
-#define ALGORITHM_H
+#ifndef MSTL_ALGORITHM_HPP__
+#define MSTL_ALGORITHM_HPP__
 #include "numeric.hpp"
 #include "algo.hpp"
 
-#endif // ALGORITHM_H
+#endif // MSTL_ALGORITHM_HPP__

@@ -1,9 +1,9 @@
-#ifndef ARRAY_HPP
-#define ARRAY_HPP
+#ifndef MSTL_ARRAY_HPP__
+#define MSTL_ARRAY_HPP__
 #include "container.h"
 #include "error.h"
 #include "basiclib.h"
-#include "memmory.hpp"
+#include "memory.hpp"
 #include <iostream>
 #include <initializer_list>
 
@@ -138,18 +138,18 @@ public:
 	const T& operator [](int _pos) const {
 		return this->at(_pos);
 	}
-	bool operator ==(const self& _arr) const {
-		for (size_t i = 0; i < this->_size; i++) {
-			if (this->_data[i] != _arr._data[i]) return false;
-		}
-		return true;
-	}
-	bool operator !=(const self& _arr) const {
-		return not (*this == _arr);
-	}
 };
-template<typename T, size_t N, typename Alloc>
+template <typename T, size_t N, typename Alloc>
 const char* const array<T, N, Alloc>::__type__ = "array";
+
+template <typename T, size_t N, typename Alloc>
+inline bool operator ==(const array<T, N, Alloc>& lh, const array<T, N, Alloc>& rh){
+	return equal(lh.const_begin(), lh.const_end(), rh.const_begin());
+}
+template <typename T, size_t N, typename Alloc>
+inline bool operator !=(const array<T, N, Alloc>& lh, const array<T, N, Alloc>& rh) {
+	return not equal(lh.const_begin(), lh.const_end(), rh.const_begin());
+}
 
 template <typename T, size_t N, typename Alloc>
 std::ostream& operator <<(std::ostream& _out, const array<T, N, Alloc>& _arr) {
@@ -158,5 +158,5 @@ std::ostream& operator <<(std::ostream& _out, const array<T, N, Alloc>& _arr) {
 }
 MSTL_END_NAMESPACE__
 
-#endif
+#endif // MSTL_ARRAY_HPP__
 

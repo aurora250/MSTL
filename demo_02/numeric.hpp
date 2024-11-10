@@ -1,5 +1,5 @@
-#ifndef NUMERIC_H
-#define NUMERIC_H
+#ifndef MSTL_NUMERIC_HPP__
+#define MSTL_NUMERIC_HPP__
 #include "functor.hpp"
 
 MSTL_BEGIN_NAMESPACE__
@@ -108,5 +108,5 @@ void iota(ForwardIterator first, ForwardIterator last, T value) {
 
 MSTL_END_NAMESPACE__
 
-#endif // NUMERIC_H
+#endif // MSTL_NUMERIC_HPP__
 

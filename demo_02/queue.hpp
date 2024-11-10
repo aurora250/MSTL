@@ -1,5 +1,5 @@
-#ifndef QUEUE_H
-#define QUEUE_H
+#ifndef MSTL_QUEUE_HPP__
+#define MSTL_QUEUE_HPP__
 #include "deque.hpp"
 
 MSTL_BEGIN_NAMESPACE__
@@ -58,4 +58,4 @@ bool operator<(const queue<T, Sequence>& x, const queue<T, Sequence>& y) {
 
 MSTL_END_NAMESPACE__
 
-#endif // QUEUE_H
+#endif // MSTL_QUEUE_HPP__

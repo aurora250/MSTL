@@ -1,5 +1,5 @@
-#ifndef STACK_H
-#define STACK_H
+#ifndef MSTL_STACK_HPP__
+#define MSTL_STACK_HPP__
 #include "deque.hpp"
 
 MSTL_BEGIN_NAMESPACE__
@@ -57,4 +57,4 @@ bool operator<(const stack<T, Sequence>& x, const stack<T, Sequence>& y) {
 
 MSTL_END_NAMESPACE__
 
-#endif // STACK_H
+#endif // MSTL_STACK_HPP__

@@ -1,5 +1,5 @@
-#ifndef DEPOSITARY_H
-#define DEPOSITARY_H
+#ifndef MSTL_DEPOSITARY_H__
+#define MSTL_DEPOSITARY_H__
 #include <functional>
 #include <unordered_map>
 #include <string>
@@ -56,4 +56,4 @@ private:
 
 MSTL_END_NAMESPACE__
 
-#endif
+#endif // MSTL_DEPOSITARY_H__

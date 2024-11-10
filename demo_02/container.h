@@ -1,5 +1,5 @@
-#ifndef BASE_CONTAINER_H
-#define BASE_CONTAINER_H
+#ifndef MSTL_CONTAINER_H__
+#define MSTL_CONTAINER_H__
 #include "object.h"
 #include <iostream>
 
@@ -23,4 +23,4 @@ public:
 
 MSTL_END_NAMESPACE__
 
-#endif // BASE_CONTAINER_H
+#endif // MSTL_CONTAINER_H__

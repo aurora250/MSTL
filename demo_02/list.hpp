@@ -1,7 +1,7 @@
-#ifndef LINKEDLIST_HPP
-#define LINKEDLIST_HPP
+#ifndef MSTL_LIST_HPP__
+#define MSTL_LIST_HPP__
 #include "container.h"
-#include "memmory.hpp"
+#include "memory.hpp"
 #include <memory>
 
 MSTL_BEGIN_NAMESPACE__
@@ -378,4 +378,4 @@ std::ostream& operator <<(std::ostream& _out, const list<T, Alloc>& _list) {
 
 MSTL_END_NAMESPACE__
 
-#endif
+#endif // MSTL_LIST_HPP__

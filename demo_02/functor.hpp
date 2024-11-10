@@ -1,5 +1,5 @@
-#ifndef FUNCTOR_H
-#define FUNCTOR_H
+#ifndef MSTL_FUNCTOR_HPP__
+#define MSTL_FUNCTOR_HPP__
 #include <iostream>
 #include "basiclib.h"
 
@@ -122,4 +122,4 @@ struct project2nd : public binary_function<Arg1, Arg2, Arg2> {
 
 MSTL_END_NAMESPACE__
 
-#endif // FUNCTOR_H
+#endif // MSTL_FUNCTOR_HPP__

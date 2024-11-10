@@ -1,9 +1,9 @@
-#ifndef DEQUE_H
-#define DEQUE_H
+#ifndef MSTL_DEQUE_HPP__
+#define MSTL_DEQUE_HPP__
 #include <iterator>
 #include "container.h"
 #include "basiclib.h"
-#include "memmory.hpp"
+#include "memory.hpp"
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -568,4 +568,4 @@ std::ostream& operator <<(std::ostream& _out, const MSTL::deque<T, Alloc, BufSiz
     return _out;
 }
 
-#endif // DEQUE_H
+#endif // MSTL_DEQUE_HPP__

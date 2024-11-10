@@ -1,9 +1,6 @@
-#ifndef DATABASE_H
-#define DATABASE_H
+#ifndef MSTL_DATABASE_H
+#define MSTL_DATABASE_H
 #include <mysql/client_plugin.h>
 
-namespace MSTL {
 
-}
-
-#endif // DATABASE_H
+#endif // MSTL_DATABASE_H

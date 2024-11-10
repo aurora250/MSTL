@@ -1,4 +1,4 @@
-﻿#include "mstlc++.h"
+﻿#include "mstlc++.hpp"
 #include <iostream>
 
 void try_lls();
@@ -226,10 +226,7 @@ void try_pque() {
     q.__det__();
 }
 
-int main()
-{
+int main() {
     try_deq();
-    /*int a[3] = { 1, 2 ,3 };
-    std::copy(a, a + 3, std::ostream_iterator<int>(std::cout, " "));*/
 }
 

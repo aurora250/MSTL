@@ -1,5 +1,5 @@
-#ifndef PRIORITY_QUEUE_H
-#define PRIORITY_QUEUE_H
+#ifndef MSTL_PRIORITY_QUEUE_HPP__
+#define MSTL_PRIORITY_QUEUE_HPP__
 #include "functor.hpp"
 #include "vector.hpp"
 #include "heap.hpp"
@@ -70,4 +70,4 @@ const char* const priority_queue<T, Sequence, Compare>::__type__ = "priority_que
 
 MSTL_END_NAMESPACE__
 
-#endif
+#endif // MSTL_PRIORITY_QUEUE_HPP__

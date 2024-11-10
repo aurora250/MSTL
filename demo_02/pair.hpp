@@ -1,5 +1,5 @@
-#ifndef PAIR_H
-#define PAIR_H
+#ifndef MSTL_PAIR_HPP__
+#define MSTL_PAIR_HPP__
 #include "object.h"
 #include <iostream>
 
@@ -7,12 +7,14 @@ MSTL_BEGIN_NAMESPACE__
 
 template <typename T1, typename T2>
 struct pair : public object {
-public:
 	typedef T1				first_type;
 	typedef T2				second_type;
 	typedef pair<T1, T2>	self;
 
+	T1 first;
+	T2 second;
 	static const char* const __type__;
+
 	inline void __show_data_only(std::ostream& _out) const {
 		_out << "first: " << this->first << std::endl;
 		_out << "second: " << this->second;
@@ -25,75 +27,41 @@ public:
 		_out << std::endl;
 		split_line(_out);
 	}
-	first_type first;
-	second_type second;
-	explicit pair(const first_type& _f = first_type(), const second_type& _s = second_type()) :
-		first(_f), second(_s) {}
-	explicit pair(const self& _p) : first(_p.first), second(_p.second) {}
-	explicit pair(self&& _p) {
-		this->swap(std::forward<self>(_p));
-	}
-	~pair() = default;
-	void swap(self&& _p) noexcept {
-		std::swap(this->first, _p.first);
-		std::swap(this->second, _p.second);
-	}
-	bool empty() const { return false; }
+
+	pair() : first(T1()), second(T2()) {}
+	pair(const T1& a, const T2& b) : first(a), second(b) {}
+	template <class U1, class U2>
+	pair(const pair<U1, U2>& p) : first(p.first), second(p.second) {}
 	self& operator =(const self& _p) {
 		if (*this == _p) return *this;
 		this->first = _p.first;
 		this->second = _p.second;
 		return *this;
 	}
-	bool operator >(const self& _p) const {
-		if (this->first > _p.first) return true;
-		else if (this->first == _p.first) {
-			if (this->second > _p.second) return true;
-			else return false;
-		}
-		else return false;
-	}
-	bool operator <(const self& _p) const {
-		if (this->first < _p.first) return true;
-		else if (this->first == _p.first) {
-			if (this->second < _p.second) return true;
-			else return false;
-		}
-		else return false;
-	}
-	bool operator ==(const self& _p) const {
-		return this->first == _p.first && this->second == _p.second;
-	}
-	bool operator !=(const self& _p) const {
-		return not (*this == _p);
-	}
-	bool operator >=(const self& _p) const {
-		return not (*this < _p);
-	}
-	bool operator <=(const self& _p) const {
-		return not (*this > _p);
-	}
+	~pair() = default;
 };
-
 template <typename T1, typename T2>
 const char* const pair<T1, T2>::__type__ = "pair";
+
+template <class T1, class T2>
+inline bool operator==(const pair<T1, T2>& x, const pair<T1, T2>& y) {
+	return x.first == y.first && x.second == y.second;
+}
+template <class T1, class T2>
+inline bool operator<(const pair<T1, T2>& x, const pair<T1, T2>& y) {
+	return x.first < y.first || (!(y.first < x.first) && x.second < y.second);
+}
+template <class T1, class T2>
+inline pair<T1, T2> make_pair(const T1& x, const T2& y) {
+	return pair<T1, T2>(x, y);
+}
 
 template <typename T1, typename T2>
 std::ostream& operator <<(std::ostream& _out, const pair<T1, T2>& _p) {
 	_p.__show_data_only(_out);
 	return _out;
 }
-template <typename T1, typename T2>
-std::istream& operator >>(std::istream& _in, pair<T1, T2>& _p) {
-	_in << _p.first << _p.second;
-	return _in;
-}
-
-template <typename T1, typename T2>
-pair<T1, T2> make_pair(T1 _f, T2 _s) {
-	return pair<T1, T2>(_f, _s);
-}
 
 MSTL_END_NAMESPACE__
 
-#endif
+#endif // MSTL_PAIR_HPP__

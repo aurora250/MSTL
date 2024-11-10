@@ -95,7 +95,7 @@
     <ClInclude Include="functor.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="mstlc++.h">
+    <ClInclude Include="mstlc++.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="function_adapter.hpp">
@@ -110,10 +110,10 @@
     <ClInclude Include="deque.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="basemstlc++.h">
+    <ClInclude Include="basemstlc++.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="memmory.hpp">
+    <ClInclude Include="memory.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="stack.hpp">
@@ -135,6 +135,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="heap.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="set.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="map.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

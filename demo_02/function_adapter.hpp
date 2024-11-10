@@ -1,9 +1,6 @@
-#ifndef FUNCTION_ADAPTER_H
-#define FUNCTION_ADAPTER_H
+#ifndef FUNCTION_ADAPTER_HPP__
+#define FUNCTION_ADAPTER_HPP__
 #include "functor.hpp"
 
-namespace MSTL {
 
-}
-
-#endif // FUNCTION_ADAPTER_H
+#endif // FUNCTION_ADAPTER_HPP__

@@ -1,8 +1,12 @@
-#ifndef ITERATOR_ADAPTER_H
-#define ITERATOR_ADAPTER_H
+#ifndef MSTL_ITERATOR_ADAPTER_H
+#define MSTL_ITERATOR_ADAPTER_H
+#include "iterator.hpp"
+#include "basiclib.h"
 
-namespace MSTL {
+MSTL_BEGIN_NAMESPACE__
 
-}
 
-#endif // ITERATOR_ADAPTER_H
+
+MSTL_END_NAMESPACE__
+
+#endif // MSTL_ITERATOR_ADAPTER_H
