@@ -1,5 +1,6 @@
 ﻿#include "mstlc++.hpp"
 #include <iostream>
+#include <thread>
 
 void try_lls();
 void try_arr() {
@@ -201,7 +202,9 @@ void try_vec() {
         MSTL_TRY__{
             out(v[10]);
         }
-        MSTL_CATCH_ERROR__();
+        MSTL_CATCH_ERROR__{
+            std::cout << "err" << std::endl;
+        }
         v.insert(v.end(), v2.const_begin(), v2.const_end());
         v2.__det__();
         v.__det__();
@@ -214,7 +217,9 @@ void try_vec() {
         c->__det__();
         MSTL_EXEC_MEMORY__
     }
-    MSTL_CATCH_ERROR__(std::cout << "err")
+    MSTL_CATCH_ERROR__{
+
+    }
 }
 void try_pque() {
     MSTL_USE_SPACE__;
@@ -227,6 +232,8 @@ void try_pque() {
 }
 
 int main() {
-    try_deq();
+    try_vec();
+    //unsigned int n = std::thread::hardware_concurrency();
+    //std::cout << "支持 " << n << " 线程。\n";
 }
 

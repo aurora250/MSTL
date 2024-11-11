@@ -25,7 +25,7 @@ struct _rb_tree_node_base {
     static base_ptr minimum(base_ptr x);
     static base_ptr maximum(base_ptr x);
 };
-template <class T>
+template <typename T>
 struct _rb_tree_node : public _rb_tree_node_base {
     typedef _rb_tree_node<T>*   link_type;
     typedef T                   value_type;
@@ -42,15 +42,15 @@ struct _rb_tree_base_iterator {
     void decrement();
 };
 
-template<class T, class Ref = T&, class Ptr = T*>
+template<typename T, typename Ref = T&, typename Ptr = T*>
 struct rb_tree_iterator : public _rb_tree_base_iterator {
     typedef T                                       value_type;
     typedef Ref                                     reference;
     typedef Ptr                                     pointer;
-    typedef rb_tree_iterator<T, T&, T*>            iterator;
-    typedef rb_tree_iterator<T, const T&, const T> const_iterator;
+    typedef rb_tree_iterator<T, T&, T*>             iterator;
+    typedef rb_tree_iterator<T, const T&, const T>  const_iterator;
     typedef const T&                                const_reference;
-    typedef rb_tree_iterator<T, Ref, Ptr>          self;
+    typedef rb_tree_iterator<T, Ref, Ptr>           self;
     typedef _rb_tree_node<T>*                       link_type;
 
     rb_tree_iterator() {}
@@ -152,6 +152,7 @@ private:
     static link_type& left(link_type x) { return (link_type&)(x->left); }
     static link_type& right(link_type x) { return (link_type&)(x->right); }
     static link_type& parent(link_type x) { return (link_type&)(x->parent); }
+
     static reference value(link_type x) { return x->value_field; }
     static const Key& key(link_type x) { return KeyOfValue()(value(x)); }
     static color_type& color(link_type x) { return (color_type&)(x->color); }
@@ -492,12 +493,12 @@ public:
         return true;
     }
 };
-template <class Key, class Value, class KeyOfValue, class Compare, class Alloc>
+template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 inline bool operator ==(const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) {
     return x.size() == y.size() && equal(x.const_begin(), x.const_end(), y.const_begin());
 }
-template <class Key, class Value, class KeyOfValue, class Compare, class Alloc>
+template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 inline bool operator <(const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) {
     return lexicographical_compare(x.const_begin(), x.const_end(), y.const_begin(), y.const_end());

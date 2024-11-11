@@ -10,7 +10,7 @@
 
 MSTL_BEGIN_NAMESPACE__
 
-template<class T, class Alloc = simple_alloc<T, std::allocator<T>>>
+template<typename T, typename Alloc = simple_alloc<T, std::allocator<T>>>
 class vector : public container {
 public:
 	typedef T					value_type;
@@ -77,7 +77,7 @@ private:
 		}
 		MSTL_CATCH_UNWIND_THROW_M__(alloc.deallocate(result, n))
 	}
-	template <class ForwardIterator>
+	template <typename ForwardIterator>
 	iterator allocate_and_copy(size_type n, ForwardIterator first, ForwardIterator last) {
 		iterator result = alloc.allocate(n);
 		MSTL_TRY__{
@@ -86,11 +86,11 @@ private:
 		}
 		MSTL_CATCH_UNWIND_THROW_M__(alloc.deallocate(result, n))
 	}
-	template <class InputIterator>
+	template <typename InputIterator>
 	void range_initialize(InputIterator first, InputIterator last, std::input_iterator_tag) {
 		for (; first != last; ++first) push_back(*first);
 	}
-	template <class ForwardIterator>
+	template <typename ForwardIterator>
 	void range_initialize(ForwardIterator first, ForwardIterator last, std::forward_iterator_tag) {
 		size_type n = 0;
 		distance(first, last, n);
@@ -129,7 +129,7 @@ private:
 		finish = new_finish;
 		end_of_storage = new_start + len;
 	}
-	template <class InputIterator>
+	template <typename InputIterator>
 	void range_insert(iterator pos, InputIterator first,
 					  InputIterator last, std::input_iterator_tag) {
 		for (; first != last; ++first) {
@@ -137,7 +137,7 @@ private:
 			++pos;
 		}
 	}
-	template <class ForwardIterator>
+	template <typename ForwardIterator>
 	void range_insert(iterator position, ForwardIterator first,
 					  ForwardIterator last, std::forward_iterator_tag) {
 		if (first == last) return;
@@ -188,13 +188,13 @@ public:
 		finish = start;
 		end_of_storage = finish;
 	}
-	explicit vector(size_type n) {
+	vector(size_type n) {
 		fill_initialize(n, T());
 	}
-	explicit vector(size_type n, const_reference value) {
+	vector(size_type n, const_reference value) {
 		fill_initialize(n, value);
 	}
-	explicit vector(int n, const_reference value) {
+	vector(int n, const_reference value) {
 		fill_initialize(n, value);
 	}
 	explicit vector(long n, const_reference value) {
@@ -206,7 +206,7 @@ public:
 		end_of_storage = finish;
 	}
 	explicit vector(const std::initializer_list<T>& l) : vector(l.begin(), l.end()) {}
-	template <class InputIterator>
+	template <typename InputIterator>
 	vector(InputIterator first, InputIterator last) : start(), finish(), end_of_storage() {
 		range_initialize(first, last, iterator_category(first));
 	}
@@ -316,7 +316,7 @@ public:
 	iterator insert(iterator position) {
 		return insert(position, T());
 	}
-	template <class InputIterator>
+	template <typename InputIterator>
 	void insert(iterator position, InputIterator first, InputIterator last) {
 		range_insert(position, first, last, iterator_category(first));
 	}

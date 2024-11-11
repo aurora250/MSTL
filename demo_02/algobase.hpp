@@ -125,7 +125,6 @@ inline OutputIterator __copy(InputIterator first, InputIterator last,
 template <typename RandomAccessIterator, typename OutputIterator>
 inline OutputIterator __copy(RandomAccessIterator first, RandomAccessIterator last,
 	OutputIterator result, std::random_access_iterator_tag) {
-	//using difference_type = std::iterator_traits<RandomAccessIterator>::difference_type;
 	return __copy_d(first, last, result, distance_type(first));
 }
 template <typename T>
@@ -140,7 +139,6 @@ inline T* __copy_t(const T* first, const T* last, T* result, __false_type) {
 template <typename InputIterator, typename OutputIterator>
 struct __copy_dispatch {
 	OutputIterator operator ()(InputIterator first, InputIterator last, OutputIterator result) {
-		//using iterator_category = std::iterator_traits<InputIterator>::iterator_category;
 		return __copy(first, last, result, iterator_category(first));
 	}
 };

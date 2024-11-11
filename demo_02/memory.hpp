@@ -6,26 +6,26 @@
 
 MSTL_BEGIN_NAMESPACE__
 
-template <class T>
+template <typename T>
 inline void destroy(T* pointer) {
     pointer->~T();
 }
-template <class T1, class T2>
+template <typename T1, typename T2>
 inline void construct(T1* p, const T2& value) {
     new (p) T1(value);
 }
-template <class ForwardIterator>
+template <typename ForwardIterator>
 inline void __destroy_aux(ForwardIterator first, ForwardIterator last, __false_type) {
     for (; first < last; ++first) destroy(&*first);
 }
-template <class ForwardIterator>
+template <typename ForwardIterator>
 inline void __destroy_aux(ForwardIterator, ForwardIterator, __true_type) {}
-template <class ForwardIterator, class T>
+template <typename ForwardIterator, typename T>
 inline void __destroy(ForwardIterator first, ForwardIterator last, T*) {
     typedef typename __type_traits<T>::has_trivial_destructor trivial_destructor;
     __destroy_aux(first, last, trivial_destructor());
 }
-template <class ForwardIterator>
+template <typename ForwardIterator>
 inline void destroy(ForwardIterator first, ForwardIterator last) {
     __destroy(first, last, value_type(first));
 }
@@ -55,12 +55,12 @@ public:
     }
 };
 
-template <class InputIterator, class ForwardIterator>
+template <typename InputIterator, typename ForwardIterator>
 inline ForwardIterator __uninitialized_copy_aux(InputIterator first, InputIterator last,
                                                 ForwardIterator result, __true_type) {
     return copy(first, last, result);
 }
-template <class InputIterator, class ForwardIterator>
+template <typename InputIterator, typename ForwardIterator>
 ForwardIterator __uninitialized_copy_aux(InputIterator first, InputIterator last,
                                          ForwardIterator result, __false_type) {
     ForwardIterator cur = result;
@@ -70,13 +70,13 @@ ForwardIterator __uninitialized_copy_aux(InputIterator first, InputIterator last
     }
     MSTL_CATCH_UNWIND_THROW_U__(destroy(result, cur))
 }
-template <class InputIterator, class ForwardIterator, class T>
+template <typename InputIterator, typename ForwardIterator, typename T>
 inline ForwardIterator __uninitialized_copy(InputIterator first, InputIterator last,
                                             ForwardIterator result, T*) {
     using is_POD = __type_traits<T>::is_POD_type;
     return __uninitialized_copy_aux(first, last, result, is_POD());
 }
-template <class InputIterator, class ForwardIterator>
+template <typename InputIterator, typename ForwardIterator>
 inline ForwardIterator uninitialized_copy(InputIterator first, InputIterator last,
                                           ForwardIterator result) {
     return __uninitialized_copy(first, last, result, value_type(result));
@@ -91,7 +91,7 @@ inline wchar_t* uninitialized_copy(const wchar_t* first, const wchar_t* last, wc
     return result + (last - first);
 }
 
-template <class InputIterator, class Size, class ForwardIterator>
+template <typename InputIterator, typename Size, typename ForwardIterator>
 pair<InputIterator, ForwardIterator>
 __uninitialized_copy_n(InputIterator first, Size count,
                        ForwardIterator result, std::input_iterator_tag) {
@@ -103,7 +103,7 @@ __uninitialized_copy_n(InputIterator first, Size count,
     }
     MSTL_CATCH_UNWIND_THROW_U__(destroy(result, cur))
 }
-template <class RandomAccessIterator, class Size, class ForwardIterator>
+template <typename RandomAccessIterator, typename Size, typename ForwardIterator>
 inline pair<RandomAccessIterator, ForwardIterator>
 __uninitialized_copy_n(RandomAccessIterator first, Size count,
     ForwardIterator result, std::random_access_iterator_tag) {
@@ -111,18 +111,18 @@ __uninitialized_copy_n(RandomAccessIterator first, Size count,
     return make_pair(last, uninitialized_copy(first, last, result));
 }
 
-template <class InputIterator, class Size, class ForwardIterator>
+template <typename InputIterator, typename Size, typename ForwardIterator>
 inline pair<InputIterator, ForwardIterator>
 uninitialized_copy_n(InputIterator first, Size count, ForwardIterator result) {
     return __uninitialized_copy_n(first, count, result, iterator_category(first));
 }
 
-template <class ForwardIterator, class T>
+template <typename ForwardIterator, typename T>
 inline void __uninitialized_fill_aux(ForwardIterator first, ForwardIterator last,
     const T& x, __true_type) {
     fill(first, last, x);
 }
-template <class ForwardIterator, class T>
+template <typename ForwardIterator, typename T>
 void __uninitialized_fill_aux(ForwardIterator first, ForwardIterator last,
     const T& x, __false_type) {
     ForwardIterator cur = first;
@@ -131,23 +131,23 @@ void __uninitialized_fill_aux(ForwardIterator first, ForwardIterator last,
     }
     MSTL_CATCH_UNWIND_THROW_U__(destroy(first, cur))
 }
-template <class ForwardIterator, class T, class V>
+template <typename ForwardIterator, typename T, typename V>
 inline void __uninitialized_fill(ForwardIterator first, ForwardIterator last,
     const T& x, V*) {
     using is_POD = __type_traits<V>::is_POD_type;
     __uninitialized_fill_aux(first, last, x, is_POD());
 }
-template <class ForwardIterator, class T>
+template <typename ForwardIterator, typename T>
 inline void uninitialized_fill(ForwardIterator first, ForwardIterator last, const T& x) {
     __uninitialized_fill(first, last, x, value_type(first));
 }
 
-template <class ForwardIterator, class Size, class T>
+template <typename ForwardIterator, typename Size, typename T>
 inline ForwardIterator __uninitialized_fill_n_aux(ForwardIterator first, Size n,
     const T& x, __true_type) {
     return fill_n(first, n, x);
 }
-template <class ForwardIterator, class Size, class T>
+template <typename ForwardIterator, typename Size, typename T>
 ForwardIterator __uninitialized_fill_n_aux(ForwardIterator first, Size n,
     const T& x, __false_type) {
     ForwardIterator cur = first;
@@ -157,18 +157,18 @@ ForwardIterator __uninitialized_fill_n_aux(ForwardIterator first, Size n,
     }
     MSTL_CATCH_UNWIND_THROW_U__(destroy(first, cur))
 }
-template <class ForwardIterator, class Size, class T, class V>
+template <typename ForwardIterator, typename Size, typename T, typename V>
 inline ForwardIterator __uninitialized_fill_n(ForwardIterator first, Size n, const T& x, V*) {
     using is_POD = __type_traits<T>::is_POD_type;
     return __uninitialized_fill_n_aux(first, n, x, is_POD());
 }
 
-template <class ForwardIterator, class Size, class T>
+template <typename ForwardIterator, typename Size, typename T>
 inline ForwardIterator uninitialized_fill_n(ForwardIterator first, Size n, const T& x) {
     return __uninitialized_fill_n(first, n, x, value_type(first));
 }
 
-template <class InputIterator1, class InputIterator2, class ForwardIterator>
+template <typename InputIterator1, typename InputIterator2, typename ForwardIterator>
 inline ForwardIterator __uninitialized_copy_copy(InputIterator1 first1, InputIterator1 last1,
     InputIterator2 first2, InputIterator2 last2,
     ForwardIterator result) {
@@ -179,7 +179,7 @@ inline ForwardIterator __uninitialized_copy_copy(InputIterator1 first1, InputIte
     MSTL_CATCH_UNWIND_THROW_U__(destroy(result, mid))
 }
 
-template <class ForwardIterator, class T, class InputIterator>
+template <typename ForwardIterator, typename T, typename InputIterator>
 inline ForwardIterator __uninitialized_fill_copy(ForwardIterator result, ForwardIterator mid, const T& x,
     InputIterator first, InputIterator last) {
     uninitialized_fill(result, mid, x);
@@ -189,7 +189,7 @@ inline ForwardIterator __uninitialized_fill_copy(ForwardIterator result, Forward
     MSTL_CATCH_UNWIND_THROW_U__(destroy(result, mid))
 }
 
-template <class InputIterator, class ForwardIterator, class T>
+template <typename InputIterator, typename ForwardIterator, typename T>
 inline void __uninitialized_copy_fill(InputIterator first1, InputIterator last1,
     ForwardIterator first2, ForwardIterator last2, const T& x) {
     ForwardIterator mid2 = uninitialized_copy(first1, last1, first2);

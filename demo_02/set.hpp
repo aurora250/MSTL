@@ -29,15 +29,15 @@ public:
 	typedef set<Key, Compare, Alloc>			self;
 private:
 	rep_type t;
-
+	Compare comp;
 public:
 	set() : t(Compare()) {}
 	explicit set(const Compare& comp) : t(comp) {}
-	template <class InputIterator>
+	template <typename InputIterator>
 	set(InputIterator first, InputIterator last) : t(Compare()) {
 		t.insert_unique(first, last);
 	}
-	template <class InputIterator>
+	template <typename InputIterator>
 	set(InputIterator first, InputIterator last, const Compare& comp) : t(comp) {
 		t.insert_unique(first, last);
 	}
@@ -64,7 +64,7 @@ public:
 	iterator insert(iterator position, const value_type& x) {
 		return t.insert_unique((rep_iterator&)position, x);
 	}
-	template <class InputIterator>
+	template <typename InputIterator>
 	void insert(InputIterator first, InputIterator last) {
 		t.insert_unique(first, last);
 	}
@@ -101,11 +101,11 @@ public:
 	friend bool operator <(const set&, const set&);
 };
 
-template <class Key, class Compare, class Alloc>
+template <typename Key, typename Compare, typename Alloc>
 inline bool operator==(const set<Key, Compare, Alloc>& x, const set<Key, Compare, Alloc>& y) {
 	return x.t == y.t;
 }
-template <class Key, class Compare, class Alloc>
+template <typename Key, typename Compare, typename Alloc>
 inline bool operator<(const set<Key, Compare, Alloc>& x, const set<Key, Compare, Alloc>& y) {
 	return x.t < y.t;
 }

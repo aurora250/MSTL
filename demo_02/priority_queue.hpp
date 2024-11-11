@@ -55,14 +55,14 @@ class priority_queue {
                 seq.push_back(x);
                 push_heap(seq.begin(), seq.end(), comp);
             }
-                MSTL_CATCH_UNWIND_THROW_M__(seq.clear())
+            MSTL_CATCH_UNWIND_THROW_M__(seq.clear())
         }
         void pop() {
             MSTL_TRY__{
                 pop_heap(seq.begin(), seq.end(), comp);
                 seq.pop_back();
             }
-                MSTL_CATCH_UNWIND_THROW_M__(seq.clear())
+            MSTL_CATCH_UNWIND_THROW_M__(seq.clear())
         }
 };
 template <typename T, typename Sequence, typename Compare>

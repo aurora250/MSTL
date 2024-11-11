@@ -560,12 +560,12 @@ public:
 template <typename T, typename Alloc, size_t BufSize>
 const char* const deque<T, Alloc, BufSize>::__type__ = "deque";
 
-MSTL_END_NAMESPACE__
-
 template <typename T, typename Alloc, size_t BufSize>
-std::ostream& operator <<(std::ostream& _out, const MSTL::deque<T, Alloc, BufSize>& _deq) {
+std::ostream& operator <<(std::ostream& _out, const deque<T, Alloc, BufSize>& _deq) {
     _deq.__show_data_only(_out);
     return _out;
 }
+
+MSTL_END_NAMESPACE__
 
 #endif // MSTL_DEQUE_HPP__

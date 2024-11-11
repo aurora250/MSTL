@@ -149,6 +149,7 @@
     <ClInclude Include="algobase.hpp" />
     <ClInclude Include="algorithm.hpp" />
     <ClInclude Include="database.h" />
+    <ClInclude Include="hashtable.h" />
     <ClInclude Include="heap.hpp" />
     <ClInclude Include="map.hpp" />
     <ClInclude Include="memory.hpp" />
@@ -160,7 +161,7 @@
     <ClInclude Include="check_type.h" />
     <ClInclude Include="deque.hpp" />
     <ClInclude Include="error.h" />
-    <ClInclude Include="function_adapter.hpp" />
+    <ClInclude Include="functional.hpp" />
     <ClInclude Include="functor.hpp" />
     <ClInclude Include="container.h" />
     <ClInclude Include="iterator_adapter.hpp" />

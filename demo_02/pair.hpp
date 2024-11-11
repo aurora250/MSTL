@@ -43,15 +43,15 @@ struct pair : public object {
 template <typename T1, typename T2>
 const char* const pair<T1, T2>::__type__ = "pair";
 
-template <class T1, class T2>
+template <typename T1, typename T2>
 inline bool operator==(const pair<T1, T2>& x, const pair<T1, T2>& y) {
 	return x.first == y.first && x.second == y.second;
 }
-template <class T1, class T2>
+template <typename T1, typename T2>
 inline bool operator<(const pair<T1, T2>& x, const pair<T1, T2>& y) {
 	return x.first < y.first || (!(y.first < x.first) && x.second < y.second);
 }
-template <class T1, class T2>
+template <typename T1, typename T2>
 inline pair<T1, T2> make_pair(const T1& x, const T2& y) {
 	return pair<T1, T2>(x, y);
 }

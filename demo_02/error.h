@@ -94,7 +94,7 @@ extern void Exit(bool _abort = false, void(__cdecl* _func)(void) = nullptr);
 		action; \
 		MSTL_EXEC_MEMORY__ \
 	};
-#define MSTL_CATCH_ERROR__(action) catch(Error e) { action; }
+#define MSTL_CATCH_ERROR__ catch(Error e)
 
 MSTL_END_NAMESPACE__
 
