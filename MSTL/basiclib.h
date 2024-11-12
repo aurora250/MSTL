@@ -1,7 +1,5 @@
 #ifndef MSTL_BASICLIB_H__
 #define MSTL_BASICLIB_H__
-#include <initializer_list>
-#include <type_traits>
 #include <iostream>
 
 #ifndef NULL
@@ -64,31 +62,6 @@ extern int memcmp(const void* _dest, const void* _rsc, int _byte);
 extern void* memmove(void* _dest, const void* _rsc, int _byte);
 extern void* memset(void* _dest, int _val, size_t _byte);
 extern size_t deque_buf_size(size_t n, size_t sz);
-
-template <typename T>
-void ostream_set(const std::initializer_list<T>& _vals,
-	bool _enter = false, std::ostream& _out = std::cout,
-	const char* _join = nullptr) {
-	auto _beg = _vals.begin();
-	size_t _size = _vals.size();
-	if (not _size == 0) {
-		if (_join) {
-			for (; _beg != _vals.end(); _beg++) {
-				_out << (*_beg) << std::flush;
-				if (--_size)
-					_out << _join << std::flush;
-			}
-			// or:
-			// #include <iterator>  #include <algorithm>
-			// std::copy(_vals.begin(), _vals.end(), std::ostream_iterator(std::cout, " "))
-		}
-		else {
-			for (; _beg != _vals.end(); _beg++)
-				_out << (*_beg) << std::flush;
-		}
-	}
-	if (_enter) _out << std::endl;
-}
 
 MSTL_END_NAMESPACE__
 

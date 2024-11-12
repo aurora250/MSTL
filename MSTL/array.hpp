@@ -152,8 +152,8 @@ inline bool operator !=(const array<T, N, Alloc>& lh, const array<T, N, Alloc>& 
 }
 
 template <typename T, size_t N, typename Alloc>
-std::ostream& operator <<(std::ostream& _out, const array<T, N, Alloc>& _arr) {
-	_arr.__show_data_only(_out);
+std::ostream& operator <<(std::ostream& _out, const array<T, N, Alloc>& _tar) {
+	_tar.__show_data_only(_out);
 	return _out;
 }
 MSTL_END_NAMESPACE__

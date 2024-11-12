@@ -138,7 +138,7 @@
     <ClCompile Include="basiclib.cpp" />
     <ClCompile Include="check_type.cpp" />
     <ClCompile Include="depositary.cpp" />
-    <ClCompile Include="demo_02.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="error.cpp" />
     <ClCompile Include="container.cpp" />
     <ClCompile Include="object.cpp" />

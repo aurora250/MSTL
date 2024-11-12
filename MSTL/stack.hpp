@@ -5,7 +5,7 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T, typename Sequence = deque<T>>
-class stack : public object {
+class stack : public container {
 public:
     typedef typename Sequence::value_type       value_type;
     typedef typename Sequence::difference_type  difference_type;
@@ -45,7 +45,6 @@ public:
 template<typename T, typename Sequence>
 const char* const stack<T, Sequence>::__type__ = "stack";
 
-
 template<typename T, typename Sequence>
 bool operator==(const stack<T, Sequence>& x, const stack<T, Sequence>& y) {
     return x.seq == y.seq;
@@ -53,6 +52,12 @@ bool operator==(const stack<T, Sequence>& x, const stack<T, Sequence>& y) {
 template<typename T, typename Sequence>
 bool operator<(const stack<T, Sequence>& x, const stack<T, Sequence>& y) {
     return x.seq < y.seq;
+}
+
+template<typename T, typename Sequence>
+std::ostream& operator <<(std::ostream& _out, const stack<T, Sequence>& _tar) {
+    _tar.__show_data_only(_out);
+    return _out;
 }
 
 MSTL_END_NAMESPACE__

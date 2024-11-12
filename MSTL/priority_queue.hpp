@@ -68,6 +68,12 @@ class priority_queue {
 template <typename T, typename Sequence, typename Compare>
 const char* const priority_queue<T, Sequence, Compare>::__type__ = "priority_queue";
 
+template <typename T, typename Sequence, typename Compare>
+std::ostream& operator <<(std::ostream& _out, const priority_queue<T, Sequence, Compare>& _prq) {
+    _prq.__show_data_only(_out);
+    return _out;
+}
+
 MSTL_END_NAMESPACE__
 
 #endif // MSTL_PRIORITY_QUEUE_HPP__

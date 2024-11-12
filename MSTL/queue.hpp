@@ -56,6 +56,12 @@ bool operator<(const queue<T, Sequence>& x, const queue<T, Sequence>& y) {
     return x.seq < y.seq;
 }
 
+template <typename T, typename Sequence>
+std::ostream& operator <<(std::ostream& _out, const queue<T, Sequence>& _tar) {
+    _tar.__show_data_only(_out);
+    return _out;
+}
+
 MSTL_END_NAMESPACE__
 
 #endif // MSTL_QUEUE_HPP__

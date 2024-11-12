@@ -147,6 +147,12 @@ inline bool operator <(const map<Key, T, Compare, Alloc>& x, const map<Key, T, C
 	return x.t < y.t;
 }
 
+template <class Key, class T, class Compare, class Alloc>
+std::ostream& operator <<(std::ostream& _out, const map<Key, T, Compare, Alloc>& _tar) {
+	_tar.__show_data_only(_out);
+	return _out;
+}
+
 MSTL_END_NAMESPACE__
 
 #endif // MSTL_MAP_HPP__

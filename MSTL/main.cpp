@@ -235,6 +235,7 @@ void try_map() {
     m[100] = 'x';
     m[2] = 'l';
     m.__det__();
+
 }
 
 int main() {

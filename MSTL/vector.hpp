@@ -364,6 +364,12 @@ public:
 template <typename T, typename Alloc>
 const char* vector<T, Alloc>::__type__ = "vector";
 
+template <typename T, typename Alloc>
+std::ostream& operator <<(std::ostream& _out, const vector<T, Alloc>& _tar) {
+	_tar.__show_data_only(_out);
+	return _out;
+}
+
 MSTL_END_NAMESPACE__
 
 #endif // MSTL_VECTOR_HPP__
