@@ -55,14 +55,15 @@ typedef int ptrdiff_t;
 typedef int intptr_t;
 #endif // __linux__
 
-extern void repect_ostm_str(const char* _str, std::ostream& _out = std::cout, size_t _size = 10);
-extern void repect_ostm_chr(char _chr, std::ostream& _out = std::cout, size_t _size = 10);
-extern void split_line(std::ostream& _out = std::cout, size_t _size = 10);
+extern void repect_ostm_str(const char* _str, std::ostream& _out, size_t _size);
+extern void repect_ostm_chr(char _chr, std::ostream& _out, size_t _size);
+extern void split_line(std::ostream& _out = std::cout, size_t _size = 15);
 
 extern void* memcpy(void* _dest, void* _rsc, int _byte);
 extern int memcmp(const void* _dest, const void* _rsc, int _byte);
 extern void* memmove(void* _dest, const void* _rsc, int _byte);
 extern void* memset(void* _dest, int _val, size_t _byte);
+extern size_t deque_buf_size(size_t n, size_t sz);
 
 template <typename T>
 void ostream_set(const std::initializer_list<T>& _vals,

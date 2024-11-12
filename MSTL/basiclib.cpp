@@ -4,15 +4,13 @@
 MSTL_BEGIN_NAMESPACE__
 
 inline void repect_ostm_str(const char* _str, std::ostream& _out, size_t _size) throw(ValueError) {
-	Exception(_size > 0 && _str, new ValueError());
 	while (_size-- != 0) _out << _str;
 }
 inline void repect_ostm_chr(char _chr, std::ostream& _out, size_t _size) throw(ValueError) {
-	Exception(_size > 0 && _chr, new ValueError());
 	while (_size-- != 0) _out << _chr;
 }
 inline void split_line(std::ostream& _out, size_t _size) throw(ValueError) {
-	repect_ostm_chr('-', _out);
+	repect_ostm_chr('-', _out, _size);
 	_out << std::endl;
 }
 void* memcpy(void* _dest, void* _rsc, int _byte) throw(ValueError) {
@@ -60,6 +58,9 @@ void* memset(void* _dest, int _val, size_t _size) throw(ValueError) {
 		_dest = (char*)_dest + 1;
 	}
 	return ret;
+}
+inline size_t deque_buf_size(size_t n, size_t sz) {
+	return n != 0 ? n : (sz < 512 ? size_t(512 / sz) : 1);
 }
 
 MSTL_END_NAMESPACE__

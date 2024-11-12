@@ -79,8 +79,14 @@ struct rb_tree_iterator : public _rb_tree_base_iterator {
         return tmp;
     }
 };
-bool operator ==(const _rb_tree_base_iterator& x, const _rb_tree_base_iterator& y);
-bool operator !=(const _rb_tree_base_iterator& x, const _rb_tree_base_iterator& y);
+inline bool operator ==(const _rb_tree_base_iterator& x,
+    const _rb_tree_base_iterator& y) {
+    return x.node == y.node;
+}
+inline bool operator !=(const _rb_tree_base_iterator& x,
+    const _rb_tree_base_iterator& y) {
+    return x.node != y.node;
+}
 
 void __rb_tree_rotate_left(_rb_tree_node_base* x, _rb_tree_node_base*& root);
 void __rb_tree_rotate_right(_rb_tree_node_base* x, _rb_tree_node_base*& root);
@@ -89,11 +95,13 @@ _rb_tree_node_base* __rb_tree_rebalance_for_erase(
     _rb_tree_node_base* z, _rb_tree_node_base*& root,
     _rb_tree_node_base*& leftmost, _rb_tree_node_base*& rightmost);
 
-inline int __black_count(_rb_tree_node_base* node, _rb_tree_node_base* root);
+int __black_count(_rb_tree_node_base* node, _rb_tree_node_base* root);
 
-template <typename Key, typename Value, typename KeyOfValue, typename Compare,
+
+
+template <typename Key, typename Value, typename KeyOfValue, typename Compare, 
     typename Alloc = std::allocator<_rb_tree_node<Value>> >
-class rb_tree : public container {
+class rb_tree {
 private:
     typedef void*                               void_pointer;
     typedef _rb_tree_node_base*                 base_ptr;
@@ -113,6 +121,8 @@ public:
     typedef rb_tree<Key, Value, KeyOfValue, Compare, Alloc>                 self;
     typedef rb_tree_iterator<value_type, reference, pointer>                iterator;
     typedef rb_tree_iterator<value_type, const_reference, const_pointer>    const_iterator;
+
+    static const char* const __type__;
 private:
     size_type node_count;
     link_type header;
@@ -220,7 +230,6 @@ private:
         leftmost() = header;
         rightmost() = header;
     }
-
 public:
     rb_tree(const Compare& comp = Compare()) : node_count(0), key_compare(comp) {
         init();
@@ -275,6 +284,7 @@ public:
     bool empty() const { return node_count == 0; }
     Compare key_comp() const { return key_compare; }
     size_type size() const { return node_count; }
+    size_type max_height() const { return 2 * log2(node_count + 1); }
 
     pair<iterator, bool> insert_unique(const_reference v) {
         link_type y = header;
@@ -291,7 +301,7 @@ public:
                 return pair<iterator, bool>(__insert(x, y, v), true);
             else --j;
         }
-        if (key_compare(key(j.node), KeyOfValue()(v)))
+        if (key_compare(key(link_type(j.node)), KeyOfValue()(v)))
             return pair<iterator, bool>(__insert(x, y, v), true);
         return pair<iterator, bool>(j, false);
     }
@@ -493,6 +503,9 @@ public:
         return true;
     }
 };
+template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
+const char* const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::__type__ = "rb_tree";
+
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 inline bool operator ==(const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) {

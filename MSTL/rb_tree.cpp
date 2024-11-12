@@ -43,14 +43,6 @@ void _rb_tree_base_iterator::decrement() {
         node = y;
     }
 }
-inline bool operator ==(const _rb_tree_base_iterator& x,
-    const _rb_tree_base_iterator& y) {
-    return x.node == y.node;
-}
-inline bool operator !=(const _rb_tree_base_iterator& x,
-    const _rb_tree_base_iterator& y) {
-    return x.node != y.node;
-}
 
 void __rb_tree_rotate_left(_rb_tree_node_base* x, _rb_tree_node_base*& root) {
     _rb_tree_node_base* y = x->right;
@@ -234,7 +226,7 @@ _rb_tree_node_base* __rb_tree_rebalance_for_erase(
     return y;
 }
 
-inline int __black_count(_rb_tree_node_base* node, _rb_tree_node_base* root) {
+int __black_count(_rb_tree_node_base* node, _rb_tree_node_base* root) {
     if (node == 0) return 0;
     else {
         int bc = node->color == __rb_tree_black ? 1 : 0;

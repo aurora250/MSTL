@@ -8,7 +8,7 @@
 MSTL_BEGIN_NAMESPACE__
 
 namespace concepts {
-#ifdef _HAS_CXX20
+#if MSTL_SUPPORT_CONCEPTS__
 	template <typename T>
 	concept MSTL_TYPE = requires(T _mstl) {
 		T::__type__;
@@ -74,7 +74,7 @@ namespace concepts {
 	concept Float = std::is_floating_point<T>::value;
 	template <typename T>
 	concept Number = std::integral<T> || std::floating_point<T> || std::unsigned_integral<T>;
-#endif // _HAS_CXX20
+#endif // MSTL_SUPPORT_CONCEPTS__
 }
 
 MSTL_END_NAMESPACE__

@@ -1,7 +1,8 @@
 #ifndef MSTL_MEMORY_HPP__
 #define MSTL_MEMORY_HPP__
+#include <memory>
 #include "iterator.hpp"
-#include "algobase.hpp"
+#include "algobase.h"
 #include "error.h"
 
 MSTL_BEGIN_NAMESPACE__
@@ -37,21 +38,19 @@ class simple_alloc {
 public:
     typedef T       value_type;
     typedef Alloc   data_allocator;
-
     data_allocator alloc;
 
-    ~simple_alloc() = default;
     T* allocate(const size_t n) {
         return 0 == n ? 0 : (T*)alloc.allocate(n * sizeof(T));
     }
     T* allocate(void) {
         return (T*)alloc.allocate(sizeof(T));
     }
-    void deallocate(T* const p, const size_t n) {
-        if (0 != n)alloc.deallocate(p, n * sizeof(T));
-    }
     void deallocate(T* const p) {
         alloc.deallocate(p, sizeof(T));
+    }
+    void deallocate(T* const p, const size_t n) {
+        if (n != 0)alloc.deallocate(p, n * sizeof(T));
     }
 };
 

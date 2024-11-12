@@ -62,9 +62,7 @@ void try_pir() {
     MSTL::pair<int, MSTL::string> p(1, s);
     MSTL::pair<int, MSTL::string> p2(p);
     p.first = 10;
-    std::cout << p.first << ' ' << p.second << std::endl;
-    p.__det__();
-    p2.__det__();
+    std::cout << p << std::endl;
 }
 class Foo {};
 void try_check() {
@@ -230,9 +228,18 @@ void try_pque() {
     q.pop();
     q.__det__();
 }
+void try_map() {
+    MSTL_USE_SPACE__;
+    map<int, char> m;
+    m[1] = 'c';
+    m[100] = 'x';
+    m[2] = 'l';
+    m.__det__();
+}
 
 int main() {
-    try_vec();
+    MSTL_USE_SPACE__
+    try_map();
     //unsigned int n = std::thread::hardware_concurrency();
     //std::cout << "支持 " << n << " 线程。\n";
 }

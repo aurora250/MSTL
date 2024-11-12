@@ -10,17 +10,16 @@ MSTL_BEGIN_NAMESPACE__
 
 class _base_deposit {
 public:
-	virtual ~_base_deposit();
+	virtual ~_base_deposit() = 0;
 };
 
-#if _HAS_CXX20
+#if MSTL_SUPPORT_CONCEPTS__
 using namespace MSTL::concepts;
-template<NVoidT T, class... Args>
+template <NVoidT T, typename... Args>
 #else
-template <typename T, class... Args>
-#endif // _HAS_CXX20
-class deposit : public _base_deposit
-{
+template <typename T, typename... Args>
+#endif // MSTL_SUPPORT_CONCEPTS__
+class deposit : public _base_deposit {
 	using Func = std::function<T(Args...)>;
 public:
 	deposit(Func _func) : _func(_func) {}
@@ -29,13 +28,13 @@ private:
 	Func _func;
 };
 
-class depositary
-{
+class depositary {
 	using _base_deposit_ptr = std::shared_ptr<_base_deposit>;
 public:
 	template<class DeposT>
 	void register_deposit(const std::string& _register_name, const DeposT& _target) {
-		_deposit_map.insert(std::pair<std::string, _base_deposit_ptr>(_register_name, _base_deposit_ptr(new DeposT(_target))));
+		_deposit_map.insert(std::pair<std::string, _base_deposit_ptr>
+			(_register_name, _base_deposit_ptr(new DeposT(_target))));
 	};
 
 	template<class T, class... Args>

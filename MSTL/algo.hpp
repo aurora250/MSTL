@@ -1,6 +1,6 @@
 #ifndef MSTL_ALGO_HPP__
 #define MSTL_ALGO_HPP__
-#include "algobase.hpp"
+#include "algobase.h"
 #include "heap.hpp"
 #include "basiclib.h"
 

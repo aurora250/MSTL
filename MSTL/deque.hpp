@@ -7,10 +7,6 @@
 
 MSTL_BEGIN_NAMESPACE__
 
-inline size_t deque_buf_size(size_t n, size_t sz) {
-    return n != 0 ? n : (sz < 512 ? size_t(512 / sz) : size_t(1));
-}
-
 template <typename T, typename Ref = T&, typename Ptr = T*, size_t BufSize = 0>
 struct deque_iterator {
     // iterator_traits:

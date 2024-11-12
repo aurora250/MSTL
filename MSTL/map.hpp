@@ -2,12 +2,13 @@
 #define MSTL_MAP_HPP__
 #include "rb_tree.h"
 #include "basiclib.h"
+#include "container.h"
 
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Key, typename T, typename Compare = less<T>,
-	typename Alloc = simple_alloc<T, std::allocator<T>>>
-class map {
+	typename Alloc = std::allocator< _rb_tree_node< pair<const Key, T>> > >
+class map : public container {
 public:
 	typedef Key							key_type;
 	typedef T							data_type;
@@ -25,6 +26,7 @@ public:
 			return comp(x.first, y.first);
 		}
 	};
+	static const char* const __type__;
 private:
 	typedef rb_tree<key_type, value_type, select1st<value_type>, key_compare, Alloc> rep_type;
 	rep_type t;
@@ -37,6 +39,33 @@ public:
 	typedef typename rep_type::const_iterator	const_iterator;
 	typedef typename rep_type::size_type		size_type;
 	typedef typename rep_type::difference_type	difference_type;
+
+	void __det__(std::ostream& _out = std::cout) const {
+		split_line(_out);
+		_out << "type: " << __type__ << std::endl;
+		_out << "check type: " << check_type<self>() << std::endl;
+		this->__show_size_only(_out);
+		_out << "data: " << std::flush;
+		this->__show_data_only(_out);
+		_out << std::endl;
+		split_line(_out);
+	}
+	void tree(std::ostream& _out) const {
+
+	}
+	void __show_data_only(std::ostream& _out) const {
+		const_iterator _band = const_end();
+		--_band;
+		_out << '[' << std::flush;
+		for (const_iterator iter = const_begin(); iter != const_end(); ++iter) {
+			_out << *iter << std::flush;
+			if (iter != _band) _out << ", " << std::flush;
+		}
+		_out << ']' << std::flush;
+	}
+	inline void __show_size_only(std::ostream& _out) const {
+		_out << "size: " << size() << std::endl;
+	}
 
 	map() : t(Compare()) {}
 	explicit map(const Compare& comp) : t(comp) {}
@@ -63,6 +92,8 @@ public:
 
 	bool empty() const { return t.empty(); }
 	size_type size() const { return t.size(); }
+	size_type max_height() const { return t.max_height(); }
+
 	key_compare key_comp() const { return t.key_comp(); }
 	value_compare value_comp() const { return value_compare(t.key_comp()); }
 
@@ -105,10 +136,12 @@ public:
 	friend bool operator <(const map&, const map&);
 };
 template <class Key, class T, class Compare, class Alloc>
+const char* const map<Key, T, Compare, Alloc>::__type__ = "map";
+
+template <class Key, class T, class Compare, class Alloc>
 inline bool operator ==(const map<Key, T, Compare, Alloc>& x, const map<Key, T, Compare, Alloc>& y) {
 	return x.t == y.t;
 }
-
 template <class Key, class T, class Compare, class Alloc>
 inline bool operator <(const map<Key, T, Compare, Alloc>& x, const map<Key, T, Compare, Alloc>& y) {
 	return x.t < y.t;

@@ -42,6 +42,9 @@
     <ClCompile Include="rb_tree.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="algobase.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="array.hpp">
@@ -83,7 +86,7 @@
     <ClInclude Include="numeric.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="algobase.hpp">
+    <ClInclude Include="algobase.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="concepts.hpp">
@@ -144,6 +147,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="hashtable.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="math.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="jsoncpp.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
