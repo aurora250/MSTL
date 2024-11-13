@@ -66,7 +66,7 @@ void try_pir() {
 }
 class Foo {};
 void try_check() {
-    MSTL_USE_SPACE__
+    MSTL_NAMESPACE__
     std::cout << check_type<string>() << std::endl;
     std::cout << check_type<const volatile void* const*&>() << std::endl;
     std::cout << check_type<int(*)[]>() << std::endl;
@@ -187,7 +187,7 @@ void try_stack() {
     q.__det__();
 }
 void try_vec() {
-    MSTL_USE_SPACE__
+    MSTL_NAMESPACE__
     MSTL_TRY__{
         vector<int> v;  //{ 1,2,3,4 }
         v.__det__();
@@ -220,7 +220,7 @@ void try_vec() {
     }
 }
 void try_pque() {
-    MSTL_USE_SPACE__;
+    MSTL_NAMESPACE__;
     priority_queue<int> q;
     q.push(3);
     q.push(5);
@@ -229,7 +229,7 @@ void try_pque() {
     q.__det__();
 }
 void try_map() {
-    MSTL_USE_SPACE__;
+    MSTL_NAMESPACE__;
     map<int, char> m;
     m[1] = 'c';
     m[100] = 'x';
@@ -239,7 +239,7 @@ void try_map() {
 }
 
 int main() {
-    MSTL_USE_SPACE__
+    MSTL_NAMESPACE__
     try_map();
     //unsigned int n = std::thread::hardware_concurrency();
     //std::cout << "支持 " << n << " 线程。\n";

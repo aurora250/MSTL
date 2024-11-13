@@ -1,7 +1,7 @@
 #ifndef MSTL_MEMORY_HPP__
 #define MSTL_MEMORY_HPP__
 #include <memory>
-#include "iterator.hpp"
+#include "type_traits.hpp"
 #include "algobase.h"
 #include "error.h"
 

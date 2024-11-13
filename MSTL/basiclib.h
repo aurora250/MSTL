@@ -14,7 +14,7 @@
 #endif // __cplusplus
 #endif // NULL
 
-#define MSTL_USE_SPACE__ using namespace MSTL;
+#define MSTL_NAMESPACE__ using namespace MSTL;
 #define MSTL__ MSTL
 #define MSTL_BEGIN_NAMESPACE__ namespace MSTL {
 #define MSTL_END_NAMESPACE__ }

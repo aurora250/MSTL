@@ -2,7 +2,6 @@
 #define MSTL_ERROR_H__
 #include <iostream>
 #include <initializer_list>
-#include <functional>
 #include <map>
 #include "object.h"
 
@@ -87,10 +86,10 @@ extern void Exit(bool _abort = false, void(__cdecl* _func)(void) = nullptr);
 #define MSTL_EXEC_MEMORY__ MSTL_EXCE_PTR_THROW__(error_map[__error::MemErr])
 
 #define MSTL_TRY__ try
-#define MSTL_CATCH_UNWIND__(action) catch(...) { action; }
-#define MSTL_CATCH_UNWIND_THROW_U__(action) catch(...) { action; throw; }
+#define MSTL_CATCH_UNWIND__ catch(...)
+#define MSTL_CATCH_UNWIND_THROW_U__(action) MSTL_CATCH_UNWIND__ { action; throw; }
 #define MSTL_CATCH_UNWIND_THROW_M__(action) \
-	catch(...) { \
+	MSTL_CATCH_UNWIND__ { \
 		action; \
 		MSTL_EXEC_MEMORY__ \
 	};

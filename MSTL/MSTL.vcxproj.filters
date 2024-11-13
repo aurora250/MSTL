@@ -104,10 +104,7 @@
     <ClInclude Include="functional.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="iterator_adapter.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="adapter.hpp">
+    <ClInclude Include="iterator.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="deque.hpp">
@@ -134,7 +131,7 @@
     <ClInclude Include="priority_queue.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="iterator.hpp">
+    <ClInclude Include="type_traits.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="heap.hpp">
@@ -149,10 +146,13 @@
     <ClInclude Include="hashtable.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="math.h">
+    <ClInclude Include="mathlib.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="jsoncpp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="huffman_tree.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

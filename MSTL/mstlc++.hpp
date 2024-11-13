@@ -19,5 +19,9 @@
 #include "rb_tree.h"
 #include "set.hpp"
 #include "map.hpp"
+#include "hashtable.h"
+
+#include "huffman_tree.hpp"
+#include "jsoncpp.h"
 
 #endif // MSTL_MSTLCPP_HPP__

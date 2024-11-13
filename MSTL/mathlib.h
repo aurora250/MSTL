@@ -1,5 +1,5 @@
-#ifndef MSTL_MATH_H__
-#define MSTL_MATH_H__
+#ifndef MSTL_MATHLIB_H__
+#define MSTL_MATHLIB_H__
 #include "basiclib.h"
 MSTL_BEGIN_NAMESPACE__
 

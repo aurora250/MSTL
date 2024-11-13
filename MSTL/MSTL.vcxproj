@@ -146,16 +146,16 @@
     <ClCompile Include="string.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="adapter.hpp" />
     <ClInclude Include="algo.hpp" />
     <ClInclude Include="algobase.h" />
     <ClInclude Include="algorithm.hpp" />
     <ClInclude Include="database.h" />
     <ClInclude Include="hashtable.h" />
     <ClInclude Include="heap.hpp" />
+    <ClInclude Include="huffman_tree.hpp" />
     <ClInclude Include="jsoncpp.h" />
     <ClInclude Include="map.hpp" />
-    <ClInclude Include="math.h" />
+    <ClInclude Include="mathlib.h" />
     <ClInclude Include="memory.hpp" />
     <ClInclude Include="array.hpp" />
     <ClInclude Include="basemstlc++.hpp" />
@@ -168,7 +168,7 @@
     <ClInclude Include="functional.hpp" />
     <ClInclude Include="functor.hpp" />
     <ClInclude Include="container.h" />
-    <ClInclude Include="iterator_adapter.hpp" />
+    <ClInclude Include="iterator.hpp" />
     <ClInclude Include="list.hpp" />
     <ClInclude Include="mstlc++.hpp" />
     <ClInclude Include="numeric.hpp" />
@@ -180,7 +180,7 @@
     <ClInclude Include="set.hpp" />
     <ClInclude Include="stack.hpp" />
     <ClInclude Include="string.h" />
-    <ClInclude Include="iterator.hpp" />
+    <ClInclude Include="type_traits.hpp" />
     <ClInclude Include="vector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
