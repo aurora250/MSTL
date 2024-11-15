@@ -1,6 +1,5 @@
 #ifndef MSTL_RB_TREE_H__
 #define MSTL_RB_TREE_H__
-#include "basiclib.h"
 #include "pair.hpp"
 #include "algo.hpp"
 #include "container.h"
@@ -284,7 +283,7 @@ public:
     bool empty() const { return node_count == 0; }
     Compare key_comp() const { return key_compare; }
     size_type size() const { return node_count; }
-    size_type max_height() const { return 2 * log2(node_count + 1); }
+    // size_type max_height() const { return 2 * log2(node_count + 1); }
 
     pair<iterator, bool> insert_unique(const_reference v) {
         link_type y = header;

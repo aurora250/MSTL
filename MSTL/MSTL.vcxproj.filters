@@ -18,7 +18,7 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="error.cpp">
+    <ClCompile Include="errorlib.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="container.cpp">
@@ -53,7 +53,7 @@
     <ClInclude Include="container.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="error.h">
+    <ClInclude Include="errorlib.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="vector.hpp">
@@ -149,10 +149,7 @@
     <ClInclude Include="mathlib.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="jsoncpp.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="huffman_tree.hpp">
+    <ClInclude Include="jsonlib.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

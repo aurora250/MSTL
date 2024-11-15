@@ -3,8 +3,8 @@
 #include <functional>
 #include <unordered_map>
 #include <string>
+#include <memory>
 #include "concepts.hpp"
-#include "basiclib.h"
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -13,9 +13,9 @@ public:
 	virtual ~_base_deposit() = 0;
 };
 
-#if MSTL_SUPPORT_CONCEPTS__
+#if defined(MSTL_SUPPORT_CONCEPTS__)
 using namespace MSTL::concepts;
-template <NVoidT T, typename... Args>
+template <concepts::NVoidT T, typename... Args>
 #else
 template <typename T, typename... Args>
 #endif // MSTL_SUPPORT_CONCEPTS__

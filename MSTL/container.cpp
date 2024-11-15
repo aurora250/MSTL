@@ -1,5 +1,4 @@
 #include "container.h"
-#include "error.h"
 
 MSTL_BEGIN_NAMESPACE__
 

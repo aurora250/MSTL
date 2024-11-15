@@ -56,6 +56,8 @@ public:
 	const_iterator const_end() const { return t.const_end(); }
 	bool empty() const { return t.empty(); }
 	size_type size() const { return t.size(); }
+	bool same_to(const self& rh) { return this->t == rh.t; }
+	bool less_to(const self& rh) { return this->t < rh.t; }
 
 	pair<iterator, bool> insert(const value_type& x) {
 		pair<rep_iterator, bool> p = t.insert_unique(x);
@@ -96,18 +98,15 @@ public:
 	pair<iterator, iterator> equal_range(const key_type& x) const {
 		return t.equal_range(x);
 	}
-
-	friend bool operator ==(const set&, const set&);
-	friend bool operator <(const set&, const set&);
 };
 
 template <typename Key, typename Compare, typename Alloc>
 inline bool operator==(const set<Key, Compare, Alloc>& x, const set<Key, Compare, Alloc>& y) {
-	return x.t == y.t;
+	return x.same_to(y);
 }
 template <typename Key, typename Compare, typename Alloc>
 inline bool operator<(const set<Key, Compare, Alloc>& x, const set<Key, Compare, Alloc>& y) {
-	return x.t < y.t;
+	return x.less_to(y);
 }
 
 MSTL_END_NAMESPACE__

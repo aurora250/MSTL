@@ -30,7 +30,6 @@ public:
 	explicit string(const vector<char>& _vec);
 	string& operator =(const string& _str);
 	~string();
-	const char* const ctype() const;
 	void reserve(int _cap);
 	void push(char _chr);
 	char pop();

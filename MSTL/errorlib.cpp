@@ -1,4 +1,4 @@
-#include "error.h"
+#include "errorlib.h"
 #include "basiclib.h"
 #include "depositary.h"
 
@@ -6,17 +6,6 @@ MSTL_BEGIN_NAMESPACE__
 
 Error::Error(cstring _info, cstring _type) noexcept : _info(_info), _type(_type) {}
 Error::~Error() {};
-void Error::__det__(std::ostream& _out) const {
-	split_line(_out);
-	_out << "type: " << this->_type << std::endl;
-	_out << "check type: " << check_type<self>() << std::endl;
-	this->__show_data_only(_out);
-	_out << std::endl;
-	split_line(_out);
-}
-inline void Error::__show_data_only(std::ostream& _out) const {
-	_out << this->_info << std::flush;
-}
 const_cstring Error::__type__ = "Error";
 
 StopIterator::StopIterator(cstring _info) noexcept : Error(_info, __type__) {}
@@ -43,7 +32,7 @@ void Exception(Error* _err) {
 	throw* _err;
 }
 
-inline void Exception(bool _boolean, Error* _err) {
+void Exception(bool _boolean, Error* _err) {
 	if (_boolean) return;
 	else {
 		if (_err == nullptr) Assert(false);
@@ -56,7 +45,7 @@ void Assert(bool _boolean, const char* _info) {
 	else Exception(new AssertError(_info));
 }
 
-void Exit(bool _abort, void(__cdecl* _func)(void)) {
+void Exit(bool _abort, void(* _func)(void)) {
 	if (_func) {
 		if (_abort)
 			std::cout << "Abort failed! Function should be called first." << std::endl;

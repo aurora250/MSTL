@@ -1,6 +1,7 @@
 #ifndef MSTL_PAIR_HPP__
 #define MSTL_PAIR_HPP__
 #include <iostream>
+#include "basiclib.h"
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -15,8 +16,7 @@ struct pair {
 
 	pair() : first(T1()), second(T2()) {}
 	pair(const T1& a, const T2& b) : first(a), second(b) {}
-	template <class U1, class U2>
-	pair(const pair<U1, U2>& p) : first(p.first), second(p.second) {}
+	pair(const self& p) : first(p.first), second(p.second) {}
 	self& operator =(const self& _p) {
 		if (*this == _p) return *this;
 		this->first = _p.first;

@@ -1,16 +1,10 @@
 #include "basiclib.h"
-#include "error.h"
+#include "errorlib.h"
 
 MSTL_BEGIN_NAMESPACE__
 
-inline void repect_ostm_str(const char* _str, std::ostream& _out, size_t _size) throw(ValueError) {
-	while (_size-- != 0) _out << _str;
-}
-inline void repect_ostm_chr(char _chr, std::ostream& _out, size_t _size) throw(ValueError) {
-	while (_size-- != 0) _out << _chr;
-}
-inline void split_line(std::ostream& _out, size_t _size) throw(ValueError) {
-	repect_ostm_chr('-', _out, _size);
+void split_line(std::ostream& _out, size_t _size) throw(ValueError) {
+	while (_size) _out << '-', _size--;
 	_out << std::endl;
 }
 void* memcpy(void* _dest, void* _rsc, int _byte) throw(ValueError) {
@@ -59,7 +53,7 @@ void* memset(void* _dest, int _val, size_t _size) throw(ValueError) {
 	}
 	return ret;
 }
-inline size_t deque_buf_size(size_t n, size_t sz) {
+size_t deque_buf_size(size_t n, size_t sz) {
 	return n != 0 ? n : (sz < 512 ? size_t(512 / sz) : 1);
 }
 

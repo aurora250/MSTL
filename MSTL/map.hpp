@@ -3,6 +3,7 @@
 #include "rb_tree.h"
 #include "basiclib.h"
 #include "container.h"
+#include "functor.hpp"
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -19,7 +20,7 @@ public:
 
 	class value_compare : public binary_function<value_type, value_type, bool> {
 	private:
-		friend class self;
+		friend class map;
 		Compare comp;
 	public:
 		bool operator ()(const value_type& x, const value_type& y) {
@@ -89,6 +90,8 @@ public:
 	iterator end() { return t.end(); }
 	const_iterator const_begin() const { return t.const_begin(); }
 	const_iterator const_end() const { return t.const_end(); }
+	bool same_to(const self& rh) { return this->t == rh.t; }
+	bool less_to(const self& rh) { return this->t < rh.t; }
 
 	bool empty() const { return t.empty(); }
 	size_type size() const { return t.size(); }
@@ -132,19 +135,17 @@ public:
 			insert(value_type(k, T()))
 			).first)).second;
 	}
-	friend bool operator ==(const map&, const map&);
-	friend bool operator <(const map&, const map&);
 };
 template <class Key, class T, class Compare, class Alloc>
 const char* const map<Key, T, Compare, Alloc>::__type__ = "map";
 
 template <class Key, class T, class Compare, class Alloc>
 inline bool operator ==(const map<Key, T, Compare, Alloc>& x, const map<Key, T, Compare, Alloc>& y) {
-	return x.t == y.t;
+	return x.same_to(y);
 }
 template <class Key, class T, class Compare, class Alloc>
 inline bool operator <(const map<Key, T, Compare, Alloc>& x, const map<Key, T, Compare, Alloc>& y) {
-	return x.t < y.t;
+	return x.less_to(y);
 }
 
 template <class Key, class T, class Compare, class Alloc>

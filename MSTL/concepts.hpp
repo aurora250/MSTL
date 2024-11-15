@@ -1,14 +1,15 @@
 #ifndef MSTL_CONCEPTS_HPP__
 #define MSTL_CONCEPTS_HPP__
+#include "basiclib.h"
+#if defined(MSTL_SUPPORT_CONCEPTS__)
 #include <concepts>
 #include <type_traits>
 #include <iostream>
-#include "basiclib.h"
-
+#endif
 MSTL_BEGIN_NAMESPACE__
 
 namespace concepts {
-#if MSTL_SUPPORT_CONCEPTS__
+#if defined(MSTL_SUPPORT_CONCEPTS__)
 	template <typename T>
 	concept MSTL_TYPE = requires(T _mstl) {
 		T::__type__;

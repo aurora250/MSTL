@@ -2,8 +2,11 @@
 #define MSTL_CHECK_TYPE_H
 #include <iostream>
 #include <sstream>
+#if defined(__GNUC__)
+#include <memory>
+#include <cxxabi.h>
+#endif
 #include "basiclib.h"
-#include "concepts.hpp"
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -21,7 +24,11 @@ private:
         if (this->check_empty(val)) return;
         if (not this->is_compact_) sr_ += " ";
         using ss_t = std::ostringstream;
-        this->sr_ += dynamic_cast<ss_t&>(ss_t() << val).str();
+#if defined(__GNUC__)
+        this->sr_ += static_cast<ss_t&>(ss_t() << val).str();
+#else
+        this->sr_ += static_cast<ss_t>(ss_t() << val).str();
+#endif
         this->is_compact_ = false;
     }
 public:
@@ -163,9 +170,9 @@ namespace MSTL {
 CHECK_TYPE_ARRAY_CV__(0)
 #endif
 CHECK_TYPE_ARRAY_CV__(N, size_t N)
-CHECK_TYPE_ARRAY__(const)
-CHECK_TYPE_ARRAY__(volatile)
-CHECK_TYPE_ARRAY__(const volatile)
+CHECK_TYPE_ARRAY__(const, , )
+CHECK_TYPE_ARRAY__(volatile, , )
+CHECK_TYPE_ARRAY__(const volatile, , )
 
 namespace MSTL {
     template <typename T, bool IsBase, typename... P>
@@ -228,26 +235,17 @@ namespace MSTL {
         } \
     };
 
-    CHECK_TYPE_MEM_FUNC__(const)
-        CHECK_TYPE_MEM_FUNC__(volatile)
-        CHECK_TYPE_MEM_FUNC__(const volatile)
+CHECK_TYPE_MEM_FUNC__(const)
+CHECK_TYPE_MEM_FUNC__(volatile)
+CHECK_TYPE_MEM_FUNC__(const volatile)
 
-        template <typename T>
-    std::string check_type() {
-        // check_type<decltype(_obj)>()
-        std::string str;
-        check<T> { str };
-        return std::move(str);
-    }
-#ifdef _HAS_CXX20
-    using namespace MSTL::concepts;
-    std::string check_type(auto _val) {
-        // std::remove_reference<decltype(_val)>::type -> non-&   else, & would be stay
-        return check_type<
-            typename std::remove_reference<decltype(_val)>::type
-        >();
-    }
-#endif // _HAS_CXX20
+template <typename T>
+std::string check_type() {
+    // check_type<decltype(_obj)>()
+    std::string str;
+    check<T> { str };
+    return str;
+}
 
 MSTL_END_NAMESPACE__
 

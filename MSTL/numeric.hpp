@@ -17,7 +17,7 @@ T accumulate(InputIterator first, InputIterator second, T init, BinaryOperation 
 
 template <typename InputIterator, typename OutputIterator>
 OutputIterator adjacent_difference(InputIterator first, InputIterator last, OutputIterator result) {
-	using T = std::iterator_traits<InputIterator>::value_type;
+	using T = typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<InputIterator>::value_type;
 	if (first == last) return result;
 	*result = *first;
 	T value = *first;
@@ -31,7 +31,7 @@ OutputIterator adjacent_difference(InputIterator first, InputIterator last, Outp
 template <typename InputIterator, typename OutputIterator, typename BinaryOperation>
 OutputIterator adjacent_difference(InputIterator first, InputIterator last, OutputIterator result, BinaryOperation binary_op) {
 	if (first == last) return result;
-	using T = std::iterator_traits<InputIterator>::value_type;
+	using T = typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<InputIterator>::value_type;
 	*result = *first;
 	T value = *first;
 	while (++first != last) {
@@ -58,7 +58,7 @@ T inner_product(InputIterator1 first1, InputIterator1 last1, InputIterator2 firs
 template <typename InputIterator, typename OutputIterator>
 OutputIterator partial_sum(InputIterator first, InputIterator  last, OutputIterator result) {
 	if (first == last) return result;
-	using T = std::iterator_traits<InputIterator>::value_type;
+	using T = typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<InputIterator>::value_type;
 	*result = *first;
 	T value = *first;
 	while (++first != last) {
@@ -70,7 +70,7 @@ OutputIterator partial_sum(InputIterator first, InputIterator  last, OutputItera
 template <typename InputIterator, typename OutputIterator, typename BinaryOperation>
 OutputIterator partial_sum(InputIterator first, InputIterator  last, OutputIterator result, BinaryOperation binary_op) {
 	if (first == last) return result;
-	using T = std::iterator_traits<InputIterator>::value_type;
+	using T = typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<InputIterator>::value_type;
 	*result = *first;
 	T value = *first;
 	while (++first != last) {
@@ -109,4 +109,3 @@ void iota(ForwardIterator first, ForwardIterator last, T value) {
 MSTL_END_NAMESPACE__
 
 #endif // MSTL_NUMERIC_HPP__
-

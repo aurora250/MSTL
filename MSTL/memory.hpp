@@ -3,7 +3,9 @@
 #include <memory>
 #include "type_traits.hpp"
 #include "algobase.h"
-#include "error.h"
+#include "basiclib.h"
+#include "errorlib.h"
+#include "pair.hpp"
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -67,12 +69,12 @@ ForwardIterator __uninitialized_copy_aux(InputIterator first, InputIterator last
         for (; first != last; ++first, ++cur) construct(&*cur, *first);
         return cur;
     }
-    MSTL_CATCH_UNWIND_THROW_U__(destroy(result, cur))
+    MSTL_CATCH_UNWIND_THROW_U__(destroy(result, cur));
 }
 template <typename InputIterator, typename ForwardIterator, typename T>
 inline ForwardIterator __uninitialized_copy(InputIterator first, InputIterator last,
                                             ForwardIterator result, T*) {
-    using is_POD = __type_traits<T>::is_POD_type;
+    using is_POD = typename __type_traits<T>::is_POD_type;
     return __uninitialized_copy_aux(first, last, result, is_POD());
 }
 template <typename InputIterator, typename ForwardIterator>
@@ -100,7 +102,7 @@ __uninitialized_copy_n(InputIterator first, Size count,
             construct(&*cur, *first);
         return pair<InputIterator, ForwardIterator>(first, cur);
     }
-    MSTL_CATCH_UNWIND_THROW_U__(destroy(result, cur))
+    MSTL_CATCH_UNWIND_THROW_U__(destroy(result, cur));
 }
 template <typename RandomAccessIterator, typename Size, typename ForwardIterator>
 inline pair<RandomAccessIterator, ForwardIterator>
@@ -113,7 +115,7 @@ __uninitialized_copy_n(RandomAccessIterator first, Size count,
 template <typename InputIterator, typename Size, typename ForwardIterator>
 inline pair<InputIterator, ForwardIterator>
 uninitialized_copy_n(InputIterator first, Size count, ForwardIterator result) {
-    return __uninitialized_copy_n(first, count, result, iterator_category(first));
+    return __uninitialized_copy_n(first, count, result, category_type(first));
 }
 
 template <typename ForwardIterator, typename T>
@@ -128,12 +130,12 @@ void __uninitialized_fill_aux(ForwardIterator first, ForwardIterator last,
     MSTL_TRY__{
         for (; cur != last; ++cur) construct(&*cur, x);
     }
-    MSTL_CATCH_UNWIND_THROW_U__(destroy(first, cur))
+    MSTL_CATCH_UNWIND_THROW_U__(destroy(first, cur));
 }
 template <typename ForwardIterator, typename T, typename V>
 inline void __uninitialized_fill(ForwardIterator first, ForwardIterator last,
     const T& x, V*) {
-    using is_POD = __type_traits<V>::is_POD_type;
+    using is_POD = typename __type_traits<V>::is_POD_type;
     __uninitialized_fill_aux(first, last, x, is_POD());
 }
 template <typename ForwardIterator, typename T>
@@ -154,11 +156,11 @@ ForwardIterator __uninitialized_fill_n_aux(ForwardIterator first, Size n,
         for (; n > 0; --n, ++cur) construct(&*cur, x);
         return cur;
     }
-    MSTL_CATCH_UNWIND_THROW_U__(destroy(first, cur))
+    MSTL_CATCH_UNWIND_THROW_U__(destroy(first, cur));
 }
 template <typename ForwardIterator, typename Size, typename T, typename V>
 inline ForwardIterator __uninitialized_fill_n(ForwardIterator first, Size n, const T& x, V*) {
-    using is_POD = __type_traits<T>::is_POD_type;
+    using is_POD = typename __type_traits<T>::is_POD_type;
     return __uninitialized_fill_n_aux(first, n, x, is_POD());
 }
 
@@ -175,7 +177,7 @@ inline ForwardIterator __uninitialized_copy_copy(InputIterator1 first1, InputIte
     MSTL_TRY__{
         return uninitialized_copy(first2, last2, mid);
     }
-    MSTL_CATCH_UNWIND_THROW_U__(destroy(result, mid))
+    MSTL_CATCH_UNWIND_THROW_U__(destroy(result, mid));
 }
 
 template <typename ForwardIterator, typename T, typename InputIterator>
@@ -185,7 +187,7 @@ inline ForwardIterator __uninitialized_fill_copy(ForwardIterator result, Forward
     MSTL_TRY__{
         return uninitialized_copy(first, last, mid);
     }
-    MSTL_CATCH_UNWIND_THROW_U__(destroy(result, mid))
+    MSTL_CATCH_UNWIND_THROW_U__(destroy(result, mid));
 }
 
 template <typename InputIterator, typename ForwardIterator, typename T>
@@ -195,7 +197,7 @@ inline void __uninitialized_copy_fill(InputIterator first1, InputIterator last1,
     MSTL_TRY__{
         uninitialized_fill(mid2, last2, x);
     }
-    MSTL_CATCH_UNWIND_THROW_U__(destroy(first2, mid2))
+    MSTL_CATCH_UNWIND_THROW_U__(destroy(first2, mid2));
 }
 MSTL_END_NAMESPACE__
 

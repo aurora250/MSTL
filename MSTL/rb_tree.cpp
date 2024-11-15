@@ -142,7 +142,7 @@ _rb_tree_node_base* __rb_tree_rebalance_for_erase(
         else
             z->parent->right = y;
         y->parent = z->parent;
-        swap(y->color, z->color);
+        std::swap(y->color, z->color);
         y = z;
     }
     else {

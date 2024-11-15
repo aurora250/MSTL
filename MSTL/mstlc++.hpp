@@ -6,8 +6,6 @@
 #ifndef MSTL_MSTLCPP_HPP__
 #define MSTL_MSTLCPP_HPP__
 
-#include "basemstlc++.hpp"
-
 #include "array.hpp"
 #include "list.hpp"
 #include "vector.hpp"
@@ -21,7 +19,7 @@
 #include "map.hpp"
 #include "hashtable.h"
 
-#include "huffman_tree.hpp"
-#include "jsoncpp.h"
+#include "depositary.h"
+#include "jsonlib.h"
 
 #endif // MSTL_MSTLCPP_HPP__

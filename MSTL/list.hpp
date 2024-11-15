@@ -37,6 +37,11 @@ struct list_iterator {
 
     list_iterator(link_type x = nullptr) : _node(x) {}
     list_iterator(const iterator& x) : _node(x._node) {}
+    self& operator =(const iterator& rh) { 
+    	if(*this == rh) return *this;
+		this->_node = rh._node; 
+		return *this;
+	}
     ~list_iterator() = default;
 
     reference operator *() const { return this->_node->_data; }
@@ -86,7 +91,7 @@ private:
     list_node_allocator alloc;
 
     inline void __range_check(int _pos) const {
-        Exception(this->__in_boundary(_pos), error_map[__error::RangeErr]);
+        Exception(this->__in_boundary(_pos), new RangeError());
     }
     link_type get_node() {
         return alloc.allocate();

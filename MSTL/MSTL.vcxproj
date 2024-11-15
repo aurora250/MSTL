@@ -139,7 +139,7 @@
     <ClCompile Include="check_type.cpp" />
     <ClCompile Include="depositary.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="error.cpp" />
+    <ClCompile Include="errorlib.cpp" />
     <ClCompile Include="container.cpp" />
     <ClCompile Include="object.cpp" />
     <ClCompile Include="rb_tree.cpp" />
@@ -152,8 +152,7 @@
     <ClInclude Include="database.h" />
     <ClInclude Include="hashtable.h" />
     <ClInclude Include="heap.hpp" />
-    <ClInclude Include="huffman_tree.hpp" />
-    <ClInclude Include="jsoncpp.h" />
+    <ClInclude Include="jsonlib.h" />
     <ClInclude Include="map.hpp" />
     <ClInclude Include="mathlib.h" />
     <ClInclude Include="memory.hpp" />
@@ -164,7 +163,7 @@
     <ClInclude Include="depositary.h" />
     <ClInclude Include="check_type.h" />
     <ClInclude Include="deque.hpp" />
-    <ClInclude Include="error.h" />
+    <ClInclude Include="errorlib.h" />
     <ClInclude Include="functional.hpp" />
     <ClInclude Include="functor.hpp" />
     <ClInclude Include="container.h" />

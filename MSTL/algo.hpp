@@ -24,7 +24,7 @@ OutputIterator set_union(InputIterator1 first1, InputIterator1 last1,
 		}
 		++result;
 	}
-	return copy(first2, last2, copy(first1, last1, result));
+	return (copy)(first2, last2, (copy)(first1, last1, result));
 }
 template <typename InputIterator1, typename InputIterator2, typename OutputIterator>
 OutputIterator set_intesection(InputIterator1 first1, InputIterator1 last1,
@@ -54,7 +54,7 @@ OutputIterator set_difference(InputIterator1 first1, InputIterator1 last1,
 			++first1; ++first2;
 		}
 	}
-	return copy(first1, last1, result);
+	return (copy)(first1, last1, result);
 }
 template <typename InputIterator1, typename InputIterator2, typename OutputIterator>
 OutputIterator set_symmetric_difference(InputIterator1 first1, InputIterator1 last1,
@@ -74,7 +74,7 @@ OutputIterator set_symmetric_difference(InputIterator1 first1, InputIterator1 la
 			++first1; ++first2;
 		}
 	}
-	return copy(first2, last2, copy(first1, last1, result));
+	return (copy)(first2, last2, (copy)(first1, last1, result));
 }
 
 //others:
@@ -101,18 +101,18 @@ ForwardIterator adjacent_find(ForwardIterator first, ForwardIterator last,
 }
 
 template <typename InputIterator, typename T>
-typename std::iterator_traits<InputIterator>::difference_type
+typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<InputIterator>::difference_type
 count(InputIterator first, InputIterator last, const T& value) {    // 等值计数
-	typename std::iterator_traits<InputIterator>::difference_type n = 0;
+	typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<InputIterator>::difference_type n = 0;
 	for (; first != last; ++first) {
 		if (*first == value) ++n;
 	}
 	return n;
 }
 template <typename InputIterator, typename T, typename Predicate>
-typename std::iterator_traits<InputIterator>::difference_type
+typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<InputIterator>::difference_type
 count_if(InputIterator first, InputIterator last, const T& value, Predicate pred) {
-	typename std::iterator_traits<InputIterator>::difference_type n = 0;
+	typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<InputIterator>::difference_type n = 0;
 	for (; first != last; ++first) {
 		if (pred(*first)) ++n;
 	}
@@ -146,7 +146,7 @@ ForwardIterator1 __search(ForwardIterator1 first1, ForwardIterator1 last1,
 template <typename ForwardIterator1, typename ForwardIterator2>
 inline ForwardIterator1 search(ForwardIterator1 first1, ForwardIterator1 last1,
 	ForwardIterator2 first2, ForwardIterator2 last2) {
-	return __search(first1, last1, first2, last2, distance_type<ForwardIterator1>(), distance_type<ForwardIterator2>());
+	return (__search)(first1, last1, first2, last2, distance_type<ForwardIterator1>(), distance_type<ForwardIterator2>());
 }
 
 template <typename InputIterator, typename T>
@@ -162,11 +162,11 @@ InputIterator find_if(InputIterator first, InputIterator last, Predicate pred) {
 template <typename ForwardIterator1, typename ForwardIterator2>
 ForwardIterator1 __find_end(ForwardIterator1 first1, ForwardIterator1 last1,
 	ForwardIterator2 first2, ForwardIterator2 last2,
-	std::forward_iterator_tag, std::forward_iterator_tag) {
+	MSTL_ITERATOR_TRATIS_FROM__ forward_iterator_tag, MSTL_ITERATOR_TRATIS_FROM__ forward_iterator_tag) {
 	if (first2 == last2) return last1;
 	ForwardIterator1 result = last1;
 	while (true) {
-		ForwardIterator1 new_result = search(first1, last1, first2, last2);
+		ForwardIterator1 new_result = (search)(first1, last1, first2, last2);
 		if (new_result == last1) return result;
 		result = new_result;
 		first1 = new_result;
@@ -176,23 +176,24 @@ ForwardIterator1 __find_end(ForwardIterator1 first1, ForwardIterator1 last1,
 template <typename BidirectionalIterator1, typename BidirectionalIterator2>
 BidirectionalIterator1 __find_end(BidirectionalIterator1 first1, BidirectionalIterator1 last1,
 	BidirectionalIterator2 first2, BidirectionalIterator2 last2,
-	std::bidirectional_iterator_tag, std::bidirectional_iterator_tag) {
-	using reviter1 = std::reverse_iterator<BidirectionalIterator1>;
-	using reviter2 = std::reverse_iterator<BidirectionalIterator2>;
+	MSTL_ITERATOR_TRATIS_FROM__ bidirectional_iterator_tag, 
+	MSTL_ITERATOR_TRATIS_FROM__ bidirectional_iterator_tag) {
+	using reviter1 = typename std::reverse_iterator<BidirectionalIterator1>;
+	using reviter2 = typename std::reverse_iterator<BidirectionalIterator2>;
 	reviter1 rlast1(first1);
 	reviter2 rlast2(first2);
-	reviter1 rresult = search(reviter1(last1), rlast1, reviter2(last2), rlast2);
+	reviter1 rresult = (search)(reviter1(last1), rlast1, reviter2(last2), rlast2);
 	if (rresult == rlast1) return last1;
 	BidirectionalIterator1 result = rresult.base();
-	advance(result, -distance(first2, last2));
+	(advance)(result, -distance(first2, last2));
 	return result;
 }
 template <typename ForwardIterator1, typename ForwardIterator2>
 inline ForwardIterator1 find_end(ForwardIterator1 first1, ForwardIterator1 last1,
 	ForwardIterator2 first2, ForwardIterator2 last2) {
-	using category1 = std::iterator_traits<ForwardIterator1>::iterator_category;
-	using category2 = std::iterator_traits<ForwardIterator2>::iterator_category;
-	return __find_end(first1, last1, first2, last2, category1(), category2());
+	using category1 = typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<ForwardIterator1>::iterator_category;
+	using category2 = typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<ForwardIterator2>::iterator_category;
+	return (__find_end)(first1, last1, first2, last2, category1(), category2());
 }
 template <typename InputIterator, typename Function>
 Function for_each(InputIterator first, InputIterator last, Function f) {

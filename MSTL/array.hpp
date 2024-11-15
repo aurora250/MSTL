@@ -1,7 +1,7 @@
 #ifndef MSTL_ARRAY_HPP__
 #define MSTL_ARRAY_HPP__
 #include "container.h"
-#include "error.h"
+#include "errorlib.h"
 #include "basiclib.h"
 #include "memory.hpp"
 #include <iostream>
@@ -11,9 +11,10 @@ MSTL_BEGIN_NAMESPACE__
 template <typename T, size_t N, typename Alloc = simple_alloc<T, std::allocator<T>>>
 class array : public container {
 public:
-	typedef T					value_type;
+	typedef T  value_type;
 	typedef T& reference;
 	typedef T* iterator;
+	typedef size_t size_type;
 	typedef const T* const_iterator;
 	typedef const T& const_reference;
 	typedef array<T, N, Alloc>	self;
@@ -47,7 +48,7 @@ private:
 		}
 	}
 	inline void __range_check(int _pos) const {
-		Exception(this->__in_boundary(_pos), error_map[__error::RangeErr]);
+		Exception(__in_boundary(_pos), new RangeError());
 	}
 	inline void __show_data_only(std::ostream& _out) const {
 		size_t _band = this->_size - 1;
@@ -94,6 +95,7 @@ public:
 		swap(this->_data, _arr._data);
 		swap(this->_size, _arr._size);
 	}
+	size_type size() const { return _size; }
 	T& back() {
 		return this->_data[not N == 0 ? N - 1 : 0];
 	}
@@ -114,7 +116,7 @@ public:
 		size_t _fin = 0;
 		if (_end == this->epos) _fin = this->_size;
 		else if (this->__in_boundary(_end)) _fin = _end;
-		else Exception(error_map[__error::RangeErr]);
+		else Exception(new RangeError());
 		for (size_t i = _start; i < _fin; i++) {
 			if (this->_data[i] == _tar) return i;
 		}
@@ -159,4 +161,3 @@ std::ostream& operator <<(std::ostream& _out, const array<T, N, Alloc>& _tar) {
 MSTL_END_NAMESPACE__
 
 #endif // MSTL_ARRAY_HPP__
-

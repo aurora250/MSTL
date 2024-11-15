@@ -15,9 +15,12 @@
 #endif // NULL
 
 #define MSTL_NAMESPACE__ using namespace MSTL;
-#define MSTL__ MSTL
 #define MSTL_BEGIN_NAMESPACE__ namespace MSTL {
 #define MSTL_END_NAMESPACE__ }
+
+#if defined(_HAS_CXX20)
+#define MSTL_SUPPORT_CONCEPTS__
+#endif
 
 #if defined(_GLIBCXX_ITERATOR) || defined(_GLIBCXX_PARALLEL_ITERATOR_H) || defined(_ITERATOR_)
 #define MSTL_NEED_ITERATOR_TAG__ 0
@@ -25,10 +28,22 @@
 #define MSTL_NEED_ITERATOR_TAG__ 1
 #endif // _ITERATOR_
 
-#if defined(_EXT_TYPE_TRAITS) || defined(__TYPE_TRAITS_H)
+#if defined(__TYPE_TRAITS_H)
 #define MSTL_NEED_SGI_TYPE_TRAITS__ 0
 #else
 #define MSTL_NEED_SGI_TYPE_TRAITS__ 1
+#endif
+
+#if defined(__GNUC__) || defined(__clang__)
+#define MSTL_DLL_LINK__ 0 
+#else
+#define MSTL_DLL_LINK__ 1
+#endif // __GNUC__
+
+#if defined(__GNUC__) || defined(__clang__)
+#define MSTL_ITERATOR_TRATIS_FROM__ std::
+#else 
+#define MSTL_ITERATOR_TRATIS_FROM__ 
 #endif
 
 MSTL_BEGIN_NAMESPACE__
@@ -53,8 +68,6 @@ typedef int ptrdiff_t;
 typedef int intptr_t;
 #endif // __linux__
 
-extern void repect_ostm_str(const char* _str, std::ostream& _out, size_t _size);
-extern void repect_ostm_chr(char _chr, std::ostream& _out, size_t _size);
 extern void split_line(std::ostream& _out = std::cout, size_t _size = 15);
 
 extern void* memcpy(void* _dest, void* _rsc, int _byte);

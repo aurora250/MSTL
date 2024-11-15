@@ -1,12 +1,11 @@
 #ifndef MSTL_VECTOR_HPP__
 #define MSTL_VECTOR_HPP__
-#include "container.h"
-#include "basiclib.h"
 #include <iostream>
 #include <iterator>
-#include "initializer_list"
+#include <initializer_list>
 #include "memory.hpp"
-#include "error.h"
+#include "errorlib.h"
+#include "container.h"
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -58,11 +57,11 @@ private:
 	data_allocator alloc;
 
 	inline void __range_check(int _pos) const {
-		Exception(__in_boundary(_pos), error_map[__error::RangeErr]);
+		Exception(__in_boundary(_pos), new RangeError());
 	}
 	inline bool __in_boundary(int _pos) const {
 		if (_pos < 0) return false;
-		else return _pos < size() ? true : false;
+		else return size_type(_pos) < size() ? true : false;
 	}
 	void fill_initialize(size_type n, const_reference value) {
 		start = allocate_and_fill(n, value);
@@ -73,18 +72,18 @@ private:
 		iterator result = alloc.allocate(n);
 		MSTL_TRY__{
 			uninitialized_fill_n(result, n, x);
-			return result;
 		}
-		MSTL_CATCH_UNWIND_THROW_M__(alloc.deallocate(result, n))
+		MSTL_CATCH_UNWIND_THROW_M__(alloc.deallocate(result, n));
+		return result;
 	}
 	template <typename ForwardIterator>
 	iterator allocate_and_copy(size_type n, ForwardIterator first, ForwardIterator last) {
 		iterator result = alloc.allocate(n);
 		MSTL_TRY__{
 			uninitialized_copy(first, last, result);
-			return result;
 		}
-		MSTL_CATCH_UNWIND_THROW_M__(alloc.deallocate(result, n))
+		MSTL_CATCH_UNWIND_THROW_M__(alloc.deallocate(result, n));
+		return result;
 	}
 	template <typename InputIterator>
 	void range_initialize(InputIterator first, InputIterator last, std::input_iterator_tag) {
@@ -122,7 +121,7 @@ private:
 		}
 		MSTL_CATCH_UNWIND_THROW_M__(
 			destroy(new_start, new_finish);
-			alloc.deallocate(new_start, len))
+			alloc.deallocate(new_start, len));
 		destroy(begin(), end());
 		deallocate();
 		start = new_start;
@@ -174,7 +173,7 @@ private:
 			}
 			MSTL_CATCH_UNWIND_THROW_M__(
 				destroy(new_start, new_finish);
-				alloc.deallocate(new_start, len))
+				alloc.deallocate(new_start, len));
 			destroy(start, finish);
 			deallocate();
 			start = new_start;
@@ -200,7 +199,7 @@ public:
 	explicit vector(long n, const_reference value) {
 		fill_initialize(n, value);
 	}
-	explicit vector(const self& x) {
+	explicit vector(const self& x) : container() {
 		start = allocate_and_copy(x.const_end() - x.const_begin(), x.const_begin(), x.const_end());
 		finish = start + (x.const_end() - x.const_begin());
 		end_of_storage = finish;
@@ -318,7 +317,7 @@ public:
 	}
 	template <typename InputIterator>
 	void insert(iterator position, InputIterator first, InputIterator last) {
-		range_insert(position, first, last, iterator_category(first));
+		range_insert(position, first, last, category_type(first));
 	}
 	void insert(iterator position, size_type n, const_reference x) {
 		if (n == 0) return;
@@ -352,7 +351,7 @@ public:
 			}
 			MSTL_CATCH_UNWIND_THROW_M__(
 				destroy(new_start, new_finish);
-				alloc.deallocate(new_start, len))
+				alloc.deallocate(new_start, len));
 			destroy(start, finish);
 			deallocate();
 			start = new_start;

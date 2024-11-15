@@ -1,5 +1,5 @@
 #include "string.h"
-#include "error.h"
+#include "errorlib.h"
 #include "basiclib.h"
 
 MSTL_BEGIN_NAMESPACE__
@@ -21,7 +21,7 @@ inline void string::__show_data_only(std::ostream& _out) const {
 		_out << this->_data[i];
 	}
 }
-inline void string::__range_check(int _pos) const throw(RangeError) {
+inline void string::__range_check(int _pos) const {
 	RangeError* e = new RangeError();
 	Exception(this->__in_boundary(_pos), e);
 	delete e;
@@ -71,9 +71,6 @@ void string::reserve(int _cap) {
 	delete[] this->_data;
 	this->_data = _str;
 }
-const char* const string::ctype() const {
-	return this->_data;
-}
 void string::push(char _chr) {
 	if (not empty()) this->reserve(this->empty() ? 4 : _capacity * 2);
 	this->_data[this->_size] = _chr;
@@ -100,7 +97,7 @@ void string::append(const string& _str) {
 	strcpy(this->end(), _str._data);
 	this->_size += _len;
 }
-void string::insert(int _pos, int _cpte, char _chr) throw(RangeError) {
+void string::insert(int _pos, int _cpte, char _chr) {
 	this->__range_check(_pos);
 	if (this->_size + _cpte > this->_capacity) this->reserve(this->_size + _cpte);
 	int _end = this->_size;
@@ -111,7 +108,7 @@ void string::insert(int _pos, int _cpte, char _chr) throw(RangeError) {
 	for (int i = 0; i < _cpte; i++) this->_data[_pos + i] = _chr;
 	this->_size += _cpte;
 }
-void string::insert(int _pos, const char* _str) throw(RangeError) {
+void string::insert(int _pos, const char* _str) {
 	this->__range_check(_pos);
 	int _len = strlen(_str);
 	if (this->_size + _len > this->_capacity) this->reserve(this->_size + _len);
@@ -123,7 +120,7 @@ void string::insert(int _pos, const char* _str) throw(RangeError) {
 	for (int i = 0; i < _len; i++) this->_data[_pos + i] = _str[i];
 	this->_size += _len;
 }
-void string::insert(int _pos, const string& _str) throw(RangeError) {
+void string::insert(int _pos, const string& _str) {
 	this->__range_check(_pos);
 	int _len = _str._size;
 	if (this->_size + _len > this->_capacity) this->reserve(this->_size + _len);
@@ -135,7 +132,7 @@ void string::insert(int _pos, const string& _str) throw(RangeError) {
 	for (int i = 0; i < _len; i++) this->_data[_pos + i] = _str._data[i];
 	this->_size += _len;
 }
-void string::erase(int _pos, int _len) throw(RangeError) {
+void string::erase(int _pos, int _len) {
 	this->__range_check(_pos);
 	if (_len == this->epos || _pos + _len >= this->_size) {
 		this->_data[_pos] = '\0';
@@ -151,7 +148,7 @@ void string::clear() {
 	this->_data[0] = '\0';
 	this->_size = 0;
 }
-decltype(auto) string::copy(int _pos, int _len) throw(RangeError) {
+decltype(auto) string::copy(int _pos, int _len) {
 	this->__range_check(_pos);
 	string _str;
 	size_t _n = _len;
@@ -182,14 +179,14 @@ void string::resize(int _cap, char _chr) {
 		this->_data[this->_size] = '\0';
 	}
 }
-int string::find(char _chr, int _pos) throw(RangeError) {
+int string::find(char _chr, int _pos) {
 	this->__range_check(_pos);
 	for (size_t i = 0; i < this->_size; i++) {
 		if (this->_data[i] == _chr) return i;
 	}
 	return this->epos;
 }
-int string::find(const char* _str, int _pos) throw(RangeError) {
+int string::find(const char* _str, int _pos) {
 	this->__range_check(_pos);
 	const char* _p = strstr(this->begin() + _pos, _str);
 	if (_p) return _p - this->begin();
@@ -200,7 +197,7 @@ char& string::operator [](int _pos) {
 		static_cast<const string&>(*this)[_pos]
 		);
 }
-const char& string::operator [](int _pos) const throw(RangeError) {
+const char& string::operator [](int _pos) const {
 	this->__range_check(_pos);
 	if (_pos == this->epos) return _data[_size - 1];
 	else return _data[_pos];
@@ -270,7 +267,7 @@ int strcmp(const char* _des, const char* _sou) {
 	if (*_des > *_sou) return 1;
 	else return -1;
 }
-const char* strstr(const char* _des, const char* _sou) throw(ValueError) {
+const char* strstr(const char* _des, const char* _sou) {
 	Exception(_des && _sou, new ValueError("Value is NULL!"));
 	const char* _s1 = _des;
 	const char* _s2 = _sou;

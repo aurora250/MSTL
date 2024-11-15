@@ -2,7 +2,6 @@
 #define MSTL_DEQUE_HPP__
 #include <iterator>
 #include "container.h"
-#include "basiclib.h"
 #include "memory.hpp"
 
 MSTL_BEGIN_NAMESPACE__
@@ -42,6 +41,14 @@ struct deque_iterator {
         cur(cur), first(first), last(last), node(node) {}
     deque_iterator(const iterator& x) :
         cur(x.cur), first(x.first), last(x.last), node(x.node) {}
+    self& operator =(const self& rh) {
+		if(*this == rh) return *this;
+		this->cur = rh.cur;
+		this->first = rh.first;
+		this->last = rh.last;
+		this->node = rh.node;
+		return *this;
+	}
     ~deque_iterator() = default;
 
     reference operator *()const { return *cur; }
@@ -132,7 +139,7 @@ public:
 
 private:
     typedef pointer* map_pointer;
-    typedef Alloc                                           data_allocator;
+    typedef Alloc    data_allocator;
     typedef simple_alloc<pointer, std::allocator<pointer>>  map_allocator;
 
     data_allocator data_alloc;
@@ -152,12 +159,10 @@ private:
         map_pointer nstart = map + (map_size - node_nums) / 2;
         map_pointer nfinish = nstart + node_nums - 1;
         map_pointer cur;
-        try {
+        MSTL_TRY__{
             for (cur = nstart; cur <= nfinish; ++cur) *cur = data_alloc.allocate(buff_size());
         }
-        catch (...) {
-            Exception(error_map[__error::MemErr]);
-        }
+        MSTL_CATCH_UNWIND_THROW_M__();
         start.set_node(nstart);
         finish.set_node(nfinish);
         start.cur = start.first;
@@ -378,7 +383,7 @@ public:
         split_line(_out);
     }
 
-    explicit deque() : map(0), map_size(1), start(), finish(), data_alloc(), map_alloc() {
+    explicit deque() : data_alloc(), map_alloc(), map(0), map_size(1), start(), finish() {
         map = map_alloc.allocate(1);
         *map = data_alloc.allocate(buff_size());
         start.set_node(map);
@@ -387,13 +392,13 @@ public:
         finish.cur = finish.first;
     }
     explicit deque(size_type n, reference_const x = T()) :
-        map(0), map_size(0), start(), finish(), data_alloc(), map_alloc() {
+        data_alloc(), map_alloc(), map(0), map_size(0), start(), finish() {
         __fill_initialize(n, x);
     }
     explicit deque(const std::initializer_list<T>& _lls) : deque(_lls.begin(), _lls.end()) {}
     template<typename InputIterator>
     deque(InputIterator first, InputIterator last) :
-        map(0), map_size(0), start(), finish(), data_alloc(), map_alloc() {
+        data_alloc(), map_alloc(), map(0), map_size(0), start(), finish() {
         difference_type n = last - first;
         __create_map_and_nodes(n);
         for (map_pointer cur = start.node; cur < finish.node; ++cur) {
@@ -403,8 +408,8 @@ public:
         uninitialized_copy(first, last, finish.first);
     }
     explicit deque(self& x) : deque(x.begin(), x.end()) {}
-    explicit deque(self&& x) : map(x.map), map_size(x.map_size),
-        start(x.start), finish(x.finish), data_alloc(), map_alloc() {
+    explicit deque(self&& x) : data_alloc(), map_alloc(),
+		map(x.map), map_size(x.map_size), start(x.start), finish(x.finish) {
         x.map = 0;
         x.map_size = 0;
         x.finish = x.start;
@@ -430,7 +435,7 @@ public:
         if (map_size - (finish.node - map) - 1 < nodes_to_add) __reallocate_map(nodes_to_add, false);
     }
     void reserve_map_at_front(size_type nodes_to_add = 1) {
-        if (start.node - map < nodes_to_add) __reallocate_map(nodes_to_add, true);
+        if (size_type(start.node - map) < nodes_to_add) __reallocate_map(nodes_to_add, true);
     }
 
     void push_back(reference_const x) {

@@ -1,6 +1,4 @@
 ﻿#include "mstlc++.hpp"
-#include <iostream>
-#include <thread>
 
 void try_lls();
 void try_arr() {
@@ -15,14 +13,13 @@ void try_arr() {
     arr.__det__();
 }
 void try_exc() {
+	MSTL_NAMESPACE__;
     try {
-        MSTL::Exception(false, new MSTL::AttributeError());
+        MSTL_EXEC_MEMORY__;
     }
-    catch (MSTL::Error e) {
-        e.__det__();
-        MSTL::StopIterator it;
-        it.__det__();
-        MSTL::Exit(true, try_lls);
+    catch (Error& e) {
+        StopIterator it;
+        Exit(true, try_lls);
         try_lls();
     }
 }
@@ -52,8 +49,7 @@ void try_str() {
     str.__det__();
     str.push('a');
     str.__det__();
-    std::cout << str.pop();;
-    auto i = str.ctype();
+    std::cout << str.pop();
     str.insert(3, str2);
     str.__det__();
 }
@@ -66,7 +62,7 @@ void try_pir() {
 }
 class Foo {};
 void try_check() {
-    MSTL_NAMESPACE__
+    MSTL_NAMESPACE__;
     std::cout << check_type<string>() << std::endl;
     std::cout << check_type<const volatile void* const*&>() << std::endl;
     std::cout << check_type<int(*)[]>() << std::endl;
@@ -76,14 +72,13 @@ void try_check() {
                                                                                       // 返回char数组指针
     std::cout << check_type<int (Foo::* const)[3]>() << std::endl;   // 常类成员指针，指向Foo里的int[3]成员
     std::cout << check_type<int (Foo::* const)(int, Foo&&, int) volatile>() << std::endl;   // 常类成员函数指针，指向Foo里的volatile成员函数
-    const int a = 0;
     string cstr("const string");
     const string* sr = new string("hai");
     split_line();
     std::cout << check_type<decltype(*(& cstr))>() << std::endl;
     std::cout << check_type<decltype(std::move(cstr))>() << std::endl;
     split_line();
-    std::cout << check_type(sr) << std::endl;
+    // std::cout << check_type(sr) << std::endl;
     std::cout << check_type<decltype(sr)>() << std::endl;
     split_line();
 }
@@ -187,7 +182,7 @@ void try_stack() {
     q.__det__();
 }
 void try_vec() {
-    MSTL_NAMESPACE__
+    MSTL_NAMESPACE__;
     MSTL_TRY__{
         vector<int> v;  //{ 1,2,3,4 }
         v.__det__();
@@ -213,7 +208,7 @@ void try_vec() {
         v.insert(v.end(), v2.const_begin(), v2.const_end());
         container* c = &v;
         c->__det__();
-        MSTL_EXEC_MEMORY__
+        MSTL_EXEC_MEMORY__;
     }
     MSTL_CATCH_ERROR__{
 
@@ -235,13 +230,12 @@ void try_map() {
     m[100] = 'x';
     m[2] = 'l';
     m.__det__();
-
+    std::cout << m[1] << std::endl;
 }
 
 int main() {
     MSTL_NAMESPACE__
-    try_map();
+    try_vec();
     //unsigned int n = std::thread::hardware_concurrency();
     //std::cout << "支持 " << n << " 线程。\n";
 }
-
