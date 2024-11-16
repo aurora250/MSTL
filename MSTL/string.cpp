@@ -148,13 +148,13 @@ void string::clear() {
 	this->_data[0] = '\0';
 	this->_size = 0;
 }
-decltype(auto) string::copy(int _pos, int _len) {
+const string& string::copy(int _pos, int _len) {
 	this->__range_check(_pos);
 	string _str;
 	size_t _n = _len;
 	if (not this->__in_boundary(_pos + _len) || _len == this->epos) _n = this->_size - _pos;
 	for (size_t i = 0; i < _n; i++)	_str += this->_data[_pos + i];
-	return (_str);
+	return _str;
 }
 void string::swap(string& _str) {
 	if (this->_capacity == _str._capacity) std::swap(this->_data, _str._data);

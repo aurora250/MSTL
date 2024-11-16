@@ -96,7 +96,6 @@ void try_dep() {
     std::cout << check_type<deposit<double, int, double, double&>>() << std::endl;
 }
 
-#include <vector>
 #include <deque>
 void try_copy() {
     //int ia[] = { 0,1,2,3,4,5,6,7,8 };

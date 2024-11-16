@@ -1,9 +1,7 @@
 #ifndef MSTL_MEMORY_HPP__
 #define MSTL_MEMORY_HPP__
-#include <memory>
 #include "type_traits.hpp"
 #include "algobase.h"
-#include "basiclib.h"
 #include "errorlib.h"
 #include "pair.hpp"
 

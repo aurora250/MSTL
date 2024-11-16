@@ -97,7 +97,7 @@ public:
 	}
 	size_type size() const { return _size; }
 	T& back() {
-		return this->_data[not N == 0 ? N - 1 : 0];
+		return this->_data[N != 0 ? N - 1 : 0];
 	}
 	T& front() {
 		return this->_data[0];

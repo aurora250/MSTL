@@ -1,7 +1,6 @@
 #ifndef MSTL_HEAP_HPP__
 #define MSTL_HEAP_HPP__
 #include "basiclib.h"
-#include "iterator.hpp"
 
 MSTL_BEGIN_NAMESPACE__
 

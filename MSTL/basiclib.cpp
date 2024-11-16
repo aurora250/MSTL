@@ -3,11 +3,11 @@
 
 MSTL_BEGIN_NAMESPACE__
 
-void split_line(std::ostream& _out, size_t _size) throw(ValueError) {
+void split_line(std::ostream& _out, size_t _size) {
 	while (_size) _out << '-', _size--;
 	_out << std::endl;
 }
-void* memcpy(void* _dest, void* _rsc, int _byte) throw(ValueError) {
+void* memcpy(void* _dest, void* _rsc, int _byte) {
 	Exception(_dest && _rsc, new StopIterator());
 	void* _ret = _dest;
 	while (_byte--) {
@@ -17,7 +17,7 @@ void* memcpy(void* _dest, void* _rsc, int _byte) throw(ValueError) {
 	}
 	return _ret;
 }
-int memcmp(const void* _dest, const void* _rsc, int _byte) throw(ValueError) {
+int memcmp(const void* _dest, const void* _rsc, int _byte) {
 	Exception(_dest && _rsc, new StopIterator());
 	while (_byte--) {
 		if (*(char*)_dest != *(char*)_rsc) return *(char*)_dest - *(char*)_rsc;
@@ -26,7 +26,7 @@ int memcmp(const void* _dest, const void* _rsc, int _byte) throw(ValueError) {
 	}
 	return 0;
 }
-void* memmove(void* _dest, const void* _rsc, int _byte) throw(ValueError) {
+void* memmove(void* _dest, const void* _rsc, int _byte) {
 	Exception(_dest && _rsc, new StopIterator());
 	void* _ret = _dest;
 	if (_dest < _rsc) {
@@ -43,7 +43,7 @@ void* memmove(void* _dest, const void* _rsc, int _byte) throw(ValueError) {
 	}
 	return _ret;
 }
-void* memset(void* _dest, int _val, size_t _size) throw(ValueError) {
+void* memset(void* _dest, int _val, size_t _size) {
 	Exception(_dest, new StopIterator());
 	void* ret = (char*)_dest;
 	while (_size--)

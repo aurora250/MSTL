@@ -25,7 +25,11 @@ private:
         if (not this->is_compact_) sr_ += " ";
         using ss_t = std::ostringstream;
 #if defined(__GNUC__)
+#if defined(__clang__)
+        this->sr_ += static_cast<ss_t>(ss_t() << val).str();
+#else
         this->sr_ += static_cast<ss_t&>(ss_t() << val).str();
+#endif
 #else
         this->sr_ += static_cast<ss_t>(ss_t() << val).str();
 #endif

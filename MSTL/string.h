@@ -40,7 +40,7 @@ public:
 	void insert(int _pos, const string& _str);
 	void erase(int _pos, int _len = epos);
 	void clear();
-	decltype(auto) copy(int _pos = 0, int _len = epos);
+	const string& copy(int _pos = 0, int _len = epos);
 	void swap(string& _str);
 	void resize(int _cap, char _chr = '\0');
 	int find(char _chr, int _pos = 0);

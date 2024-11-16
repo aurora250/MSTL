@@ -153,10 +153,8 @@ DEFAULT_TYPE_TRAITS__(unsigned long)
 DEFAULT_TYPE_TRAITS__(float)
 DEFAULT_TYPE_TRAITS__(double)
 DEFAULT_TYPE_TRAITS__(long double)
-#if defined(LLONG_MAX)
 DEFAULT_TYPE_TRAITS__(long long)
 DEFAULT_TYPE_TRAITS__(unsigned long long)
-#endif
 #else
 MSTL_END_NAMESPACE__
 #include <type_traits>

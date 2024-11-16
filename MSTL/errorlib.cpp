@@ -1,6 +1,5 @@
 #include "errorlib.h"
 #include "basiclib.h"
-#include "depositary.h"
 
 MSTL_BEGIN_NAMESPACE__
 
