@@ -1,6 +1,6 @@
 #include "string.h"
 #include "errorlib.h"
-#include "basiclib.h"
+#include "check_type.h"
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -148,7 +148,7 @@ void string::clear() {
 	this->_data[0] = '\0';
 	this->_size = 0;
 }
-const string& string::copy(int _pos, int _len) {
+string& string::copy(int _pos, int _len) {
 	this->__range_check(_pos);
 	string _str;
 	size_t _n = _len;

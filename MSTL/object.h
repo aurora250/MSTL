@@ -1,6 +1,5 @@
 #ifndef MSTL_OBJECT_H__
 #define MSTL_OBJECT_H__
-#include "check_type.h"
 #include "basiclib.h"
 #include <iostream>
 

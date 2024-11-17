@@ -1,8 +1,6 @@
 #ifndef MSTL_RB_TREE_H__
 #define MSTL_RB_TREE_H__
 #include "pair.hpp"
-#include "algo.hpp"
-#include "container.h"
 #include "memory.hpp"
 #include <iterator>
 

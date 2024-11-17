@@ -19,6 +19,8 @@
 #include "map.hpp"
 #include "hashtable.h"
 
+#include "algorithm.hpp"
+#include "check_type.h"
 #include "depositary.h"
 #include "jsonlib.h"
 

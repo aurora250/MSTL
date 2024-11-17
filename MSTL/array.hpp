@@ -3,6 +3,7 @@
 #include "container.h"
 #include "errorlib.h"
 #include "basiclib.h"
+#include "check_type.h"
 #include "memory.hpp"
 #include <iostream>
 #include <initializer_list>

@@ -1,8 +1,6 @@
 #ifndef MSTL_ERROR_H__
 #define MSTL_ERROR_H__
-#include <initializer_list>
-#include <map>
-#include "object.h"
+#include "basiclib.h"
 
 MSTL_BEGIN_NAMESPACE__
 

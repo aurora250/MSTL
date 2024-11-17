@@ -235,6 +235,4 @@ void try_map() {
 int main() {
     MSTL_NAMESPACE__
     try_vec();
-    //unsigned int n = std::thread::hardware_concurrency();
-    //std::cout << "支持 " << n << " 线程。\n";
 }

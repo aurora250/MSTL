@@ -8,7 +8,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug",
-            "program": "${command:cmake.launchTargetPath}", 
+            "program": "${command:make.launchTargetPath}", // "${command:cmake.launchTargetPath}", 
             "args": [],
             "cwd": "${workspaceFolder}",
             "internalConsoleOptions": "neverOpen",

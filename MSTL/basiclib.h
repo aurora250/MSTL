@@ -40,7 +40,7 @@
 #define MSTL_DLL_LINK__ 1
 #endif // __GNUC__
 
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(__GNUC__)
 #define MSTL_ITERATOR_TRATIS_FROM__ std::
 #else 
 #define MSTL_ITERATOR_TRATIS_FROM__ 

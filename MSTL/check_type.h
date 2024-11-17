@@ -1,6 +1,5 @@
 #ifndef MSTL_CHECK_TYPE_H
 #define MSTL_CHECK_TYPE_H
-#include <iostream>
 #include <sstream>
 #if defined(__GNUC__)
 #include <memory>
@@ -115,12 +114,10 @@ struct check<T[], IsBase> : check<T, true> {   // Êý×é
 
     check(const output& out) : base_t(out), bound_(out_), bracket_(out_) {}
 };
-}
-
 
 #define CHECK_TYPE__(OPT) \
     template <typename T, bool IsBase> \
-    struct MSTL::check<T OPT, IsBase> : MSTL::check<T, true> \
+    struct check<T OPT, IsBase> : check<T, true> \
     { \
         using base_t = check<T, true>; \
         using base_t::out_; \
@@ -134,24 +131,22 @@ CHECK_TYPE__(&)
 CHECK_TYPE__(&&)
 CHECK_TYPE__(*)
 
-namespace MSTL {
-    template <bool IsStart, typename P1, typename... P>
-    struct parameter<IsStart, P1, P...> {
-        output& out_;
 
-        parameter(output& out) : out_(out) {}
-        ~parameter(void) {
-            [this](bracket<IsStart>&&) {
-                check<P1> { out_ };
-                parameter<false, P...> { out_.compact() };
-                } (bracket<IsStart> { out_, "," });
-        }
-    };
-}
+template <bool IsStart, typename P1, typename... P>
+struct parameter<IsStart, P1, P...> {
+    output& out_;
+    parameter(output& out) : out_(out) {}
+    ~parameter(void) {
+        [this](bracket<IsStart>&&) {
+            check<P1> { out_ };
+            parameter<false, P...> { out_.compact() };
+            } (bracket<IsStart> { out_, "," });
+    }
+};
 
 #define CHECK_TYPE_ARRAY__(CV_OPT, BOUND_OPT, ...) \
     template <typename T, bool IsBase __VA_ARGS__> \
-    struct MSTL::check<T CV_OPT [BOUND_OPT], IsBase> : MSTL::check<T CV_OPT, !std::is_array<T>::value> \
+    struct check<T CV_OPT [BOUND_OPT], IsBase> : check<T CV_OPT, !std::is_array<T>::value> \
     { \
         using base_t = check<T CV_OPT, !std::is_array<T>::value>; \
         using base_t::out_; \
@@ -178,7 +173,6 @@ CHECK_TYPE_ARRAY__(const, , )
 CHECK_TYPE_ARRAY__(volatile, , )
 CHECK_TYPE_ARRAY__(const volatile, , )
 
-namespace MSTL {
     template <typename T, bool IsBase, typename... P>
     struct check<T(P...), IsBase> : check<T, true> {   // º¯Êý
         using base_t = check<T, true>;
@@ -245,7 +239,7 @@ CHECK_TYPE_MEM_FUNC__(const volatile)
 
 template <typename T>
 std::string check_type() {
-    // check_type<decltype(_obj)>()
+    // check_type<decltype(object)>()
     std::string str;
     check<T> { str };
     return str;
