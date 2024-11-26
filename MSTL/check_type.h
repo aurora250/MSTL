@@ -1,6 +1,7 @@
 #ifndef MSTL_CHECK_TYPE_H
 #define MSTL_CHECK_TYPE_H
 #include <sstream>
+#include "string.h"
 #if defined(__GNUC__)
 #include <memory>
 #include <cxxabi.h>
@@ -140,7 +141,7 @@ struct parameter<IsStart, P1, P...> {
         [this](bracket<IsStart>&&) {
             check<P1> { out_ };
             parameter<false, P...> { out_.compact() };
-            } (bracket<IsStart> { out_, "," });
+        } (bracket<IsStart> { out_, "," });
     }
 };
 
@@ -173,47 +174,46 @@ CHECK_TYPE_ARRAY__(const, , )
 CHECK_TYPE_ARRAY__(volatile, , )
 CHECK_TYPE_ARRAY__(const volatile, , )
 
-    template <typename T, bool IsBase, typename... P>
-    struct check<T(P...), IsBase> : check<T, true> {   // 函数
-        using base_t = check<T, true>;
-        using base_t::out_;
-        parameter<true, P...> parameter_;
-        bracket<IsBase>       bracket_;
+template <typename T, bool IsBase, typename... P>
+struct check<T(P...), IsBase> : check<T, true> {   // 函数
+    using base_t = check<T, true>;
+    using base_t::out_;
+    parameter<true, P...> parameter_;
+    bracket<IsBase>       bracket_;
 
-        check(const output& out) : base_t(out), parameter_(out_), bracket_(out_) {}
-    };
+    check(const output& out) : base_t(out), parameter_(out_), bracket_(out_) {}
+};
 
-    template <typename T, bool IsBase, typename C>
-    struct check<T C::*, IsBase> : check<T, true> {   // 类成员指针
-        using base_t = check<T, true>;
-        using base_t::out_;
+template <typename T, bool IsBase, typename C>
+struct check<T C::*, IsBase> : check<T, true> {   // 类成员指针
+    using base_t = check<T, true>;
+    using base_t::out_;
 
-        check(const output& out) : base_t(out) {
-            check<C> { out_ };
-            out_.compact()("::*");
-        }
-    };
+    check(const output& out) : base_t(out) {
+        check<C> { out_ };
+        out_.compact()("::*");
+    }
+};
 
-    template <typename T, bool IsBase, typename C, typename... P>
-    struct check<T(C::*)(P...), IsBase> : check<T(P...), true> {   // 类成员函数指针
-        using base_t = check<T(P...), true>;
-        using base_t::out_;
+template <typename T, bool IsBase, typename C, typename... P>
+struct check<T(C::*)(P...), IsBase> : check<T(P...), true> {   // 类成员函数指针
+    using base_t = check<T(P...), true>;
+    using base_t::out_;
 
-        check(const output& out) : base_t(out) {
-            check<C> { out_ };
-            out_.compact()("::*");
-        }
-    };
+    check(const output& out) : base_t(out) {
+        check<C> { out_ };
+        out_.compact()("::*");
+    }
+};
 
-    struct at_destruct {
-        output& out_;
-        const char* str_;
+struct at_destruct {
+    output& out_;
+    const char* str_;
 
-        at_destruct(output& out, const char* str = nullptr);
-        ~at_destruct(void);
-        void set_str(const char* str = nullptr);
-    };
-
+    at_destruct(output& out, const char* str = nullptr);
+    ~at_destruct(void);
+    void set_str(const char* str = nullptr);
+};
 
 #define CHECK_TYPE_MEM_FUNC__(...) \
     template <typename T, bool IsBase, typename C, typename... P> \

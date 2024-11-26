@@ -149,6 +149,7 @@
     <ClInclude Include="algo.hpp" />
     <ClInclude Include="algobase.h" />
     <ClInclude Include="algorithm.hpp" />
+    <ClInclude Include="AVL_tree.hpp" />
     <ClInclude Include="database.h" />
     <ClInclude Include="hashtable.h" />
     <ClInclude Include="heap.hpp" />
@@ -179,6 +180,7 @@
     <ClInclude Include="set.hpp" />
     <ClInclude Include="stack.hpp" />
     <ClInclude Include="string.h" />
+    <ClInclude Include="tuple.hpp" />
     <ClInclude Include="type_traits.hpp" />
     <ClInclude Include="vector.hpp" />
   </ItemGroup>

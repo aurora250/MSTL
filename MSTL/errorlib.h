@@ -54,6 +54,12 @@ struct RangeError : public Error {   // 数组越界或无值
 	static const_cstring __type__;
 };
 
+struct SQLError : public Error {   // SQL错误
+	typedef SQLError self;
+	explicit SQLError(cstring _info = "SQL Manage error!") noexcept;
+	static const_cstring __type__;
+};
+
 extern void Exception(Error* _err);
 extern void Exception(bool _boolean, Error* _err = nullptr);
 extern void Assert(bool _boolean, const char* const _info = "Assert false!");

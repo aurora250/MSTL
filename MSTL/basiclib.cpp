@@ -53,6 +53,63 @@ void* memset(void* _dest, int _val, size_t _size) {
 	}
 	return ret;
 }
+
+size_t strlen(const char* _str) {
+	if (*_str != '\0') return strlen(_str + 1) + 1;
+	else return 0;
+}
+char* strcpy(char* _dest, const char* _sou) {
+	char* _ret = _dest;
+	while (*_sou != '\0') {
+		*_dest = *_sou;
+		_dest++;
+		_sou++;
+	}
+	*_dest = *_sou;
+	return _ret;
+}
+int strcmp(const char* _des, const char* _sou) {
+	while (*_des == *_sou) {
+		if (*_des == '\0') return 0;
+		_des++;
+		_sou++;
+	}
+	if (*_des > *_sou) return 1;
+	else return -1;
+}
+const char* strstr(const char* _des, const char* _sou) {
+	Exception(_des && _sou, new ValueError("Value is NULL!"));
+	const char* _s1 = _des;
+	const char* _s2 = _sou;
+	const char* _cur = _des;
+	while (*_cur) {
+		_s1 = _cur;
+		_s2 = _sou;
+		while (*_s1 && *_s2 && (*_s1 == *_s2)) {
+			_s1++;
+			_s2++;
+		}
+		if (*_s2 == '\0') return _cur;
+		_cur++;
+	}
+	return NULL;
+}
+char* memstr(char* _data, size_t _len, char* _sub) {
+	if (_data == NULL || _len <= 0 || _sub == NULL) return NULL;
+	if (*_sub == '\0') return NULL;
+	size_t _sublen = strlen(_sub);
+	size_t i;
+	char* _cur = _data;
+	size_t _las = _len - _sublen + 1;
+	for (i = 0; i < _las; i++) {
+		if (*_cur == *_sub) {
+			if (memcmp(_cur, _sub, _sublen) == 0) return _cur;
+		}
+		_cur++;
+	}
+	return NULL;
+}
+
 size_t deque_buf_size(size_t n, size_t sz) {
 	return n != 0 ? n : (sz < 512 ? size_t(512 / sz) : 1);
 }

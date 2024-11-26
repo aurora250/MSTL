@@ -18,10 +18,12 @@
 #include "set.hpp"
 #include "map.hpp"
 #include "hashtable.h"
+#include "tuple.hpp"
 
 #include "algorithm.hpp"
 #include "check_type.h"
 #include "depositary.h"
 #include "jsonlib.h"
+#include "database.h"
 
 #endif // MSTL_MSTLCPP_HPP__

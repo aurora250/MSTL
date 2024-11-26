@@ -152,5 +152,11 @@
     <ClInclude Include="jsonlib.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="tuple.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="AVL_tree.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

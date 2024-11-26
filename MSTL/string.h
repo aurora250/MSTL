@@ -25,9 +25,8 @@ private:
 	bool __in_boundary(int _pos) const;
 public:
 	explicit string(const char* _str = "");
-	explicit string(const string& _str);
+	explicit string(const string& _str); 
 	explicit string(string&& _str);
-	explicit string(const vector<char>& _vec);
 	string& operator =(const string& _str);
 	~string();
 	void reserve(int _cap);
@@ -55,6 +54,13 @@ public:
 	const char& operator [](int _pos) const;
 	string& operator +=(char _chr);
 	string& operator +=(const char* _str);
+
+#define MSTL_STRING_CONVERT_DECLARE__(OPT) string& operator +=(OPT _tar)
+
+	MSTL_STRING_CONVERT_DECLARE__(int);
+	MSTL_STRING_CONVERT_DECLARE__(double);
+	MSTL_STRING_CONVERT_DECLARE__(size_t);
+
 	string& operator +=(const string& _str);
 	bool operator <(const string& _str) const;
 	bool operator >(const string& _str) const;
@@ -62,14 +68,7 @@ public:
 	bool operator >=(const string& _str) const;
 	bool operator !=(const string& _str) const;
 	bool operator ==(const string& _str) const;
-	friend std::ostream& operator <<(std::ostream& _out, const string& _str);
 };
-
-size_t strlen(const char* _str);
-char* strcpy(char* _dest, const char* _sou);
-int strcmp(const char* _des, const char* _sou);
-const char* strstr(const char* _des, const char* _sou);
-char* memstr(char* _data, size_t _len, char* _sub);
 
 MSTL_END_NAMESPACE__
 

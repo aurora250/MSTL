@@ -96,7 +96,6 @@ void try_dep() {
     std::cout << check_type<deposit<double, int, double, double&>>() << std::endl;
 }
 
-#include <deque>
 void try_copy() {
     //int ia[] = { 0,1,2,3,4,5,6,7,8 };
     ////输出区间的终点和输入区间出现重叠 没有问题
@@ -110,20 +109,20 @@ void try_copy() {
     //std::for_each(ia, ia + 9, display<int>()); //0 1 2 3 2 3 4 5 6
     //std::cout << std::endl;
     ////本例结果正确 因为调用的copy算法使用memmove()执行实际复制操作
-
+    MSTL_NAMESPACE__;
     int ia[] = { 0,1,2,3,4,5,6,7,8 };
-    std::deque<int>id(ia, ia + 9);
-    std::deque<int>::iterator first = id.begin();
-    std::deque<int>::iterator last = id.end();
+    deque<int>id(ia, ia + 9);
+    deque<int>::iterator first = id.begin();
+    deque<int>::iterator last = id.end();
     ++++first;  //advance(first,2)  2
     std::cout << *first << std::endl;
     ----last;  //advance(last,-2) 7
     std::cout << *last << std::endl;
-    std::deque<int>::iterator result = id.begin();
+    deque<int>::iterator result = id.begin();
     std::cout << *result << std::endl; //0
     //输出区间的终点和输入区间重叠 没有问题
     MSTL::copy(first, last, result);
-    MSTL::for_each(id.begin(), id.end(), MSTL::display<int>()); //2 3 4 5 6 5 6 7 8
+    MSTL::for_each(id.begin(), id.end(), display<int>()); //2 3 4 5 6 5 6 7 8
     std::cout << std::endl;
 
     //int ia[] = { 0,1,2,3,4,5,6,7,8 };
@@ -207,6 +206,9 @@ void try_vec() {
         v.insert(v.end(), v2.const_begin(), v2.const_end());
         container* c = &v;
         c->__det__();
+        FOR(it, v2) {
+            std::cout << *it << std::endl;
+        }
         MSTL_EXEC_MEMORY__;
     }
     MSTL_CATCH_ERROR__{
@@ -231,8 +233,13 @@ void try_map() {
     m.__det__();
     std::cout << m[1] << std::endl;
 }
+void try_tup() {
+    MSTL_NAMESPACE__;
+    tuple<int, char, const char*> t(1, 't', "MSTL");
+
+}
 
 int main() {
     MSTL_NAMESPACE__
-    try_vec();
+    try_tup();
 }

@@ -25,6 +25,9 @@ const_cstring ValueError::__type__ = "ValueError";
 RangeError::RangeError(cstring _info) noexcept : Error(_info, __type__) {}
 const_cstring RangeError::__type__ = "RangeError";
 
+SQLError::SQLError(cstring _info) noexcept : Error(_info, __type__) {}
+const_cstring SQLError::__type__ = "SQLError";
+
 void Exception(Error* _err) {
 	// _out_set<const char*>({ "Exception : (" , _err->_type, ") ",_err->_info }, true, std::cerr);
 	std::cerr << "Exception : (" << _err->_type << ") " << _err->_info << std::endl;
