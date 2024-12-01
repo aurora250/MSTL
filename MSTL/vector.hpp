@@ -56,12 +56,12 @@ private:
 	iterator end_of_storage;
 	data_allocator alloc;
 
-	inline void __range_check(int _pos) const {
+	inline void __range_check(size_type _pos) const {
 		Exception(__in_boundary(_pos), new RangeError());
 	}
-	inline bool __in_boundary(int _pos) const {
+	inline bool __in_boundary(size_type _pos) const {
 		if (_pos < 0) return false;
-		else return size_type(_pos) < size() ? true : false;
+		else return _pos < size() ? true : false;
 	}
 	void fill_initialize(size_type n, const_reference value) {
 		start = allocate_and_fill(n, value);

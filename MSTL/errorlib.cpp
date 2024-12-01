@@ -5,6 +5,9 @@ MSTL_BEGIN_NAMESPACE__
 
 Error::Error(cstring _info, cstring _type) noexcept : _info(_info), _type(_type) {}
 Error::~Error() {};
+void Error::__show_data_only(std::ostream& _out) const {
+	_out << "Exception : (" << this->_type << ") " << this->_info;
+}
 const_cstring Error::__type__ = "Error";
 
 StopIterator::StopIterator(cstring _info) noexcept : Error(_info, __type__) {}
@@ -28,14 +31,23 @@ const_cstring RangeError::__type__ = "RangeError";
 SQLError::SQLError(cstring _info) noexcept : Error(_info, __type__) {}
 const_cstring SQLError::__type__ = "SQLError";
 
+std::ostream& operator <<(std::ostream& _out, const Error& err) {
+	err.__show_data_only(_out);
+	return _out;
+}
+
 void Exception(Error* _err) {
 	// _out_set<const char*>({ "Exception : (" , _err->_type, ") ",_err->_info }, true, std::cerr);
-	std::cerr << "Exception : (" << _err->_type << ") " << _err->_info << std::endl;
+	_err->__show_data_only(std::cerr);
+	std::cerr << std::endl;
 	throw* _err;
 }
 
 void Exception(bool _boolean, Error* _err) {
-	if (_boolean) return;
+	if (_boolean) {
+		delete _err;
+		return;
+	}
 	else {
 		if (_err == nullptr) Assert(false);
 		else Exception(_err);

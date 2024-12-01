@@ -63,7 +63,7 @@ string::const_iterator string::const_begin() const {
 string::const_iterator string::const_end() const {
 	return this->_data + this->_size;
 }
-void string::reserve(int _cap) {
+void string::reserve(size_type _cap) {
 	if (_cap <= this->_capacity) return;
 	char* _str = new char[_cap + 1];
 	this->_capacity = _cap;
@@ -97,10 +97,10 @@ void string::append(const string& _str) {
 	strcpy(this->end(), _str._data);
 	this->_size += _len;
 }
-void string::insert(int _pos, int _cpte, char _chr) {
+void string::insert(size_type _pos, size_type _cpte, char _chr) {
 	this->__range_check(_pos);
 	if (this->_size + _cpte > this->_capacity) this->reserve(this->_size + _cpte);
-	int _end = this->_size;
+	size_type _end = this->_size;
 	while (_end >= _pos && _end != this->epos) {
 		this->_data[_end + _cpte] = this->_data[_end];
 		_end--;
@@ -108,7 +108,7 @@ void string::insert(int _pos, int _cpte, char _chr) {
 	for (int i = 0; i < _cpte; i++) this->_data[_pos + i] = _chr;
 	this->_size += _cpte;
 }
-void string::insert(int _pos, const char* _str) {
+void string::insert(size_type _pos, const char* _str) {
 	this->__range_check(_pos);
 	int _len = strlen(_str);
 	if (this->_size + _len > this->_capacity) this->reserve(this->_size + _len);
@@ -120,7 +120,7 @@ void string::insert(int _pos, const char* _str) {
 	for (int i = 0; i < _len; i++) this->_data[_pos + i] = _str[i];
 	this->_size += _len;
 }
-void string::insert(int _pos, const string& _str) {
+void string::insert(size_type _pos, const string& _str) {
 	this->__range_check(_pos);
 	int _len = _str._size;
 	if (this->_size + _len > this->_capacity) this->reserve(this->_size + _len);
@@ -132,7 +132,7 @@ void string::insert(int _pos, const string& _str) {
 	for (int i = 0; i < _len; i++) this->_data[_pos + i] = _str._data[i];
 	this->_size += _len;
 }
-void string::erase(int _pos, int _len) {
+void string::erase(size_type _pos, int _len) {
 	this->__range_check(_pos);
 	if (_len == this->epos || _pos + _len >= this->_size) {
 		this->_data[_pos] = '\0';
@@ -148,14 +148,6 @@ void string::clear() {
 	this->_data[0] = '\0';
 	this->_size = 0;
 }
-string& string::copy(int _pos, int _len) {
-	this->__range_check(_pos);
-	string _str;
-	size_t _n = _len;
-	if (not this->__in_boundary(_pos + _len) || _len == this->epos) _n = this->_size - _pos;
-	for (size_t i = 0; i < _n; i++)	_str += this->_data[_pos + i];
-	return _str;
-}
 void string::swap(string& _str) {
 	if (this->_capacity == _str._capacity) std::swap(this->_data, _str._data);
 	else if (this->_capacity > _str._capacity) {
@@ -167,7 +159,7 @@ void string::swap(string& _str) {
 	std::swap(this->_size, _str._size);
 	std::swap(this->_capacity, _str._capacity);
 }
-void string::resize(int _cap, char _chr) {
+void string::resize(size_type _cap, char _chr) {
 	if (_cap < this->_capacity) {
 		this->_data[_cap] = '\0';
 		this->_size = _cap;
@@ -192,12 +184,12 @@ int string::find(const char* _str, int _pos) {
 	if (_p) return _p - this->begin();
 	else return this->epos;
 }
-char& string::operator [](int _pos) {
+char& string::operator [](size_type _pos) {
 	return const_cast<char&>(
 		static_cast<const string&>(*this)[_pos]
 		);
 }
-const char& string::operator [](int _pos) const {
+const char& string::operator [](size_type _pos) const {
 	this->__range_check(_pos);
 	if (_pos == this->epos) return _data[_size - 1];
 	else return _data[_pos];
@@ -214,14 +206,14 @@ string& string::operator +=(const string& _str) {
 	this->append(_str);
 	return *this;
 }
-#define MSTL_STRING_CONVERT_IMPLE__(OPT) string& string::operator +=(OPT _tar) { \
-		this->append(TO_STRING(_tar)); \
-		return *this; \
-	};
-
-MSTL_STRING_CONVERT_IMPLE__(int);
-MSTL_STRING_CONVERT_IMPLE__(double);
-MSTL_STRING_CONVERT_IMPLE__(size_t);
+string& string::operator +=(int _tar) {
+	this->append(TO_STRING(_tar));
+	return *this;
+};
+string& string::operator +=(double _tar) {
+	this->append(TO_STRING(_tar));
+	return *this;
+};
 
 bool string::operator <(const string& _str) const {
 	size_t i1 = 0;

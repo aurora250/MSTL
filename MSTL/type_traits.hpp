@@ -7,7 +7,7 @@
 MSTL_BEGIN_NAMESPACE__
 
 #if MSTL_NEED_ITERATOR_TAG__
-#if defined(__GNUC__)
+#if defined(MSTL_COMPILE_GNUC__)
 #else
 struct input_iterator_tag {};
 struct output_iterator_tag {};
@@ -81,7 +81,7 @@ struct iterator_traits<const T*> {
 };
 #endif 
 #else
-#if defined(_MSC_VER)  // __GNUC__ 无法使用
+#if defined(MSTL_COMPILE_MSVC__)  // __GNUC__ 无法使用
 using std::iterator_traits;
 using std::output_iterator_tag;
 using std::input_iterator_tag;

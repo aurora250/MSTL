@@ -43,26 +43,27 @@ void try_lls() {
     lls.clear();
     std::cout << lls.empty() <<std::endl;
 }
-void try_str() {
-    MSTL::string str("abc");
-    MSTL::string str2("def");
-    str.__det__();
-    str.push('a');
-    str.__det__();
-    std::cout << str.pop();
-    str.insert(3, str2);
-    str.__det__();
-}
-void try_pir() {
-    MSTL::string s("hello!");
-    MSTL::pair<int, MSTL::string> p(1, s);
-    MSTL::pair<int, MSTL::string> p2(p);
-    p.first = 10;
-    std::cout << p << std::endl;
-}
+//void try_str() {
+//    MSTL::string str("abc");
+//    MSTL::string str2("def");
+//    str.__det__();
+//    str.push('a');
+//    str.__det__();
+//    std::cout << str.pop();
+//    str.insert(3, str2);
+//    str.__det__();
+//}
+//void try_pir() {
+//    MSTL::string s("hello!");
+//    MSTL::pair<int, MSTL::string> p(1, s);
+//    MSTL::pair<int, MSTL::string> p2(p);
+//    p.first = 10;
+//    std::cout << p << std::endl;
+//}
 class Foo {};
 void try_check() {
     MSTL_NAMESPACE__;
+    using std::string;
     std::cout << check_type<string>() << std::endl;
     std::cout << check_type<const volatile void* const*&>() << std::endl;
     std::cout << check_type<int(*)[]>() << std::endl;
@@ -206,13 +207,14 @@ void try_vec() {
         v.insert(v.end(), v2.const_begin(), v2.const_end());
         container* c = &v;
         c->__det__();
-        FOR(it, v2) {
+        FOR_EACH(it, v2) {
             std::cout << *it << std::endl;
         }
         MSTL_EXEC_MEMORY__;
     }
     MSTL_CATCH_ERROR__{
-
+        e.__show_data_only(std::cout);
+        std::cout << std::endl;
     }
 }
 void try_pque() {

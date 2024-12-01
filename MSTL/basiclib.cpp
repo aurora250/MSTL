@@ -1,5 +1,5 @@
 #include "basiclib.h"
-#include "errorlib.h"
+#include <assert.h>
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -8,7 +8,11 @@ void split_line(std::ostream& _out, size_t _size) {
 	_out << std::endl;
 }
 void* memcpy(void* _dest, void* _rsc, int _byte) {
+#if defined(assert)
+	assert(_dest && _rsc);
+#else
 	Exception(_dest && _rsc, new StopIterator());
+#endif
 	void* _ret = _dest;
 	while (_byte--) {
 		*(char*)_dest = *(char*)_rsc;
@@ -18,7 +22,7 @@ void* memcpy(void* _dest, void* _rsc, int _byte) {
 	return _ret;
 }
 int memcmp(const void* _dest, const void* _rsc, int _byte) {
-	Exception(_dest && _rsc, new StopIterator());
+	assert(_dest && _rsc);
 	while (_byte--) {
 		if (*(char*)_dest != *(char*)_rsc) return *(char*)_dest - *(char*)_rsc;
 		_dest = (char*)_dest + 1;
@@ -27,7 +31,7 @@ int memcmp(const void* _dest, const void* _rsc, int _byte) {
 	return 0;
 }
 void* memmove(void* _dest, const void* _rsc, int _byte) {
-	Exception(_dest && _rsc, new StopIterator());
+	assert(_dest && _rsc);
 	void* _ret = _dest;
 	if (_dest < _rsc) {
 		while (_byte--) {
@@ -44,7 +48,7 @@ void* memmove(void* _dest, const void* _rsc, int _byte) {
 	return _ret;
 }
 void* memset(void* _dest, int _val, size_t _size) {
-	Exception(_dest, new StopIterator());
+	assert(_dest);
 	void* ret = (char*)_dest;
 	while (_size--)
 	{
@@ -77,11 +81,11 @@ int strcmp(const char* _des, const char* _sou) {
 	if (*_des > *_sou) return 1;
 	else return -1;
 }
-const char* strstr(const char* _des, const char* _sou) {
-	Exception(_des && _sou, new ValueError("Value is NULL!"));
-	const char* _s1 = _des;
+const char* strstr(const char* _dest, const char* _sou) {
+	assert(_dest && _sou);
+	const char* _s1 = _dest;
 	const char* _s2 = _sou;
-	const char* _cur = _des;
+	const char* _cur = _dest;
 	while (*_cur) {
 		_s1 = _cur;
 		_s2 = _sou;

@@ -29,19 +29,18 @@ public:
 	explicit string(string&& _str);
 	string& operator =(const string& _str);
 	~string();
-	void reserve(int _cap);
+	void reserve(size_type _cap);
 	void push(char _chr);
 	char pop();
 	void append(const char* _str);
 	void append(const string& _str);
-	void insert(int _pos, int _cpte, char _chr);
-	void insert(int _pos, const char* _str);
-	void insert(int _pos, const string& _str);
-	void erase(int _pos, int _len = epos);
+	void insert(size_type _pos, size_type _cpte, char _chr);
+	void insert(size_type _pos, const char* _str);
+	void insert(size_type _pos, const string& _str);
+	void erase(size_type _pos, int _len = epos);
 	void clear();
-	string& copy(int _pos = 0, int _len = epos);
 	void swap(string& _str);
-	void resize(int _cap, char _chr = '\0');
+	void resize(size_type _cap, char _chr = '\0');
 	int find(char _chr, int _pos = 0);
 	int find(const char* _str, int _pos = 0);
 
@@ -50,16 +49,13 @@ public:
 	const_iterator const_begin() const;
 	const_iterator const_end() const;
 
-	char& operator [](int _pos);
-	const char& operator [](int _pos) const;
+	char& operator [](size_type _pos);
+	const char& operator [](size_type _pos) const;
 	string& operator +=(char _chr);
 	string& operator +=(const char* _str);
 
-#define MSTL_STRING_CONVERT_DECLARE__(OPT) string& operator +=(OPT _tar)
-
-	MSTL_STRING_CONVERT_DECLARE__(int);
-	MSTL_STRING_CONVERT_DECLARE__(double);
-	MSTL_STRING_CONVERT_DECLARE__(size_t);
+	string& operator +=(int _tar);
+	string& operator +=(double _tar);
 
 	string& operator +=(const string& _str);
 	bool operator <(const string& _str) const;

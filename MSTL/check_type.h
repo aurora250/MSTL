@@ -24,12 +24,9 @@ private:
         if (this->check_empty(val)) return;
         if (not this->is_compact_) sr_ += " ";
         using ss_t = std::ostringstream;
-#if defined(__GNUC__)
-#if defined(__clang__)
         this->sr_ += static_cast<ss_t>(ss_t() << val).str();
-#else
+#if defined(MSTL_COMPILE_GCC__)
         this->sr_ += static_cast<ss_t&>(ss_t() << val).str();
-#endif
 #else
         this->sr_ += static_cast<ss_t>(ss_t() << val).str();
 #endif
@@ -89,7 +86,7 @@ struct check {
     output out_;
 
     check(const output& out) : out_(out) {
-#   if defined(__GNUC__)
+#if defined(MSTL_COMPILE_GNUC__)
         const char* typeid_name = typeid(T).name();
         auto deleter = [](char* p)
             {
@@ -100,9 +97,9 @@ struct check {
             abi::__cxa_demangle(typeid_name, nullptr, nullptr, nullptr), deleter
         };
         out_(real_name ? real_name.get() : typeid_name);
-#   else
+#else
         out_(typeid(T).name());
-#   endif
+#endif
     }
 };
 
@@ -166,7 +163,7 @@ struct parameter<IsStart, P1, P...> {
     CHECK_TYPE_ARRAY__(const, BOUND_OPT, ,##__VA_ARGS__) \
     CHECK_TYPE_ARRAY__(volatile, BOUND_OPT, ,##__VA_ARGS__) \
     CHECK_TYPE_ARRAY__(const volatile, BOUND_OPT, ,##__VA_ARGS__)
-#if defined(__GNUC__)
+#if defined(MSTL_COMPILE_GNUC__)
 CHECK_TYPE_ARRAY_CV__(0)
 #endif
 CHECK_TYPE_ARRAY_CV__(N, size_t N)

@@ -14,6 +14,7 @@ struct Error {
 
 	explicit Error(cstring _info = __type__, cstring _type = __type__) noexcept;
 	virtual ~Error();
+	void __show_data_only(std::ostream& _out) const;
 	static const_cstring __type__;
 	// friend void Exception(Error* _err);   use non-mumber instead of friend function
 };
@@ -56,7 +57,7 @@ struct RangeError : public Error {   // 数组越界或无值
 
 struct SQLError : public Error {   // SQL错误
 	typedef SQLError self;
-	explicit SQLError(cstring _info = "SQL Manage error!") noexcept;
+	explicit SQLError(cstring _info = "SQL operation error!") noexcept;
 	static const_cstring __type__;
 };
 

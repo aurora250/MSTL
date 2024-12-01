@@ -162,7 +162,7 @@ private:
         MSTL_TRY__{
             for (cur = nstart; cur <= nfinish; ++cur) *cur = data_alloc.allocate(buff_size());
         }
-        MSTL_CATCH_UNWIND_THROW_M__();
+        MSTL_CATCH_UNWIND_THROW_M__(std::cout << "error" << std::endl);
         start.set_node(nstart);
         finish.set_node(nfinish);
         start.cur = start.first;

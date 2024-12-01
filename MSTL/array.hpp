@@ -118,7 +118,7 @@ public:
 		if (_end == this->epos) _fin = this->_size;
 		else if (this->__in_boundary(_end)) _fin = _end;
 		else Exception(new RangeError());
-		for (size_t i = _start; i < _fin; i++) {
+		for (int i = _start; i < _fin; i++) {
 			if (this->_data[i] == _tar) return i;
 		}
 		return this->epos;

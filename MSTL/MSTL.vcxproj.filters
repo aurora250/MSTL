@@ -24,9 +24,6 @@
     <ClCompile Include="container.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="string.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="check_type.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -57,9 +54,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="vector.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="string.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="pair.hpp">
@@ -153,9 +147,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="tuple.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="AVL_tree.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
