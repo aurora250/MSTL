@@ -24,7 +24,7 @@ OutputIterator set_union(InputIterator1 first1, InputIterator1 last1,
 		}
 		++result;
 	}
-	return (copy)(first2, last2, (copy)(first1, last1, result));
+	return copy(first2, last2, copy(first1, last1, result));
 }
 template <typename InputIterator1, typename InputIterator2, typename OutputIterator>
 OutputIterator set_intesection(InputIterator1 first1, InputIterator1 last1,
@@ -54,7 +54,7 @@ OutputIterator set_difference(InputIterator1 first1, InputIterator1 last1,
 			++first1; ++first2;
 		}
 	}
-	return (copy)(first1, last1, result);
+	return copy(first1, last1, result);
 }
 template <typename InputIterator1, typename InputIterator2, typename OutputIterator>
 OutputIterator set_symmetric_difference(InputIterator1 first1, InputIterator1 last1,
@@ -74,7 +74,7 @@ OutputIterator set_symmetric_difference(InputIterator1 first1, InputIterator1 la
 			++first1; ++first2;
 		}
 	}
-	return (copy)(first2, last2, (copy)(first1, last1, result));
+	return copy(first2, last2, copy(first1, last1, result));
 }
 
 //others:
@@ -146,7 +146,7 @@ ForwardIterator1 __search(ForwardIterator1 first1, ForwardIterator1 last1,
 template <typename ForwardIterator1, typename ForwardIterator2>
 inline ForwardIterator1 search(ForwardIterator1 first1, ForwardIterator1 last1,
 	ForwardIterator2 first2, ForwardIterator2 last2) {
-	return (__search)(first1, last1, first2, last2, distance_type<ForwardIterator1>(), distance_type<ForwardIterator2>());
+	return (__search)(first1, last1, first2, last2, (distance_type)(first1), (distance_type)(first2));
 }
 
 template <typename InputIterator, typename T>
@@ -191,14 +191,97 @@ BidirectionalIterator1 __find_end(BidirectionalIterator1 first1, BidirectionalIt
 template <typename ForwardIterator1, typename ForwardIterator2>
 inline ForwardIterator1 find_end(ForwardIterator1 first1, ForwardIterator1 last1,
 	ForwardIterator2 first2, ForwardIterator2 last2) {
-	using category1 = typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<ForwardIterator1>::iterator_category;
-	using category2 = typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<ForwardIterator2>::iterator_category;
-	return (__find_end)(first1, last1, first2, last2, category1(), category2());
+	return __find_end(first1, last1, first2, last2, (iterator_category)(first1), (iterator_category)(first2));
 }
 template <typename InputIterator, typename Function>
 Function for_each(InputIterator first, InputIterator last, Function f) {
 	for (; first != last; ++first) f(*first);
 	return f;
+}
+
+template <class ForwardIterator, class T, class Distance>
+ForwardIterator __lower_bound(ForwardIterator first, ForwardIterator last,
+	const T& value, Distance*, MSTL_ITERATOR_TRATIS_FROM__ forward_iterator_tag) {
+	Distance len = 0;
+	distance(first, last, len);
+	Distance half;
+	ForwardIterator middle;
+	while (len > 0) {
+		half = len >> 1;
+		middle = first;
+		advance(middle, half);
+		if (*middle < value) {
+			first = middle;
+			++first;
+			len = len - half - 1;
+		}
+		else len = half;
+	}
+	return first;
+}
+template <class RandomAccessIterator, class T, class Distance>
+RandomAccessIterator __lower_bound(RandomAccessIterator first, RandomAccessIterator last,
+	const T& value,Distance*, MSTL_ITERATOR_TRATIS_FROM__ random_access_iterator_tag) {
+	Distance len = last - first;
+	Distance half;
+	RandomAccessIterator middle;
+	while (len > 0) {
+		half = len >> 1;
+		middle = first + half;
+		if (*middle < value) {
+			first = middle + 1;
+			len = len - half - 1;
+		}
+		else len = half;
+	}
+	return first;
+}
+template <class ForwardIterator, class T>
+inline ForwardIterator lower_bound(ForwardIterator first, ForwardIterator last, const T& value) {
+	return __lower_bound(first, last, value, (distance_type)(first), (iterator_category)(first));
+}
+
+template <class ForwardIterator, class T, class Compare, class Distance>
+ForwardIterator __lower_bound(ForwardIterator first, ForwardIterator last,
+	const T& value, Compare comp, Distance*, MSTL_ITERATOR_TRATIS_FROM__ forward_iterator_tag) {
+	Distance len = 0;
+	distance(first, last, len);
+	Distance half;
+	ForwardIterator middle;
+	while (len > 0) {
+		half = len >> 1;
+		middle = first;
+		advance(middle, half);
+		if (comp(*middle, value)) {
+			first = middle;
+			++first;
+			len = len - half - 1;
+		}
+		else len = half;
+	}
+	return first;
+}
+template <class RandomAccessIterator, class T, class Compare, class Distance>
+RandomAccessIterator __lower_bound(RandomAccessIterator first, RandomAccessIterator last,
+	const T& value, Compare comp, Distance*, MSTL_ITERATOR_TRATIS_FROM__ random_access_iterator_tag) {
+	Distance len = last - first;
+	Distance half;
+	RandomAccessIterator middle;
+	while (len > 0) {
+		half = len >> 1;
+		middle = first + half;
+		if (comp(*middle, value)) {
+			first = middle + 1;
+			len = len - half - 1;
+		}
+		else len = half;
+	}
+	return first;
+}
+template <class ForwardIterator, class T, class Compare>
+inline ForwardIterator lower_bound(ForwardIterator first, ForwardIterator last, 
+	const T& value, Compare comp) {
+	return __lower_bound(first, last, value, comp, (distance_type)(first), (iterator_category)(first));
 }
 MSTL_END_NAMESPACE__
 

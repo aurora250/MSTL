@@ -1,6 +1,6 @@
 #ifndef MSTL_DEQUE_HPP__
 #define MSTL_DEQUE_HPP__
-#include <iterator>
+
 #include "container.h"
 #include "memory.hpp"
 

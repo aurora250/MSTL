@@ -79,7 +79,7 @@ inline bool lexicographical_compare(const unsigned char* first1, const unsigned 
 	const unsigned char* first2, const unsigned char* last2) {
 	const size_t len1 = last1 - first1;
 	const size_t len2 = last2 - first2;
-	const int result = (memcmp)(first1, first2, (min)(len1, len1));
+	const int result = memcmp(first1, first2, (min)(len1, len1));
 	return result != 0 ? result < 0 : len1 < len2;
 }
 
@@ -138,21 +138,21 @@ inline T* __copy_t(const T* first, const T* last, T* result, __false_type) {
 template <typename InputIterator, typename OutputIterator>
 struct __copy_dispatch {
 	OutputIterator operator ()(InputIterator first, InputIterator last, OutputIterator result) {
-		return (__copy)(first, last, result, (category_type)(first));
+		return __copy(first, last, result, (iterator_category)(first));
 	}
 };
 template <typename T>
 struct __copy_dispatch<T*, T*> {
 	T* operator ()(T* first, T* last, T* result) {
 		using t = typename __type_traits<T>::has_trivial_assignment_operator;
-		return (__copy_t)(first, last, result, t());
+		return __copy_t(first, last, result, t());
 	}
 };
 template <typename T>
 struct __copy_dispatch<const T*, T*> {
 	T* operator ()(const T* first, const T* last, T* result) {
 		using t = typename __type_traits<T>::has_trivial_assignment_operator;
-		return (__copy_t)(first, last, result, t());
+		return __copy_t(first, last, result, t());
 	}
 };
 template <typename InputIterator, typename OutputIterator>
@@ -190,14 +190,14 @@ template <class T>
 struct __copy_backward_dispatch<T*, T*> {
 	T* operator()(T* first, T* last, T* result) {
 		using t = typename __type_traits<T>::has_trivial_assignment_operator;
-		return (__copy_backward_t)(first, last, result, t());
+		return __copy_backward_t(first, last, result, t());
 	}
 };
 template <class T>
 struct __copy_backward_dispatch<const T*, T*> {
 	T* operator()(const T* first, const T* last, T* result) {
 		using t = typename __type_traits<T>::has_trivial_assignment_operator;
-		return (__copy_backward_t)(first, last, result, t());
+		return __copy_backward_t(first, last, result, t());
 	}
 };
 template <class BidirectionalIterator1, class BidirectionalIterator2>

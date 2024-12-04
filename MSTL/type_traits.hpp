@@ -93,7 +93,7 @@ using std::random_access_iterator_tag;
 
 template <typename Iterator>
 inline typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<Iterator>::iterator_category
-category_type(const Iterator&) {
+iterator_category(const Iterator&) {
 	using category = typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<Iterator>::iterator_category;
 	return category();
 }
@@ -181,7 +181,7 @@ inline void __advance(RandomAccessIterator& i, Distance n, MSTL_ITERATOR_TRATIS_
 }
 template <typename InputIterator, typename Distance>
 inline void advance(InputIterator& iter, Distance n) {
-	__advance(iter, n, category_type(iter));
+	__advance(iter, n, iterator_category(iter));
 }
 
 template <typename InputIterator, typename Distance>
@@ -195,7 +195,7 @@ inline void __distance(RandomAccessIterator first, RandomAccessIterator last,
 }
 template <typename InputIterator, typename Distance>
 inline void distance(InputIterator first, InputIterator last, Distance& n) {
-	__distance(first, last, n, category_type(first));
+	__distance(first, last, n, iterator_category(first));
 }
 template <typename InputIterator>
 inline typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<InputIterator>::difference_type

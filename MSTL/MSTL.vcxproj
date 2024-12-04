@@ -138,6 +138,7 @@
     <ClCompile Include="basiclib.cpp" />
     <ClCompile Include="check_type.cpp" />
     <ClCompile Include="depositary.cpp" />
+    <ClCompile Include="hashtable.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="errorlib.cpp" />
     <ClCompile Include="container.cpp" />
@@ -150,12 +151,12 @@
     <ClInclude Include="algorithm.hpp" />
     <ClInclude Include="database.h" />
     <ClInclude Include="hashtable.h" />
+    <ClInclude Include="hash_map.hpp" />
     <ClInclude Include="heap.hpp" />
     <ClInclude Include="jsonlib.h" />
     <ClInclude Include="map.hpp" />
     <ClInclude Include="mathlib.h" />
     <ClInclude Include="memory.hpp" />
-    <ClInclude Include="array.hpp" />
     <ClInclude Include="basemstlc++.hpp" />
     <ClInclude Include="basiclib.h" />
     <ClInclude Include="concepts.hpp" />

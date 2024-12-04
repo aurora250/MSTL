@@ -41,9 +41,7 @@ public:
     explicit tuple(const Types&... args) : Base(args...) {}
     explicit tuple(Types&&... args) : Base(std::forward<Types>(args)...) {}
 };
-template<>
-class tuple<> {};   // µ›πÈ÷’÷π
-
+MSTL_TEMPLATE_NULL__ class tuple<> {};   // µ›πÈ÷’÷π
 
 template<size_t Index, typename T>
 T& get(_tuple_element<Index, T>& element) {

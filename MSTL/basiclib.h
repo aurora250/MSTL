@@ -71,16 +71,24 @@
 #define FILE_PATH TO_STRING(__FILE__)
 #endif
 
+#define MSTL_TEMPLATE_NULL__ template<>
+
 MSTL_BEGIN_NAMESPACE__
 
 #if defined(MSTL_PLATFORM_WINDOWS__) && defined(MSTL_COMPILE_MSVC__)
-typedef unsigned __int64 size_t;
-typedef __int64 ptrdiff_t;
-typedef __int64 intptr_t;
+#define MSTL_LONG_LONG_TYPE__ __int64
+typedef unsigned MSTL_LONG_LONG_TYPE__ size_t;
+typedef MSTL_LONG_LONG_TYPE__ ptrdiff_t;
+typedef MSTL_LONG_LONG_TYPE__ intptr_t;
 #else
-typedef unsigned long long size_t;
-typedef long long ptrdiff_t;
-typedef long long intptr_t;
+#define MSTL_LONG_LONG_TYPE__ long long
+typedef unsigned MSTL_LONG_LONG_TYPE__ size_t;
+typedef MSTL_LONG_LONG_TYPE__ ptrdiff_t;
+typedef MSTL_LONG_LONG_TYPE__ intptr_t;
+#endif
+
+#if defined(_HAS_CXX17)
+typedef decltype(nullptr) nullptr_t;
 #endif
 
 extern void* memcpy(void* _dest, void* _rsc, int _byte);

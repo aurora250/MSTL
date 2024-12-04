@@ -6,7 +6,6 @@
 #ifndef MSTL_MSTLCPP_HPP__
 #define MSTL_MSTLCPP_HPP__
 
-#include "array.hpp"
 #include "list.hpp"
 #include "vector.hpp"
 #include "string.h"
@@ -17,7 +16,7 @@
 #include "rb_tree.h"
 #include "set.hpp"
 #include "map.hpp"
-#include "hashtable.h"
+#include "hash_map.hpp"
 #include "tuple.hpp"
 
 #include "algorithm.hpp"

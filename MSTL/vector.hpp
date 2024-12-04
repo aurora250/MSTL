@@ -6,10 +6,11 @@
 #include "memory.hpp"
 #include "errorlib.h"
 #include "container.h"
+#include "algobase.h"
 
 MSTL_BEGIN_NAMESPACE__
 
-template<typename T, typename Alloc = simple_alloc<T, std::allocator<T>>>
+template<typename T, typename Alloc = simple_alloc<T>>
 class vector : public container {
 public:
 	typedef T					value_type;
@@ -317,7 +318,7 @@ public:
 	}
 	template <typename InputIterator>
 	void insert(iterator position, InputIterator first, InputIterator last) {
-		range_insert(position, first, last, category_type(first));
+		range_insert(position, first, last, iterator_category(first));
 	}
 	void insert(iterator position, size_type n, const_reference x) {
 		if (n == 0) return;
@@ -359,6 +360,12 @@ public:
 			end_of_storage = new_start + len;
 		}
 	}
+	void swap(self& x) {
+		using MSTL::swap;
+		swap(start, x.start);
+		swap(finish, x.finish);
+		swap(end_of_storage, x.end_of_storage);
+	}
 };
 template <typename T, typename Alloc>
 const char* vector<T, Alloc>::__type__ = "vector";
@@ -367,6 +374,11 @@ template <typename T, typename Alloc>
 std::ostream& operator <<(std::ostream& _out, const vector<T, Alloc>& _tar) {
 	_tar.__show_data_only(_out);
 	return _out;
+}
+
+template <class T, class Alloc>
+inline void swap(vector<T, Alloc>& x, vector<T, Alloc>& y) {
+	x.swap(y);
 }
 
 MSTL_END_NAMESPACE__

@@ -1,17 +1,17 @@
 ﻿#include "mstlc++.hpp"
 
 void try_lls();
-void try_arr() {
-    MSTL::array<size_t, 3> arr{ 1,2,3 };
-    MSTL::array<size_t, 3> arr2(arr);
-    std::cout << arr.size() << ' ' << arr.back() << ' ' << arr.find(3) << std::endl;
-    for (MSTL::array<size_t, 3>::iterator i = arr.begin(); i != arr.end(); i++) {
-        std::cout << *i << std::endl;
-    }
-    if (arr == arr2) std::cout << "yes" << std::endl;
-    //std::cout << arr;
-    arr.__det__();
-}
+//void try_arr() {
+//    MSTL::array<size_t, 3> arr{ 1,2,3 };
+//    MSTL::array<size_t, 3> arr2(arr);
+//    std::cout << arr.size() << ' ' << arr.back() << ' ' << arr.find(3) << std::endl;
+//    for (MSTL::array<size_t, 3>::iterator i = arr.begin(); i != arr.end(); i++) {
+//        std::cout << *i << std::endl;
+//    }
+//    if (arr == arr2) std::cout << "yes" << std::endl;
+//    //std::cout << arr;
+//    arr.__det__();
+//}
 void try_exc() {
 	MSTL_NAMESPACE__;
     try {
@@ -240,8 +240,14 @@ void try_tup() {
     tuple<int, char, const char*> t(1, 't', "MSTL");
 
 }
+void try_hash() {
+    MSTL_NAMESPACE__;
+    hash_map<int, char> m;
+    m[1] = 'a';
+    m[2] = 'b';
+}
 
 int main() {
     MSTL_NAMESPACE__
-    try_tup();
+    try_vec();
 }

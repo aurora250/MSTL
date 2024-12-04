@@ -33,7 +33,7 @@ inline void destroy(ForwardIterator first, ForwardIterator last) {
 inline void destroy(char*, char*) {}
 inline void destroy(wchar_t*, wchar_t*) {}
 
-template <typename T, typename Alloc>
+template <typename T, typename Alloc = std::allocator<T>>
 class simple_alloc {
 public:
     typedef T       value_type;
@@ -113,7 +113,7 @@ __uninitialized_copy_n(RandomAccessIterator first, Size count,
 template <typename InputIterator, typename Size, typename ForwardIterator>
 inline pair<InputIterator, ForwardIterator>
 uninitialized_copy_n(InputIterator first, Size count, ForwardIterator result) {
-    return __uninitialized_copy_n(first, count, result, category_type(first));
+    return __uninitialized_copy_n(first, count, result, iterator_category(first));
 }
 
 template <typename ForwardIterator, typename T>

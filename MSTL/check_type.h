@@ -24,7 +24,6 @@ private:
         if (this->check_empty(val)) return;
         if (not this->is_compact_) sr_ += " ";
         using ss_t = std::ostringstream;
-        this->sr_ += static_cast<ss_t>(ss_t() << val).str();
 #if defined(MSTL_COMPILE_GCC__)
         this->sr_ += static_cast<ss_t&>(ss_t() << val).str();
 #else
@@ -54,8 +53,7 @@ struct bracket {   // ()
         out_.compact()(")");
     }
 };
-template <>
-struct bracket<false> {
+MSTL_TEMPLATE_NULL__ struct bracket<false> {
     bracket(output& out, const char* str = nullptr) { out(str); }
 };
 

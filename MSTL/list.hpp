@@ -7,12 +7,12 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T>
-struct list_node {
+struct __list_node {
     typedef T                     value_type;
     typedef const T& reference;
-    typedef list_node<value_type> self;
+    typedef __list_node<value_type> self;
 
-    list_node(reference _val = value_type(), self* _prev = nullptr, self* _next = nullptr)
+    __list_node(reference _val = value_type(), self* _prev = nullptr, self* _next = nullptr)
         : _data(_val), _prev(_prev), _next(_next) {}
 
     value_type _data;
@@ -31,7 +31,7 @@ struct list_iterator {
 
     typedef list_iterator<T, Ref, Ptr>      self;
     typedef list_iterator<T, T&, T*>        iterator;
-    typedef list_node<T>* link_type;
+    typedef __list_node<T>*                 link_type;
 
     link_type _node;
 
@@ -45,7 +45,7 @@ struct list_iterator {
     ~list_iterator() = default;
 
     reference operator *() const { return this->_node->_data; }
-    pointer operator ->() const { return &(this->_node->_data); }
+    pointer operator->() const { return &(operator*()); }
     self& operator ++() {
         this->_node = this->_node->_next;
         return *this;
@@ -68,7 +68,7 @@ struct list_iterator {
     bool operator !=(const self& _iter) const { return this->_node != _iter._node; }
 };
 
-template <typename T, typename Alloc = simple_alloc<list_node<T>, std::allocator<list_node<T>>>>
+template <typename T, typename Alloc = simple_alloc<__list_node<T>, std::allocator<__list_node<T>>>>
 class list : public container {
 public:
     typedef T                       value_type;
@@ -77,7 +77,7 @@ public:
     typedef const T& const_reference;
     typedef size_t                  size_type;
     typedef list<T, Alloc>          self;
-    typedef list_node<T>            node_type;
+    typedef __list_node<T>            node_type;
     typedef node_type* link_type;
     typedef list_iterator<T, T&, T*>              iterator;
     typedef list_iterator<T, const T&, const T*>  const_iterator;
