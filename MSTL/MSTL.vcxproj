@@ -134,11 +134,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="algobase.cpp" />
     <ClCompile Include="basiclib.cpp" />
     <ClCompile Include="check_type.cpp" />
     <ClCompile Include="depositary.cpp" />
-    <ClCompile Include="hashtable.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="errorlib.cpp" />
     <ClCompile Include="container.cpp" />
@@ -147,10 +145,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="algo.hpp" />
-    <ClInclude Include="algobase.h" />
+    <ClInclude Include="algobase.hpp" />
     <ClInclude Include="algorithm.hpp" />
+    <ClInclude Include="alloc.h" />
     <ClInclude Include="database.h" />
-    <ClInclude Include="hashtable.h" />
+    <ClInclude Include="hashtable.hpp" />
     <ClInclude Include="hash_map.hpp" />
     <ClInclude Include="heap.hpp" />
     <ClInclude Include="jsonlib.h" />
@@ -164,7 +163,7 @@
     <ClInclude Include="check_type.h" />
     <ClInclude Include="deque.hpp" />
     <ClInclude Include="errorlib.h" />
-    <ClInclude Include="functional.hpp" />
+    <ClInclude Include="function.hpp" />
     <ClInclude Include="functor.hpp" />
     <ClInclude Include="container.h" />
     <ClInclude Include="iterator.hpp" />

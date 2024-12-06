@@ -4,13 +4,12 @@
 #include "basiclib.h"
 
 MSTL_BEGIN_NAMESPACE__
-// unary_function:
+
 template <typename Arg, typename Result>
 struct unary_function {
 	typedef Arg		argument_type;
 	typedef Result  result_type;
 };
-// binary_function:
 template <typename Arg1, typename Arg2, typename Result>
 struct binary_function {
 	typedef Arg1	first_argument_type;

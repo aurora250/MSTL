@@ -103,7 +103,7 @@ private:
     typedef void*                               void_pointer;
     typedef _rb_tree_node_base*                 base_ptr;
     typedef _rb_tree_node<Value>                rb_tree_node;
-    typedef simple_alloc<rb_tree_node, Alloc>   rb_tree_node_allocator;
+    typedef default_standard_alloc<rb_tree_node, Alloc>   rb_tree_node_allocator;
     typedef _rb_tree_color_type                 color_type;
 public:
     typedef Key                 key_type;

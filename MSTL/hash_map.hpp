@@ -1,11 +1,11 @@
 #ifndef MSTL_HASH_MAP_H__
 #define MSTL_HASH_MAP_H__
-#include "hashtable.h"
+#include "hashtable.hpp"
 #include "functor.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
-    class Alloc = simple_alloc<__hashtable_node<pair<const Key, T>>>>
+    class Alloc = default_standard_alloc<__hashtable_node<pair<const Key, T>>>>
 class hash_map {
 private:
     typedef hashtable<pair<const Key, T>, Key, HashFcn,
@@ -128,7 +128,7 @@ inline bool operator==(const hash_map<Key, T, HashFcn, EqualKey, Alloc>& hm1,
 
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
-    class Alloc = simple_alloc<__hashtable_node<pair<const Key, T>>> >
+    class Alloc = default_standard_alloc<__hashtable_node<pair<const Key, T>>> >
 class hash_multimap
 {
 private:

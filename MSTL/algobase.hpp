@@ -159,8 +159,14 @@ template <typename InputIterator, typename OutputIterator>
 inline OutputIterator copy(InputIterator first, InputIterator last, OutputIterator result) {
 	return __copy_dispatch<InputIterator, OutputIterator>()(first, last, result);
 }
-char* copy(const char* first, const char* last, char* result);
-wchar_t* copy(const wchar_t* first, const wchar_t* last, wchar_t* result);
+inline char* copy(const char* first, const char* last, char* result) {
+	memmove(result, first, last - first);
+	return result + (last - first);
+}
+inline wchar_t* copy(const wchar_t* first, const wchar_t* last, wchar_t* result) {
+	memmove(result, first, sizeof(wchar_t) * (last - first));
+	return result + (last - first);
+}
 
 // copy_backward:
 template <class BidirectionalIterator1, class BidirectionalIterator2>

@@ -9,7 +9,13 @@ MSTL_BEGIN_NAMESPACE__
 
 template <class Key>
 struct hash {};
-size_t __hash_string(const char* s);
+inline size_t __hash_string(const char* s) {
+    unsigned long h = 0;
+    for (; *s; ++s)
+        h = 5 * h + *s;
+    return size_t(h);
+}
+
 MSTL_TEMPLATE_NULL__ struct hash<char*> {
     size_t operator ()(const char* s) const { return __hash_string(s); }
 };
@@ -39,7 +45,7 @@ struct __hashtable_node {
 };
 
 template <class Value, class Key, class HashFcn, class ExtractKey, class EqualKey,
-    class Alloc = simple_alloc<__hashtable_node<Value>>>
+    class Alloc = default_standard_alloc<__hashtable_node<Value>>>
 class hashtable;
 
 template <class Value, class Key, class HashFcn,
@@ -138,7 +144,12 @@ static const unsigned long __stl_prime_list[__stl_num_primes] =
   1610612741, 3221225473ul, 4294967291ul
 };
 
-unsigned long __next_prime(unsigned long n);
+inline unsigned long __next_prime(unsigned long n) {
+    const unsigned long* first = __stl_prime_list;
+    const unsigned long* last = __stl_prime_list + __stl_num_primes;
+    const unsigned long* pos = lower_bound(first, last, n);
+    return pos == last ? *(last - 1) : *pos;
+}
 
 template <class Value, class Key, class HashFcn, class ExtractKey, class EqualKey, class Alloc>
 class hashtable {

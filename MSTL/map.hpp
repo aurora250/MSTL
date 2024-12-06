@@ -8,7 +8,7 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Key, typename T, typename Compare = less<T>,
-	typename Alloc = std::allocator< _rb_tree_node< pair<const Key, T>> > >
+	typename Alloc = default_standard_alloc<_rb_tree_node<pair<const Key, T>>>>
 class map : public container {
 public:
 	typedef Key							key_type;

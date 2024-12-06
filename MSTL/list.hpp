@@ -68,7 +68,7 @@ struct list_iterator {
     bool operator !=(const self& _iter) const { return this->_node != _iter._node; }
 };
 
-template <typename T, typename Alloc = simple_alloc<__list_node<T>, std::allocator<__list_node<T>>>>
+template <typename T, typename Alloc = default_standard_alloc<__list_node<T>>>
 class list : public container {
 public:
     typedef T                       value_type;

@@ -1,9 +1,9 @@
 #ifndef MSTL_MEMORY_HPP__
 #define MSTL_MEMORY_HPP__
 #include "type_traits.hpp"
-#include "algobase.h"
+#include "algobase.hpp"
 #include "errorlib.h"
-#include "pair.hpp"
+#include "alloc.h"
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -32,27 +32,6 @@ inline void destroy(ForwardIterator first, ForwardIterator last) {
 }
 inline void destroy(char*, char*) {}
 inline void destroy(wchar_t*, wchar_t*) {}
-
-template <typename T, typename Alloc = std::allocator<T>>
-class simple_alloc {
-public:
-    typedef T       value_type;
-    typedef Alloc   data_allocator;
-    data_allocator alloc;
-
-    T* allocate(const size_t n) {
-        return 0 == n ? 0 : (T*)alloc.allocate(n * sizeof(T));
-    }
-    T* allocate(void) {
-        return (T*)alloc.allocate(sizeof(T));
-    }
-    void deallocate(T* const p) {
-        alloc.deallocate(p, sizeof(T));
-    }
-    void deallocate(T* const p, const size_t n) {
-        if (n != 0)alloc.deallocate(p, n * sizeof(T));
-    }
-};
 
 template <typename InputIterator, typename ForwardIterator>
 inline ForwardIterator __uninitialized_copy_aux(InputIterator first, InputIterator last,

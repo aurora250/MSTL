@@ -6,11 +6,11 @@
 #include "memory.hpp"
 #include "errorlib.h"
 #include "container.h"
-#include "algobase.h"
+#include "algobase.hpp"
 
 MSTL_BEGIN_NAMESPACE__
 
-template<typename T, typename Alloc = simple_alloc<T>>
+template<typename T, typename Alloc = default_standard_alloc<T>>
 class vector : public container {
 public:
 	typedef T					value_type;

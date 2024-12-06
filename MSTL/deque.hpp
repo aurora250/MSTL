@@ -122,7 +122,7 @@ struct deque_iterator {
     bool operator <(const self& x)const { return node == x.node ? (cur < x.cur) : (node < x.node); }
 };
 
-template<typename T, typename Alloc = simple_alloc<T, std::allocator<T>>, size_t BufSize = 0>
+template<typename T, typename Alloc = default_standard_alloc<T>, size_t BufSize = 0>
 class deque : public container {
 public:
     typedef T                           value_type;
@@ -140,7 +140,7 @@ public:
 private:
     typedef pointer* map_pointer;
     typedef Alloc    data_allocator;
-    typedef simple_alloc<pointer, std::allocator<pointer>>  map_allocator;
+    typedef default_standard_alloc<pointer, std::allocator<pointer>>  map_allocator;
 
     data_allocator data_alloc;
     map_allocator map_alloc;

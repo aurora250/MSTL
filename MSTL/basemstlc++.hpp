@@ -8,7 +8,7 @@
 //#include "concepts.hpp"
 #include "depositary.h"
 
-#include "functional.hpp" // "functor.hpp"
+#include "function.hpp" // "functor.hpp"
 #include "iterator.hpp"
 #include "type_traits.hpp"
 //#include "numeric.hpp"
