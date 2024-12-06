@@ -1,5 +1,5 @@
-#ifndef MSTL_CHECK_TYPE_H
-#define MSTL_CHECK_TYPE_H
+#ifndef MSTL_CHECK_TYPE_H__
+#define MSTL_CHECK_TYPE_H__
 #include <sstream>
 #include "string.h"
 #if defined(__GNUC__)
@@ -242,4 +242,4 @@ std::string check_type() {
 
 MSTL_END_NAMESPACE__
 
-#endif // MSTL_CHECK_TYPE_H
+#endif // MSTL_CHECK_TYPE_H__

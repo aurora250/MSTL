@@ -1,5 +1,5 @@
-#ifndef MSTL_TUPLE_H__
-#define MSTL_TUPLE_H__
+#ifndef MSTL_TUPLE_HPP__
+#define MSTL_TUPLE_HPP__
 #include "basiclib.h"
 MSTL_BEGIN_NAMESPACE__
 
@@ -67,4 +67,5 @@ tuple<Types...> make_tuple(Types&&... args) {
 }
 
 MSTL_END_NAMESPACE__
-#endif // MSTL_TUPLE_H__
+
+#endif // MSTL_TUPLE_HPP__

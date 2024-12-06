@@ -1,5 +1,5 @@
-#ifndef MSTL_ERROR_H__
-#define MSTL_ERROR_H__
+#ifndef MSTL_ERRORLIB_H__
+#define MSTL_ERRORLIB_H__
 #include "basiclib.h"
 
 MSTL_BEGIN_NAMESPACE__
@@ -85,4 +85,4 @@ extern void Exit(bool _abort = false, void(* _func)(void) = nullptr);
 
 MSTL_END_NAMESPACE__
 
-#endif // MSTL_ERROR_H__
+#endif // MSTL_ERRORLIB_H__

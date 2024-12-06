@@ -97,14 +97,14 @@ int __black_count(_rb_tree_node_base* node, _rb_tree_node_base* root);
 
 
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, 
-    typename Alloc = std::allocator<_rb_tree_node<Value>> >
+    typename Alloc = default_standard_alloc<_rb_tree_node<Value>> >
 class rb_tree {
 private:
-    typedef void*                               void_pointer;
-    typedef _rb_tree_node_base*                 base_ptr;
-    typedef _rb_tree_node<Value>                rb_tree_node;
-    typedef default_standard_alloc<rb_tree_node, Alloc>   rb_tree_node_allocator;
-    typedef _rb_tree_color_type                 color_type;
+    typedef void*                   void_pointer;
+    typedef _rb_tree_node_base*     base_ptr;
+    typedef _rb_tree_node<Value>    rb_tree_node;
+    typedef Alloc                   rb_tree_node_allocator;
+    typedef _rb_tree_color_type     color_type;
 public:
     typedef Key                 key_type;
     typedef Value               value_type;

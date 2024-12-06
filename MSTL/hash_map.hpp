@@ -1,5 +1,5 @@
-#ifndef MSTL_HASH_MAP_H__
-#define MSTL_HASH_MAP_H__
+#ifndef MSTL_HASH_MAP_HPP__
+#define MSTL_HASH_MAP_HPP__
 #include "hashtable.hpp"
 #include "functor.hpp"
 MSTL_BEGIN_NAMESPACE__
@@ -245,4 +245,5 @@ inline bool operator==(const hash_multimap<Key, T, HF, EqKey, Alloc>& hm1,
 }
 
 MSTL_END_NAMESPACE__
-#endif
+
+#endif // MSTL_HASH_MAP_HPP__

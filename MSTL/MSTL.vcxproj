@@ -151,6 +151,7 @@
     <ClInclude Include="database.h" />
     <ClInclude Include="hashtable.hpp" />
     <ClInclude Include="hash_map.hpp" />
+    <ClInclude Include="hash_set.hpp" />
     <ClInclude Include="heap.hpp" />
     <ClInclude Include="jsonlib.h" />
     <ClInclude Include="map.hpp" />

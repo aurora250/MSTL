@@ -6,8 +6,7 @@
 
 MSTL_BEGIN_NAMESPACE__
 
-template <typename Key, typename Compare = less<Key>,
-	class Alloc = default_standard_alloc<Key, std::allocator<Key>>>
+template <typename Key, typename Compare = less<Key>, typename Alloc = default_standard_alloc<Key>>
 class set {
 public:
 	typedef Key			key_type;

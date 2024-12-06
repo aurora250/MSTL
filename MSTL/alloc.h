@@ -216,7 +216,6 @@ public:
         my_free_list = free_list + FREELIST_INDEX(n);
         q->free_list_link = *my_free_list;
         *my_free_list = q;
-        // lock is released here
     }
 
     static void* reallocate(void* p, size_t old_sz, size_t new_sz) {

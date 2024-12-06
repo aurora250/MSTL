@@ -1,5 +1,5 @@
-#ifndef MSTL_HASHTABLE_H__
-#define MSTL_HASHTABLE_H__
+#ifndef MSTL_HASHTABLE_HPP__
+#define MSTL_HASHTABLE_HPP__
 #include "basiclib.h"
 #include "algo.hpp"
 #include "memory.hpp"
@@ -613,4 +613,4 @@ bool operator ==(const hashtable<V, K, HF, Ex, Eq, A>& ht1,
 
 MSTL_END_NAMESPACE__
 
-#endif
+#endif // MSTL_HASHTABLE_HPP__

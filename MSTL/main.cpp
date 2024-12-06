@@ -250,5 +250,5 @@ void try_hash() {
 
 int main() {
     MSTL_NAMESPACE__
-    try_vec();
+    try_hash();
 }
