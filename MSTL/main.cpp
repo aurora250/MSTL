@@ -245,6 +245,7 @@ void try_hash() {
     hash_map<int, char> m;
     m[1] = 'a';
     m[2] = 'b';
+    m.begin();
 }
 
 int main() {
