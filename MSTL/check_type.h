@@ -2,7 +2,7 @@
 #define MSTL_CHECK_TYPE_H__
 #include <sstream>
 #include "string.h"
-#if defined(__GNUC__)
+#ifdef MSTL_COMPILE_GNUC__ 
 #include <memory>
 #include <cxxabi.h>
 #endif
@@ -24,7 +24,7 @@ private:
         if (this->check_empty(val)) return;
         if (not this->is_compact_) sr_ += " ";
         using ss_t = std::ostringstream;
-#if defined(MSTL_COMPILE_GCC__)
+#ifdef MSTL_COMPILE_GCC__
         this->sr_ += static_cast<ss_t&>(ss_t() << val).str();
 #else
         this->sr_ += static_cast<ss_t>(ss_t() << val).str();
@@ -178,7 +178,6 @@ struct check<T(P...), IsBase> : check<T, true> {   // 函数
 
     check(const output& out) : base_t(out), parameter_(out_), bracket_(out_) {}
 };
-
 template <typename T, bool IsBase, typename C>
 struct check<T C::*, IsBase> : check<T, true> {   // 类成员指针
     using base_t = check<T, true>;
@@ -189,7 +188,6 @@ struct check<T C::*, IsBase> : check<T, true> {   // 类成员指针
         out_.compact()("::*");
     }
 };
-
 template <typename T, bool IsBase, typename C, typename... P>
 struct check<T(C::*)(P...), IsBase> : check<T(P...), true> {   // 类成员函数指针
     using base_t = check<T(P...), true>;

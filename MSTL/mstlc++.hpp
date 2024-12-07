@@ -18,10 +18,10 @@
 #include "set.hpp"
 #include "map.hpp"
 #include "hash_map.hpp"
+#include "hash_set.hpp"
+
 #include "tuple.hpp"
 
-#include "algorithm.hpp"
-#include "check_type.h"
 #include "depositary.h"
 #include "jsonlib.h"
 #include "database.h"
