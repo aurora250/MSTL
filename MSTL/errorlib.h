@@ -1,13 +1,11 @@
 #ifndef MSTL_ERRORLIB_H__
 #define MSTL_ERRORLIB_H__
 #include "basiclib.h"
+#include "object.h"
 
 MSTL_BEGIN_NAMESPACE__
 
-typedef const char* cstring;
-typedef const char* const const_cstring;
-
-struct Error {
+struct Error : public object {
 	typedef Error self;
 	cstring _info;
 	cstring _type;

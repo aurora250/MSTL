@@ -4,11 +4,8 @@
 
 MSTL_BEGIN_NAMESPACE__
 
-class object {
-protected:
+struct object {
 	virtual void __show_data_only(std::ostream& _out) const = 0;
-public:
-	virtual void __det__(std::ostream& _out = std::cout) const = 0;
 	virtual ~object() = 0;
 };
 

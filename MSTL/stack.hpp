@@ -31,6 +31,9 @@ public:
     void __show_data_only(std::ostream& _out) const {
         seq.__show_data_only(_out);
     }
+    void __show_size_only(std::ostream& _out) const {
+        _out << "size: " << size() << std::endl;
+    }
 
     stack() : seq(Sequence()) {}
     ~stack() = default;
@@ -39,8 +42,8 @@ public:
     void pop() { seq.pop_back(); }
     reference top() { return seq.back(); }
     reference_const top() const { return seq.back(); }
-    size_type size() { return seq.size(); }
-    bool empty() { return seq.empty(); }
+    size_type size() const { return seq.size(); }
+    bool empty() const { return seq.empty(); }
 };
 template<typename T, typename Sequence>
 const char* const stack<T, Sequence>::__type__ = "stack";

@@ -245,7 +245,8 @@ void try_hash() {
     hash_map<int, char> m;
     m[1] = 'a';
     m[2] = 'b';
-    std::cout<< *m.begin() << std::endl;
+    std::cout<< *++m.begin() << std::endl;
+    m.__det__();
 }
 
 int main() {

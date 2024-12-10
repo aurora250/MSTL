@@ -11,10 +11,10 @@ MSTL_BEGIN_NAMESPACE__
 template <class Key>
 struct hash {};
 inline size_t __hash_string(const char* s) {
-    unsigned long h = 0;
+    size_t h = 0;
     for (; *s; ++s)
         h = 5 * h + *s;
-    return size_t(h);
+    return h;
 }
 
 MSTL_TEMPLATE_NULL__ struct hash<char*> {
@@ -135,8 +135,7 @@ struct __hashtable_const_iterator {
 };
 
 static const int __stl_num_primes = 28;
-static const unsigned long __stl_prime_list[__stl_num_primes] =
-{
+static const unsigned long __stl_prime_list[__stl_num_primes] = {
   53,         97,           193,         389,       769,
   1543,       3079,         6151,        12289,     24593,
   49157,      98317,        196613,      393241,    786433,
@@ -187,22 +186,20 @@ public:
 
     friend struct __hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
     friend struct __hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+    friend bool operator ==(const hashtable&, const hashtable&);
 
-    hashtable(size_type n, const HashFcn& hf, const EqualKey& eql, const ExtractKey& ext)
+    explicit hashtable(size_type n, const HashFcn& hf, const EqualKey& eql, const ExtractKey& ext)
         : hash(hf), equals(eql), get_key(ext), num_elements(0) {
         initialize_buckets(n);
     }
-
-    hashtable(size_type n, const HashFcn& hf, const EqualKey& eql)
+    explicit hashtable(size_type n, const HashFcn& hf, const EqualKey& eql)
         : hash(hf), equals(eql), get_key(ExtractKey()), num_elements(0) {
         initialize_buckets(n);
     }
-
-    hashtable(const hashtable& ht)
+    explicit hashtable(const hashtable& ht)
         : hash(ht.hash), equals(ht.equals), get_key(ht.get_key), num_elements(0) {
         copy_from(ht);
     }
-
     hashtable& operator =(const hashtable& ht) {
         if (&ht != this) {
             clear();
@@ -225,18 +222,16 @@ public:
                 return iterator(buckets[n], this);
         return end();
     }
-
     iterator end() { return iterator(0, this); }
 
     const_iterator begin() const {
-        for (size_type n = 0; n < buckets.size(); ++n)
-            if (buckets[n])
-                return const_iterator(buckets[n], this);
+        for (size_type n = 0; n < buckets.size(); ++n) {
+            if (buckets[n]) return const_iterator(buckets[n], this);
+        }
         return end();
     }
     const_iterator end() const { return const_iterator(0, this); }
 
-    friend bool operator ==(const hashtable&, const hashtable&);
     void swap(hashtable& ht) {
         using std::swap;
         swap(hash, ht.hash);
@@ -245,12 +240,8 @@ public:
         buckets.swap(ht.buckets);
         swap(num_elements, ht.num_elements);
     }
-
     size_type bucket_count() const { return buckets.size(); }
-    size_type max_bucket_count() const {
-        return __stl_prime_list[__stl_num_primes - 1];
-    }
-
+    size_type max_bucket_count() const { return __stl_prime_list[__stl_num_primes - 1]; }
     size_type elems_in_bucket(size_type bucket) const {
         size_type result = 0;
         for (node* cur = buckets[bucket]; cur; cur = cur->next)
@@ -266,7 +257,6 @@ public:
         resize(num_elements + 1);
         return insert_equal_noresize(obj);
     }
-
     pair<iterator, bool> insert_unique_noresize(const value_type& obj) {
         const size_type n = bkt_num(obj);
         node* first = buckets[n];
@@ -297,7 +287,6 @@ public:
         ++num_elements;
         return iterator(tmp, this);
     }
-
     template <class InputIterator>
     void insert_unique(InputIterator f, InputIterator l) {
         insert_unique(f, l, (iterator_category)(f));
@@ -333,8 +322,9 @@ public:
         resize(num_elements + 1);
         size_type n = bkt_num(obj);
         node* first = buckets[n];
-        for (node* cur = first; cur; cur = cur->next)
+        for (node* cur = first; cur; cur = cur->next) {
             if (equals(get_key(cur->val), get_key(obj))) return cur->val;
+        }
         node* tmp = new_node(obj);
         tmp->next = first;
         buckets[n] = tmp;
@@ -348,22 +338,19 @@ public:
         return iterator(first, this);
     }
 
-    const_iterator find(const key_type& key) const
-    {
+    const_iterator find(const key_type& key) const {
         size_type n = bkt_num_key(key);
         const node* first;
         for (first = buckets[n]; first && !equals(get_key(first->val), key); first = first->next);
         return const_iterator(first, this);
     }
 
-    size_type count(const key_type& key) const
-    {
+    size_type count(const key_type& key) const {
         const size_type n = bkt_num_key(key);
         size_type result = 0;
-
-        for (const node* cur = buckets[n]; cur; cur = cur->next)
-            if (equals(get_key(cur->val), key))
-                ++result;
+        for (const node* cur = buckets[n]; cur; cur = cur->next) {
+            if (equals(get_key(cur->val), key)) ++result;
+        }
         return result;
     }
 
@@ -372,13 +359,15 @@ public:
         const size_type n = bkt_num_key(key);
         for (node* first = buckets[n]; first; first = first->next) {
             if (equals(get_key(first->val), key)) {
-                for (node* cur = first->next; cur; cur = cur->next)
+                for (node* cur = first->next; cur; cur = cur->next) {
                     if (!equals(get_key(cur->val), key))
                         return iter_pir(iterator(first, this), iterator(cur, this));
-                for (size_type m = n + 1; m < buckets.size(); ++m)
+                }
+                for (size_type m = n + 1; m < buckets.size(); ++m) {
                     if (buckets[m])
                         return iter_pir(iterator(first, this),
                             iterator(buckets[m], this));
+                }
                 return iter_pir(iterator(first, this), end());
             }
         }
@@ -389,12 +378,14 @@ public:
         const size_type n = bkt_num_key(key);
         for (const node* first = buckets[n]; first; first = first->next) {
             if (equals(get_key(first->val), key)) {
-                for (const node* cur = first->next; cur; cur = cur->next)
+                for (const node* cur = first->next; cur; cur = cur->next) {
                     if (!equals(get_key(cur->val), key))
                         return citer_pir(const_iterator(first, this), const_iterator(cur, this));
-                for (size_type m = n + 1; m < buckets.size(); ++m)
+                }
+                for (size_type m = n + 1; m < buckets.size(); ++m) {
                     if (buckets[m])
                         return citer_pir(const_iterator(first, this), const_iterator(buckets[m], this));
+                }
                 return citer_pir(const_iterator(first, this), end());
             }
         }
@@ -580,26 +571,26 @@ private:
         buckets.reserve(ht.buckets.size());
         buckets.insert(buckets.end(), ht.buckets.size(), (node*)0);
         MSTL_TRY__{
-          for (size_type i = 0; i < ht.buckets.size(); ++i) {
-            if (const node* cur = ht.buckets[i]) {
-              node* copy = new_node(cur->val);
-              buckets[i] = copy;
-
-              for (node* next = cur->next; next; cur = next, next = cur->next) {
-                copy->next = new_node(next->val);
-                copy = copy->next;
-              }
+            for (size_type i = 0; i < ht.buckets.size(); ++i) {
+                if (const node* cur = ht.buckets[i]) {
+                    node* copy = new_node(cur->val);
+                    buckets[i] = copy;
+                    for (node* next = cur->next; next; cur = next, next = cur->next) {
+                        copy->next = new_node(next->val);
+                        copy = copy->next;
+                    }
+                }
             }
-          }
-          num_elements = ht.num_elements;
+            num_elements = ht.num_elements;
         }
         MSTL_CATCH_UNWIND_THROW_U__(clear());
     }
 };
 
-template <class V, class K, class HF, class Ex, class Eq, class A>
-bool operator ==(const hashtable<V, K, HF, Ex, Eq, A>& ht1, const hashtable<V, K, HF, Ex, Eq, A>& ht2) {
-    typedef typename hashtable<V, K, HF, Ex, Eq, A>::node node;
+template <class Val, class Key, class HF, class Extract, class EqKey, class A>
+bool operator ==(const hashtable<Val, Key, HF, Extract, EqKey, A>& ht1, 
+    const hashtable<Val, Key, HF, Extract, EqKey, A>& ht2) {
+    typedef typename hashtable<Val, Key, HF, Extract, EqKey, A>::node node;
     if (ht1.buckets.size() != ht2.buckets.size()) return false;
     for (int n = 0; n < ht1.buckets.size(); ++n) {
         node* cur1 = ht1.buckets[n];
@@ -610,7 +601,8 @@ bool operator ==(const hashtable<V, K, HF, Ex, Eq, A>& ht1, const hashtable<V, K
     return true;
 }
 template <class Val, class Key, class HF, class Extract, class EqKey, class A>
-inline void swap(hashtable<Val, Key, HF, Extract, EqKey, A>& ht1, hashtable<Val, Key, HF, Extract, EqKey, A>& ht2) {
+inline void swap(hashtable<Val, Key, HF, Extract, EqKey, A>& ht1, 
+    hashtable<Val, Key, HF, Extract, EqKey, A>& ht2) {
     ht1.swap(ht2);
 }
 

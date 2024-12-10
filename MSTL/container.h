@@ -5,20 +5,13 @@
 
 MSTL_BEGIN_NAMESPACE__
 
-class container : public object {
-public:
+struct container : public object {
 	typedef size_t size_type;
-
-	static const int epos;
-protected:
-	size_type _size;
-public:
-	virtual void __show_size_only(std::ostream& _out) const;
-	virtual bool __in_boundary(int _pos) const;
-	container(size_type _size = 0);
+	virtual void __det__(std::ostream& _out = std::cout) const = 0;
+	virtual void __show_size_only(std::ostream& _out) const = 0;
 	virtual ~container() = 0;
-	virtual size_type size() const;
-	virtual bool empty() const;
+	virtual size_type size() const = 0;
+	virtual bool empty() const = 0;
 };
 
 MSTL_END_NAMESPACE__

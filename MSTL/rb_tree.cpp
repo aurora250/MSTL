@@ -2,16 +2,16 @@
 
 MSTL_BEGIN_NAMESPACE__
 
-_rb_tree_node_base::base_ptr _rb_tree_node_base::minimum(base_ptr x) {
+__rb_tree_node_base::base_ptr __rb_tree_node_base::minimum(base_ptr x) {
     while (x->left != 0) x = x->left;
     return x;
 }
-_rb_tree_node_base::base_ptr _rb_tree_node_base::maximum(base_ptr x) {
+__rb_tree_node_base::base_ptr __rb_tree_node_base::maximum(base_ptr x) {
     while (x->right != 0) x = x->right;
     return x;
 }
 
-void _rb_tree_base_iterator::increment() {
+void __rb_tree_base_iterator::increment() {
     if (node->right != 0) {
         node = node->right;
         while (node->left != 0) node = node->left;
@@ -25,7 +25,7 @@ void _rb_tree_base_iterator::increment() {
         if (node->right != y) node = y;
     }
 }
-void _rb_tree_base_iterator::decrement() {
+void __rb_tree_base_iterator::decrement() {
     if (node->color == __rb_tree_red && node->parent->parent == node) {
         node = node->right;
     }
@@ -44,8 +44,8 @@ void _rb_tree_base_iterator::decrement() {
     }
 }
 
-void __rb_tree_rotate_left(_rb_tree_node_base* x, _rb_tree_node_base*& root) {
-    _rb_tree_node_base* y = x->right;
+void __rb_tree_rotate_left(__rb_tree_node_base* x, __rb_tree_node_base*& root) {
+    __rb_tree_node_base* y = x->right;
     x->right = y->left;
     if (y->left != 0) y->left->parent = x;
     y->parent = x->parent;
@@ -55,8 +55,8 @@ void __rb_tree_rotate_left(_rb_tree_node_base* x, _rb_tree_node_base*& root) {
     y->left = x;
     x->parent = y;
 }
-void __rb_tree_rotate_right(_rb_tree_node_base* x, _rb_tree_node_base*& root) {
-    _rb_tree_node_base* y = x->left;
+void __rb_tree_rotate_right(__rb_tree_node_base* x, __rb_tree_node_base*& root) {
+    __rb_tree_node_base* y = x->left;
     x->left = y->right;
     if (y->right != 0) y->right->parent = x;
     y->parent = x->parent;
@@ -66,11 +66,11 @@ void __rb_tree_rotate_right(_rb_tree_node_base* x, _rb_tree_node_base*& root) {
     y->right = x;
     x->parent = y;
 }
-void __rb_tree_rebalance(_rb_tree_node_base* x, _rb_tree_node_base*& root) {
+void __rb_tree_rebalance(__rb_tree_node_base* x, __rb_tree_node_base*& root) {
     x->color = __rb_tree_red;
     while (x != root && x->parent->color == __rb_tree_red) {
         if (x->parent == x->parent->parent->left) {
-            _rb_tree_node_base* y = x->parent->parent->right;
+            __rb_tree_node_base* y = x->parent->parent->right;
             if (y && y->color == __rb_tree_red) {
                 x->parent->color = __rb_tree_black;
                 y->color = __rb_tree_black;
@@ -88,7 +88,7 @@ void __rb_tree_rebalance(_rb_tree_node_base* x, _rb_tree_node_base*& root) {
             }
         }
         else {
-            _rb_tree_node_base* y = x->parent->parent->left;
+            __rb_tree_node_base* y = x->parent->parent->left;
             if (y && y->color == __rb_tree_red) {
                 x->parent->color = __rb_tree_black;
                 y->color = __rb_tree_black;
@@ -108,12 +108,12 @@ void __rb_tree_rebalance(_rb_tree_node_base* x, _rb_tree_node_base*& root) {
     }
     root->color = __rb_tree_black;
 }
-_rb_tree_node_base* __rb_tree_rebalance_for_erase(
-    _rb_tree_node_base* z, _rb_tree_node_base*& root,
-    _rb_tree_node_base*& leftmost, _rb_tree_node_base*& rightmost) {
-    _rb_tree_node_base* y = z;
-    _rb_tree_node_base* x = 0;
-    _rb_tree_node_base* x_parent = 0;
+__rb_tree_node_base* __rb_tree_rebalance_for_erase(
+    __rb_tree_node_base* z, __rb_tree_node_base*& root,
+    __rb_tree_node_base*& leftmost, __rb_tree_node_base*& rightmost) {
+    __rb_tree_node_base* y = z;
+    __rb_tree_node_base* x = 0;
+    __rb_tree_node_base* x_parent = 0;
     if (y->left == 0) x = y->right;
     else {
         if (y->right == 0) x = y->left;
@@ -155,17 +155,17 @@ _rb_tree_node_base* __rb_tree_rebalance_for_erase(
         }
         if (leftmost == z) {
             if (z->right == 0) leftmost = z->parent;
-            else leftmost = _rb_tree_node_base::minimum(x);
+            else leftmost = __rb_tree_node_base::minimum(x);
         }
         if (rightmost == z) {
             if (z->left == 0) rightmost = z->parent;
-            else rightmost = _rb_tree_node_base::maximum(x);
+            else rightmost = __rb_tree_node_base::maximum(x);
         }
     }
     if (y->color != __rb_tree_red) {
         while (x != root && (x == 0 || x->color == __rb_tree_black)) {
             if (x == x_parent->left) {
-                _rb_tree_node_base* w = x_parent->right;
+                __rb_tree_node_base* w = x_parent->right;
                 if (w->color == __rb_tree_red) {
                     w->color = __rb_tree_black;
                     x_parent->color = __rb_tree_red;
@@ -193,7 +193,7 @@ _rb_tree_node_base* __rb_tree_rebalance_for_erase(
                 }
             }
             else {
-                _rb_tree_node_base* w = x_parent->left;
+                __rb_tree_node_base* w = x_parent->left;
                 if (w->color == __rb_tree_red) {
                     w->color = __rb_tree_black;
                     x_parent->color = __rb_tree_red;
@@ -226,7 +226,7 @@ _rb_tree_node_base* __rb_tree_rebalance_for_erase(
     return y;
 }
 
-int __black_count(_rb_tree_node_base* node, _rb_tree_node_base* root) {
+int __black_count(__rb_tree_node_base* node, __rb_tree_node_base* root) {
     if (node == 0) return 0;
     else {
         int bc = node->color == __rb_tree_black ? 1 : 0;

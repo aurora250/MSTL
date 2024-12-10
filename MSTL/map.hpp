@@ -8,7 +8,7 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Key, typename T, typename Compare = less<T>,
-	typename Alloc = default_standard_alloc<_rb_tree_node<pair<const Key, T>>>>
+	typename Alloc = default_standard_alloc<__rb_tree_node<pair<const Key, T>>>>
 class map : public container {
 public:
 	typedef Key							key_type;
@@ -142,7 +142,7 @@ std::ostream& operator <<(std::ostream& _out, const map<Key, T, Compare, Alloc>&
 
 
 template <class Key, class T, class Compare = less<Key>,
-	class Alloc = default_standard_alloc<_rb_tree_node<pair<const Key, T>>>>
+	class Alloc = default_standard_alloc<__rb_tree_node<pair<const Key, T>>>>
 class multimap {
 public:
 	typedef Key key_type;

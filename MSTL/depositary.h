@@ -8,9 +8,9 @@
 
 MSTL_BEGIN_NAMESPACE__
 
-class _base_deposit {
+class __base_deposit {
 public:
-	virtual ~_base_deposit() = 0;
+	virtual ~__base_deposit() = 0;
 };
 
 #if defined(MSTL_SUPPORT_CONCEPTS__)
@@ -19,7 +19,7 @@ template <concepts::NVoidT T, typename... Args>
 #else
 template <typename T, typename... Args>
 #endif // MSTL_SUPPORT_CONCEPTS__
-class deposit : public _base_deposit {
+class deposit : public __base_deposit {
 	using Func = std::function<T(Args...)>;
 public:
 	deposit(Func _func) : _func(_func) {}
@@ -29,12 +29,12 @@ private:
 };
 
 class depositary {
-	using _base_deposit_ptr = std::shared_ptr<_base_deposit>;
+	using __base_deposit_ptr = std::shared_ptr<__base_deposit>;
 public:
 	template<class DeposT>
 	void register_deposit(const std::string& _register_name, const DeposT& _target) {
-		_deposit_map.insert(std::pair<std::string, _base_deposit_ptr>
-			(_register_name, _base_deposit_ptr(new DeposT(_target))));
+		_deposit_map.insert(std::pair<std::string, __base_deposit_ptr>
+			(_register_name, __base_deposit_ptr(new DeposT(_target))));
 	};
 
 	template<class T, class... Args>
@@ -50,7 +50,7 @@ public:
 		}
 	}
 private:
-	std::unordered_map<std::string, _base_deposit_ptr> _deposit_map;
+	std::unordered_map<std::string, __base_deposit_ptr> _deposit_map;
 };
 
 MSTL_END_NAMESPACE__

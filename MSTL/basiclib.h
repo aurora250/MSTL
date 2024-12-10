@@ -71,36 +71,37 @@
 #define FILE_PATH TO_STRING(__FILE__)
 #endif
 
+// #if defined(_HAS_CXX17)
+// typedef decltype(nullptr) nullptr_t;
+// #endif
+
+#if defined(MSTL_PLATFORM_WINDOWS__) && defined(MSTL_COMPILE_MSVC__)
+#define MSTL_LONG_LONG_TYPE__ __int64
+#else
+#define MSTL_LONG_LONG_TYPE__ long long
+#endif
+
 #define MSTL_TEMPLATE_NULL__ template<>
 
 MSTL_BEGIN_NAMESPACE__
 
-#if defined(MSTL_PLATFORM_WINDOWS__) && defined(MSTL_COMPILE_MSVC__)
-#define MSTL_LONG_LONG_TYPE__ __int64
 typedef unsigned MSTL_LONG_LONG_TYPE__ size_t;
 typedef MSTL_LONG_LONG_TYPE__ ptrdiff_t;
 typedef MSTL_LONG_LONG_TYPE__ intptr_t;
-#else
-#define MSTL_LONG_LONG_TYPE__ long long
-typedef unsigned MSTL_LONG_LONG_TYPE__ size_t;
-typedef MSTL_LONG_LONG_TYPE__ ptrdiff_t;
-typedef MSTL_LONG_LONG_TYPE__ intptr_t;
-#endif
 
-#if defined(_HAS_CXX17)
-typedef decltype(nullptr) nullptr_t;
-#endif
+typedef const char* cstring;
+typedef const char* const const_cstring;
 
 extern void* memcpy(void* _dest, void* _rsc, int _byte);
 extern int memcmp(const void* _dest, const void* _rsc, int _byte);
 extern void* memmove(void* _dest, const void* _rsc, int _byte);
-extern void* memset(void* _dest, int _val, size_t _byte);
+extern void* memset(void* _dest, int _val, int _byte);
 
 size_t strlen(const char* _str);
 char* strcpy(char* _dest, const char* _sou);
 int strcmp(const char* _des, const char* _sou);
 const char* strstr(const char* _des, const char* _sou);
-char* memstr(char* _data, size_t _len, char* _sub);
+char* memstr(char* _data, int _len, char* _sub);
 
 extern void split_line(std::ostream & _out = std::cout, size_t _size = 15);
 extern size_t deque_buf_size(size_t n, size_t sz);

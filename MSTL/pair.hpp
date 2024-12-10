@@ -1,12 +1,12 @@
 #ifndef MSTL_PAIR_HPP__
 #define MSTL_PAIR_HPP__
-#include <iostream>
 #include "basiclib.h"
+#include "object.h"
 
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T1, typename T2>
-struct pair {
+struct pair { // public object
 	typedef T1				first_type;
 	typedef T2				second_type;
 	typedef pair<T1, T2>	self;
@@ -38,6 +38,18 @@ inline bool operator ==(const pair<T1, T2>& x, const pair<T1, T2>& y) {
 template <typename T1, typename T2>
 inline bool operator <(const pair<T1, T2>& x, const pair<T1, T2>& y) {
 	return x.first < y.first || (!(y.first < x.first) && x.second < y.second);
+}
+template <typename T1, typename T2>
+inline bool operator >(const pair<T1, T2>& x, const pair<T1, T2>& y) {
+	return x.first > y.first || (!(y.first > x.first) && x.second > y.second);
+}
+template <typename T1, typename T2>
+inline bool operator <=(const pair<T1, T2>&x, const pair<T1, T2>&y) {
+	return !(x > y);
+}
+template <typename T1, typename T2>
+inline bool operator >=(const pair<T1, T2>& x, const pair<T1, T2>& y) {
+	return !(x < y);
 }
 template <typename T1, typename T2>
 inline pair<T1, T2> make_pair(const T1& x, const T2& y) {

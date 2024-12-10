@@ -75,7 +75,6 @@ public:
     typedef T& reference;
     typedef T* pointer;
     typedef const T& const_reference;
-    typedef size_t                  size_type;
     typedef list<T, Alloc>          self;
     typedef __list_node<T>            node_type;
     typedef node_type* link_type;
@@ -89,9 +88,14 @@ private:
 
     link_type _node;
     list_node_allocator alloc;
+    size_type _size;
 
     inline void __range_check(int _pos) const {
         Exception(this->__in_boundary(_pos), new RangeError());
+    }
+    bool __in_boundary(int _pos) const {
+        if (_pos < 0) return false;
+        else return _pos < this->_size ? true : false;
     }
     link_type get_node() {
         return alloc.allocate();
@@ -138,6 +142,10 @@ public:
         }
         _out << ']' << std::flush;
     }
+    void __show_size_only(std::ostream& _out) const {
+        _out << "size: " << _size << std::endl;
+    }
+
     void empty_initialize() {
         _node = new node_type();
         _node->_prev = _node->_next = _node;
@@ -201,18 +209,11 @@ public:
         destroy_node(this->_node);
     }
 
-    iterator begin() {
-        return this->_node->_next;
-    }
-    iterator end() {
-        return this->_node;
-    }
-    const_iterator const_begin() const {
-        return this->_node->_next;
-    }
-    const_iterator const_end() const {
-        return this->_node;
-    }
+    iterator begin() { return this->_node->_next; }
+    size_type size() const { return _size; }
+    iterator end() { return this->_node; }
+    const_iterator const_begin() const { return this->_node->_next; }
+    const_iterator const_end() const { return this->_node; }
     bool empty() const {
         return this->_node->_next == this->_node ||
             link_type(this->_node->_next)->_next == this->_node;

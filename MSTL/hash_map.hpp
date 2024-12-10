@@ -3,6 +3,7 @@
 #include "hashtable.hpp"
 #include "functor.hpp"
 #include "container.h"
+#include "check_type.h"
 MSTL_BEGIN_NAMESPACE__
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
@@ -12,6 +13,7 @@ private:
     typedef hashtable<pair<const Key, T>, Key, HashFcn, select1st<pair<const Key, T> >, EqualKey, Alloc> ht;
     ht rep;
 public:
+    typedef hash_map<Key, T, HashFcn, EqualKey, Alloc> self;
     typedef typename ht::key_type key_type;
     typedef T data_type;
     typedef T mapped_type;
@@ -26,6 +28,30 @@ public:
     typedef typename ht::const_reference const_reference;
     typedef typename ht::iterator iterator;
     typedef typename ht::const_iterator const_iterator;
+
+    static const char* const __type__;
+    void __det__(std::ostream& _out = std::cout) const {
+        split_line(_out);
+        _out << "type: " << __type__ << std::endl;
+        _out << "check type: " << check_type<self>() << std::endl;
+        this->__show_size_only(_out);
+        _out << "data: ";
+        this->__show_data_only(_out);
+        _out << std::endl;
+        split_line(_out);
+    }
+    void __show_data_only(std::ostream& _out) const {
+        size_t cou = size() - 1;
+        _out << '[';
+        for (const_iterator iter = const_begin(); iter != const_end(); ++iter, --cou) {
+            _out << *iter;
+            if (cou) _out << ", ";
+        }
+        _out << ']' << std::flush;
+    }
+    void __show_size_only(std::ostream& _out) const {
+        _out << "size: " << size() << std::endl;
+    }
 
     hasher hash_funct() const { return rep.hash_funct(); }
     key_equal key_eq() const { return rep.key_eq(); }
@@ -58,8 +84,8 @@ public:
     void swap(hash_map& hs) { rep.swap(hs.rep); }
     iterator begin() { return rep.begin(); }
     iterator end() { return rep.end(); }
-    const_iterator begin() const { return rep.begin(); }
-    const_iterator end() const { return rep.end(); }
+    const_iterator const_begin() const { return rep.begin(); }
+    const_iterator const_end() const { return rep.end(); }
     friend bool operator ==(const hash_map&, const hash_map&);
 
     pair<iterator, bool> insert(const value_type& obj) { return rep.insert_unique(obj); }
@@ -93,6 +119,14 @@ inline bool operator ==(const hash_map<Key, T, HashFcn, EqualKey, Alloc>& hm1,
     const hash_map<Key, T, HashFcn, EqualKey, Alloc>& hm2) {
     return hm1.rep == hm2.rep;
 }
+template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
+inline std::ostream& operator <<(std::ostream& _out, const hash_map<Key, T, HashFcn, EqualKey, Alloc>& hm) {
+    hm.__show_data_only(_out);
+    return _out;
+}
+template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
+const char* const hash_map<Key, T, HashFcn, EqualKey, Alloc>::__type__ = "hash_map";
+
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
     class Alloc = default_standard_alloc<__hashtable_node<pair<const Key, T>>>>

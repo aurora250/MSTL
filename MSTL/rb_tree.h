@@ -6,13 +6,13 @@
 
 MSTL_BEGIN_NAMESPACE__
 
-typedef bool _rb_tree_color_type;
-const _rb_tree_color_type __rb_tree_red = false;
-const _rb_tree_color_type __rb_tree_black = true;
+typedef bool __rb_tree_color_type;
+const __rb_tree_color_type __rb_tree_red = false;
+const __rb_tree_color_type __rb_tree_black = true;
 
-struct _rb_tree_node_base {
-    typedef _rb_tree_color_type     color_type;
-    typedef _rb_tree_node_base*     base_ptr;
+struct __rb_tree_node_base {
+    typedef __rb_tree_color_type     color_type;
+    typedef __rb_tree_node_base*     base_ptr;
 
     color_type color;
     base_ptr parent;
@@ -23,14 +23,14 @@ struct _rb_tree_node_base {
     static base_ptr maximum(base_ptr x);
 };
 template <typename T>
-struct _rb_tree_node : public _rb_tree_node_base {
-    typedef _rb_tree_node<T>*   link_type;
+struct __rb_tree_node : public __rb_tree_node_base {
+    typedef __rb_tree_node<T>*   link_type;
     typedef T                   value_type;
     T value_field;
 };
 
-struct _rb_tree_base_iterator {
-    typedef _rb_tree_node_base::base_ptr    base_ptr;
+struct __rb_tree_base_iterator {
+    typedef __rb_tree_node_base::base_ptr    base_ptr;
     typedef std::bidirectional_iterator_tag iterator_category;
     typedef ptrdiff_t                       differrnce_type;
     base_ptr node;
@@ -40,7 +40,7 @@ struct _rb_tree_base_iterator {
 };
 
 template<typename T, typename Ref = T&, typename Ptr = T*>
-struct rb_tree_iterator : public _rb_tree_base_iterator {
+struct rb_tree_iterator : public __rb_tree_base_iterator {
     typedef T                                       value_type;
     typedef Ref                                     reference;
     typedef Ptr                                     pointer;
@@ -48,7 +48,7 @@ struct rb_tree_iterator : public _rb_tree_base_iterator {
     typedef rb_tree_iterator<T, const T&, const T>  const_iterator;
     typedef const T&                                const_reference;
     typedef rb_tree_iterator<T, Ref, Ptr>           self;
-    typedef _rb_tree_node<T>*                       link_type;
+    typedef __rb_tree_node<T>*                       link_type;
 
     rb_tree_iterator() {}
     rb_tree_iterator(link_type x) { node = x; }
@@ -76,35 +76,35 @@ struct rb_tree_iterator : public _rb_tree_base_iterator {
         return tmp;
     }
 };
-inline bool operator ==(const _rb_tree_base_iterator& x,
-    const _rb_tree_base_iterator& y) {
+inline bool operator ==(const __rb_tree_base_iterator& x,
+    const __rb_tree_base_iterator& y) {
     return x.node == y.node;
 }
-inline bool operator !=(const _rb_tree_base_iterator& x,
-    const _rb_tree_base_iterator& y) {
+inline bool operator !=(const __rb_tree_base_iterator& x,
+    const __rb_tree_base_iterator& y) {
     return x.node != y.node;
 }
 
-void __rb_tree_rotate_left(_rb_tree_node_base* x, _rb_tree_node_base*& root);
-void __rb_tree_rotate_right(_rb_tree_node_base* x, _rb_tree_node_base*& root);
-void __rb_tree_rebalance(_rb_tree_node_base* x, _rb_tree_node_base*& root);
-_rb_tree_node_base* __rb_tree_rebalance_for_erase(
-    _rb_tree_node_base* z, _rb_tree_node_base*& root,
-    _rb_tree_node_base*& leftmost, _rb_tree_node_base*& rightmost);
+void __rb_tree_rotate_left(__rb_tree_node_base* x, __rb_tree_node_base*& root);
+void __rb_tree_rotate_right(__rb_tree_node_base* x, __rb_tree_node_base*& root);
+void __rb_tree_rebalance(__rb_tree_node_base* x, __rb_tree_node_base*& root);
+__rb_tree_node_base* __rb_tree_rebalance_for_erase(
+    __rb_tree_node_base* z, __rb_tree_node_base*& root,
+    __rb_tree_node_base*& leftmost, __rb_tree_node_base*& rightmost);
 
-int __black_count(_rb_tree_node_base* node, _rb_tree_node_base* root);
+int __black_count(__rb_tree_node_base* node, __rb_tree_node_base* root);
 
 
 
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, 
-    typename Alloc = default_standard_alloc<_rb_tree_node<Value>> >
+    typename Alloc = default_standard_alloc<__rb_tree_node<Value>> >
 class rb_tree {
 private:
     typedef void*                   void_pointer;
-    typedef _rb_tree_node_base*     base_ptr;
-    typedef _rb_tree_node<Value>    rb_tree_node;
+    typedef __rb_tree_node_base*     base_ptr;
+    typedef __rb_tree_node<Value>    rb_tree_node;
     typedef Alloc                   rb_tree_node_allocator;
-    typedef _rb_tree_color_type     color_type;
+    typedef __rb_tree_color_type     color_type;
 public:
     typedef Key                 key_type;
     typedef Value               value_type;
@@ -164,8 +164,8 @@ private:
     static const Key& key(link_type x) { return KeyOfValue()(value(x)); }
     static color_type& color(link_type x) { return (color_type&)(x->color); }
 
-    static link_type minimum(link_type x) { return (link_type)_rb_tree_node_base::minimum(x); }
-    static link_type maximum(link_type x) { return (link_type)_rb_tree_node_base::maximum(x); }
+    static link_type minimum(link_type x) { return (link_type)__rb_tree_node_base::minimum(x); }
+    static link_type maximum(link_type x) { return (link_type)__rb_tree_node_base::maximum(x); }
 
     iterator __insert(base_ptr x_, base_ptr y_, const_reference v) {
         link_type x = (link_type)x_;
@@ -495,8 +495,8 @@ public:
             if (R && key_compare(key(R), key(x))) return false;
             if (!L && !R && __black_count(x, root()) != len) return false;
         }
-        if (leftmost() != _rb_tree_node_base::minimum(root())) return false;
-        if (rightmost() != _rb_tree_node_base::maximum(root())) return false;
+        if (leftmost() != __rb_tree_node_base::minimum(root())) return false;
+        if (rightmost() != __rb_tree_node_base::maximum(root())) return false;
         return true;
     }
 };

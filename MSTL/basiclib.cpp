@@ -8,11 +8,7 @@ void split_line(std::ostream& _out, size_t _size) {
 	_out << std::endl;
 }
 void* memcpy(void* _dest, void* _rsc, int _byte) {
-#if defined(assert)
 	assert(_dest && _rsc);
-#else
-	Exception(_dest && _rsc, new StopIterator());
-#endif
 	void* _ret = _dest;
 	while (_byte--) {
 		*(char*)_dest = *(char*)_rsc;
@@ -47,7 +43,7 @@ void* memmove(void* _dest, const void* _rsc, int _byte) {
 	}
 	return _ret;
 }
-void* memset(void* _dest, int _val, size_t _size) {
+void* memset(void* _dest, int _val, int _size) {
 	assert(_dest);
 	void* ret = (char*)_dest;
 	while (_size--)
@@ -98,13 +94,13 @@ const char* strstr(const char* _dest, const char* _sou) {
 	}
 	return NULL;
 }
-char* memstr(char* _data, size_t _len, char* _sub) {
+char* memstr(char* _data, int _len, char* _sub) {
 	if (_data == NULL || _len <= 0 || _sub == NULL) return NULL;
 	if (*_sub == '\0') return NULL;
-	size_t _sublen = strlen(_sub);
-	size_t i;
+	int _sublen = strlen(_sub);
+	int i;
 	char* _cur = _data;
-	size_t _las = _len - _sublen + 1;
+	int _las = _len - _sublen + 1;
 	for (i = 0; i < _las; i++) {
 		if (*_cur == *_sub) {
 			if (memcmp(_cur, _sub, _sublen) == 0) return _cur;
