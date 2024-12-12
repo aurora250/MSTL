@@ -234,7 +234,7 @@ template <typename T>
 std::string check_type() {
     // check_type<decltype(object)>()
     std::string str;
-    check<T> { str };
+    check<T> c(str);
     return str;
 }
 

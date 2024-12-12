@@ -84,8 +84,8 @@ public:
     void swap(hash_map& hs) { rep.swap(hs.rep); }
     iterator begin() { return rep.begin(); }
     iterator end() { return rep.end(); }
-    const_iterator const_begin() const { return rep.begin(); }
-    const_iterator const_end() const { return rep.end(); }
+    const_iterator const_begin() const { return rep.const_begin(); }
+    const_iterator const_end() const { return rep.const_end(); }
     friend bool operator ==(const hash_map&, const hash_map&);
 
     pair<iterator, bool> insert(const value_type& obj) { return rep.insert_unique(obj); }
@@ -130,11 +130,12 @@ const char* const hash_map<Key, T, HashFcn, EqualKey, Alloc>::__type__ = "hash_m
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
     class Alloc = default_standard_alloc<__hashtable_node<pair<const Key, T>>>>
-class hash_multimap {
+class hash_multimap : public container {
 private:
-    typedef hashtable<pair<const Key, T>, Key, HashFcn, select1st<pair<const Key, T> >, EqualKey, Alloc> ht;
+    typedef hashtable<pair<const Key, T>, Key, HashFcn, select1st<pair<const Key, T>>, EqualKey, Alloc> ht;
     ht rep;
 public:
+    typedef hash_multimap<Key, T, HashFcn, EqualKey, Alloc> self;
     typedef typename ht::key_type key_type;
     typedef T data_type;
     typedef T mapped_type;
@@ -152,6 +153,31 @@ public:
 
     hasher hash_funct() const { return rep.hash_funct(); }
     key_equal key_eq() const { return rep.key_eq(); }
+
+    static const char* const __type__;
+    void __det__(std::ostream& _out = std::cout) const {
+        split_line(_out);
+        _out << "type: " << __type__ << std::endl;
+        _out << "check type: " << check_type<self>() << std::endl;
+        this->__show_size_only(_out);
+        _out << "data: ";
+        this->__show_data_only(_out);
+        _out << std::endl;
+        split_line(_out);
+    }
+    void __show_data_only(std::ostream& _out) const {
+        size_t cou = size() - 1;
+        _out << '[';
+        for (const_iterator iter = const_begin(); iter != const_end(); ++iter, --cou) {
+            _out << *iter;
+            if (cou) _out << ", ";
+        }
+        _out << ']' << std::flush;
+    }
+    void __show_size_only(std::ostream& _out) const {
+        _out << "size: " << size() << std::endl;
+    }
+
     hash_multimap() : rep(100, hasher(), key_equal()) {}
     explicit hash_multimap(size_type n) : rep(n, hasher(), key_equal()) {}
     explicit hash_multimap(size_type n, const hasher& hf) : rep(n, hf, key_equal()) {}
@@ -180,8 +206,8 @@ public:
     void swap(hash_multimap& hs) { rep.swap(hs.rep); }
     iterator begin() { return rep.begin(); }
     iterator end() { return rep.end(); }
-    const_iterator begin() const { return rep.begin(); }
-    const_iterator end() const { return rep.end(); }
+    const_iterator const_begin() const { return rep.const_begin(); }
+    const_iterator const_end() const { return rep.const_end(); }
     friend bool operator ==(const hash_multimap&, const hash_multimap&);
 
     iterator insert(const value_type& obj) { return rep.insert_equal(obj); }
@@ -211,6 +237,13 @@ inline bool operator ==(const hash_multimap<Key, T, HF, EqKey, Alloc>& hm1,
     const hash_multimap<Key, T, HF, EqKey, Alloc>& hm2) {
     return hm1.rep == hm2.rep;
 }
+template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
+std::ostream& operator <<(std::ostream& _out, const hash_multimap<Key, T, HashFcn, EqualKey, Alloc>& hm) {
+    hm.__show_data_only(_out);
+    return _out;
+}
+template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
+const char* const hash_multimap<Key, T, HashFcn, EqualKey, Alloc>::__type__ = "hash_multimap";
 
 MSTL_END_NAMESPACE__
 

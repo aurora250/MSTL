@@ -97,11 +97,11 @@ extern int memcmp(const void* _dest, const void* _rsc, int _byte);
 extern void* memmove(void* _dest, const void* _rsc, int _byte);
 extern void* memset(void* _dest, int _val, int _byte);
 
-size_t strlen(const char* _str);
-char* strcpy(char* _dest, const char* _sou);
-int strcmp(const char* _des, const char* _sou);
-const char* strstr(const char* _des, const char* _sou);
-char* memstr(char* _data, int _len, char* _sub);
+extern size_t strlen(const char* _str);
+extern char* strcpy(char* _dest, const char* _sou);
+extern int strcmp(const char* _des, const char* _sou);
+extern const char* strstr(const char* _des, const char* _sou);
+extern char* memstr(char* _data, int _len, char* _sub);
 
 extern void split_line(std::ostream & _out = std::cout, size_t _size = 15);
 extern size_t deque_buf_size(size_t n, size_t sz);

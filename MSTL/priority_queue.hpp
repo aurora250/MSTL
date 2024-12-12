@@ -8,7 +8,7 @@ MSTL_BEGIN_NAMESPACE__
 
 template<typename T, typename Sequence = vector<T>,
 typename Compare = greater<typename Sequence::value_type>>
-class priority_queue {
+class priority_queue : public container {
     public:
         typedef typename Sequence::value_type       value_type;
         typedef typename Sequence::size_type        size_type;
@@ -34,6 +34,9 @@ class priority_queue {
         }
         void __show_data_only(std::ostream& _out) const {
             seq.__show_data_only(_out);
+        }
+        void __show_size_only(std::ostream& _out) const {
+            seq.__show_size_only(_out);
         }
 
         priority_queue() : seq(), comp() {}

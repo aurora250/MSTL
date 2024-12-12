@@ -359,7 +359,7 @@ private:
         return pos;
     }
 public:
-    inline void __show_data_only(std::ostream& _out) const {
+    void __show_data_only(std::ostream& _out) const {
         const_iterator _band = const_end();
         --_band;
         _out << '[' << std::flush;
@@ -369,8 +369,8 @@ public:
         }
         _out << ']' << std::flush;
     }
-    inline void __show_size_only(std::ostream& _out) const {
-        _out << "size: " << this->map_size << " (map_size) " << std::endl;
+    void __show_size_only(std::ostream& _out) const {
+        _out << "size: " << size() << std::endl;
     }
     void __det__(std::ostream& _out = std::cout) const {
         split_line(_out);

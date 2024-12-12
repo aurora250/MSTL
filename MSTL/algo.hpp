@@ -1,9 +1,7 @@
 #ifndef MSTL_ALGO_HPP__
 #define MSTL_ALGO_HPP__
 #include "algobase.hpp"
-#include "heap.hpp"
-#include "basiclib.h"
-#include <stdlib.h>
+#include "sort.hpp"
 
 MSTL_BEGIN_NAMESPACE__
 //set:
@@ -978,88 +976,130 @@ void random_shuffle(RandomAccessIterator first, RandomAccessIterator last, Rando
 		(iter_swap)(i, first + rand((i - first) + 1));
 }
 
+template <class ForwardIterator, class T, class Distance>
+pair<ForwardIterator, ForwardIterator>
+__equal_range(ForwardIterator first, ForwardIterator last, const T& value,
+	Distance*, forward_iterator_tag) {
+	Distance len = 0;
+	distance(first, last, len);
+	Distance half;
+	ForwardIterator middle, left, right;
 
-template <class RandomAccessIterator, class T>
-void __partial_sort(RandomAccessIterator first, RandomAccessIterator middle, RandomAccessIterator last, T*) {
-	make_heap(first, middle);
-	for (RandomAccessIterator i = middle; i < last; ++i)
-		if (*i < *first)
-			__pop_heap(first, middle, i, T(*i), (distance_type)(first));
-	sort_heap(first, middle);
-}
-template <class RandomAccessIterator>
-inline void partial_sort(RandomAccessIterator first, RandomAccessIterator middle, RandomAccessIterator last) {
-	__partial_sort(first, middle, last, (value_type)(first));
-}
-
-template <class RandomAccessIterator, class T, class Compare>
-void __partial_sort(RandomAccessIterator first, RandomAccessIterator middle, RandomAccessIterator last,
-	T*, Compare comp) {
-	make_heap(first, middle, comp);
-	for (RandomAccessIterator i = middle; i < last; ++i)
-		if (comp(*i, *first))
-			__pop_heap(first, middle, i, T(*i), comp, (distance_type)(first));
-	sort_heap(first, middle, comp);
-}
-template <class RandomAccessIterator, class Compare>
-inline void partial_sort(RandomAccessIterator first, RandomAccessIterator middle, RandomAccessIterator last,
-	Compare comp) {
-	__partial_sort(first, middle, last, (value_type)(first), comp);
-}
-
-template <class InputIterator, class RandomAccessIterator, class Distance, class T>
-RandomAccessIterator __partial_sort_copy(InputIterator first, InputIterator last,
-	RandomAccessIterator result_first, RandomAccessIterator result_last, Distance*, T*) {
-	if (result_first == result_last) return result_last;
-	RandomAccessIterator result_real_last = result_first;
-	while (first != last && result_real_last != result_last) {
-		*result_real_last = *first;
-		++result_real_last;
-		++first;
-	}
-	make_heap(result_first, result_real_last);
-	while (first != last) {
-		if (*first < *result_first)
-			__adjust_heap(result_first, Distance(0),
-				Distance(result_real_last - result_first), T(*first));
-		++first;
-	}
-	sort_heap(result_first, result_real_last);
-	return result_real_last;
-}
-template <class InputIterator, class RandomAccessIterator>
-inline RandomAccessIterator partial_sort_copy(InputIterator first, InputIterator last,
-	RandomAccessIterator result_first, RandomAccessIterator result_last) {
-	return __partial_sort_copy(first, last, result_first, result_last, 
-		(distance_type)(result_first), (value_type)(first));
-}
-
-template <class InputIterator, class RandomAccessIterator, class Compare, class Distance, class T>
-RandomAccessIterator __partial_sort_copy(InputIterator first, InputIterator last,
-	RandomAccessIterator result_first, RandomAccessIterator result_last, Compare comp, Distance*, T*) {
-	if (result_first == result_last) return result_last;
-	RandomAccessIterator result_real_last = result_first;
-	while (first != last && result_real_last != result_last) {
-		*result_real_last = *first;
-		++result_real_last;
-		++first;
-	}
-	make_heap(result_first, result_real_last, comp);
-	while (first != last) {
-		if (comp(*first, *result_first)) {
-			__adjust_heap(result_first, Distance(0), Distance(result_real_last - result_first),
-				T(*first), comp);
+	while (len > 0) {
+		half = len >> 1;
+		middle = first;
+		advance(middle, half);
+		if (*middle < value) {
+			first = middle;
+			++first;
+			len = len - half - 1;
 		}
-		++first;
+		else if (value < *middle)
+			len = half;
+		else {
+			left = lower_bound(first, middle, value);
+			advance(first, len);
+			right = upper_bound(++middle, first, value);
+			return pair<ForwardIterator, ForwardIterator>(left, right);
+		}
 	}
-	sort_heap(result_first, result_real_last, comp);
-	return result_real_last;
+	return pair<ForwardIterator, ForwardIterator>(first, first);
 }
-template <class InputIterator, class RandomAccessIterator, class Compare>
-inline RandomAccessIterator partial_sort_copy(InputIterator first, InputIterator last,
-	RandomAccessIterator result_first, RandomAccessIterator result_last, Compare comp) {
-	return __partial_sort_copy(first, last, result_first, result_last, comp,
-		(distance_type)(result_first), (value_type)(first));
+template <class RandomAccessIterator, class T, class Distance>
+pair<RandomAccessIterator, RandomAccessIterator>
+__equal_range(RandomAccessIterator first, RandomAccessIterator last,
+	const T& value, Distance*, random_access_iterator_tag) {
+	Distance len = last - first;
+	Distance half;
+	RandomAccessIterator middle, left, right;
+
+	while (len > 0) {
+		half = len >> 1;
+		middle = first + half;
+		if (*middle < value) {
+			first = middle + 1;
+			len = len - half - 1;
+		}
+		else if (value < *middle)
+			len = half;
+		else {
+			left = lower_bound(first, middle, value);
+			right = upper_bound(++middle, first + len, value);
+			return pair<RandomAccessIterator, RandomAccessIterator>(left,
+				right);
+		}
+	}
+	return pair<RandomAccessIterator, RandomAccessIterator>(first, first);
+}
+
+template <class ForwardIterator, class T>
+inline pair<ForwardIterator, ForwardIterator>
+equal_range(ForwardIterator first, ForwardIterator last, const T& value) {
+	return __equal_range(first, last, value, distance_type(first),
+		iterator_category(first));
+}
+template <class ForwardIterator, class T, class Compare, class Distance>
+pair<ForwardIterator, ForwardIterator>
+__equal_range(ForwardIterator first, ForwardIterator last, const T& value,
+	Compare comp, Distance*, forward_iterator_tag) {
+	Distance len = 0;
+	distance(first, last, len);
+	Distance half;
+	ForwardIterator middle, left, right;
+
+	while (len > 0) {
+		half = len >> 1;
+		middle = first;
+		advance(middle, half);
+		if (comp(*middle, value)) {
+			first = middle;
+			++first;
+			len = len - half - 1;
+		}
+		else if (comp(value, *middle))
+			len = half;
+		else {
+			left = lower_bound(first, middle, value, comp);
+			advance(first, len);
+			right = upper_bound(++middle, first, value, comp);
+			return pair<ForwardIterator, ForwardIterator>(left, right);
+		}
+	}
+	return pair<ForwardIterator, ForwardIterator>(first, first);
+}
+template <class RandomAccessIterator, class T, class Compare, class Distance>
+pair<RandomAccessIterator, RandomAccessIterator>
+__equal_range(RandomAccessIterator first, RandomAccessIterator last,
+	const T& value, Compare comp, Distance*,
+	random_access_iterator_tag) {
+	Distance len = last - first;
+	Distance half;
+	RandomAccessIterator middle, left, right;
+
+	while (len > 0) {
+		half = len >> 1;
+		middle = first + half;
+		if (comp(*middle, value)) {
+			first = middle + 1;
+			len = len - half - 1;
+		}
+		else if (comp(value, *middle))
+			len = half;
+		else {
+			left = lower_bound(first, middle, value, comp);
+			right = upper_bound(++middle, first + len, value, comp);
+			return pair<RandomAccessIterator, RandomAccessIterator>(left,
+				right);
+		}
+	}
+	return pair<RandomAccessIterator, RandomAccessIterator>(first, first);
+}
+template <class ForwardIterator, class T, class Compare>
+inline pair<ForwardIterator, ForwardIterator>
+equal_range(ForwardIterator first, ForwardIterator last, const T& value,
+	Compare comp) {
+	return __equal_range(first, last, value, comp, distance_type(first),
+		iterator_category(first));
 }
 
 MSTL_END_NAMESPACE__

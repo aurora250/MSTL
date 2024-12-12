@@ -59,22 +59,6 @@ void (*__malloc_alloc_template<inst>::__malloc_alloc_oom_handler)() = 0;
 typedef __malloc_alloc_template<0> malloc_alloc;
 
 
-template<class T, class Alloc>
-struct simple_alloc {
-    static T* allocate(size_t n) {
-        return 0 == n ? 0 : (T*)Alloc::allocate(n * sizeof(T));
-    }
-    static T* allocate(void) {
-        return (T*)Alloc::allocate(sizeof(T));
-    }
-    static void deallocate(T* p, size_t n) {
-        if (0 != n) Alloc::deallocate(p, n * sizeof(T));
-    }
-    static void deallocate(T* p) {
-        Alloc::deallocate(p, sizeof(T));
-    }
-};
-
 template <typename T, typename Alloc = std::allocator<T>>
 class default_standard_alloc {
 public:
@@ -233,19 +217,32 @@ public:
 };
 template <int inst>
 char* __default_alloc_template<inst>::start_free = 0;
-
 template <int inst>
 char* __default_alloc_template<inst>::end_free = 0;
-
 template <int inst>
 size_t __default_alloc_template<inst>::heap_size = 0;
-
 template <int inst>
 __default_alloc_template<inst>::obj* volatile __default_alloc_template<inst>::
 free_list[__NFREELISTS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
 
 typedef __default_alloc_template<0> alloc;
-typedef __default_alloc_template<0> single_client_alloc;
+
+
+template<class T, class Alloc = alloc>
+struct simple_alloc {
+    static T* allocate(size_t n) {
+        return 0 == n ? 0 : (T*)Alloc::allocate(n * sizeof(T));
+    }
+    static T* allocate(void) {
+        return (T*)Alloc::allocate(sizeof(T));
+    }
+    static void deallocate(T* p, size_t n) {
+        if (0 != n) Alloc::deallocate(p, n * sizeof(T));
+    }
+    static void deallocate(T* p) {
+        Alloc::deallocate(p, sizeof(T));
+    }
+};
 
 
 MSTL_END_NAMESPACE__

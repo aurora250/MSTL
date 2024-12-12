@@ -147,9 +147,10 @@
     <ClInclude Include="algo.hpp" />
     <ClInclude Include="algobase.hpp" />
     <ClInclude Include="algorithm.hpp" />
-    <ClInclude Include="alloc.h" />
+    <ClInclude Include="alloc.hpp" />
     <ClInclude Include="database.h" />
     <ClInclude Include="hashtable.hpp" />
+    <ClInclude Include="hash_function.hpp" />
     <ClInclude Include="hash_map.hpp" />
     <ClInclude Include="hash_set.hpp" />
     <ClInclude Include="heap.hpp" />
@@ -177,7 +178,9 @@
     <ClInclude Include="queue.hpp" />
     <ClInclude Include="rb_tree.h" />
     <ClInclude Include="set.hpp" />
+    <ClInclude Include="sort.hpp" />
     <ClInclude Include="stack.hpp" />
+    <ClInclude Include="tempbuf.hpp" />
     <ClInclude Include="tuple.hpp" />
     <ClInclude Include="type_traits.hpp" />
     <ClInclude Include="vector.hpp" />

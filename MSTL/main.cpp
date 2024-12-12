@@ -116,7 +116,7 @@ void try_copy() {
     deque<int>::iterator first = id.begin();
     deque<int>::iterator last = id.end();
     ++++first;  //advance(first,2)  2
-    std::cout << *first << std::endl;
+    std::cout << *++first << std::endl;
     ----last;  //advance(last,-2) 7
     std::cout << *last << std::endl;
     deque<int>::iterator result = id.begin();
@@ -189,7 +189,7 @@ void try_vec() {
         v.push_back(4);
         v.__det__();
         vector<int> v2(v);
-        display_endl<int> out;
+        display<int> out;
         out(v.front());
         MSTL_TRY__{
             out(v[10]);
@@ -219,9 +219,11 @@ void try_vec() {
 }
 void try_pque() {
     MSTL_NAMESPACE__;
-    priority_queue<int> q;
-    q.push(3);
-    q.push(5);
+    priority_queue<int*> q;
+    int val = 3;
+    std::cout << typeid(priority_queue<int*>).name() << std::endl;
+    q.push(&val);
+    q.push(&++++val);
     q.__det__();
     q.pop();
     q.__det__();
@@ -247,9 +249,11 @@ void try_hash() {
     m[2] = 'b';
     std::cout<< *++m.begin() << std::endl;
     m.__det__();
+    hash_multimap<std::string, int> mm;
+    
+    mm.__det__();
 }
 
 int main() {
-    MSTL_NAMESPACE__
     try_hash();
 }

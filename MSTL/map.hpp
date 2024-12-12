@@ -61,7 +61,7 @@ public:
 		}
 		_out << ']' << std::flush;
 	}
-	inline void __show_size_only(std::ostream& _out) const {
+	void __show_size_only(std::ostream& _out) const {
 		_out << "size: " << size() << std::endl;
 	}
 
@@ -143,13 +143,14 @@ std::ostream& operator <<(std::ostream& _out, const map<Key, T, Compare, Alloc>&
 
 template <class Key, class T, class Compare = less<Key>,
 	class Alloc = default_standard_alloc<__rb_tree_node<pair<const Key, T>>>>
-class multimap {
+class multimap : public container {
 public:
 	typedef Key key_type;
 	typedef T data_type;
 	typedef T mapped_type;
 	typedef pair<const Key, T> value_type;
 	typedef Compare key_compare;
+	typedef multimap<Key, T, Compare, Alloc> self;
 
 	class value_compare : public binary_function<value_type, value_type, bool> {
 		friend class multimap<Key, T, Compare, Alloc>;
@@ -176,6 +177,32 @@ public:
 	typedef typename rep_type::size_type size_type;
 	typedef typename rep_type::difference_type difference_type;
 
+	static const char* const __type__;
+
+	void __det__(std::ostream& _out = std::cout) const {
+		split_line(_out);
+		_out << "type: " << __type__ << std::endl;
+		_out << "check type: " << check_type<self>() << std::endl;
+		this->__show_size_only(_out);
+		_out << "data: " << std::flush;
+		this->__show_data_only(_out);
+		_out << std::endl;
+		split_line(_out);
+	}
+	void __show_data_only(std::ostream& _out) const {
+		const_iterator _band = const_end();
+		--_band;
+		_out << '[' << std::flush;
+		for (const_iterator iter = const_begin(); iter != const_end(); ++iter) {
+			_out << *iter << std::flush;
+			if (iter != _band) _out << ", " << std::flush;
+		}
+		_out << ']' << std::flush;
+	}
+	void __show_size_only(std::ostream& _out) const {
+		_out << "size: " << size() << std::endl;
+	}
+
 	multimap() : t(Compare()) { }
 	explicit multimap(const Compare& comp) : t(comp) { }
 	template <class InputIterator>
@@ -195,9 +222,9 @@ public:
 	key_compare key_comp() const { return t.key_comp(); }
 	value_compare value_comp() const { return value_compare(t.key_comp()); }
 	iterator begin() { return t.begin(); }
-	const_iterator begin() const { return t.begin(); }
+	const_iterator const_begin() const { return t.begin(); }
 	iterator end() { return t.end(); }
-	const_iterator end() const { return t.end(); }
+	const_iterator const_end() const { return t.end(); }
 	reverse_iterator rbegin() { return t.rbegin(); }
 	const_reverse_iterator rbegin() const { return t.rbegin(); }
 	reverse_iterator rend() { return t.rend(); }
@@ -227,6 +254,9 @@ public:
 	friend bool operator ==(const multimap&, const multimap&);
 	friend bool operator <(const multimap&, const multimap&);
 };
+template <class Key, class T, class Compare, class Alloc>
+const char* const multimap<Key, T, Compare, Alloc>::__type__ = "multimap";
+
 template <class Key, class T, class Compare, class Alloc>
 inline bool operator==(const multimap<Key, T, Compare, Alloc>& x, const multimap<Key, T, Compare, Alloc>& y) {
 	return x.t == y.t;

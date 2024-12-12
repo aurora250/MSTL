@@ -81,7 +81,7 @@ struct iterator_traits<const T*> {
 };
 #endif 
 #else
-#if defined(MSTL_COMPILE_MSVC__)  // __GNUC__ 无法使用
+#if defined(MSTL_COMPILE_MSVC__)
 using std::iterator_traits;
 using std::output_iterator_tag;
 using std::input_iterator_tag;

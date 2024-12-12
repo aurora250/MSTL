@@ -3,41 +3,14 @@
 #include "basiclib.h"
 #include "algo.hpp"
 #include "memory.hpp"
-#include "vector.hpp"
+#include "tuple.hpp"
 #include "type_traits.hpp"
-
+#include "hash_function.hpp"
+//#ifdef MSTL_DLL_LINK__
+//#include <boost/container_hash/extensions.hpp>
+//using namespace boost;
+//#endif
 MSTL_BEGIN_NAMESPACE__
-
-template <class Key>
-struct hash {};
-inline size_t __hash_string(const char* s) {
-    size_t h = 0;
-    for (; *s; ++s)
-        h = 5 * h + *s;
-    return h;
-}
-
-MSTL_TEMPLATE_NULL__ struct hash<char*> {
-    size_t operator ()(const char* s) const { return __hash_string(s); }
-};
-MSTL_TEMPLATE_NULL__ struct hash<const char*> {
-    size_t operator ()(const char* s) const { return __hash_string(s); }
-};
-#define HASH_STRUCT__(OPT) \
-    MSTL_TEMPLATE_NULL__ struct hash<OPT> { \
-    size_t operator ()(OPT x) const { return x; } \
-    };
-HASH_STRUCT__(char)
-HASH_STRUCT__(unsigned char)
-HASH_STRUCT__(signed char)
-HASH_STRUCT__(short)
-HASH_STRUCT__(unsigned short)
-HASH_STRUCT__(int)
-HASH_STRUCT__(unsigned int)
-HASH_STRUCT__(long)
-HASH_STRUCT__(unsigned long)
-HASH_STRUCT__(long long)
-HASH_STRUCT__(size_t)
 
 template <class Value>
 struct __hashtable_node {
@@ -167,7 +140,6 @@ public:
 
     hasher hash_funct() const { return hash; }
     key_equal key_eq() const { return equals; }
-
 private:
     hasher hash;
     key_equal equals;
@@ -222,15 +194,15 @@ public:
                 return iterator(buckets[n], this);
         return end();
     }
-    iterator end() { return iterator(0, this); }
+    iterator end() { return iterator(nullptr, this); }
 
-    const_iterator begin() const {
+    const_iterator const_begin() const {
         for (size_type n = 0; n < buckets.size(); ++n) {
             if (buckets[n]) return const_iterator(buckets[n], this);
         }
-        return end();
+        return const_end();
     }
-    const_iterator end() const { return const_iterator(0, this); }
+    const_iterator const_end() const { return const_iterator(nullptr, this); }
 
     void swap(hashtable& ht) {
         using std::swap;

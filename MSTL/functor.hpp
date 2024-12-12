@@ -94,14 +94,15 @@ template <typename T>
 struct identity : public unary_function<T, T> {
 	const T& operator()(const T& x) const { return x; }
 };
-template <class T>
+template <typename T>
 struct display {
-	void operator()(const T& value) { std::cout << value << ' '; }
+	void operator()(const T& value) { std::cout << value << std::flush; }
 };
-template <class T>
-struct display_endl {
+template <typename T>
+struct display_enter {
 	void operator()(const T& value) { std::cout << value << std::endl; }
 };
+
 template <typename Pair>
 struct select1st : public unary_function<Pair, typename Pair::first_type> {
 	typename Pair::first_type& operator()(const Pair& x) const { return x.first; }

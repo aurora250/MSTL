@@ -6,7 +6,7 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T1, typename T2>
-struct pair { // public object
+struct pair {
 	typedef T1				first_type;
 	typedef T2				second_type;
 	typedef pair<T1, T2>	self;

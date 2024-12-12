@@ -3,7 +3,7 @@
 #include "type_traits.hpp"
 #include "algobase.hpp"
 #include "errorlib.h"
-#include "alloc.h"
+#include "alloc.hpp"
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -36,7 +36,7 @@ inline void destroy(wchar_t*, wchar_t*) {}
 template <typename InputIterator, typename ForwardIterator>
 inline ForwardIterator __uninitialized_copy_aux(InputIterator first, InputIterator last,
                                                 ForwardIterator result, __true_type) {
-    return copy(first, last, result);
+    return MSTL::copy(first, last, result);
 }
 template <typename InputIterator, typename ForwardIterator>
 ForwardIterator __uninitialized_copy_aux(InputIterator first, InputIterator last,
@@ -123,7 +123,7 @@ inline void uninitialized_fill(ForwardIterator first, ForwardIterator last, cons
 template <typename ForwardIterator, typename Size, typename T>
 inline ForwardIterator __uninitialized_fill_n_aux(ForwardIterator first, Size n,
     const T& x, __true_type) {
-    return fill_n(first, n, x);
+    return MSTL::fill_n(first, n, x);
 }
 template <typename ForwardIterator, typename Size, typename T>
 ForwardIterator __uninitialized_fill_n_aux(ForwardIterator first, Size n,

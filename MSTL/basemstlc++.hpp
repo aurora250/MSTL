@@ -2,7 +2,7 @@
 #define MSTL_BASEMSTLCPP_HPP__
 
 #include "errorlib.h"  // "object.h" <- "basiclib.h"
-#include "memory.hpp"
+#include "memory.hpp"  // "alloc.h"
 #include "check_type.h"
 #include "mathlib.h"
 #include "concepts.hpp"
