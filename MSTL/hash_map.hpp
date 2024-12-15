@@ -8,7 +8,7 @@ MSTL_BEGIN_NAMESPACE__
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
     class Alloc = default_standard_alloc<__hashtable_node<pair<const Key, T>>>>
-    class hash_map : public container {
+class hash_map : public container {
 private:
     typedef hashtable<pair<const Key, T>, Key, HashFcn, select1st<pair<const Key, T> >, EqualKey, Alloc> ht;
     ht rep;
@@ -89,6 +89,7 @@ public:
     friend bool operator ==(const hash_map&, const hash_map&);
 
     pair<iterator, bool> insert(const value_type& obj) { return rep.insert_unique(obj); }
+    pair<iterator, bool> insert(const Key& k, const T& v) { return rep.insert_unique(pair<const Key, T>(k, v)); }
     template <class InputIterator>
     void insert(InputIterator f, InputIterator l) { rep.insert_unique(f, l); }
     pair<iterator, bool> insert_noresize(const value_type& obj) { return rep.insert_unique_noresize(obj); }
@@ -211,6 +212,7 @@ public:
     friend bool operator ==(const hash_multimap&, const hash_multimap&);
 
     iterator insert(const value_type& obj) { return rep.insert_equal(obj); }
+    iterator insert(const Key& k, const T& v) { return rep.insert_equal(pair<const Key, T>(k, v)); }
     template <class InputIterator>
     void insert(InputIterator f, InputIterator l) { rep.insert_equal(f, l); }
     iterator insert_noresize(const value_type& obj) {

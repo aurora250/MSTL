@@ -2,7 +2,7 @@
 #define MSTL_DEQUE_HPP__
 
 #include "container.h"
-#include "memory.hpp"
+#include "iterator.hpp"
 
 MSTL_BEGIN_NAMESPACE__
 

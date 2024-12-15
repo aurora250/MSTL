@@ -94,14 +94,6 @@ template <typename T>
 struct identity : public unary_function<T, T> {
 	const T& operator()(const T& x) const { return x; }
 };
-template <typename T>
-struct display {
-	void operator()(const T& value) { std::cout << value << std::flush; }
-};
-template <typename T>
-struct display_enter {
-	void operator()(const T& value) { std::cout << value << std::endl; }
-};
 
 template <typename Pair>
 struct select1st : public unary_function<Pair, typename Pair::first_type> {
@@ -118,6 +110,16 @@ struct project1st : public binary_function<Arg1, Arg2, Arg1> {
 template <typename Arg1, typename Arg2>
 struct project2nd : public binary_function<Arg1, Arg2, Arg2> {
 	Arg2 operator()(const Arg1&, const Arg2& y) const { return y; }
+};
+
+
+struct display {
+	const display& operator ()() { return *this; }
+	void operator()(const auto& value) { std::cout << value << std::flush; }
+};
+struct display_enter {
+	const display_enter& operator ()() { return *this; }
+	void operator ()(const auto& value) { std::cout << value << std::endl; }
 };
 
 MSTL_END_NAMESPACE__

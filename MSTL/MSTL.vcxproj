@@ -174,7 +174,6 @@
     <ClInclude Include="numeric.hpp" />
     <ClInclude Include="object.h" />
     <ClInclude Include="pair.hpp" />
-    <ClInclude Include="priority_queue.hpp" />
     <ClInclude Include="queue.hpp" />
     <ClInclude Include="rb_tree.h" />
     <ClInclude Include="set.hpp" />

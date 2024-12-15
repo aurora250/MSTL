@@ -3,6 +3,7 @@
 #include "basiclib.h"
 #include "algo.hpp"
 #include "memory.hpp"
+#include "vector.hpp"
 #include "tuple.hpp"
 #include "type_traits.hpp"
 #include "hash_function.hpp"
@@ -117,11 +118,11 @@ static const unsigned long __stl_prime_list[__stl_num_primes] = {
   1610612741, 3221225473ul, 4294967291ul
 };
 
-inline unsigned long __next_prime(unsigned long n) {
+inline size_t __next_prime(size_t n) {
     const unsigned long* first = __stl_prime_list;
     const unsigned long* last = __stl_prime_list + __stl_num_primes;
     const unsigned long* pos = lower_bound(first, last, n);
-    return pos == last ? *(last - 1) : *pos;
+    return pos == last ? (size_t)(*(last - 1)) : (size_t)(*pos);
 }
 
 template <class Value, class Key, class HashFcn, class ExtractKey, class EqualKey, class Alloc>

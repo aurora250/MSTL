@@ -91,7 +91,7 @@ void try_dep() {
             return a + b;
         };
     deposit<double, int, double, double&> add_service(add);
-    manager.register_deposit<deposit<double, int, double, double&>>("add", add_service);
+    manager.register_deposit("add", add_service);
     double test = 0;
     std::cout << manager.excute<double>("add", 2, 1.08, test) << std::endl;
     std::cout << check_type<deposit<double, int, double, double&>>() << std::endl;
@@ -123,7 +123,7 @@ void try_copy() {
     std::cout << *result << std::endl; //0
     //输出区间的终点和输入区间重叠 没有问题
     MSTL::copy(first, last, result);
-    MSTL::for_each(id.begin(), id.end(), display<int>()); //2 3 4 5 6 5 6 7 8
+    MSTL::for_each(id.begin(), id.end(), display()); //2 3 4 5 6 5 6 7 8
     std::cout << std::endl;
 
     //int ia[] = { 0,1,2,3,4,5,6,7,8 };
@@ -189,7 +189,7 @@ void try_vec() {
         v.push_back(4);
         v.__det__();
         vector<int> v2(v);
-        display<int> out;
+        display out;
         out(v.front());
         MSTL_TRY__{
             out(v[10]);
@@ -239,18 +239,22 @@ void try_map() {
 }
 void try_tup() {
     MSTL_NAMESPACE__;
-    tuple<int, char, const char*> t(1, 't', "MSTL");
-
+    tuple<int, char, const char*> tup(1, 't', "MSTL");
+    __tuple<int, char, const char*> t(1, 't', "MSTL");
+    std::cout << get<0, int, char, const char*>(t) << std::endl;
+    std::cout << tup.size() << std::endl;
+    std::cout << tup.get<2>() << std::endl;
 }
 void try_hash() {
     MSTL_NAMESPACE__;
     hash_map<int, char> m;
     m[1] = 'a';
     m[2] = 'b';
+    m.insert(3, 'c');
     std::cout<< *++m.begin() << std::endl;
     m.__det__();
     hash_multimap<std::string, int> mm;
-    
+    mm.insert("hello", 1);
     mm.__det__();
 }
 

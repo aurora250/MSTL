@@ -359,10 +359,9 @@ public:
 		}
 	}
 	void swap(self& x) {
-		using MSTL::swap;
-		swap(start, x.start);
-		swap(finish, x.finish);
-		swap(end_of_storage, x.end_of_storage);
+		MSTL::swap(start, x.start);
+		MSTL::swap(finish, x.finish);
+		MSTL::swap(end_of_storage, x.end_of_storage);
 	}
 };
 template <typename T, typename Alloc>

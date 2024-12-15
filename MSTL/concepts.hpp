@@ -4,7 +4,6 @@
 #if defined(MSTL_SUPPORT_CONCEPTS__)
 #include <concepts>
 #include <type_traits>
-#include <iostream>
 #endif
 MSTL_BEGIN_NAMESPACE__
 

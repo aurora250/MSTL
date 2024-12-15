@@ -116,9 +116,6 @@
     <ClInclude Include="database.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="priority_queue.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="type_traits.hpp">
       <Filter>头文件</Filter>
     </ClInclude>

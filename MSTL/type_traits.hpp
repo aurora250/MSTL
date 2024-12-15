@@ -132,9 +132,7 @@ struct __type_traits<T*> {
 };
 
 #define DEFAULT_TYPE_TRAITS__(OPT) \
-	template<> \
-	struct __type_traits<OPT> \
-	{ \
+	MSTL_TEMPLATE_NULL__  struct __type_traits<OPT> { \
 		typedef __true_type has_trivial_default_constructor; \
 		typedef __true_type has_trivial_copy_constructor; \
 		typedef __true_type has_trivial_assignment_operator; \
@@ -163,58 +161,6 @@ MSTL_BEGIN_NAMESPACE__
 using std::__true_type;
 using std::__false_type;
 #endif // MSTL_NEED_SGI_TYPE_TRAITS__
-
-template <typename InputIterator, typename Distance>
-inline void __advance(InputIterator& i, Distance n, MSTL_ITERATOR_TRATIS_FROM__ input_iterator_tag) {
-	while (n--) ++i;
-}
-template <typename BidirectionalIterator, typename Distance>
-inline void __advance(BidirectionalIterator& i, Distance n, MSTL_ITERATOR_TRATIS_FROM__ bidirectional_iterator_tag) {
-	if (n >= 0)
-		while (n--) ++i;
-	else
-		while (n++) --i;
-}
-template <typename RandomAccessIterator, typename Distance>
-inline void __advance(RandomAccessIterator& i, Distance n, MSTL_ITERATOR_TRATIS_FROM__ random_access_iterator_tag) {
-	i += n;
-}
-template <typename InputIterator, typename Distance>
-inline void advance(InputIterator& iter, Distance n) {
-	__advance(iter, n, iterator_category(iter));
-}
-
-template <typename InputIterator, typename Distance>
-inline void __distance(InputIterator first, InputIterator last, Distance& n, MSTL_ITERATOR_TRATIS_FROM__ input_iterator_tag) {
-	while (first != last) { ++first; ++n; }
-}
-template <typename RandomAccessIterator, typename Distance>
-inline void __distance(RandomAccessIterator first, RandomAccessIterator last,
-	Distance& n, MSTL_ITERATOR_TRATIS_FROM__ random_access_iterator_tag) {
-	n += last - first;
-}
-template <typename InputIterator, typename Distance>
-inline void distance(InputIterator first, InputIterator last, Distance& n) {
-	__distance(first, last, n, iterator_category(first));
-}
-template <typename InputIterator>
-inline typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<InputIterator>::difference_type
-__distance(InputIterator first, InputIterator last, MSTL_ITERATOR_TRATIS_FROM__ input_iterator_tag) {
-	typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<InputIterator>::difference_type n = 0;
-	while (first != last) { ++first; ++n; }
-	return n;
-}
-template <typename RandomAccessIterator>
-inline typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<RandomAccessIterator>::difference_type
-__distance(RandomAccessIterator first, RandomAccessIterator last, MSTL_ITERATOR_TRATIS_FROM__ random_access_iterator_tag) {
-	return last - first;
-}
-template <typename InputIterator>
-inline typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<InputIterator>::difference_type
-distance(InputIterator first, InputIterator last) {
-	using category = typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<InputIterator>::iterator_category;
-	return __distance(first, last, category());
-}
 
 MSTL_END_NAMESPACE__
 

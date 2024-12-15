@@ -2,6 +2,7 @@
 #define MSTL_RB_TREE_H__
 #include "pair.hpp"
 #include "memory.hpp"
+#include "iterator.hpp"
 #include <iterator>
 
 MSTL_BEGIN_NAMESPACE__
@@ -31,8 +32,8 @@ struct __rb_tree_node : public __rb_tree_node_base {
 
 struct __rb_tree_base_iterator {
     typedef __rb_tree_node_base::base_ptr    base_ptr;
-    typedef std::bidirectional_iterator_tag iterator_category;
-    typedef ptrdiff_t                       differrnce_type;
+    typedef std::bidirectional_iterator_tag  iterator_category;
+    typedef ptrdiff_t                        differrnce_type;
     base_ptr node;
 
     void increment();
@@ -47,8 +48,9 @@ struct rb_tree_iterator : public __rb_tree_base_iterator {
     typedef rb_tree_iterator<T, T&, T*>             iterator;
     typedef rb_tree_iterator<T, const T&, const T>  const_iterator;
     typedef const T&                                const_reference;
+    typedef std::bidirectional_iterator_tag         iterator_category;
     typedef rb_tree_iterator<T, Ref, Ptr>           self;
-    typedef __rb_tree_node<T>*                       link_type;
+    typedef __rb_tree_node<T>*                      link_type;
 
     rb_tree_iterator() {}
     rb_tree_iterator(link_type x) { node = x; }
@@ -188,7 +190,7 @@ private:
         parent(z) = y;
         left(z) = 0;
         right(z) = 0;
-        __rb_tree_rebalance(z, header->parent);
+        (__rb_tree_rebalance)(z, header->parent);
         ++node_count;
         return iterator(z);
     }
@@ -283,7 +285,7 @@ public:
     size_type size() const { return node_count; }
     // size_type max_height() const { return 2 * log2(node_count + 1); }
 
-    pair<iterator, bool> insert_unique(const_reference v) {
+    pair<iterator, bool> insert_unique(const Value& v) {
         link_type y = header;
         link_type x = root();
         bool comp = true;
@@ -298,7 +300,7 @@ public:
                 return pair<iterator, bool>(__insert(x, y, v), true);
             else --j;
         }
-        if (key_compare(key(link_type(j.node)), KeyOfValue()(v)))
+        if (key_compare(KeyOfValue()(value(link_type(j.node))), KeyOfValue()(v)))
             return pair<iterator, bool>(__insert(x, y, v), true);
         return pair<iterator, bool>(j, false);
     }
@@ -422,7 +424,7 @@ public:
     size_type count(const Key& k) const {
         pair<const_iterator, const_iterator> p = equal_range(k);
         size_type n = 0;
-        distance(p.first, p.second, n);
+        MSTL::distance(p.first, p.second, n);
         return n;
     }
     iterator lower_bound(const Key& k) {

@@ -79,7 +79,7 @@ inline bool lexicographical_compare(const unsigned char* first1, const unsigned 
 	const unsigned char* first2, const unsigned char* last2) {
 	const size_t len1 = last1 - first1;
 	const size_t len2 = last2 - first2;
-	const int result = memcmp(first1, first2, (min)(len1, len1));
+	const int result = memcmp(first1, first2, (int)(min)(len1, len1));
 	return result != 0 ? result < 0 : len1 < len2;
 }
 
@@ -128,7 +128,7 @@ inline OutputIterator __copy(RandomAccessIterator first, RandomAccessIterator la
 }
 template <typename T>
 inline T* __copy_t(const T* first, const T* last, T* result, __true_type) {
-	(memmove)(result, first, sizeof(T) * (last - first));
+	(memmove)(result, first, (int)(sizeof(T) * (last - first)));
 	return result + (last - first);
 }
 template <typename T>
@@ -160,11 +160,11 @@ inline OutputIterator copy(InputIterator first, InputIterator last, OutputIterat
 	return __copy_dispatch<InputIterator, OutputIterator>()(first, last, result);
 }
 inline char* copy(const char* first, const char* last, char* result) {
-	memmove(result, first, last - first);
+	memmove(result, first, (int)(last - first));
 	return result + (last - first);
 }
 inline wchar_t* copy(const wchar_t* first, const wchar_t* last, wchar_t* result) {
-	memmove(result, first, sizeof(wchar_t) * (last - first));
+	memmove(result, first, (int)(sizeof(wchar_t) * (last - first)));
 	return result + (last - first);
 }
 
@@ -178,7 +178,7 @@ BidirectionalIterator2 __copy_backward(BidirectionalIterator1 first,
 template <class T>
 T* __copy_backward_t(const T* first, const T* last, T* result, __true_type) {
 	const ptrdiff_t N = last - first;
-	(memmove)(result - N, first, sizeof(T) * N);
+	(memmove)(result - N, first, (int)(sizeof(T) * N));
 	return result - N;
 }
 template <class T>

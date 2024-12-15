@@ -5,6 +5,7 @@
 #include "memory.hpp"  // "alloc.h"
 #include "check_type.h"
 #include "mathlib.h"
+#include "hash_function.hpp"
 #include "concepts.hpp"
 
 #include "function.hpp" // "functor.hpp"

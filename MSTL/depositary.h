@@ -1,11 +1,12 @@
 #ifndef MSTL_DEPOSITARY_H__
 #define MSTL_DEPOSITARY_H__
 #include <functional>
-#include <unordered_map>
 #include <string>
 #include <memory>
 #include "concepts.hpp"
-
+#include "hash_map.hpp"
+#include "map.hpp"
+using namespace MSTL::concepts;
 MSTL_BEGIN_NAMESPACE__
 
 class __base_deposit {
@@ -13,19 +14,18 @@ public:
 	virtual ~__base_deposit() = 0;
 };
 
-#if defined(MSTL_SUPPORT_CONCEPTS__)
-using namespace MSTL::concepts;
-template <concepts::NVoidT T, typename... Args>
+#ifdef MSTL_SUPPORT_CONCEPTS__
+template <NVoidT T, typename... Args>
 #else
 template <typename T, typename... Args>
-#endif // MSTL_SUPPORT_CONCEPTS__
+#endif
 class deposit : public __base_deposit {
 	using Func = std::function<T(Args...)>;
 public:
-	deposit(Func _func) : _func(_func) {}
-	T run(Args&&... _args) { return _func(std::forward<Args>(_args)...); }
+	deposit(Func _func) : func_(_func) {}
+	T run(Args&&... _args) { return func_(std::forward<Args>(_args)...); }
 private:
-	Func _func;
+	Func func_;
 };
 
 class depositary {
@@ -33,24 +33,28 @@ class depositary {
 public:
 	template<class DeposT>
 	void register_deposit(const std::string& _register_name, const DeposT& _target) {
-		_deposit_map.insert(std::pair<std::string, __base_deposit_ptr>
-			(_register_name, __base_deposit_ptr(new DeposT(_target))));
+		//deposit_map_.insert(pair(_register_name, __base_deposit_ptr(new DeposT(_target))));
+		deposit_map_[_register_name] = __base_deposit_ptr(new DeposT(_target));
 	};
 
-	template<class T, class... Args>
+#ifdef MSTL_SUPPORT_CONCEPTS__
+	template <NVoidT T, typename... Args>
+#else
+	template <typename T, typename... Args>
+#endif
 	T excute(const std::string& _register_name, Args&&... _args) {
-		if (_deposit_map.count(_register_name)) {
-			auto depos_ptr = _deposit_map[_register_name];
+		if (deposit_map_.count(_register_name)) {
+			auto depos_ptr = deposit_map_[_register_name];
 			deposit<T, Args...>* run_depos_ptr = dynamic_cast<deposit<T, Args...>*>(depos_ptr.get());
 			return run_depos_ptr->run(std::forward<Args>(_args)...);
 		}
 		else {
-			std::cout << "Invalid register name, return a default value." << std::endl;
+			std::cout << "Invalid register name, return default value." << std::endl;
 			return T();
 		}
 	}
 private:
-	std::unordered_map<std::string, __base_deposit_ptr> _deposit_map;
+	hash_map<std::string, __base_deposit_ptr> deposit_map_;
 };
 
 MSTL_END_NAMESPACE__

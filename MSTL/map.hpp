@@ -7,7 +7,7 @@
 
 MSTL_BEGIN_NAMESPACE__
 
-template <typename Key, typename T, typename Compare = less<T>,
+template <typename Key, typename T, typename Compare = less<Key>,
 	typename Alloc = default_standard_alloc<__rb_tree_node<pair<const Key, T>>>>
 class map : public container {
 public:

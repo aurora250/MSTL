@@ -2,6 +2,7 @@
 #define MSTL_ALGO_HPP__
 #include "algobase.hpp"
 #include "sort.hpp"
+#include "iterator.hpp"
 
 MSTL_BEGIN_NAMESPACE__
 //set:

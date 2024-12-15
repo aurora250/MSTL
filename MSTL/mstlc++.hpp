@@ -13,7 +13,6 @@
 #include "deque.hpp"
 #include "stack.hpp"
 #include "queue.hpp"
-#include "priority_queue.hpp"
 #include "rb_tree.h"
 #include "set.hpp"
 #include "map.hpp"

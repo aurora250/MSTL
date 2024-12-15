@@ -60,12 +60,12 @@ inline ForwardIterator uninitialized_copy(InputIterator first, InputIterator las
     return __uninitialized_copy(first, last, result, value_type(result));
 }
 inline char* uninitialized_copy(const char* first, const char* last, char* result) {
-    memmove(result, first, last - first);
+    memmove(result, first, (int)(last - first));
     return result + (last - first);
 }
 
 inline wchar_t* uninitialized_copy(const wchar_t* first, const wchar_t* last, wchar_t* result) {
-    memmove(result, first, sizeof(wchar_t) * (last - first));
+    memmove(result, first, (int)(sizeof(wchar_t) * (last - first)));
     return result + (last - first);
 }
 
