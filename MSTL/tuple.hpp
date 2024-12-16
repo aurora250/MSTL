@@ -66,6 +66,11 @@ public:
     template <size_t Index, typename... ElemTypes>
     friend decltype(auto) get(__tuple<ElemTypes...>&& tuple);
     friend class tuple<Types...>;
+    
+    template <size_t Index, typename... ElemTypes>
+    friend decltype(auto) get(const tuple<ElemTypes...>& tuple);
+    template <size_t Index, typename... ElemTypes>
+    friend decltype(auto) get(tuple<ElemTypes...>&& tuple);
 };
 MSTL_TEMPLATE_NULL__ class __tuple<> {};
 
@@ -104,7 +109,25 @@ public:
         return (static_cast<const base*>(tup)->value);
     }
     size_type size() const { return _size; }
+
+    template <size_t Index, typename... ElemTypes>
+    friend decltype(auto) get(const tuple<ElemTypes...>& tuple);
+    template <size_t Index, typename... ElemTypes>
+    friend decltype(auto) get(tuple<ElemTypes...>&& tuple);
 };
+
+template <size_t Index, typename... ElemTypes>
+decltype(auto) get(const tuple<ElemTypes...>& tup) {
+    using base_type = typename tuple_helper<Index, ElemTypes...>::type;
+    return (static_cast<const base_type&>(*(tup.tup)).value);
+}
+
+template <size_t Index, typename... ElemTypes>
+decltype(auto) get(tuple<ElemTypes...>&& tup) {
+    using base_type = typename tuple_helper<Index, ElemTypes...>::type;
+    using value_type = typename tuple_element<Index, ElemTypes...>::type;
+    return std::forward<value_type>(static_cast<base_type&&>(*(tup.tup)).value);
+}
 
 template <typename... Types>
 tuple<Types...> make_tuple(Types&&... args) {

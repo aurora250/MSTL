@@ -121,6 +121,11 @@ public:
 			insert(value_type(k, T()))
 			).first)).second;
 	}
+	T& operator[](key_type&& k) {
+		return (*((
+			insert(value_type(std::move(k), T()))
+			).first)).second;
+	}
 };
 template <class Key, class T, class Compare, class Alloc>
 const char* const map<Key, T, Compare, Alloc>::__type__ = "map";

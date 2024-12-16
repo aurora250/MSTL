@@ -9,7 +9,7 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T, typename Alloc = default_standard_alloc<T>>
-class vector : public container {
+class vector {
 public:
 	typedef T					value_type;
 	typedef T*					pointer;
@@ -22,31 +22,6 @@ public:
 	typedef vector<T, Alloc>	self;
 
 	static const char* __type__;
-
-	inline void __show_size_only(std::ostream& _out) const {
-		_out << "size: " << size() << std::endl;
-		_out << "capacity: " << capacity() << std::endl;
-	}
-	void __show_data_only(std::ostream& _out) const {
-		const_iterator _band = const_end();
-		--_band;
-		_out << '[' << std::flush;
-		for (const_iterator iter = const_begin(); iter != const_end(); ++iter) {
-			_out << *iter << std::flush;
-			if (iter != _band) _out << ", " << std::flush;
-		}
-		_out << ']' << std::flush;
-	}
-	void __det__(std::ostream& _out = std::cout) const {
-		split_line(_out);
-		_out << "type: " << __type__ << std::endl;
-		_out << "check type: " << check_type<self>() << std::endl;
-		this->__show_size_only(_out);
-		_out << "data: " << std::flush;
-		this->__show_data_only(_out);
-		_out << std::endl;
-		split_line(_out);
-	}
 private:
 	typedef Alloc data_allocator;
 
@@ -198,7 +173,7 @@ public:
 	explicit vector(long n, const_reference value) {
 		fill_initialize(n, value);
 	}
-	explicit vector(const self& x) : container() {
+	explicit vector(const self& x) {
 		start = allocate_and_copy(x.const_end() - x.const_begin(), x.const_begin(), x.const_end());
 		finish = start + (x.const_end() - x.const_begin());
 		end_of_storage = finish;
@@ -359,19 +334,13 @@ public:
 		}
 	}
 	void swap(self& x) {
-		MSTL::swap(start, x.start);
-		MSTL::swap(finish, x.finish);
-		MSTL::swap(end_of_storage, x.end_of_storage);
+		std::swap(start, x.start);
+		std::swap(finish, x.finish);
+		std::swap(end_of_storage, x.end_of_storage);
 	}
 };
 template <typename T, typename Alloc>
 const char* vector<T, Alloc>::__type__ = "vector";
-
-template <typename T, typename Alloc>
-std::ostream& operator <<(std::ostream& _out, const vector<T, Alloc>& _tar) {
-	_tar.__show_data_only(_out);
-	return _out;
-}
 
 template <class T, class Alloc>
 inline void swap(vector<T, Alloc>& x, vector<T, Alloc>& y) {

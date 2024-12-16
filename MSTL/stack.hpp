@@ -5,7 +5,7 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T, typename Sequence = deque<T>>
-class stack : public container {
+class stack {
 public:
     typedef typename Sequence::value_type       value_type;
     typedef typename Sequence::difference_type  difference_type;
@@ -18,23 +18,6 @@ public:
 private:
     Sequence seq;
 public:
-    void __det__(std::ostream& _out = std::cout) const {
-        split_line(_out);
-        _out << "type: " << __type__ << std::endl;
-        _out << "check type: " << check_type<self>() << std::endl;
-        seq.__show_size_only(_out);
-        _out << "data: " << std::flush;
-        seq.__show_data_only(_out);
-        _out << std::endl;
-        split_line(_out);
-    }
-    void __show_data_only(std::ostream& _out) const {
-        seq.__show_data_only(_out);
-    }
-    void __show_size_only(std::ostream& _out) const {
-        _out << "size: " << size() << std::endl;
-    }
-
     stack() : seq(Sequence()) {}
     ~stack() = default;
 
@@ -55,12 +38,6 @@ bool operator==(const stack<T, Sequence>& x, const stack<T, Sequence>& y) {
 template<typename T, typename Sequence>
 bool operator<(const stack<T, Sequence>& x, const stack<T, Sequence>& y) {
     return x.seq < y.seq;
-}
-
-template<typename T, typename Sequence>
-std::ostream& operator <<(std::ostream& _out, const stack<T, Sequence>& _tar) {
-    _tar.__show_data_only(_out);
-    return _out;
 }
 
 MSTL_END_NAMESPACE__

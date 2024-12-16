@@ -1,12 +1,12 @@
 #ifndef MSTL_CHECK_TYPE_H__
 #define MSTL_CHECK_TYPE_H__
 #include <sstream>
-#include "string.h"
+#include <string>
+#include "basiclib.h"
 #ifdef MSTL_COMPILE_GNUC__ 
 #include <memory>
 #include <cxxabi.h>
 #endif
-#include "basiclib.h"
 
 MSTL_BEGIN_NAMESPACE__
 

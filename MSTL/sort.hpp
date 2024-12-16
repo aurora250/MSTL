@@ -6,6 +6,23 @@
 #include "tempbuf.hpp"
 MSTL_BEGIN_NAMESPACE__
 
+// bubble sort
+//template <typename BidirectionalIterator>
+//void bubble_sort(BidirectionalIterator start, BidirectionalIterator end) {
+//    bool notfinished;
+//    auto before_start = --start;
+//    for (auto iter = end, --iter; iter != before_start; --iter) {
+//        notfinished = false;
+//        for (auto it = start; it != iter; it++) {
+//            if (*it > *++it) {
+//                (iter_swap)(it, ++it);
+//                notfinished = true;
+//            }
+//        }
+//        if (not notfinished) break;
+//    }
+//}
+
 // partial sort (heap sort)
 template <class RandomAccessIterator, class T>
 void __partial_sort(RandomAccessIterator first, RandomAccessIterator middle, RandomAccessIterator last, T*) {

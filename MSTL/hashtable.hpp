@@ -17,6 +17,9 @@ template <class Value>
 struct __hashtable_node {
     __hashtable_node* next;
     Value val;
+    //__hashtable_node() : next(0), val(Value()) {}
+    //__hashtable_node(__hashtable_node<Value>* n, Value&& v) : next(n), val(std::forward<Value>(v)) {}
+    //~__hashtable_node() = default;
 };
 
 template <class Value, class Key, class HashFcn, class ExtractKey, class EqualKey,
@@ -138,6 +141,10 @@ public:
     typedef const value_type* const_pointer;
     typedef value_type& reference;
     typedef const value_type& const_reference;
+    typedef typename Value::second_type value_of_key;
+
+    template <class... _Args>
+    using key_extractor = std::_In_place_key_extract_map<Key, _Args...>;
 
     hasher hash_funct() const { return hash; }
     key_equal key_eq() const { return equals; }
@@ -226,9 +233,17 @@ public:
         resize(num_elements + 1);
         return insert_unique_noresize(obj);
     }
+    pair<iterator, bool> insert_unique(const Key& key, value_of_key&& val) {
+        resize(num_elements + 1);
+        return insert_unique_noresize(key, std::forward<value_of_key>(val));
+    }
     iterator insert_equal(const value_type& obj) {
         resize(num_elements + 1);
         return insert_equal_noresize(obj);
+    }
+    iterator insert_equal(const Key& key, value_of_key&& val) {
+        resize(num_elements + 1);
+        return insert_equal_noresize(key, std::forward<value_of_key>(val));
     }
     pair<iterator, bool> insert_unique_noresize(const value_type& obj) {
         const size_type n = bkt_num(obj);
@@ -237,6 +252,18 @@ public:
             if (equals(get_key(cur->val), get_key(obj)))
                 return pair<iterator, bool>(iterator(cur, this), false);
         node* tmp = new_node(obj);
+        tmp->next = first;
+        buckets[n] = tmp;
+        ++num_elements;
+        return pair<iterator, bool>(iterator(tmp, this), true);
+    }
+    pair<iterator, bool> insert_unique_noresize(const Key& key, value_of_key&& val) {
+        const size_type n = bkt_num_key(key, buckets.size());
+        node* first = buckets[n];
+        for (node* cur = first; cur; cur = cur->next)
+            if (equals(get_key(cur->val), key))
+                return pair<iterator, bool>(iterator(cur, this), false);
+        node* tmp = new_node(key, std::forward<value_of_key>(val));
         tmp->next = first;
         buckets[n] = tmp;
         ++num_elements;
@@ -255,6 +282,24 @@ public:
             }
         }
         node* tmp = new_node(obj);
+        tmp->next = first;
+        buckets[n] = tmp;
+        ++num_elements;
+        return iterator(tmp, this);
+    }
+    iterator insert_equal_noresize(const Key& key, value_of_key&& val) {
+        const size_type n = bkt_num_key(key, buckets.size());
+        node* first = buckets[n];
+        for (node* cur = first; cur; cur = cur->next) {
+            if (equals(get_key(cur->val), key)) {
+                node* tmp = new_node(key, std::forward<value_of_key>(val));
+                tmp->next = cur->next;
+                cur->next = tmp;
+                ++num_elements;
+                return iterator(tmp, this);
+            }
+        }
+        node* tmp = new_node(key, std::forward<value_of_key>(val));
         tmp->next = first;
         buckets[n] = tmp;
         ++num_elements;
@@ -279,14 +324,14 @@ public:
     template <class ForwardIterator>
     void insert_unique(ForwardIterator f, ForwardIterator l, MSTL_ITERATOR_TRATIS_FROM__ forward_iterator_tag) {
         size_type n = 0;
-        distance(f, l, n);
+        MSTL::distance(f, l, n);
         resize(num_elements + n);
         for (; n > 0; --n, ++f) insert_unique_noresize(*f);
     }
     template <class ForwardIterator>
     void insert_equal(ForwardIterator f, ForwardIterator l, MSTL_ITERATOR_TRATIS_FROM__ forward_iterator_tag) {
         size_type n = 0;
-        distance(f, l, n);
+        MSTL::distance(f, l, n);
         resize(num_elements + n);
         for (; n > 0; --n, ++f) insert_equal_noresize(*f);
     }
@@ -304,6 +349,19 @@ public:
         ++num_elements;
         return tmp->val;
     }
+    reference find_or_insert(const Key& key, value_of_key&& val) {
+        resize(num_elements + 1);
+        size_type n = bkt_num_key(key, buckets.size());
+        node* first = buckets[n];
+        for (node* cur = first; cur; cur = cur->next) {
+            if (equals(get_key(cur->val), key)) return cur->val;
+        }
+        node* tmp = new_node(key, std::forward<value_of_key>(val));
+        tmp->next = first;
+        buckets[n] = tmp;
+        ++num_elements;
+        return tmp->val;
+    }
     iterator find(const key_type& key) {
         size_type n = bkt_num_key(key);
         node* first;
@@ -316,6 +374,24 @@ public:
         const node* first;
         for (first = buckets[n]; first && !equals(get_key(first->val), key); first = first->next);
         return const_iterator(first, this);
+    }
+
+    template <typename... Args> requires (sizeof...(Args) > 1)
+    void emplace_unique(Args&&... args) {
+        resize(num_elements + 1);
+        // using extractor = typename key_extractor<std::_Remove_cvref_t<Args>...>;
+        // const auto& key = extractor::_Extract(Args...);
+
+        auto [key, value_args] = std::forward_as_tuple(std::forward<Args>(args)...);  // C++17
+        const size_type n = bkt_num_key(key, buckets.size());
+        node* first = buckets[n];
+        for (node* cur = first; cur; cur = cur->next)
+            if (equals(get_key(cur->val), key))
+                return;
+        node* tmp = new_node(key, std::forward<decltype(value_args)>(value_args));
+        tmp->next = first;
+        buckets[n] = tmp;
+        ++num_elements;
     }
 
     size_type count(const key_type& key) const {
@@ -505,13 +581,23 @@ private:
         node* n = alloc.allocate();
         n->next = 0;
         MSTL_TRY__{
-          (construct)(&n->val, obj);
+          MSTL::construct(&n->val, obj);
           return n;
         }
         MSTL_CATCH_UNWIND_THROW_U__(alloc.deallocate(n));
     }
+    template <typename... Args> requires (sizeof...(Args) > 1)
+    node* new_node(Args&&... args) {
+        node* n = alloc.allocate();
+        n->next = 0;
+        MSTL_TRY__{
+            n->val(std::move(value_type(std::forward<decltype(args)>(args)...)));
+            return n;
+        }
+        MSTL_CATCH_UNWIND_THROW_U__(alloc.deallocate(n));
+    }
     void delete_node(node* n) {
-        destroy(&n->val);
+        MSTL::destroy(&n->val);
         alloc.deallocate(n);
     }
     void erase_bucket(const size_type n, node* first, node* last) {

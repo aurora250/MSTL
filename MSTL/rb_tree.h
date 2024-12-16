@@ -302,7 +302,7 @@ public:
         }
         if (key_compare(KeyOfValue()(value(link_type(j.node))), KeyOfValue()(v)))
             return pair<iterator, bool>(__insert(x, y, v), true);
-        return pair<iterator, bool>(j, false);
+        return pair<iterator, bool>(iterator(j), false);
     }
     iterator insert_unique(iterator position, const_reference v) {
         if (position.node == header->left) {

@@ -11,20 +11,26 @@
 #elif defined(__APPLE__) || defined(TARGET_OS_IPHONE) || defined(TARGET_IPHONE_SIMULATOR) || defined(TARGET_OS_MAC)
 #define MSTL_PLATFORM_IOS__     1
 #else
-#define MSTL_PLATFORM_UNKNOWN__ 1
+#define MSTL_PLATFORM_UNKNOWN__	1
 #endif
 
 #if defined(__GNUC__)
-#define MSTL_COMPILE_GNUC__	  1
+#define MSTL_COMPILE_GNUC__		1
 #if defined(__clang__)
-#define MSTL_COMPILE_CLANG__  1
+#define MSTL_COMPILE_CLANG__	1
 #else
-#define MSTL_COMPILE_GCC__    1
+#define MSTL_COMPILE_GCC__		1
 #endif
 #elif defined(_MSC_VER)
-#define MSTL_COMPILE_MSVC__   1
+#define MSTL_COMPILE_MSVC__		1
 #else
-#define MSTL_COMPILE_UNKNOW__ 1
+#define MSTL_COMPILE_UNKNOW__	1
+#endif
+
+#if defined(DEBUG) || defined(_DEBUG)
+#define MSTL_STATE_DEBUG__		1
+#else
+#define MSTL_STATE_RELEASE__	1
 #endif
 
 #ifndef NULL
@@ -69,6 +75,12 @@
 #define FOR_EACH(VALUE, CONTAINER) for(auto VALUE = CONTAINER.begin(); VALUE != CONTAINER.end(); ++VALUE)
 #if defined(__FILE__)
 #define FILE_PATH TO_STRING(__FILE__)
+#endif
+
+#if 0
+#define MSTL_CONSTEXPR__ constexpr
+#else
+#define MSTL_CONSTEXPR__ 
 #endif
 
 // #if defined(_HAS_CXX17)

@@ -1,4 +1,5 @@
 ﻿#include "mstlc++.hpp"
+#include "thread_pool.h"
 
 void try_lls();
 //void try_arr() {
@@ -148,46 +149,33 @@ void try_deq() {
     using namespace MSTL;
     deque<int> a;
     a.push_back(2);
-    a.__det__();
     a.push_front(10);
-    a.__det__();
     a.push_back(3);
     a.push_back(7);
     a.push_back(6);
-    a.__det__();
     a.pop_back();
     a.pop_front();
-    a.__det__();
     deque<int> b{ 1,2,3,4,5 };
-    b.__det__();
-    std::cout << b << std::endl;
     std::cout << b.front() << std::endl;
     b.clear();
-    b.__det__();
 }
 void try_stack() {
     using namespace MSTL;
     stack<int> s;
     s.push(2);
     s.push(3);
-    s.__det__();
     s.push(5);
     s.push(4);
-    s.__det__();
     s.pop();
-    s.__det__();
     queue<int> q;
     q.push(2);
-    q.__det__();
 }
 void try_vec() {
     MSTL_NAMESPACE__;
     MSTL_TRY__{
         vector<int> v;  //{ 1,2,3,4 }
-        v.__det__();
         v.push_back(3);
         v.push_back(4);
-        v.__det__();
         vector<int> v2(v);
         display out;
         out(v.front());
@@ -198,15 +186,10 @@ void try_vec() {
             std::cout << "err" << std::endl;
         }
         v.insert(v.end(), v2.const_begin(), v2.const_end());
-        v2.__det__();
-        v.__det__();
         v.pop_back();
-        v.__det__();
         v.clear();
         std::cout << v.empty() << std::endl;
         v.insert(v.end(), v2.const_begin(), v2.const_end());
-        container* c = &v;
-        c->__det__();
         FOR_EACH(it, v2) {
             std::cout << *it << std::endl;
         }
@@ -224,9 +207,7 @@ void try_pque() {
     std::cout << typeid(priority_queue<int*>).name() << std::endl;
     q.push(&val);
     q.push(&++++val);
-    q.__det__();
     q.pop();
-    q.__det__();
 }
 void try_map() {
     MSTL_NAMESPACE__;
@@ -244,6 +225,7 @@ void try_tup() {
     std::cout << get<0, int, char, const char*>(t) << std::endl;
     std::cout << tup.size() << std::endl;
     std::cout << tup.get<2>() << std::endl;
+    std::cout << get<2>(tup) << std::endl;
 }
 void try_hash() {
     MSTL_NAMESPACE__;
@@ -252,12 +234,22 @@ void try_hash() {
     m[2] = 'b';
     m.insert(3, 'c');
     std::cout<< *++m.begin() << std::endl;
-    m.__det__();
     hash_multimap<std::string, int> mm;
     mm.insert("hello", 1);
-    mm.__det__();
+}
+
+void try_pool() {
+    using namespace std;
+    MSTL_NAMESPACE__;
+    {
+        ThreadPool pool;
+        pool.setMode(PoolMode::MODE_CACHED);
+        pool.start();
+    }
+
+    getchar();
 }
 
 int main() {
-    try_hash();
+    try_pool();
 }

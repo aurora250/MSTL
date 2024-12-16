@@ -50,6 +50,8 @@ public:
     T* begin() { return buffer; }
     T* end() { return buffer + len; }
 
+    temporary_buffer(const temporary_buffer&) = delete;
+    void operator =(const temporary_buffer&) = delete;
     temporary_buffer(ForwardIterator first, ForwardIterator last) {
         MSTL_TRY__{
             len = 0;
@@ -64,9 +66,6 @@ public:
         destroy(buffer, buffer + len);
         free(buffer);
     }
-private:
-    temporary_buffer(const temporary_buffer&) {}
-    void operator =(const temporary_buffer&) {}
 };
 
 MSTL_END_NAMESPACE__

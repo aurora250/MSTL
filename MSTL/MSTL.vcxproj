@@ -142,12 +142,14 @@
     <ClCompile Include="container.cpp" />
     <ClCompile Include="object.cpp" />
     <ClCompile Include="rb_tree.cpp" />
+    <ClCompile Include="thread_pool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="algo.hpp" />
     <ClInclude Include="algobase.hpp" />
     <ClInclude Include="algorithm.hpp" />
     <ClInclude Include="alloc.hpp" />
+    <ClInclude Include="avl_tree.hpp" />
     <ClInclude Include="database.h" />
     <ClInclude Include="hashtable.hpp" />
     <ClInclude Include="hash_function.hpp" />
@@ -180,6 +182,7 @@
     <ClInclude Include="sort.hpp" />
     <ClInclude Include="stack.hpp" />
     <ClInclude Include="tempbuf.hpp" />
+    <ClInclude Include="thread_pool.h" />
     <ClInclude Include="tuple.hpp" />
     <ClInclude Include="type_traits.hpp" />
     <ClInclude Include="vector.hpp" />

@@ -39,6 +39,9 @@
     <ClCompile Include="rb_tree.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="thread_pool.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="container.h">
@@ -156,6 +159,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="hash_function.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="thread_pool.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="avl_tree.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
