@@ -40,8 +40,6 @@ struct pair {
 		noexcept(std::is_nothrow_constructible_v<T1, U1>&& std::is_nothrow_constructible_v<T2, U2>)
 		: first(std::forward<U1>(_Val1)), second(std::forward<U2>(_Val2)) {}
 
-#if MSTL_SUPPORT_CONCEPTS__
-
 	template <class Tuple1, class Tuple2, size_t... Ids1, size_t... Ids2>
 	MSTL_CONSTEXPR__ pair(Tuple1& val1, Tuple2& val2, std::index_sequence<Ids1...>, std::index_sequence<Ids2...>)
 		: first(get<Ids1>(std::move(val1))...), second(get<Ids2>(std::move(val2))...) {}
@@ -49,8 +47,6 @@ struct pair {
 	template <class... Types1, class... Types2>
 	MSTL_CONSTEXPR__ pair(std::piecewise_construct_t, tuple<Types1...> val1, tuple<Types2...> val2)
 		: pair(val1, val2, std::index_sequence_for<Types1...>{}, std::index_sequence_for<Types2...>{}) {}
-
-#endif
 
 	pair(const pair& p) = default;
 	pair(pair&& p) = default;

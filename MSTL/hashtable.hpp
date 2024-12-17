@@ -213,12 +213,11 @@ public:
     const_iterator const_end() const { return const_iterator(nullptr, this); }
 
     void swap(hashtable& ht) {
-        using std::swap;
-        swap(hash, ht.hash);
-        swap(equals, ht.equals);
-        swap(get_key, ht.get_key);
+        std::swap(hash, ht.hash);
+        std::swap(equals, ht.equals);
+        std::swap(get_key, ht.get_key);
         buckets.swap(ht.buckets);
-        swap(num_elements, ht.num_elements);
+        std::swap(num_elements, ht.num_elements);
     }
     size_type bucket_count() const { return buckets.size(); }
     size_type max_bucket_count() const { return __stl_prime_list[__stl_num_primes - 1]; }
@@ -591,7 +590,7 @@ private:
         node* n = alloc.allocate();
         n->next = 0;
         MSTL_TRY__{
-            n->val(std::move(value_type(std::forward<decltype(args)>(args)...)));
+            MSTL::construct(&n->val, std::move(value_type(std::forward<decltype(args)>(args)...)));
             return n;
         }
         MSTL_CATCH_UNWIND_THROW_U__(alloc.deallocate(n));

@@ -233,6 +233,8 @@ void try_hash() {
     m[1] = 'a';
     m[2] = 'b';
     m.insert(3, 'c');
+    m.emplace(4, 'd');
+    __det__(m);
     std::cout<< *++m.begin() << std::endl;
     hash_multimap<std::string, int> mm;
     mm.insert("hello", 1);

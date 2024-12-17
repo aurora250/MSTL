@@ -86,7 +86,8 @@ private:
 private:
 	typedef std::function<void()> Task;
 
-	std::unordered_map<int, std::unique_ptr<Thread>> threads_;
+	//std::
+	unordered_map<int, std::shared_ptr<Thread>> threads_;
 
 	size_t initThreadSize_;
 	size_t threadSizeThreshHold_;

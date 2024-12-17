@@ -10,9 +10,13 @@ MSTL_BEGIN_NAMESPACE__
 namespace concepts {
 #if defined(MSTL_SUPPORT_CONCEPTS__)
 	template <typename T>
-	concept MSTL_TYPE = requires(T _mstl) {
+	concept Detailable = requires(T c) {
 		T::__type__;
-		_mstl.__det__;
+		typename T::const_iterator;
+		typename T::self;
+		c.const_begin();
+		c.const_end();
+		c.size();
 	};
 	template <typename T, typename B>
 	concept Derived = std::is_base_of<B, T>::value;
@@ -28,7 +32,7 @@ namespace concepts {
 	template <typename T>
 	concept Pointer = std::is_pointer<T>::value;
 	template <typename T>
-	concept Handler = std::is_reference<T>::value ||
+	concept Handler = std::is_reference<T>::value || 
 		std::is_rvalue_reference<T>::value || std::is_pointer<T>::value;
 	template <typename T>
 	concept NHandler = (not std::is_reference<T>::value) &&
