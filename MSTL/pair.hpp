@@ -1,11 +1,10 @@
 #ifndef MSTL_PAIR_HPP__
 #define MSTL_PAIR_HPP__
-#include "basiclib.h"
-#include "object.h"
 #include "tuple.hpp"
-#include <type_traits>
+#include "container.h"
 
 MSTL_BEGIN_NAMESPACE__
+using namespace MSTL::concepts;
 
 template <typename T1, typename T2>
 struct pair {
@@ -16,12 +15,12 @@ struct pair {
 	T1 first;
 	T2 second;
 
-	template <typename U1 = T1, typename U2 = T2, std::enable_if_t<
-		std::conjunction_v<std::is_default_constructible<U1>,std::is_default_constructible<U2>>, int> = 0>
+	template <DefaultConstructible U1 = T1, DefaultConstructible U2 = T2>
+	//requires (DefaultConstructible<U1>&& DefaultConstructible<U2>)
 	MSTL_CONSTEXPR__ explicit(not std::conjunction_v<std::_Is_implicitly_default_constructible<U1>,
 		std::_Is_implicitly_default_constructible<U2>>)
 		pair() 
-		noexcept(std::is_nothrow_default_constructible_v<U1>&& std::is_nothrow_default_constructible_v<U2>)
+		noexcept(NothrowDefaultConstructible<U1>&& NothrowDefaultConstructible<U2>)
 		: first(), second() {}
 
 	template <typename U1 = T1, typename U2 = T2, std::enable_if_t<
@@ -110,10 +109,6 @@ struct pair {
 		std::swap(first, _Right.first);
 		std::swap(second, _Right.second);
 	}
-
-	void __show_data_only(std::ostream& _out) const {
-		_out << "{ " << first << ", " << second << " }";
-	}
 };
 
 template <class T1, class T2, class U1, class U2>
@@ -145,10 +140,13 @@ template <class T1, class T2, std::enable_if_t<
 	MSTL_CONSTEXPR__ void swap(pair<T1, T2>& lh, pair<T1, T2>& rh) noexcept(noexcept(lh.swap(rh))) {
 	lh.swap(rh);
 }
-
+template <Printable T1, Printable T2>
+inline void __show_data_only(const pair<T1, T2>& p, std::ostream& _out) {
+	_out << "{ " << p.first << ", " << p.second << " }";
+}
 template <typename T1, typename T2>
 std::ostream& operator <<(std::ostream& _out, const pair<T1, T2>& _p) {
-	_p.__show_data_only(_out);
+	__show_data_only(_p, _out);
 	return _out;
 }
 

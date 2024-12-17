@@ -3,6 +3,7 @@
 #include "type_traits.hpp"
 #include "basiclib.h"
 #include "pair.hpp"
+#include "concepts.hpp"
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -156,7 +157,10 @@ struct __copy_dispatch<const T*, T*> {
 	}
 };
 template <typename InputIterator, typename OutputIterator>
-inline OutputIterator copy(InputIterator first, InputIterator last, OutputIterator result) {
+inline OutputIterator copy(InputIterator first, InputIterator last, OutputIterator result)
+	requires(concepts::InputIterator<InputIterator> 
+&& concepts::InputIterator<InputIterator> 
+&& concepts::InputIterator<OutputIterator>) {
 	return __copy_dispatch<InputIterator, OutputIterator>()(first, last, result);
 }
 inline char* copy(const char* first, const char* last, char* result) {

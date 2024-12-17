@@ -4,6 +4,7 @@
 #include "functor.hpp"
 #include "vector.hpp"
 #include "heap.hpp"
+#include "concepts.hpp"
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -48,6 +49,7 @@ bool operator<(const queue<T, Sequence>& x, const queue<T, Sequence>& y) {
 
 template<typename T, typename Sequence = vector<T>,
     typename Compare = greater<typename Sequence::value_type>>
+    requires(concepts::BinaryFunction<Compare>)
 class priority_queue {
 public:
     typedef typename Sequence::value_type       value_type;
@@ -56,11 +58,12 @@ public:
     typedef typename Sequence::const_reference  const_reference;
     typedef priority_queue<T, Sequence>         self;
 
-    static const char* const __type__;
 private:
     Sequence seq;
     Compare comp;
 
+    template <typename T, typename Sequence, typename Compare>
+    friend void detailof(const priority_queue<T, Sequence, Compare>& pq, std::ostream& _out);
 public:
     priority_queue() : seq(), comp() {}
     explicit priority_queue(const Compare& x) :seq(), comp(x) {}
@@ -91,8 +94,17 @@ public:
         MSTL_CATCH_UNWIND_THROW_M__(seq.clear());
     }
 };
+
 template <typename T, typename Sequence, typename Compare>
-const char* const priority_queue<T, Sequence, Compare>::__type__ = "priority_queue";
+void detailof(const priority_queue<T, Sequence, Compare>& pq, std::ostream& _out = std::cout) {
+    split_line(_out);
+    _out << "type: " << check_type<priority_queue<T, Sequence, Compare>>() << std::endl;
+    _out << "size: " << pq.size() << std::endl;
+    _out << "data: " << std::flush;
+    __show_data_only(pq.seq, _out);
+    _out << std::endl;
+    split_line(_out);
+}
 
 MSTL_END_NAMESPACE__
 

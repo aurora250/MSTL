@@ -31,7 +31,7 @@ public:
 		mysql_options(mysql, MYSQL_SET_CHARSET_NAME, encode);
 		MSTL_TRY__{
 			Exception(mysql_real_connect(mysql, host, user, passwd, db, port, NULL, 0) == NULL,
-				new SQLError(mysql_error(mysql)));
+				SQLError(mysql_error(mysql)));
 		}
 		MSTL_CATCH_ERROR__{
 			mysql_close(mysql);

@@ -1,7 +1,6 @@
 #ifndef MSTL_MAP_HPP__
 #define MSTL_MAP_HPP__
 #include "rb_tree.h"
-#include "basiclib.h"
 #include "container.h"
 #include "functor.hpp"
 
@@ -9,7 +8,7 @@ MSTL_BEGIN_NAMESPACE__
 
 template <typename Key, typename T, typename Compare = less<Key>,
 	typename Alloc = default_standard_alloc<__rb_tree_node<pair<const Key, T>>>>
-class map : public container {
+class map {
 public:
 	typedef Key							key_type;
 	typedef T							data_type;
@@ -40,30 +39,6 @@ public:
 	typedef typename rep_type::const_iterator	const_iterator;
 	typedef typename rep_type::size_type		size_type;
 	typedef typename rep_type::difference_type	difference_type;
-
-	void __det__(std::ostream& _out = std::cout) const {
-		split_line(_out);
-		_out << "type: " << __type__ << std::endl;
-		_out << "check type: " << check_type<self>() << std::endl;
-		this->__show_size_only(_out);
-		_out << "data: " << std::flush;
-		this->__show_data_only(_out);
-		_out << std::endl;
-		split_line(_out);
-	}
-	void __show_data_only(std::ostream& _out) const {
-		const_iterator _band = const_end();
-		--_band;
-		_out << '[' << std::flush;
-		for (const_iterator iter = const_begin(); iter != const_end(); ++iter) {
-			_out << *iter << std::flush;
-			if (iter != _band) _out << ", " << std::flush;
-		}
-		_out << ']' << std::flush;
-	}
-	void __show_size_only(std::ostream& _out) const {
-		_out << "size: " << size() << std::endl;
-	}
 
 	map() : t(Compare()) {}
 	explicit map(const Compare& comp) : t(comp) {}
@@ -140,7 +115,7 @@ inline bool operator <(const map<Key, T, Compare, Alloc>& x, const map<Key, T, C
 }
 template <class Key, class T, class Compare, class Alloc>
 std::ostream& operator <<(std::ostream& _out, const map<Key, T, Compare, Alloc>& _tar) {
-	_tar.__show_data_only(_out);
+	__show_data_only(_tar, _out);
 	return _out;
 }
 
@@ -148,7 +123,7 @@ std::ostream& operator <<(std::ostream& _out, const map<Key, T, Compare, Alloc>&
 
 template <class Key, class T, class Compare = less<Key>,
 	class Alloc = default_standard_alloc<__rb_tree_node<pair<const Key, T>>>>
-class multimap : public container {
+class multimap {
 public:
 	typedef Key key_type;
 	typedef T data_type;
@@ -183,30 +158,6 @@ public:
 	typedef typename rep_type::difference_type difference_type;
 
 	static const char* const __type__;
-
-	void __det__(std::ostream& _out = std::cout) const {
-		split_line(_out);
-		_out << "type: " << __type__ << std::endl;
-		_out << "check type: " << check_type<self>() << std::endl;
-		this->__show_size_only(_out);
-		_out << "data: " << std::flush;
-		this->__show_data_only(_out);
-		_out << std::endl;
-		split_line(_out);
-	}
-	void __show_data_only(std::ostream& _out) const {
-		const_iterator _band = const_end();
-		--_band;
-		_out << '[' << std::flush;
-		for (const_iterator iter = const_begin(); iter != const_end(); ++iter) {
-			_out << *iter << std::flush;
-			if (iter != _band) _out << ", " << std::flush;
-		}
-		_out << ']' << std::flush;
-	}
-	void __show_size_only(std::ostream& _out) const {
-		_out << "size: " << size() << std::endl;
-	}
 
 	multimap() : t(Compare()) { }
 	explicit multimap(const Compare& comp) : t(comp) { }

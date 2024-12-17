@@ -1,13 +1,12 @@
 #include "errorlib.h"
-#include "basiclib.h"
 
 MSTL_BEGIN_NAMESPACE__
 
+const_cstring MSTL_NOTERROR__ = "NotError";
+const std::shared_ptr<MemoryError> MSTL_MEMORY_ERROR_PTR__ = std::make_shared<MemoryError>(MemoryError());
+
 Error::Error(cstring _info, cstring _type) noexcept : _info(_info), _type(_type) {}
 Error::~Error() {};
-void Error::__show_data_only(std::ostream& _out) const {
-	_out << "Exception : (" << this->_type << ") " << this->_info;
-}
 const_cstring Error::__type__ = "Error";
 
 StopIterator::StopIterator(cstring _info) noexcept : Error(_info, __type__) {}
@@ -31,38 +30,43 @@ const_cstring RangeError::__type__ = "RangeError";
 SQLError::SQLError(cstring _info) noexcept : Error(_info, __type__) {}
 const_cstring SQLError::__type__ = "SQLError";
 
+NotError::NotError() noexcept : Error(__type__, __type__) {}
+const_cstring NotError::__type__ = MSTL_NOTERROR__;
+
+void __show_data_only(const Error& e, std::ostream& _out) {
+	_out << "Exception : (" << e._type << ") " << e._info << std::flush;
+}
+
 std::ostream& operator <<(std::ostream& _out, const Error& err) {
-	err.__show_data_only(_out);
+	__show_data_only(err, _out);
 	return _out;
 }
 
-void Exception(Error* _err) {
-	// _out_set<const char*>({ "Exception : (" , _err->_type, ") ",_err->_info }, true, std::cerr);
-	_err->__show_data_only(std::cerr);
+void Exception(const Error& _err) {
+	__show_data_only(_err, std::cerr);
 	std::cerr << std::endl;
-	throw* _err;
+	throw _err;
 }
 
-void Exception(bool _boolean, Error* _err) {
-	if (_boolean) {
-		delete _err;
-		return;
-	}
+void Exception(bool _boolean, const Error& _err) {
+	if (_boolean) return;
 	else {
-		if (_err == nullptr) Assert(false);
+		if (_err._type == MSTL_NOTERROR__) Assert(false);
 		else Exception(_err);
 	}
 }
 
-void Assert(bool _boolean, const char* _info) {
+inline void Assert(bool _boolean, const char* _info) {
 	if (_boolean) return;
-	else Exception(new AssertError(_info));
+	else Exception(AssertError(_info));
 }
 
 void Exit(bool _abort, void(* _func)(void)) {
 	if (_func) {
+#ifdef MSTL_STATE_DEBUG__
 		if (_abort)
 			std::cout << "Abort failed! Function should be called first." << std::endl;
+#endif
 		std::atexit(_func);
 	}
 	else {

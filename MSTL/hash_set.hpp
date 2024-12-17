@@ -7,7 +7,7 @@ MSTL_BEGIN_NAMESPACE__
 
 template <class Value, class HashFcn = hash<Value>,  class EqualKey = equal_to<Value>, 
     class Alloc = default_standard_alloc<__hashtable_node<pair<const Value, Value>>>>
-class hash_set : public container {
+class hash_set {
 private:
     typedef hashtable<Value, Value, HashFcn, identity<Value>, EqualKey, Alloc> ht;
     ht rep;

@@ -69,7 +69,7 @@ public:
 			&& taskSize_ > idleThreadSize_
 			&& threads_.size() < threadSizeThreshHold_) {
 			std::cout << ">>> creat new thread" << std::endl;
-			auto ptr = std::make_unique<Thread>(std::bind(&ThreadPool::threadFunc, this, std::placeholders::_1));
+			auto ptr = std::make_shared<Thread>(std::bind(&ThreadPool::threadFunc, this, std::placeholders::_1));
 			int threadid = ptr->getId();
 			threads_.emplace(threadid, std::move(ptr));
 			threads_[threadid]->start();

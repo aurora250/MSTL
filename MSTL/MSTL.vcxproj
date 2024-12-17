@@ -139,8 +139,6 @@
     <ClCompile Include="depositary.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="errorlib.cpp" />
-    <ClCompile Include="container.cpp" />
-    <ClCompile Include="object.cpp" />
     <ClCompile Include="rb_tree.cpp" />
     <ClCompile Include="thread_pool.cpp" />
   </ItemGroup>
@@ -150,6 +148,7 @@
     <ClInclude Include="algorithm.hpp" />
     <ClInclude Include="alloc.hpp" />
     <ClInclude Include="avl_tree.hpp" />
+    <ClInclude Include="container.h" />
     <ClInclude Include="database.h" />
     <ClInclude Include="hashtable.hpp" />
     <ClInclude Include="hash_function.hpp" />
@@ -169,12 +168,10 @@
     <ClInclude Include="errorlib.h" />
     <ClInclude Include="function.hpp" />
     <ClInclude Include="functor.hpp" />
-    <ClInclude Include="container.h" />
     <ClInclude Include="iterator.hpp" />
     <ClInclude Include="list.hpp" />
     <ClInclude Include="mstlc++.hpp" />
     <ClInclude Include="numeric.hpp" />
-    <ClInclude Include="object.h" />
     <ClInclude Include="pair.hpp" />
     <ClInclude Include="queue.hpp" />
     <ClInclude Include="rb_tree.h" />

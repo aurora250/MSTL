@@ -1,7 +1,6 @@
 #ifndef MSTL_DEQUE_HPP__
 #define MSTL_DEQUE_HPP__
 
-#include "container.h"
 #include "iterator.hpp"
 #include "memory.hpp"
 #include "algobase.hpp" 

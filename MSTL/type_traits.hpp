@@ -153,13 +153,6 @@ DEFAULT_TYPE_TRAITS__(double)
 DEFAULT_TYPE_TRAITS__(long double)
 DEFAULT_TYPE_TRAITS__(long long)
 DEFAULT_TYPE_TRAITS__(unsigned long long)
-#else
-MSTL_END_NAMESPACE__
-#include <type_traits>
-MSTL_BEGIN_NAMESPACE__
-
-using std::__true_type;
-using std::__false_type;
 #endif // MSTL_NEED_SGI_TYPE_TRAITS__
 
 MSTL_END_NAMESPACE__

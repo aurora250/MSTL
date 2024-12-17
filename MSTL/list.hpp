@@ -69,7 +69,7 @@ struct list_iterator {
 };
 
 template <typename T, typename Alloc = default_standard_alloc<__list_node<T>>>
-class list : public container {
+class list {
 public:
     typedef T                       value_type;
     typedef T& reference;
@@ -80,6 +80,7 @@ public:
     typedef node_type* link_type;
     typedef list_iterator<T, T&, T*>              iterator;
     typedef list_iterator<T, const T&, const T*>  const_iterator;
+    typedef size_t size_type;
 
     static const char* const __type__;
 
@@ -91,7 +92,7 @@ private:
     size_type _size;
 
     inline void __range_check(int _pos) const {
-        Exception(this->__in_boundary(_pos), new RangeError());
+        Exception(this->__in_boundary(_pos), RangeError());
     }
     bool __in_boundary(int _pos) const {
         if (_pos < 0) return false;
@@ -123,29 +124,6 @@ private:
         _first._node->_prev = tmp;
     }
 public:
-    void __det__(std::ostream& _out = std::cout) const {
-        split_line(_out);
-        _out << "type: " << __type__ << std::endl;
-        _out << "check type: " << check_type<self>() << std::endl;
-        this->__show_size_only(_out);
-        _out << "data: " << std::flush;
-        this->__show_data_only(_out);
-        _out << std::endl;
-        split_line(_out);
-    }
-    void __show_data_only(std::ostream& _out) const {
-        _out << '[' << std::flush;
-        const_iterator band = const_iterator(this->_node->_prev);
-        for (const_iterator iter = const_begin(); iter != const_end(); ++iter) {
-            _out << *iter << std::flush;
-            if (iter != band) _out << " ," << std::flush;
-        }
-        _out << ']' << std::flush;
-    }
-    void __show_size_only(std::ostream& _out) const {
-        _out << "size: " << _size << std::endl;
-    }
-
     void empty_initialize() {
         _node = new node_type();
         _node->_prev = _node->_next = _node;
@@ -378,7 +356,7 @@ const char* const list<T, Alloc>::__type__ = "list";
 
 template<typename T, typename Alloc>
 std::ostream& operator <<(std::ostream& _out, const list<T, Alloc>& _list) {
-    _list.__show_data_only(_out);
+    __show_data_only(_list, _out);
     return _out;
 }
 

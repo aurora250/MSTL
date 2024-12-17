@@ -103,10 +103,10 @@ template <typename Key, typename Value, typename KeyOfValue, typename Compare,
 class rb_tree {
 private:
     typedef void*                   void_pointer;
-    typedef __rb_tree_node_base*     base_ptr;
-    typedef __rb_tree_node<Value>    rb_tree_node;
+    typedef __rb_tree_node_base*    base_ptr;
+    typedef __rb_tree_node<Value>   rb_tree_node;
     typedef Alloc                   rb_tree_node_allocator;
-    typedef __rb_tree_color_type     color_type;
+    typedef __rb_tree_color_type    color_type;
 public:
     typedef Key                 key_type;
     typedef Value               value_type;

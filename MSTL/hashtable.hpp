@@ -590,7 +590,7 @@ private:
         node* n = alloc.allocate();
         n->next = 0;
         MSTL_TRY__{
-            MSTL::construct(&n->val, std::move(value_type(std::forward<decltype(args)>(args)...)));
+            MSTL::construct(&n->val, std::forward<decltype(args)>(args)...);
             return n;
         }
         MSTL_CATCH_UNWIND_THROW_U__(alloc.deallocate(n));

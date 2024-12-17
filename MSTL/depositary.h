@@ -5,7 +5,6 @@
 #include <memory>
 #include "concepts.hpp"
 #include "hash_map.hpp"
-#include "map.hpp"
 using namespace MSTL::concepts;
 MSTL_BEGIN_NAMESPACE__
 
@@ -14,11 +13,7 @@ public:
 	virtual ~__base_deposit() = 0;
 };
 
-#ifdef MSTL_SUPPORT_CONCEPTS__
 template <NVoidT T, typename... Args>
-#else
-template <typename T, typename... Args>
-#endif
 class deposit : public __base_deposit {
 	using Func = std::function<T(Args...)>;
 public:
@@ -37,11 +32,7 @@ public:
 		deposit_map_[_register_name] = __base_deposit_ptr(new DeposT(_target));
 	};
 
-#ifdef MSTL_SUPPORT_CONCEPTS__
 	template <NVoidT T, typename... Args>
-#else
-	template <typename T, typename... Args>
-#endif
 	T excute(const std::string& _register_name, Args&&... _args) {
 		if (deposit_map_.count(_register_name)) {
 			auto depos_ptr = deposit_map_[_register_name];

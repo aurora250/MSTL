@@ -2,9 +2,6 @@
 #define MSTL_VECTOR_HPP__
 #include <initializer_list>
 #include "memory.hpp"
-#include "errorlib.h"
-#include "container.h"
-#include "algobase.hpp"
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -31,7 +28,7 @@ private:
 	data_allocator alloc;
 
 	inline void __range_check(size_type _pos) const {
-		Exception(__in_boundary(_pos), new RangeError());
+		Exception(__in_boundary(_pos), RangeError());
 	}
 	inline bool __in_boundary(size_type _pos) const {
 		if (_pos < 0) return false;

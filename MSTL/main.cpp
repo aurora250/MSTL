@@ -27,18 +27,18 @@ void try_exc() {
 void try_lls() {
     using namespace MSTL;
     list<int> lls{ 1,2,3,4,5,6,7 };
-    lls.__det__();
+    detailof(lls);
     lls.push_back(3);
     lls.push_back(4);
     lls.push_front(10);
-    lls.__det__();
+    detailof(lls);
     lls.reverse();
-    lls.__det__();
+    detailof(lls);
     lls.sort();
     std::cout << lls << std::endl;
     lls.pop_back();
     lls.pop_front();
-    lls.__det__();
+    detailof(lls);
     std::cout << lls.at(0) << ':' << lls[0] << std::endl;
     std::cout << lls.front() << ':' << lls.back() << std::endl;
     lls.clear();
@@ -153,10 +153,12 @@ void try_deq() {
     a.push_back(3);
     a.push_back(7);
     a.push_back(6);
+    detailof(a);
     a.pop_back();
     a.pop_front();
     deque<int> b{ 1,2,3,4,5 };
     std::cout << b.front() << std::endl;
+    detailof(b);
     b.clear();
 }
 void try_stack() {
@@ -176,8 +178,9 @@ void try_vec() {
         vector<int> v;  //{ 1,2,3,4 }
         v.push_back(3);
         v.push_back(4);
+        detailof(v);
         vector<int> v2(v);
-        display out;
+        display_enter out;
         out(v.front());
         MSTL_TRY__{
             out(v[10]);
@@ -186,17 +189,19 @@ void try_vec() {
             std::cout << "err" << std::endl;
         }
         v.insert(v.end(), v2.const_begin(), v2.const_end());
+        detailof(v);
         v.pop_back();
         v.clear();
         std::cout << v.empty() << std::endl;
         v.insert(v.end(), v2.const_begin(), v2.const_end());
+        detailof(v);
         FOR_EACH(it, v2) {
             std::cout << *it << std::endl;
         }
         MSTL_EXEC_MEMORY__;
     }
     MSTL_CATCH_ERROR__{
-        e.__show_data_only(std::cout);
+        __show_data_only(error, std::cout);
         std::cout << std::endl;
     }
 }
@@ -215,7 +220,7 @@ void try_map() {
     m[1] = 'c';
     m[100] = 'x';
     m[2] = 'l';
-    m.__det__();
+    //detailof(m);
     std::cout << m[1] << std::endl;
 }
 void try_tup() {
@@ -234,10 +239,11 @@ void try_hash() {
     m[2] = 'b';
     m.insert(3, 'c');
     m.emplace(4, 'd');
-    __det__(m);
+    detailof(m);
     std::cout<< *++m.begin() << std::endl;
     hash_multimap<std::string, int> mm;
     mm.insert("hello", 1);
+    detailof(mm);
 }
 
 void try_pool() {
@@ -245,13 +251,15 @@ void try_pool() {
     MSTL_NAMESPACE__;
     {
         ThreadPool pool;
-        pool.setMode(PoolMode::MODE_CACHED);
         pool.start();
+        pool.submitTask(try_lls);
+        pool.submitTask(try_deq);
+        pool.submitTask(try_deq);
     }
-
-    getchar();
 }
 
 int main() {
-    try_pool();
+    try_pque();
+
+    getchar();
 }

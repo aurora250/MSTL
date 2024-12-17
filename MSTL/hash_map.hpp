@@ -178,6 +178,10 @@ public:
     const_iterator const_end() const { return rep.const_end(); }
     friend bool operator ==(const hash_multimap&, const hash_multimap&);
 
+    template<typename... Args>
+    void emplace(Args&&... args) {
+        //rep.emplace_equal(std::forward<Args>(args)...);
+    }
     iterator insert(value_type&& obj) { return rep.insert_equal(std::move(obj)); }
     iterator insert(const value_type& obj) { return rep.insert_equal(obj); }
     iterator insert(Key&& k, T&& v) { return rep.insert_equal(value_type(std::forward<Key>(k), std::forward<T>(v))); }

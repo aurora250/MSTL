@@ -61,7 +61,7 @@ void ThreadPool::start(unsigned int initThreadSize) {
 	isRunning_ = true;
 	initThreadSize_ = initThreadSize;
 	for (size_t i = 0; i < initThreadSize_; i++) {
-		auto ptr = std::make_unique<Thread>(std::bind(&ThreadPool::threadFunc, this, std::placeholders::_1));
+		auto ptr = std::make_shared<Thread>(std::bind(&ThreadPool::threadFunc, this, std::placeholders::_1));
 		threads_.emplace(ptr->getId(), std::move(ptr));
 	}
 	for (int i = 0; i < initThreadSize_; i++) {

@@ -21,13 +21,7 @@
     <ClCompile Include="errorlib.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="container.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="check_type.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="object.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="basiclib.cpp">
@@ -44,9 +38,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="container.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="errorlib.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -57,9 +48,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="check_type.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="object.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="basiclib.h">
@@ -165,6 +153,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="avl_tree.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="container.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
