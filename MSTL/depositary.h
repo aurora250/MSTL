@@ -23,7 +23,7 @@ private:
 	Func func_;
 };
 
-class depositary {
+class Depositary {
 	using __base_deposit_ptr = std::shared_ptr<__base_deposit>;
 public:
 	template<class DeposT>

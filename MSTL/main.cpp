@@ -1,18 +1,6 @@
 ﻿#include "mstlc++.hpp"
-#include "thread_pool.h"
 
 void try_lls();
-//void try_arr() {
-//    MSTL::array<size_t, 3> arr{ 1,2,3 };
-//    MSTL::array<size_t, 3> arr2(arr);
-//    std::cout << arr.size() << ' ' << arr.back() << ' ' << arr.find(3) << std::endl;
-//    for (MSTL::array<size_t, 3>::iterator i = arr.begin(); i != arr.end(); i++) {
-//        std::cout << *i << std::endl;
-//    }
-//    if (arr == arr2) std::cout << "yes" << std::endl;
-//    //std::cout << arr;
-//    arr.__det__();
-//}
 void try_exc() {
 	MSTL_NAMESPACE__;
     try {
@@ -27,40 +15,23 @@ void try_exc() {
 void try_lls() {
     using namespace MSTL;
     list<int> lls{ 1,2,3,4,5,6,7 };
-    detailof(lls);
+    detailof_safe(lls);
     lls.push_back(3);
     lls.push_back(4);
     lls.push_front(10);
-    detailof(lls);
+    detailof_safe(lls);
     lls.reverse();
-    detailof(lls);
+    detailof_safe(lls);
     lls.sort();
-    std::cout << lls << std::endl;
     lls.pop_back();
     lls.pop_front();
-    detailof(lls);
-    std::cout << lls.at(0) << ':' << lls[0] << std::endl;
-    std::cout << lls.front() << ':' << lls.back() << std::endl;
+    detailof_safe(lls);
+    sout << lls.at(0) << ':' << lls[0] << endl;
+    sout << lls.front() << ':' << lls.back() << endl;
     lls.clear();
-    std::cout << lls.empty() <<std::endl;
+    sout << lls.empty() << endl;
 }
-//void try_str() {
-//    MSTL::string str("abc");
-//    MSTL::string str2("def");
-//    str.__det__();
-//    str.push('a');
-//    str.__det__();
-//    std::cout << str.pop();
-//    str.insert(3, str2);
-//    str.__det__();
-//}
-//void try_pir() {
-//    MSTL::string s("hello!");
-//    MSTL::pair<int, MSTL::string> p(1, s);
-//    MSTL::pair<int, MSTL::string> p2(p);
-//    p.first = 10;
-//    std::cout << p << std::endl;
-//}
+
 class Foo {};
 void try_check() {
     MSTL_NAMESPACE__;
@@ -86,7 +57,7 @@ void try_check() {
 }
 void try_dep() {
     using namespace MSTL;
-    depositary manager;
+    Depositary manager;
     auto add = [](int a, double b, double& c)->double {
             c = a + b;
             return a + b;
@@ -153,12 +124,12 @@ void try_deq() {
     a.push_back(3);
     a.push_back(7);
     a.push_back(6);
-    detailof(a);
+    detailof_safe(a);
     a.pop_back();
     a.pop_front();
     deque<int> b{ 1,2,3,4,5 };
-    std::cout << b.front() << std::endl;
-    detailof(b);
+    sout << b.front() << endl;
+    detailof_safe(b);
     b.clear();
 }
 void try_stack() {
@@ -220,7 +191,7 @@ void try_map() {
     m[1] = 'c';
     m[100] = 'x';
     m[2] = 'l';
-    //detailof(m);
+    detailof(m);
     std::cout << m[1] << std::endl;
 }
 void try_tup() {
@@ -259,7 +230,7 @@ void try_pool() {
 }
 
 int main() {
-    try_pque();
+    try_pool();
 
     getchar();
 }

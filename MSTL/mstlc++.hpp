@@ -24,5 +24,6 @@
 #include "depositary.h"
 #include "jsonlib.h"
 #include "database.h"
+#include "thread_pool.h"  // threadsafe_print
 
 #endif // MSTL_MSTLCPP_HPP__

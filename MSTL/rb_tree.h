@@ -7,12 +7,12 @@
 
 MSTL_BEGIN_NAMESPACE__
 
-typedef bool __rb_tree_color_type;
-const __rb_tree_color_type __rb_tree_red = false;
-const __rb_tree_color_type __rb_tree_black = true;
+typedef bool RB_TREE_COLORS;
+const RB_TREE_COLORS __RB_TREE_RED = false;
+const RB_TREE_COLORS __RB_TREE_BLACK = true;
 
 struct __rb_tree_node_base {
-    typedef __rb_tree_color_type     color_type;
+    typedef RB_TREE_COLORS     color_type;
     typedef __rb_tree_node_base*     base_ptr;
 
     color_type color;
@@ -46,9 +46,10 @@ struct rb_tree_iterator : public __rb_tree_base_iterator {
     typedef Ref                                     reference;
     typedef Ptr                                     pointer;
     typedef rb_tree_iterator<T, T&, T*>             iterator;
-    typedef rb_tree_iterator<T, const T&, const T>  const_iterator;
+    typedef rb_tree_iterator<T, const T&, const T*> const_iterator;
     typedef const T&                                const_reference;
     typedef std::bidirectional_iterator_tag         iterator_category;
+    typedef size_t                                  difference_type;
     typedef rb_tree_iterator<T, Ref, Ptr>           self;
     typedef __rb_tree_node<T>*                      link_type;
 
@@ -106,7 +107,7 @@ private:
     typedef __rb_tree_node_base*    base_ptr;
     typedef __rb_tree_node<Value>   rb_tree_node;
     typedef Alloc                   rb_tree_node_allocator;
-    typedef __rb_tree_color_type    color_type;
+    typedef RB_TREE_COLORS          color_type;
 public:
     typedef Key                 key_type;
     typedef Value               value_type;
@@ -224,7 +225,7 @@ private:
 
     void init() {
         header = get_node();
-        color(header) = __rb_tree_red;
+        color(header) = __RB_TREE_RED;
         root() = 0;
         leftmost() = header;
         rightmost() = header;
@@ -236,7 +237,7 @@ public:
     rb_tree(const self& x)
         : node_count(0), key_compare(x.key_compare) {
         header = get_node();
-        color(header) = __rb_tree_red;
+        color(header) = __RB_TREE_RED;
         if (x.root() == 0) {
             root() = 0;
             leftmost() = header;
@@ -373,8 +374,8 @@ public:
         return n;
     }
     void erase(iterator position) {
-        link_type y = (link_type)__rb_tree_rebalance_for_erase(position.node, header->parent,
-            header->left, header->right);
+        link_type y = (link_type)
+            __rb_tree_rebalance_for_erase(position.node, header->parent, header->left, header->right);
         destroy_node(y);
         --node_count;
     }
@@ -406,7 +407,7 @@ public:
             else x = right(x);
         }
         iterator j = iterator(y);
-        return (j == end() || key_compare(k, key(j.node))) ? end() : j;
+        return (j == end() || key_compare(k, KeyOfValue()(y->value_field))) ? end() : j;
     }
     const_iterator find(const Key& k) const {
         link_type y = header;
@@ -419,7 +420,7 @@ public:
             else x = right(x);
         }
         const_iterator j = const_iterator(y);
-        return (j == end() || key_compare(k, key(j.node))) ? end() : j;
+        return (j == end() || key_compare(k, KeyOfValue()(y->value_field))) ? end() : j;
     }
     size_type count(const Key& k) const {
         pair<const_iterator, const_iterator> p = equal_range(k);
@@ -490,8 +491,8 @@ public:
             link_type x = (link_type)it.node;
             link_type L = left(x);
             link_type R = right(x);
-            if (x->color == __rb_tree_red)
-                if ((L && L->color == __rb_tree_red) || (R && R->color == __rb_tree_red))
+            if (x->color == __RB_TREE_RED)
+                if ((L && L->color == __RB_TREE_RED) || (R && R->color == __RB_TREE_RED))
                     return false;
             if (L && key_compare(key(x), key(L))) return false;
             if (R && key_compare(key(R), key(x))) return false;

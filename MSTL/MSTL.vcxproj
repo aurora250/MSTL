@@ -140,6 +140,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="errorlib.cpp" />
     <ClCompile Include="rb_tree.cpp" />
+    <ClCompile Include="threadsafe_print.cpp" />
     <ClCompile Include="thread_pool.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -179,6 +180,7 @@
     <ClInclude Include="sort.hpp" />
     <ClInclude Include="stack.hpp" />
     <ClInclude Include="tempbuf.hpp" />
+    <ClInclude Include="threadsafe_print.h" />
     <ClInclude Include="thread_pool.h" />
     <ClInclude Include="tuple.hpp" />
     <ClInclude Include="type_traits.hpp" />

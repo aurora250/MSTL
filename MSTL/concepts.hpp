@@ -1,10 +1,8 @@
 #ifndef MSTL_CONCEPTS_HPP__
 #define MSTL_CONCEPTS_HPP__
 #include "basiclib.h"
-#if defined(MSTL_SUPPORT_CONCEPTS__)
 #include <concepts>
 #include <type_traits>
-#endif
 MSTL_BEGIN_NAMESPACE__
 
 namespace concepts {
@@ -95,7 +93,7 @@ namespace concepts {
 	};
 
 	template <typename T>
-	concept Detailable = NPointer<T> &&  requires(const T & c) {
+	concept Detailable = NPointer<T> &&  requires(const T& c) {
 		{ c.const_begin() } -> std::convertible_to<typename T::const_iterator>;
 		{ c.const_end() } -> std::convertible_to<typename T::const_iterator>;
 		{ c.size() } -> std::convertible_to<size_t>;

@@ -4,19 +4,19 @@ const size_t TASK_MAX_THRESHHOLD = INT32_MAX;
 const size_t THREAD_MAX_THRESHHOLD = std::thread::hardware_concurrency();
 const size_t THREAD_MAX_IDLE_SECONDS = 60;
 
-int Thread::generateId_ = 0;
+int __thread::generateId_ = 0;
 
-Thread::Thread(ThreadFunc func)
+__thread::__thread(ThreadFunc func)
 	: func_(func),
 	threadId_(generateId_++) {
 }
-Thread::~Thread() {}
+__thread::~__thread() {}
 
-void Thread::start() {
+void __thread::start() {
 	std::thread t(func_, threadId_);
 	t.detach();
 }
-int Thread::getId() const {
+int __thread::getId() const {
 	return threadId_;
 }
 
@@ -26,7 +26,7 @@ ThreadPool::ThreadPool()
 	taskSize_(0),
 	idleThreadSize_(0),
 	taskQueMaxThreshHold_(TASK_MAX_THRESHHOLD),
-	poolMode_(PoolMode::MODE_FIXED),
+	poolMode_(POOL_MODE::MODE_FIXED),
 	isRunning_(false) {
 }
 
@@ -37,23 +37,19 @@ ThreadPool::~ThreadPool() {
 	exitCond_.wait(lock, [&]()->bool { return threads_.empty(); });
 }
 
-void ThreadPool::setInitThreadSize(size_t size) {
-	if (checkRunningState()) return;
-	initThreadSize_ = size;
-}
-void ThreadPool::setMode(PoolMode mode) {
+void ThreadPool::set_mode(POOL_MODE mode) {
 	if (checkRunningState()) return;
 	poolMode_ = mode;
 }
-void ThreadPool::setTaskQueMaxThreshHold(size_t threshHold) {
+void ThreadPool::set_taskque_max_thresh_hold(size_t threshHold) {
 	if (checkRunningState()) return;
 	taskQueMaxThreshHold_ = threshHold;
 }
-void ThreadPool::setThreadSizeThreshHold(size_t threshHold) {
-	if (checkRunningState() || poolMode_ == PoolMode::MODE_FIXED) return;
+void ThreadPool::set_thread_size_thresh_hold(size_t threshHold) {
+	if (checkRunningState() || poolMode_ == POOL_MODE::MODE_FIXED) return;
 	threadSizeThreshHold_ = threshHold > THREAD_MAX_THRESHHOLD ? THREAD_MAX_THRESHHOLD : threshHold;
 }
-size_t ThreadPool::maxThreadSize() {
+size_t ThreadPool::max_thread_size() {
 	return THREAD_MAX_THRESHHOLD;
 }
 
@@ -61,7 +57,7 @@ void ThreadPool::start(unsigned int initThreadSize) {
 	isRunning_ = true;
 	initThreadSize_ = initThreadSize;
 	for (size_t i = 0; i < initThreadSize_; i++) {
-		auto ptr = std::make_shared<Thread>(std::bind(&ThreadPool::threadFunc, this, std::placeholders::_1));
+		auto ptr = std::make_shared<__thread>(std::bind(&ThreadPool::thread_function, this, std::placeholders::_1));
 		threads_.emplace(ptr->getId(), std::move(ptr));
 	}
 	for (int i = 0; i < initThreadSize_; i++) {
@@ -70,29 +66,32 @@ void ThreadPool::start(unsigned int initThreadSize) {
 	}
 }
 
-void ThreadPool::threadFunc(int threadid) {
+void ThreadPool::thread_function(int threadid) {
 	auto last = std::chrono::high_resolution_clock().now();
 
 	for (;;) {
 		Task task;
 		{
 			std::unique_lock<std::mutex> lock(taskQueMtx_);
-			std::cout << "thread id (" << std::this_thread::get_id() << ") try to get Task..." << std::endl;
+			aux_output_ << "thread id (" << std::this_thread::get_id() << ") try to get Task..." << endl;
+			sout << aux_output_;
 			while (taskQueue_.empty()) {
 				if (not isRunning_) {  // unlock deadlock after finish every mission 
 					threads_.erase(threadid);
-					std::cout << "thread (" << std::this_thread::get_id() << ") exit" << std::endl;
+					aux_output_ << "thread (" << std::this_thread::get_id() << ") exit" << endl;
+					sout << aux_output_;
 					exitCond_.notify_all();
 					return;
 				}
-				if (poolMode_ == PoolMode::MODE_CACHED) {
+				if (poolMode_ == POOL_MODE::MODE_CACHED) {
 					if (std::cv_status::timeout == notEmpty_.wait_for(lock, std::chrono::seconds(1))) {
 						auto now = std::chrono::high_resolution_clock().now();
 						auto sub = std::chrono::duration_cast<std::chrono::seconds>(now - last);
 						if (sub.count() >= THREAD_MAX_IDLE_SECONDS && threads_.size() > initThreadSize_) {
 							threads_.erase(threadid);
 							idleThreadSize_--;
-							std::cout << "thread (" << std::this_thread::get_id() << ") exit" << std::endl;
+							aux_output_ << "thread (" << std::this_thread::get_id() << ") exit" << endl;
+							sout << aux_output_;
 							return;
 						}
 					}
@@ -103,7 +102,8 @@ void ThreadPool::threadFunc(int threadid) {
 			} // free lock
 
 			idleThreadSize_--;
-			std::cout << "thread id (" << std::this_thread::get_id() << ") get Task!" << std::endl;
+			aux_output_ << "thread id (" << std::this_thread::get_id() << ") get Task!" << endl;
+			sout << aux_output_;
 			task = taskQueue_.front();
 			taskQueue_.pop();
 			taskSize_--;

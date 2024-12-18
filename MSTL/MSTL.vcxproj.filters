@@ -36,6 +36,9 @@
     <ClCompile Include="thread_pool.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="threadsafe_print.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="errorlib.h">
@@ -156,6 +159,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="container.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="threadsafe_print.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

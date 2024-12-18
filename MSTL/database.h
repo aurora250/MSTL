@@ -17,14 +17,14 @@ MSTL_BEGIN_NAMESPACE__
 //	return static_cast<const char*>(fin);
 //}
 
-class mysql_db {
+class MysqlDB {
 private:
 	MYSQL* mysql;
 	std::string username;
 	std::string db_name;
 	std::string encode;
 public:
-	mysql_db(const char* user, const char* passwd, const char* db, unsigned int port = 3306,
+	MysqlDB(const char* user, const char* passwd, const char* db, unsigned int port = 3306,
 		const char* host = "localhost", const char* encode = "gbk") :
 		mysql(0), username(user), db_name(db), encode(encode) {
 		mysql_init(mysql);
@@ -49,7 +49,7 @@ public:
 	//	}
 	//	mysql_free_result(res);
 	//}
-	~mysql_db() {
+	~MysqlDB() {
 		mysql_close(mysql);
 	}
 };
