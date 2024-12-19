@@ -3,6 +3,7 @@
 #include "deque.hpp"
 #include "functor.hpp"
 #include "vector.hpp"
+#include "check_type.h"
 #include "heap.hpp"
 #include "concepts.hpp"
 
@@ -17,34 +18,42 @@ public:
     typedef typename Sequence::reference        reference;
     typedef typename Sequence::reference_const  reference_const;
     typedef queue<T, Sequence>                  self;
-
-    static const char* const __type__;
 private:
-    Sequence seq;
+    Sequence seq_;
+
+    template <typename T, typename Sequence>
+    friend void detailof(const queue<T, Sequence>& pq, std::ostream& _out);
 public:
-    queue() : seq(Sequence()) {}
+    queue() : seq_(Sequence()) {}
     ~queue() = default;
 
-    void push(const value_type& x) { seq.push_back(x); }
-    void emplace(const value_type& x) { seq.push_back(x); }
-    void pop() { seq.pop_front(); }
-    reference front() { return seq.front(); }
-    reference_const front()const { return seq.front(); }
-    reference back() { return seq.back(); }
-    reference_const back()const { return seq.back(); }
-    size_type size() { return seq.size(); }
-    bool empty() { return seq.empty(); }
+    void push(const value_type& x) { seq_.push_back(x); }
+    void emplace(const value_type& x) { seq_.push_back(x); }
+    void pop() { seq_.pop_front(); }
+    reference front() { return seq_.front(); }
+    reference_const front()const { return seq_.front(); }
+    reference back() { return seq_.back(); }
+    reference_const back()const { return seq_.back(); }
+    size_type size() { return seq_.size(); }
+    bool empty() { return seq_.empty(); }
 };
 template <typename T, typename Sequence>
-const char* const queue<T, Sequence>::__type__ = "queue";
-
-template <typename T, typename Sequence>
 bool operator==(const queue<T, Sequence>& x, const queue<T, Sequence>& y) {
-    return x.seq == y.seq;
+    return x.seq_ == y.seq_;
 }
 template <typename T, typename Sequence>
 bool operator<(const queue<T, Sequence>& x, const queue<T, Sequence>& y) {
-    return x.seq < y.seq;
+    return x.seq_ < y.seq_;
+}
+template <typename T, typename Sequence>
+void detailof(const queue<T, Sequence>& pq, std::ostream& _out = std::cout) {
+    split_line(_out);
+    _out << "type: " << check_type<queue<T, Sequence>>() << std::endl;
+    _out << "size: " << pq.size() << std::endl;
+    _out << "data: " << std::flush;
+    __show_data_only(pq.seq_, _out);
+    _out << std::endl;
+    split_line(_out);
 }
 
 template<typename T, typename Sequence = vector<T>,
@@ -59,39 +68,39 @@ public:
     typedef priority_queue<T, Sequence>         self;
 
 private:
-    Sequence seq;
-    Compare comp;
+    Sequence seq_;
+    Compare comp_;
 
     template <typename T, typename Sequence, typename Compare>
     friend void detailof(const priority_queue<T, Sequence, Compare>& pq, std::ostream& _out);
 public:
-    priority_queue() : seq(), comp() {}
-    explicit priority_queue(const Compare& x) :seq(), comp(x) {}
+    priority_queue() : seq_(), comp_() {}
+    explicit priority_queue(const Compare& x) :seq_(), comp_(x) {}
     template <typename InputIterator>
-    priority_queue(InputIterator first, InputIterator last) : seq(first, last) {
-        make_heap(seq.begin(), seq.end(), comp);
+    priority_queue(InputIterator first, InputIterator last) : seq_(first, last) {
+        make_heap(seq_.begin(), seq_.end(), comp_);
     }
     template<typename InputIterator>
     priority_queue(InputIterator first, InputIterator last, const Compare& x) :
-        seq(first, last), comp(x) {
-        make_heap(seq.begin(), seq.end(), comp);
+        seq_(first, last), comp_(x) {
+        make_heap(seq_.begin(), seq_.end(), comp_);
     }
-    bool empty() const { return seq.empty(); }
-    size_type size() const { return seq.size(); }
-    const_reference top() const { return seq.front(); }
+    bool empty() const { return seq_.empty(); }
+    size_type size() const { return seq_.size(); }
+    const_reference top() const { return seq_.front(); }
     void push(const_reference x) {
         MSTL_TRY__{
-            seq.push_back(x);
-            push_heap(seq.begin(), seq.end(), comp);
+            seq_.push_back(x);
+            push_heap(seq_.begin(), seq_.end(), comp_);
         }
-        MSTL_CATCH_UNWIND_THROW_M__(seq.clear());
+        MSTL_CATCH_UNWIND_THROW_M__(seq_.clear());
     }
     void pop() {
         MSTL_TRY__{
-            pop_heap(seq.begin(), seq.end(), comp);
-            seq.pop_back();
+            pop_heap(seq_.begin(), seq_.end(), comp_);
+            seq_.pop_back();
         }
-        MSTL_CATCH_UNWIND_THROW_M__(seq.clear());
+        MSTL_CATCH_UNWIND_THROW_M__(seq_.clear());
     }
 };
 
@@ -101,7 +110,7 @@ void detailof(const priority_queue<T, Sequence, Compare>& pq, std::ostream& _out
     _out << "type: " << check_type<priority_queue<T, Sequence, Compare>>() << std::endl;
     _out << "size: " << pq.size() << std::endl;
     _out << "data: " << std::flush;
-    __show_data_only(pq.seq, _out);
+    __show_data_only(pq.seq_, _out);
     _out << std::endl;
     split_line(_out);
 }

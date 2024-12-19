@@ -2,8 +2,6 @@
 #define MSTL_HASH_MAP_HPP__
 #include "hashtable.hpp"
 #include "functor.hpp"
-#include "container.h"
-#include "check_type.h"
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -29,8 +27,6 @@ public:
     typedef typename ht::const_reference const_reference;
     typedef typename ht::iterator iterator;
     typedef typename ht::const_iterator const_iterator;
-
-    static const char* const __type__;
 
     hasher hash_funct() const { return rep.hash_funct(); }
     key_equal key_eq() const { return rep.key_eq(); }
@@ -110,8 +106,6 @@ inline bool operator ==(const hash_map<Key, T, HashFcn, EqualKey, Alloc>& hm1,
     const hash_map<Key, T, HashFcn, EqualKey, Alloc>& hm2) {
     return hm1.rep == hm2.rep;
 }
-template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
-const char* const hash_map<Key, T, HashFcn, EqualKey, Alloc>::__type__ = "hash_map";
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
     class Alloc = default_standard_alloc<__hashtable_node<pair<const Key, T>>>>
@@ -143,8 +137,6 @@ public:
 
     hasher hash_funct() const { return rep.hash_funct(); }
     key_equal key_eq() const { return rep.key_eq(); }
-
-    static const char* const __type__;
 
     hash_multimap() : rep(100, hasher(), key_equal()) {}
     explicit hash_multimap(size_type n) : rep(n, hasher(), key_equal()) {}
@@ -180,7 +172,7 @@ public:
 
     template<typename... Args>
     void emplace(Args&&... args) {
-        //rep.emplace_equal(std::forward<Args>(args)...);
+        rep.emplace_equal(std::forward<Args>(args)...);
     }
     iterator insert(value_type&& obj) { return rep.insert_equal(std::move(obj)); }
     iterator insert(const value_type& obj) { return rep.insert_equal(obj); }
@@ -212,8 +204,6 @@ inline bool operator ==(const hash_multimap<Key, T, HF, EqKey, Alloc>& hm1,
     const hash_multimap<Key, T, HF, EqKey, Alloc>& hm2) {
     return hm1.rep == hm2.rep;
 }
-template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
-const char* const hash_multimap<Key, T, HashFcn, EqualKey, Alloc>::__type__ = "hash_multimap";
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
     class Alloc = default_standard_alloc<__hashtable_node<pair<const Key, T>>>>

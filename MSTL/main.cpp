@@ -26,8 +26,11 @@ void try_lls() {
     lls.pop_back();
     lls.pop_front();
     detailof_safe(lls);
-    sout << lls.at(0) << ':' << lls[0] << endl;
-    sout << lls.front() << ':' << lls.back() << endl;
+    Output out;
+    out << lls.at(0) << ':' << lls[0] << endl;
+    sout << out;
+    out << lls.front() << ':' << lls.back() << endl;
+    sout << out;
     lls.clear();
     sout << lls.empty() << endl;
 }
@@ -192,7 +195,7 @@ void try_map() {
     m[100] = 'x';
     m[2] = 'l';
     detailof(m);
-    std::cout << m[1] << std::endl;
+    sout << m[1] << endl;
 }
 void try_tup() {
     MSTL_NAMESPACE__;
@@ -209,7 +212,8 @@ void try_hash() {
     m[1] = 'a';
     m[2] = 'b';
     m.insert(3, 'c');
-    m.emplace(4, 'd');
+    m.emplace(2, 'c');
+    m.insert(1, 'b');
     detailof(m);
     std::cout<< *++m.begin() << std::endl;
     hash_multimap<std::string, int> mm;
@@ -223,14 +227,14 @@ void try_pool() {
     {
         ThreadPool pool;
         pool.start();
-        pool.submitTask(try_lls);
-        pool.submitTask(try_deq);
-        pool.submitTask(try_deq);
+        pool.submit_task(try_lls);
+        pool.submit_task(try_deq);
+        pool.submit_task(try_deq);
     }
 }
 
 int main() {
-    try_pool();
+    try_hash();
 
-    getchar();
+    //getchar();
 }

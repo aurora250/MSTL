@@ -4,7 +4,6 @@
 #include "algo.hpp"
 #include "memory.hpp"
 #include "vector.hpp"
-#include "tuple.hpp"
 #include "type_traits.hpp"
 #include "hash_function.hpp"
 //#ifdef MSTL_DLL_LINK__
@@ -17,9 +16,6 @@ template <class Value>
 struct __hashtable_node {
     __hashtable_node* next;
     Value val;
-    //__hashtable_node() : next(0), val(Value()) {}
-    //__hashtable_node(__hashtable_node<Value>* n, Value&& v) : next(n), val(std::forward<Value>(v)) {}
-    //~__hashtable_node() = default;
 };
 
 template <class Value, class Key, class HashFcn, class ExtractKey, class EqualKey,
@@ -111,8 +107,8 @@ struct __hashtable_const_iterator {
     bool operator !=(const const_iterator& it) const { return cur != it.cur; }
 };
 
-static const int __stl_num_primes = 28;
-static const unsigned long __stl_prime_list[__stl_num_primes] = {
+static const int NUM_PRIMERS__ = 28;
+static const unsigned long PRIME_LIST__[NUM_PRIMERS__] = {
   53,         97,           193,         389,       769,
   1543,       3079,         6151,        12289,     24593,
   49157,      98317,        196613,      393241,    786433,
@@ -122,8 +118,8 @@ static const unsigned long __stl_prime_list[__stl_num_primes] = {
 };
 
 inline size_t __next_prime(size_t n) {
-    const unsigned long* first = __stl_prime_list;
-    const unsigned long* last = __stl_prime_list + __stl_num_primes;
+    const unsigned long* first = PRIME_LIST__;
+    const unsigned long* last = PRIME_LIST__ + NUM_PRIMERS__;
     const unsigned long* pos = lower_bound(first, last, n);
     return pos == last ? (size_t)(*(last - 1)) : (size_t)(*pos);
 }
@@ -220,11 +216,11 @@ public:
         std::swap(num_elements, ht.num_elements);
     }
     size_type bucket_count() const { return buckets.size(); }
-    size_type max_bucket_count() const { return __stl_prime_list[__stl_num_primes - 1]; }
+    size_type max_bucket_count() const { return PRIME_LIST__[NUM_PRIMERS__ - 1]; }
     size_type elems_in_bucket(size_type bucket) const {
         size_type result = 0;
-        for (node* cur = buckets[bucket]; cur; cur = cur->next)
-            result += 1;
+        for (node* cur = buckets[bucket]; cur; cur = cur->next) 
+            result++;
         return result;
     }
 
@@ -247,9 +243,16 @@ public:
     pair<iterator, bool> insert_unique_noresize(const value_type& obj) {
         const size_type n = bkt_num(obj);
         node* first = buckets[n];
-        for (node* cur = first; cur; cur = cur->next)
-            if (equals(get_key(cur->val), get_key(obj)))
-                return pair<iterator, bool>(iterator(cur, this), false);
+        for (node* cur = first; cur; cur = cur->next) {
+            if (equals(get_key(cur->val), get_key(obj))) {
+                buckets[n] = cur->next;
+                delete_node(cur);
+                node* tmp = new_node(obj);
+                tmp->next = buckets[n];
+                buckets[n] = tmp;
+                return pair<iterator, bool>(iterator(tmp, this), false);
+            }
+        }
         node* tmp = new_node(obj);
         tmp->next = first;
         buckets[n] = tmp;
@@ -259,9 +262,16 @@ public:
     pair<iterator, bool> insert_unique_noresize(const Key& key, value_of_key&& val) {
         const size_type n = bkt_num_key(key, buckets.size());
         node* first = buckets[n];
-        for (node* cur = first; cur; cur = cur->next)
-            if (equals(get_key(cur->val), key))
+        for (node* cur = first; cur; cur = cur->next) {
+            if (equals(get_key(cur->val), key)) {
+                buckets[n] = cur->next;
+                delete_node(cur);
+                node* tmp = new_node(key, std::forward<value_of_key>(val));
+                tmp->next = buckets[n];
+                buckets[n] = tmp;
                 return pair<iterator, bool>(iterator(cur, this), false);
+            }
+        }
         node* tmp = new_node(key, std::forward<value_of_key>(val));
         tmp->next = first;
         buckets[n] = tmp;
@@ -376,21 +386,51 @@ public:
     }
 
     template <typename... Args> requires (sizeof...(Args) > 1)
-    void emplace_unique(Args&&... args) {
+        pair<iterator, bool> emplace_unique(Args&&... args) {
         resize(num_elements + 1);
         // using extractor = typename key_extractor<std::_Remove_cvref_t<Args>...>;
         // const auto& key = extractor::_Extract(Args...);
 
-        auto [key, value_args] = std::forward_as_tuple(std::forward<Args>(args)...);  // C++17
+        auto [key, value_args] = std::forward_as_tuple(std::forward<Args>(args)...);
         const size_type n = bkt_num_key(key, buckets.size());
         node* first = buckets[n];
-        for (node* cur = first; cur; cur = cur->next)
-            if (equals(get_key(cur->val), key))
-                return;
+        for (node* cur = first; cur; cur = cur->next) {
+            if (equals(get_key(cur->val), key)) {
+                buckets[n] = cur->next;
+                delete_node(cur);
+                node* tmp = new_node(key, std::forward<value_of_key>(value_args));
+                tmp->next = buckets[n];
+                buckets[n] = tmp;
+                return pair<iterator, bool>(iterator(tmp, this), false);
+            }
+        }
         node* tmp = new_node(key, std::forward<decltype(value_args)>(value_args));
         tmp->next = first;
         buckets[n] = tmp;
         ++num_elements;
+        return pair<iterator, bool>(iterator(tmp, this), true);
+    }
+
+    template <typename... Args> requires (sizeof...(Args) > 1)
+        iterator emplace_equal(Args&&... args) {
+        resize(num_elements + 1);
+        auto [key, value_args] = std::forward_as_tuple(std::forward<Args>(args)...);
+        const size_type n = bkt_num_key(key, buckets.size());
+        node* first = buckets[n];
+        for (node* cur = first; cur; cur = cur->next) {
+            if (equals(get_key(cur->val), key)) {
+                node* tmp = new_node(key, std::forward<value_of_key>(value_args));
+                tmp->next = cur->next;
+                cur->next = tmp;
+                ++num_elements;
+                return iterator(tmp, this);
+            }
+        }
+        node* tmp = new_node(key, std::forward<decltype(value_args)>(value_args));
+        tmp->next = first;
+        buckets[n] = tmp;
+        ++num_elements;
+        return iterator(tmp, this);
     }
 
     size_type count(const key_type& key) const {
@@ -403,41 +443,41 @@ public:
     }
 
     pair<iterator, iterator> equal_range(const key_type& key) {
-        typedef pair<iterator, iterator> iter_pir;
+        typedef pair<iterator, iterator> iter_pair;
         const size_type n = bkt_num_key(key);
         for (node* first = buckets[n]; first; first = first->next) {
             if (equals(get_key(first->val), key)) {
                 for (node* cur = first->next; cur; cur = cur->next) {
                     if (!equals(get_key(cur->val), key))
-                        return iter_pir(iterator(first, this), iterator(cur, this));
+                        return iter_pair(iterator(first, this), iterator(cur, this));
                 }
                 for (size_type m = n + 1; m < buckets.size(); ++m) {
                     if (buckets[m])
-                        return iter_pir(iterator(first, this),
+                        return iter_pair(iterator(first, this),
                             iterator(buckets[m], this));
                 }
-                return iter_pir(iterator(first, this), end());
+                return iter_pair(iterator(first, this), end());
             }
         }
-        return iter_pir(end(), end());
+        return iter_pair(end(), end());
     }
     pair<const_iterator, const_iterator> equal_range(const key_type& key) const {
-        typedef pair<const_iterator, const_iterator> citer_pir;
+        typedef pair<const_iterator, const_iterator> citer_pair;
         const size_type n = bkt_num_key(key);
         for (const node* first = buckets[n]; first; first = first->next) {
             if (equals(get_key(first->val), key)) {
                 for (const node* cur = first->next; cur; cur = cur->next) {
                     if (!equals(get_key(cur->val), key))
-                        return citer_pir(const_iterator(first, this), const_iterator(cur, this));
+                        return citer_pair(const_iterator(first, this), const_iterator(cur, this));
                 }
                 for (size_type m = n + 1; m < buckets.size(); ++m) {
                     if (buckets[m])
-                        return citer_pir(const_iterator(first, this), const_iterator(buckets[m], this));
+                        return citer_pair(const_iterator(first, this), const_iterator(buckets[m], this));
                 }
-                return citer_pir(const_iterator(first, this), end());
+                return citer_pair(const_iterator(first, this), end());
             }
         }
-        return citer_pir(end(), end());
+        return citer_pair(end(), end());
     }
 
     size_type erase(const key_type& key) {
@@ -581,7 +621,7 @@ private:
         n->next = 0;
         MSTL_TRY__{
           MSTL::construct(&n->val, obj);
-          return n;
+          return std::move(n);
         }
         MSTL_CATCH_UNWIND_THROW_U__(alloc.deallocate(n));
     }
@@ -591,7 +631,7 @@ private:
         n->next = 0;
         MSTL_TRY__{
             MSTL::construct(&n->val, std::forward<decltype(args)>(args)...);
-            return n;
+            return std::move(n);
         }
         MSTL_CATCH_UNWIND_THROW_U__(alloc.deallocate(n));
     }

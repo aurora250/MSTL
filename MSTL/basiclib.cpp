@@ -3,6 +3,8 @@
 
 MSTL_BEGIN_NAMESPACE__
 
+const size_t MSTL_SPLIT_LENGHT = 15;
+
 void split_line(std::ostream& _out, size_t _size) {
 	while (_size) _out << '-', _size--;
 	_out << std::endl;

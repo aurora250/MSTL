@@ -16,53 +16,53 @@ void __thread::start() {
 	std::thread t(func_, threadId_);
 	t.detach();
 }
-int __thread::getId() const {
+int __thread::get_id() const {
 	return threadId_;
 }
 
 ThreadPool::ThreadPool()
-	: initThreadSize_(0),
-	threadSizeThreshHold_(THREAD_MAX_THRESHHOLD),
-	taskSize_(0),
-	idleThreadSize_(0),
-	taskQueMaxThreshHold_(TASK_MAX_THRESHHOLD),
-	poolMode_(POOL_MODE::MODE_FIXED),
-	isRunning_(false) {
+	: init_thread_size_(0),
+	thread_size_thresh_hold_(THREAD_MAX_THRESHHOLD),
+	task_size_(0),
+	idle_thread_size_(0),
+	task_queue_max_thresh_hold_(TASK_MAX_THRESHHOLD),
+	pool_mode_(POOL_MODE::MODE_FIXED),
+	is_running_(false) {
 }
 
 ThreadPool::~ThreadPool() {
-	isRunning_ = false;
-	std::unique_lock<std::mutex> lock(taskQueMtx_);
-	notEmpty_.notify_all();   // unlock and call threadFunc to exit
-	exitCond_.wait(lock, [&]()->bool { return threads_.empty(); });
+	is_running_ = false;
+	std::unique_lock<std::mutex> lock(task_queue_mtx_);
+	not_empty_.notify_all();   // unlock and call threadFunc to exit
+	exit_cond_.wait(lock, [&]()->bool { return threads_.empty(); });
 }
 
 void ThreadPool::set_mode(POOL_MODE mode) {
-	if (checkRunningState()) return;
-	poolMode_ = mode;
+	if (running()) return;
+	pool_mode_ = mode;
 }
 void ThreadPool::set_taskque_max_thresh_hold(size_t threshHold) {
-	if (checkRunningState()) return;
-	taskQueMaxThreshHold_ = threshHold;
+	if (running()) return;
+	task_queue_max_thresh_hold_ = threshHold;
 }
 void ThreadPool::set_thread_size_thresh_hold(size_t threshHold) {
-	if (checkRunningState() || poolMode_ == POOL_MODE::MODE_FIXED) return;
-	threadSizeThreshHold_ = threshHold > THREAD_MAX_THRESHHOLD ? THREAD_MAX_THRESHHOLD : threshHold;
+	if (running() || pool_mode_ == POOL_MODE::MODE_FIXED) return;
+	thread_size_thresh_hold_ = threshHold > THREAD_MAX_THRESHHOLD ? THREAD_MAX_THRESHHOLD : threshHold;
 }
 size_t ThreadPool::max_thread_size() {
 	return THREAD_MAX_THRESHHOLD;
 }
 
 void ThreadPool::start(unsigned int initThreadSize) {
-	isRunning_ = true;
-	initThreadSize_ = initThreadSize;
-	for (size_t i = 0; i < initThreadSize_; i++) {
+	is_running_ = true;
+	init_thread_size_ = initThreadSize;
+	for (size_t i = 0; i < init_thread_size_; i++) {
 		auto ptr = std::make_shared<__thread>(std::bind(&ThreadPool::thread_function, this, std::placeholders::_1));
-		threads_.emplace(ptr->getId(), std::move(ptr));
+		threads_.emplace(ptr->get_id(), std::move(ptr));
 	}
-	for (int i = 0; i < initThreadSize_; i++) {
+	for (int i = 0; i < init_thread_size_; i++) {
 		threads_[i]->start();
-		idleThreadSize_++;
+		idle_thread_size_++;
 	}
 }
 
@@ -72,53 +72,61 @@ void ThreadPool::thread_function(int threadid) {
 	for (;;) {
 		Task task;
 		{
-			std::unique_lock<std::mutex> lock(taskQueMtx_);
+			std::unique_lock<std::mutex> lock(task_queue_mtx_);
+#ifdef MSTL_STATE_DEBUG__
 			aux_output_ << "thread id (" << std::this_thread::get_id() << ") try to get Task..." << endl;
 			sout << aux_output_;
-			while (taskQueue_.empty()) {
-				if (not isRunning_) {  // unlock deadlock after finish every mission 
+#endif
+			while (task_queue_.empty()) {
+				if (not is_running_) {  // unlock deadlock after finish every mission 
 					threads_.erase(threadid);
+#ifdef MSTL_STATE_DEBUG__
 					aux_output_ << "thread (" << std::this_thread::get_id() << ") exit" << endl;
 					sout << aux_output_;
-					exitCond_.notify_all();
+#endif
+					exit_cond_.notify_all();
 					return;
 				}
-				if (poolMode_ == POOL_MODE::MODE_CACHED) {
-					if (std::cv_status::timeout == notEmpty_.wait_for(lock, std::chrono::seconds(1))) {
+				if (pool_mode_ == POOL_MODE::MODE_CACHED) {
+					if (std::cv_status::timeout == not_empty_.wait_for(lock, std::chrono::seconds(1))) {
 						auto now = std::chrono::high_resolution_clock().now();
 						auto sub = std::chrono::duration_cast<std::chrono::seconds>(now - last);
-						if (sub.count() >= THREAD_MAX_IDLE_SECONDS && threads_.size() > initThreadSize_) {
+						if (sub.count() >= THREAD_MAX_IDLE_SECONDS && threads_.size() > init_thread_size_) {
 							threads_.erase(threadid);
-							idleThreadSize_--;
+							idle_thread_size_--;
+#ifdef MSTL_STATE_DEBUG__
 							aux_output_ << "thread (" << std::this_thread::get_id() << ") exit" << endl;
 							sout << aux_output_;
+#endif
 							return;
 						}
 					}
 				}
 				else {
-					notEmpty_.wait(lock);
+					not_empty_.wait(lock);
 				}
 			} // free lock
 
-			idleThreadSize_--;
+			idle_thread_size_--;
+#ifdef MSTL_STATE_DEBUG__ 
 			aux_output_ << "thread id (" << std::this_thread::get_id() << ") get Task!" << endl;
 			sout << aux_output_;
-			task = taskQueue_.front();
-			taskQueue_.pop();
-			taskSize_--;
-			if (not taskQueue_.empty()) notEmpty_.notify_all();
-			notFull_.notify_all();
+#endif
+			task = task_queue_.front();
+			task_queue_.pop();
+			task_size_--;
+			if (not task_queue_.empty()) not_empty_.notify_all();
+			not_full_.notify_all();
 		}
 		if (task != nullptr) {
 			task();
 		}
-		idleThreadSize_++;
+		idle_thread_size_++;
 		last = std::chrono::high_resolution_clock().now();
 	}
 }
 
-bool ThreadPool::checkRunningState() const {
-	return isRunning_;
+bool ThreadPool::running() const {
+	return is_running_;
 }
 MSTL_END_NAMESPACE__

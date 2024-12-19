@@ -13,8 +13,6 @@ public:
     typedef typename Sequence::reference        reference;
     typedef typename Sequence::reference_const  reference_const;
     typedef stack<T, Sequence>                  self;
-
-    static const char* const __type__;
 private:
     Sequence seq;
 public:
@@ -28,9 +26,6 @@ public:
     size_type size() const { return seq.size(); }
     bool empty() const { return seq.empty(); }
 };
-template<typename T, typename Sequence>
-const char* const stack<T, Sequence>::__type__ = "stack";
-
 template<typename T, typename Sequence>
 bool operator==(const stack<T, Sequence>& x, const stack<T, Sequence>& y) {
     return x.seq == y.seq;

@@ -1,23 +1,20 @@
 #ifndef MSTL_LIST_HPP__
 #define MSTL_LIST_HPP__
-#include "container.h"
 #include "memory.hpp"
-#include <memory>
-
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T>
 struct __list_node {
-    typedef T                     value_type;
-    typedef const T& reference;
+    typedef T                       value_type;
+    typedef const T&                reference;
     typedef __list_node<value_type> self;
 
     __list_node(reference _val = value_type(), self* _prev = nullptr, self* _next = nullptr)
-        : _data(_val), _prev(_prev), _next(_next) {}
+        : data_(_val), prev_(_prev), next_(_next) {}
 
-    value_type _data;
-    self* _prev;
-    self* _next;
+    value_type data_;
+    self* prev_;
+    self* next_;
 };
 
 template <typename T, typename Ref = T&, typename Ptr = T*>
@@ -28,26 +25,25 @@ struct list_iterator {
     typedef T                               value_type;
     typedef Ptr                             pointer;
     typedef Ref                             reference;
-
     typedef list_iterator<T, Ref, Ptr>      self;
     typedef list_iterator<T, T&, T*>        iterator;
     typedef __list_node<T>*                 link_type;
 
-    link_type _node;
+    link_type node_;
 
-    list_iterator(link_type x = nullptr) : _node(x) {}
-    list_iterator(const iterator& x) : _node(x._node) {}
+    list_iterator(link_type x = nullptr) : node_(x) {}
+    list_iterator(const iterator& x) : node_(x.node_) {}
     self& operator =(const iterator& rh) { 
     	if(*this == rh) return *this;
-		this->_node = rh._node; 
+		this->node_ = rh.node_; 
 		return *this;
 	}
     ~list_iterator() = default;
 
-    reference operator *() const { return this->_node->_data; }
+    reference operator *() const { return this->node_->data_; }
     pointer operator->() const { return &(operator*()); }
     self& operator ++() {
-        this->_node = this->_node->_next;
+        this->node_ = this->node_->next_;
         return *this;
     }
     self operator ++(int) {
@@ -56,7 +52,7 @@ struct list_iterator {
         return _old;
     }
     self& operator --() {
-        this->_node = this->_node->_prev;
+        this->node_ = this->node_->prev_;
         return *this;
     }
     self operator --(int) {
@@ -64,49 +60,46 @@ struct list_iterator {
         --(*this);
         return _old;
     }
-    bool operator ==(const self& _iter) const { return this->_node == _iter._node; }
-    bool operator !=(const self& _iter) const { return this->_node != _iter._node; }
+    bool operator ==(const self& _iter) const { return this->node_ == _iter.node_; }
+    bool operator !=(const self& _iter) const { return this->node_ != _iter.node_; }
 };
 
 template <typename T, typename Alloc = default_standard_alloc<__list_node<T>>>
 class list {
 public:
     typedef T                       value_type;
-    typedef T& reference;
-    typedef T* pointer;
-    typedef const T& const_reference;
+    typedef T&                      reference;
+    typedef T*                      pointer;
+    typedef const T&                const_reference;
     typedef list<T, Alloc>          self;
-    typedef __list_node<T>            node_type;
-    typedef node_type* link_type;
+    typedef __list_node<T>          node_type;
+    typedef node_type*              link_type;
     typedef list_iterator<T, T&, T*>              iterator;
     typedef list_iterator<T, const T&, const T*>  const_iterator;
     typedef size_t size_type;
-
-    static const char* const __type__;
-
 private:
-    typedef Alloc                   list_node_allocator;
+    typedef Alloc list_node_allocator;
 
-    link_type _node;
-    list_node_allocator alloc;
-    size_type _size;
+    link_type node_;
+    list_node_allocator alloc_;
+    size_type size_;
 
-    inline void __range_check(int _pos) const {
-        Exception(this->__in_boundary(_pos), RangeError());
+    inline void range_check(int _pos) const {
+        Exception(this->in_boundary(_pos), RangeError());
     }
-    bool __in_boundary(int _pos) const {
+    inline bool in_boundary(int _pos) const {
         if (_pos < 0) return false;
-        else return _pos < this->_size ? true : false;
+        else return _pos < this->size_ ? true : false;
     }
     link_type get_node() {
-        return alloc.allocate();
+        return alloc_.allocate();
     }
     void put_node(link_type p) {
-        alloc.deallocate(p);
+        alloc_.deallocate(p);
     }
     link_type create_node(const value_type& x) {
         link_type p = get_node();
-        construct(&(p->_data), x);
+        construct(&(p->data_), x);
         return p;
     }
     void destroy_node(link_type p) {
@@ -115,18 +108,18 @@ private:
     }
     void transfer(iterator _pos, iterator _first, iterator _last) {
         if (_pos == _last) return;
-        _last._node->_prev->_next = _pos._node;
-        _first._node->_prev->_next = _last._node;
-        _pos._node->_prev->_next = _first._node;
-        link_type tmp = _pos._node->_prev;
-        _pos._node->_prev = _last._node->_prev;
-        _last._node->_prev = _first._node->_prev;
-        _first._node->_prev = tmp;
+        _last.node_->prev_->next_ = _pos.node_;
+        _first.node_->prev_->next_ = _last.node_;
+        _pos.node_->prev_->next_ = _first.node_;
+        link_type tmp = _pos.node_->prev_;
+        _pos.node_->prev_ = _last.node_->prev_;
+        _last.node_->prev_ = _first.node_->prev_;
+        _first.node_->prev_ = tmp;
     }
 public:
     void empty_initialize() {
-        _node = new node_type();
-        _node->_prev = _node->_next = _node;
+        node_ = new node_type();
+        node_->prev_ = node_->next_ = node_;
     }
     list() {
         empty_initialize();
@@ -156,72 +149,72 @@ public:
     const self& operator =(const self& x) {
         if (*this == x) return *this;
         this->clear();
-        link_type p = x._node->_next;
-        while (p != x._node) {
+        link_type p = x.node_->next_;
+        while (p != x.node_) {
             link_type q = new node_type(p->data);
-            q->_prev = _node->_prev;
-            q->_next = _node;
-            _node->_prev->_next = q;
-            _node->_prev = q;
-            p = p->_next;
+            q->prev_ = node_->prev_;
+            q->next_ = node_;
+            node_->prev_->next_ = q;
+            node_->prev_ = q;
+            p = p->next_;
         }
-        this->_size = x._size;
+        this->size_ = x.size_;
         return *this;
     }
     const self& operator =(self&& x) {
         if (*this == x) return *this;
         clear();
-        this->_node = x._node;
-        x._node = new node_type();
-        x._node->_prev = x._node->_next = x._node;
-        this->_size = x._size;
+        this->node_ = x.node_;
+        x.node_ = new node_type();
+        x.node_->prev_ = x.node_->next_ = x.node_;
+        this->size_ = x.size_;
         return *this;
     }
     ~list() {
-        link_type _ptr = this->_node->_next;
-        while (_ptr != this->_node) {
+        link_type _ptr = this->node_->next_;
+        while (_ptr != this->node_) {
             link_type q = _ptr;
-            _ptr = _ptr->_next;
+            _ptr = _ptr->next_;
             destroy_node(q);
         }
-        destroy_node(this->_node);
+        destroy_node(this->node_);
     }
 
-    iterator begin() { return this->_node->_next; }
-    size_type size() const { return _size; }
-    iterator end() { return this->_node; }
-    const_iterator const_begin() const { return this->_node->_next; }
-    const_iterator const_end() const { return this->_node; }
+    iterator begin() { return this->node_->next_; }
+    size_type size() const { return size_; }
+    iterator end() { return this->node_; }
+    const_iterator const_begin() const { return this->node_->next_; }
+    const_iterator const_end() const { return this->node_; }
     bool empty() const {
-        return this->_node->_next == this->_node ||
-            link_type(this->_node->_next)->_next == this->_node;
+        return this->node_->next_ == this->node_ ||
+            link_type(this->node_->next_)->next_ == this->node_;
     }
-    const_reference front() const { return this->_node->_next->_data; }
-    const_reference back() const { return this->_node->_prev->_data; }
+    const_reference front() const { return this->node_->next_->data_; }
+    const_reference back() const { return this->node_->prev_->data_; }
     void pop_front() { this->erase(begin()); }
-    void pop_back() { this->erase(this->_node->_prev); }
+    void pop_back() { this->erase(this->node_->prev_); }
     void push_front(const_reference x) { insert(begin(), x); }
     void push_back(const_reference x) { insert(end(), x); }
     iterator insert(iterator position, const_reference x) {
         link_type temp = create_node(x);
-        temp->_next = position._node;
-        temp->_prev = position._node->_prev;
-        position._node->_prev->_next = temp;
-        position._node->_prev = temp;
-        ++_size;
+        temp->next_ = position.node_;
+        temp->prev_ = position.node_->prev_;
+        position.node_->prev_->next_ = temp;
+        position.node_->prev_ = temp;
+        ++size_;
         return temp;
     }
     void insert(iterator position, size_type n, const_reference x) {
-        link_type cur = position._node;
+        link_type cur = position.node_;
         link_type temp;
         while (n--) {
             temp = create_node(x);
-            temp->_next = cur;
-            temp->_prev = cur->_prev;
-            cur->_prev->_next = temp;
-            cur->_prev = temp;
+            temp->next_ = cur;
+            temp->prev_ = cur->prev_;
+            cur->prev_->next_ = temp;
+            cur->prev_ = temp;
             cur = temp;
-            ++_size;
+            ++size_;
         }
     }
     template<typename InputIterator>
@@ -232,12 +225,12 @@ public:
     }
 
     iterator erase(iterator position) {
-        if (empty()) return this->_node;
-        link_type ret = position._node->_next;
-        position._node->_prev->_next = position._node->_next;
-        position._node->_next->_prev = position._node->_prev;
-        destroy_node(position._node);
-        --_size;
+        if (empty()) return this->node_;
+        link_type ret = position.node_->next_;
+        position.node_->prev_->next_ = position.node_->next_;
+        position.node_->next_->prev_ = position.node_->prev_;
+        destroy_node(position.node_);
+        --size_;
         return ret;
     }
     iterator erase(iterator first, iterator last) {
@@ -245,15 +238,15 @@ public:
         return first;
     }
     void clear() {
-        link_type cur = _node->_next;
-        while (cur != _node) {
+        link_type cur = node_->next_;
+        while (cur != node_) {
             link_type temp = cur;
-            cur = cur->_next;
+            cur = cur->next_;
             destroy_node(temp);
-            --_size;
+            --size_;
         }
-        _node->_prev = _node;
-        _node->_next = _node;
+        node_->prev_ = node_;
+        node_->next_ = node_;
     }
     void remove(const value_type& x) {
         auto iter = begin(), last = end();
@@ -305,7 +298,7 @@ public:
     }
 
     void swap(self& _lis) noexcept {
-        std::swap(_lis._node, this->_node);
+        std::swap(_lis.node_, this->node_);
     }
     void unique() {
         iterator first = begin();
@@ -320,24 +313,24 @@ public:
     }
     void sort() {
         if (empty()) return;
-        link_type p = _node->_next->_next;
-        while (p != _node) {
-            auto temp = p->_data;
-            link_type prev = p->_prev;
-            while (prev != _node && prev->_data > temp) {
-                prev->_next->_data = prev->_data;
-                prev = prev->_prev;
+        link_type p = node_->next_->next_;
+        while (p != node_) {
+            auto temp = p->data_;
+            link_type prev = p->prev_;
+            while (prev != node_ && prev->data_ > temp) {
+                prev->next_->data_ = prev->data_;
+                prev = prev->prev_;
             }
-            prev->_next->_data = temp;
-            p = p->_next;
+            prev->next_->data_ = temp;
+            p = p->next_;
         }
     }
 
     const_reference at(int _pos) const {
-        this->__range_check(_pos);
+        this->range_check(_pos);
         const_iterator iter = const_begin();
         while (_pos--) iter++;
-        return iter._node->_data;
+        return iter.node_->data_;
     }
     reference at(int _pos) {
         return const_cast<reference>(
@@ -351,14 +344,6 @@ public:
         return this->at(_pos);
     }
 };
-template <typename T, typename Alloc>
-const char* const list<T, Alloc>::__type__ = "list";
-
-template<typename T, typename Alloc>
-std::ostream& operator <<(std::ostream& _out, const list<T, Alloc>& _list) {
-    __show_data_only(_list, _out);
-    return _out;
-}
 
 MSTL_END_NAMESPACE__
 

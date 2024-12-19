@@ -3,6 +3,7 @@
 #include <functional>
 #include <string>
 #include <memory>
+#include <future>
 #include "concepts.hpp"
 #include "hash_map.hpp"
 using namespace MSTL::concepts;
@@ -26,11 +27,21 @@ private:
 class Depositary {
 	using __base_deposit_ptr = std::shared_ptr<__base_deposit>;
 public:
-	template<class DeposT>
-	void register_deposit(const std::string& _register_name, const DeposT& _target) {
+	template <typename Func>
+	void register_deposit(const std::string& register_name, Func&& func) {
 		//deposit_map_.insert(pair(_register_name, __base_deposit_ptr(new DeposT(_target))));
-		deposit_map_[_register_name] = __base_deposit_ptr(new DeposT(_target));
+		deposit_map_.emplace(register_name, __base_deposit_ptr(&std::forward<Func>(func)));
 	};
+	template <typename Func, typename... Args>
+	decltype(auto) register_deposit(const std::string& register_name, Func&& func, Args&&... args) {
+		using Result = decltype(func(args));
+		auto deposit = std::make_shared<std::packaged_task<Result()>>(
+			std::bind(std::forward<Func>(func), std::forward<Args>(args)...));
+		deposit_map_.emplace(register_name, __base_deposit_ptr(&std::forward<Func>(func)));
+		auto res = deposit->get_future();
+		return res;
+	}
+
 
 	template <NVoidT T, typename... Args>
 	T excute(const std::string& _register_name, Args&&... _args) {
@@ -40,7 +51,9 @@ public:
 			return run_depos_ptr->run(std::forward<Args>(_args)...);
 		}
 		else {
+#ifdef MSTL_STATE_DEBUG__
 			std::cout << "Invalid register name, return default value." << std::endl;
+#endif
 			return T();
 		}
 	}

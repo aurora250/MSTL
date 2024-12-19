@@ -1,7 +1,6 @@
 #ifndef MSTL_MAP_HPP__
 #define MSTL_MAP_HPP__
 #include "rb_tree.h"
-#include "container.h"
 #include "functor.hpp"
 
 MSTL_BEGIN_NAMESPACE__
@@ -26,7 +25,6 @@ public:
 			return comp(x.first, y.first);
 		}
 	};
-	static const char* const __type__;
 private:
 	typedef rb_tree<key_type, value_type, select1st<value_type>, key_compare, Alloc> rep_type;
 	rep_type t;
@@ -83,6 +81,7 @@ public:
 
 	iterator find(const key_type& x) { return t.find(x); }
 	const_iterator find(const key_type& x) const { return t.find(x); }
+	void swap(self& x) { t.swap(x.t); }
 	size_type count(const key_type& x) const { return t.count(x); }
 	iterator lower_bound(const key_type& x) { return t.lower_bound(x); }
 	const_iterator lower_bound(const key_type& x) const { return t.lower_bound(x); }
@@ -103,9 +102,6 @@ public:
 	}
 };
 template <class Key, class T, class Compare, class Alloc>
-const char* const map<Key, T, Compare, Alloc>::__type__ = "map";
-
-template <class Key, class T, class Compare, class Alloc>
 inline bool operator ==(const map<Key, T, Compare, Alloc>& x, const map<Key, T, Compare, Alloc>& y) {
 	return x.same_to(y);
 }
@@ -114,12 +110,9 @@ inline bool operator <(const map<Key, T, Compare, Alloc>& x, const map<Key, T, C
 	return x.less_to(y);
 }
 template <class Key, class T, class Compare, class Alloc>
-std::ostream& operator <<(std::ostream& _out, const map<Key, T, Compare, Alloc>& _tar) {
-	__show_data_only(_tar, _out);
-	return _out;
+inline void swap(map<Key, T, Compare, Alloc>& x, map<Key, T, Compare, Alloc>& y) {
+	x.swap(y);
 }
-
-
 
 template <class Key, class T, class Compare = less<Key>,
 	class Alloc = default_standard_alloc<__rb_tree_node<pair<const Key, T>>>>
@@ -156,8 +149,6 @@ public:
 	typedef typename rep_type::const_reverse_iterator const_reverse_iterator;
 	typedef typename rep_type::size_type size_type;
 	typedef typename rep_type::difference_type difference_type;
-
-	static const char* const __type__;
 
 	multimap() : t(Compare()) { }
 	explicit multimap(const Compare& comp) : t(comp) { }
@@ -210,8 +201,6 @@ public:
 	friend bool operator ==(const multimap&, const multimap&);
 	friend bool operator <(const multimap&, const multimap&);
 };
-template <class Key, class T, class Compare, class Alloc>
-const char* const multimap<Key, T, Compare, Alloc>::__type__ = "multimap";
 
 template <class Key, class T, class Compare, class Alloc>
 inline bool operator==(const multimap<Key, T, Compare, Alloc>& x, const multimap<Key, T, Compare, Alloc>& y) {

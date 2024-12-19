@@ -1,9 +1,8 @@
 #ifndef MSTL_TEMPBUF_HPP__
 #define MSTL_TEMPBUF_HPP__
-#include "basiclib.h"
 #include "errorlib.h"
+#include "iterator.hpp"
 #include "pair.hpp"
-#include "type_traits.hpp"
 #include "memory.hpp"
 MSTL_BEGIN_NAMESPACE__
 
@@ -55,7 +54,7 @@ public:
     temporary_buffer(ForwardIterator first, ForwardIterator last) {
         MSTL_TRY__{
             len = 0;
-            distance(first, last, len);
+            MSTL::distance(first, last, len);
             allocate_buffer();
             if (len > 0)
                 initialize_buffer(*first, typename __type_traits<T>::has_trivial_default_constructor());
@@ -63,7 +62,7 @@ public:
         MSTL_CATCH_UNWIND_THROW_M__(free(buffer); buffer = 0; len = 0);
     }
     ~temporary_buffer() {
-        destroy(buffer, buffer + len);
+        MSTL::destroy(buffer, buffer + len);
         free(buffer);
     }
 };

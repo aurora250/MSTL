@@ -62,7 +62,7 @@
 #endif
 
 #if defined(MSTL_COMPILE_MSVC__)
-#define MSTL_DLL_LINK__ 1
+#define MSTL_DLL_LINK__ 0
 #endif // __GNUC__
 
 #if defined(MSTL_COMPILE_GNUC__)
@@ -94,7 +94,6 @@
 #endif
 
 #define MSTL_TEMPLATE_NULL__ template<>
-#define MSTL_SPLIT_LENGHT__ 15
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -104,6 +103,8 @@ typedef MSTL_LONG_LONG_TYPE__ intptr_t;
 
 typedef const char* cstring;
 typedef const char* const const_cstring;
+
+extern const size_t MSTL_SPLIT_LENGHT;
 
 extern void* memcpy(void* _dest, void* _rsc, int _byte);
 extern int memcmp(const void* _dest, const void* _rsc, int _byte);
@@ -116,7 +117,7 @@ extern int strcmp(const char* _des, const char* _sou);
 extern const char* strstr(const char* _des, const char* _sou);
 extern char* memstr(char* _data, int _len, char* _sub);
 
-extern void split_line(std::ostream & _out = std::cout, size_t _size = MSTL_SPLIT_LENGHT__);
+extern void split_line(std::ostream & _out = std::cout, size_t _size = MSTL_SPLIT_LENGHT);
 extern size_t deque_buf_size(size_t n, size_t sz);
 
 MSTL_END_NAMESPACE__
