@@ -1,7 +1,7 @@
 #ifndef MSTL_FUNCTOR_HPP__
 #define MSTL_FUNCTOR_HPP__
-#include <iostream>
 #include "basiclib.h"
+#include "concepts.hpp"
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -18,7 +18,7 @@ struct binary_function {
 };
 
 //arithmetic:
-template <typename T>
+template <typename T> requires(Addable<T, T>)
 struct plus : public binary_function<T, T, T> {
 	T operator()(const T& x, const T& y) const { return x + y; }
 };

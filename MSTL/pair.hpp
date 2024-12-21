@@ -15,37 +15,29 @@ struct pair {
 	T1 first;
 	T2 second;
 
-	template <DefaultConstructible U1 = T1, DefaultConstructible U2 = T2>
-	//requires (DefaultConstructible<U1>&& DefaultConstructible<U2>)
+	template <typename U1 = T1, typename U2 = T2>
+	requires(DefaultConstructible<U1>&& DefaultConstructible<U2>)
 	MSTL_CONSTEXPR__ explicit(not std::conjunction_v<std::_Is_implicitly_default_constructible<U1>,
 		std::_Is_implicitly_default_constructible<U2>>)
 		pair() 
 		noexcept(NothrowDefaultConstructible<U1>&& NothrowDefaultConstructible<U2>)
 		: first(), second() {}
 
-	template <typename U1 = T1, typename U2 = T2, std::enable_if_t<
-		std::conjunction_v<std::is_copy_constructible<U1>, std::is_copy_constructible<U2>>, int> = 0>
+	template <typename U1 = T1, typename U2 = T2>
+	requires(CopyConstructible<U1>&& CopyConstructible<U2>)
 	MSTL_CONSTEXPR__ explicit(not std::conjunction_v<std::is_convertible<const U1&, U1>,
 		std::is_convertible<const U2&, U2>>)
 		pair(const T1& a, const T2& b) 
 		noexcept(std::is_nothrow_copy_constructible_v<U1>&& std::is_nothrow_copy_constructible_v<U2>)
 		: first(a), second(b) {}
 
-	template <class U1, class U2, std::enable_if_t<
-		std::conjunction_v<std::is_constructible<T1, U1>, std::is_constructible<T2, U2>>, int> = 0>
+	template <class U1, class U2>
+	requires(ConstructibleFrom<T1, U1> && ConstructibleFrom<T2, U2>)
 	MSTL_CONSTEXPR__ explicit(not std::conjunction_v<std::is_convertible<U1, T1>,
 		std::is_convertible<U2, T2>>)
 		pair(U1&& _Val1, U2&& _Val2) 
 		noexcept(std::is_nothrow_constructible_v<T1, U1>&& std::is_nothrow_constructible_v<T2, U2>)
 		: first(std::forward<U1>(_Val1)), second(std::forward<U2>(_Val2)) {}
-
-	template <class Tuple1, class Tuple2, size_t... Ids1, size_t... Ids2>
-	MSTL_CONSTEXPR__ pair(Tuple1& val1, Tuple2& val2, std::index_sequence<Ids1...>, std::index_sequence<Ids2...>)
-		: first(get<Ids1>(std::move(val1))...), second(get<Ids2>(std::move(val2))...) {}
-
-	template <class... Types1, class... Types2>
-	MSTL_CONSTEXPR__ pair(std::piecewise_construct_t, tuple<Types1...> val1, tuple<Types2...> val2)
-		: pair(val1, val2, std::index_sequence_for<Types1...>{}, std::index_sequence_for<Types2...>{}) {}
 
 	pair(const pair& p) = default;
 	pair(pair&& p) = default;
@@ -135,16 +127,18 @@ template <typename T1, typename T2, class U1, class U2>
 MSTL_CONSTEXPR__ pair<T1, T2> make_pair(const T1& x, const T2& y) {
 	return pair<T1, T2>(x, y);
 }
-template <class T1, class T2, std::enable_if_t<
-	std::_Is_swappable<T1>::value && std::_Is_swappable<T2>::value, int> = 0>
+template <class T1, class T2>
+	requires(Swappable<T1> && Swappable<T2>)
 	MSTL_CONSTEXPR__ void swap(pair<T1, T2>& lh, pair<T1, T2>& rh) noexcept(noexcept(lh.swap(rh))) {
 	lh.swap(rh);
 }
-template <Printable T1, Printable T2>
+template <typename T1, typename T2>
+	requires(Printable<T1> && Printable<T2>)
 inline void __show_data_only(const pair<T1, T2>& p, std::ostream& _out) {
 	_out << "{ " << p.first << ", " << p.second << " }";
 }
 template <typename T1, typename T2>
+	requires(Printable<T1>&& Printable<T2>)
 std::ostream& operator <<(std::ostream& _out, const pair<T1, T2>& _p) {
 	__show_data_only(_p, _out);
 	return _out;

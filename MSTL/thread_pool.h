@@ -15,6 +15,10 @@
 
 MSTL_BEGIN_NAMESPACE__
 
+static const size_t MSTL_TASK_MAX_THRESHHOLD__ = INT32_MAX;
+static const size_t MSTL_THREAD_MAX_THRESHHOLD__ = std::thread::hardware_concurrency();
+static const size_t MSTL_THREAD_MAX_IDLE_SECONDS__ = 60;
+
 enum class POOL_MODE {
 	MODE_FIXED,  // static number
 	MODE_CACHED  // dynamic number
@@ -96,6 +100,7 @@ private:
 	size_t thread_size_thresh_hold_;
 
 	queue<Task> task_queue_;
+	queue<Task> finished_queue_;
 	std::atomic_uint task_size_;
 	std::atomic_uint idle_thread_size_;
 	size_t task_queue_max_thresh_hold_;

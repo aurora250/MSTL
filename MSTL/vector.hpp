@@ -170,7 +170,10 @@ public:
 	explicit vector(long n, const_reference value) {
 		fill_initialize(n, value);
 	}
-	explicit vector(const self& x) {
+	explicit vector(MSTL_LONG_LONG_TYPE__ n, const_reference value) {
+		fill_initialize(n, value);
+	}
+	vector(const vector<T, Alloc>& x) {
 		start_ = allocate_and_copy(x.const_end() - x.const_begin(), x.const_begin(), x.const_end());
 		finish_ = start_ + (x.const_end() - x.const_begin());
 		end_of_storage_ = finish_;
@@ -178,24 +181,24 @@ public:
 	explicit vector(const std::initializer_list<T>& l) : vector(l.begin(), l.end()) {}
 	template <typename InputIterator>
 	vector(InputIterator first, InputIterator last) : start_(), finish_(), end_of_storage_() {
-		range_initialize(first, last, iterator_category(first));
+		range_initialize(first, last, (MSTL::iterator_category)(first));
 	}
 	self& operator =(const self& x) {
 		if (x == *this) return *this;
 		if (x.size() > capacity()) {
 			iterator _new = allocate_and_copy(x.end() - x.begin(), x.begin(), x.end());
-			destroy(start_, finish_);
+			MSTL::destroy(start_, finish_);
 			deallocate();
 			start_ = _new;
 			end_of_storage_ = start_ + (x.end() - x.begin());
 		}
 		else if (size() >= x.size()) {
 			iterator i = copy(x.begin(), x.end(), begin());
-			destroy(i, finish_);
+			MSTL::destroy(i, finish_);
 		}
 		else {
-			copy(x.begin(), x.begin() + size(), start_);
-			uninitialized_copy(x.begin() + size(), x.end(), finish_);
+			MSTL::copy(x.begin(), x.begin() + size(), start_);
+			MSTL::uninitialized_copy(x.begin() + size(), x.end(), finish_);
 		}
 		finish_ = start_ + x.size();
 		return *this;

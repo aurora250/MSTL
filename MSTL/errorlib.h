@@ -60,16 +60,16 @@ struct SQLError : public Error {   // SQL错误
 	static const_cstring __type__;
 };
 
-struct NotError : public Error {   // 并非错误
-	typedef NotError self;
-	explicit NotError() noexcept;
+struct MathError : public Error {   // 数学错误
+	typedef MathError self;
+	explicit MathError(cstring _info = "Math Operation Failure!") noexcept;
 	static const_cstring __type__;
 };
 
 void __show_data_only(const Error& e, std::ostream& _out);
 
 extern void Exception(const Error& _err);
-extern void Exception(bool _boolean, const Error& _err = NotError());
+extern void Exception(bool _boolean, const Error& _err = Error());
 extern void Assert(bool _boolean, const char* const _info = MSTL_ASSERT_ERROR__);
 
 extern void Exit(bool _abort = false, void(* _func)(void) = nullptr);

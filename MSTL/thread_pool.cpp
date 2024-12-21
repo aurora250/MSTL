@@ -1,8 +1,5 @@
 #include "thread_pool.h"
 MSTL_BEGIN_NAMESPACE__
-const size_t TASK_MAX_THRESHHOLD = INT32_MAX;
-const size_t THREAD_MAX_THRESHHOLD = std::thread::hardware_concurrency();
-const size_t THREAD_MAX_IDLE_SECONDS = 60;
 
 int __thread::generateId_ = 0;
 
@@ -22,10 +19,10 @@ int __thread::get_id() const {
 
 ThreadPool::ThreadPool()
 	: init_thread_size_(0),
-	thread_size_thresh_hold_(THREAD_MAX_THRESHHOLD),
+	thread_size_thresh_hold_(MSTL_THREAD_MAX_THRESHHOLD__),
 	task_size_(0),
 	idle_thread_size_(0),
-	task_queue_max_thresh_hold_(TASK_MAX_THRESHHOLD),
+	task_queue_max_thresh_hold_(MSTL_TASK_MAX_THRESHHOLD__),
 	pool_mode_(POOL_MODE::MODE_FIXED),
 	is_running_(false) {
 }
@@ -47,10 +44,10 @@ void ThreadPool::set_taskque_max_thresh_hold(size_t threshHold) {
 }
 void ThreadPool::set_thread_size_thresh_hold(size_t threshHold) {
 	if (running() || pool_mode_ == POOL_MODE::MODE_FIXED) return;
-	thread_size_thresh_hold_ = threshHold > THREAD_MAX_THRESHHOLD ? THREAD_MAX_THRESHHOLD : threshHold;
+	thread_size_thresh_hold_ = threshHold > MSTL_THREAD_MAX_THRESHHOLD__ ? MSTL_THREAD_MAX_THRESHHOLD__ : threshHold;
 }
 size_t ThreadPool::max_thread_size() {
-	return THREAD_MAX_THRESHHOLD;
+	return MSTL_THREAD_MAX_THRESHHOLD__;
 }
 
 void ThreadPool::start(unsigned int initThreadSize) {
@@ -91,7 +88,7 @@ void ThreadPool::thread_function(int threadid) {
 					if (std::cv_status::timeout == not_empty_.wait_for(lock, std::chrono::seconds(1))) {
 						auto now = std::chrono::high_resolution_clock().now();
 						auto sub = std::chrono::duration_cast<std::chrono::seconds>(now - last);
-						if (sub.count() >= THREAD_MAX_IDLE_SECONDS && threads_.size() > init_thread_size_) {
+						if (sub.count() >= MSTL_THREAD_MAX_IDLE_SECONDS__ && threads_.size() > init_thread_size_) {
 							threads_.erase(threadid);
 							idle_thread_size_--;
 #ifdef MSTL_STATE_DEBUG__
@@ -113,6 +110,7 @@ void ThreadPool::thread_function(int threadid) {
 			sout << aux_output_;
 #endif
 			task = task_queue_.front();
+			finished_queue_.push(task);
 			task_queue_.pop();
 			task_size_--;
 			if (not task_queue_.empty()) not_empty_.notify_all();

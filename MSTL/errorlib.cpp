@@ -2,36 +2,33 @@
 
 MSTL_BEGIN_NAMESPACE__
 
-const_cstring MSTL_NOTERROR__ = "NotError";
-const std::shared_ptr<MemoryError> MSTL_MEMORY_ERROR_PTR__ = std::make_shared<MemoryError>(MemoryError());
-
 Error::Error(cstring _info, cstring _type) noexcept : _info(_info), _type(_type) {}
 Error::~Error() {};
-const_cstring Error::__type__ = "Error";
+const_cstring Error::__type__ = TO_STRING(Error);
 
 StopIterator::StopIterator(cstring _info) noexcept : Error(_info, __type__) {}
-const_cstring StopIterator::__type__ = "StopIterator";
+const_cstring StopIterator::__type__ = TO_STRING(StopIterator);
 
 AssertError::AssertError(cstring _info) noexcept : Error(_info, __type__) {}
-const_cstring AssertError::__type__ = "AssertError";
+const_cstring AssertError::__type__ = TO_STRING(AssertError);
 
 AttributeError::AttributeError(cstring _info) noexcept : Error(_info, __type__) {}
-const_cstring AttributeError::__type__ = "AttributeError";
+const_cstring AttributeError::__type__ = TO_STRING(AttributeError);
 
 MemoryError::MemoryError(cstring _info) noexcept : Error(_info, __type__) {}
-const_cstring MemoryError::__type__ = "MemoryError";
+const_cstring MemoryError::__type__ = TO_STRING(MemoryError);
 
 ValueError::ValueError(cstring _info) noexcept : Error(_info, __type__) {}
-const_cstring ValueError::__type__ = "ValueError";
+const_cstring ValueError::__type__ = TO_STRING(ValueError);
 
 RangeError::RangeError(cstring _info) noexcept : Error(_info, __type__) {}
-const_cstring RangeError::__type__ = "RangeError";
+const_cstring RangeError::__type__ = TO_STRING(RangeError);
 
 SQLError::SQLError(cstring _info) noexcept : Error(_info, __type__) {}
-const_cstring SQLError::__type__ = "SQLError";
+const_cstring SQLError::__type__ = TO_STRING(SQLError);
 
-NotError::NotError() noexcept : Error(__type__, __type__) {}
-const_cstring NotError::__type__ = MSTL_NOTERROR__;
+MathError::MathError(cstring _info) noexcept : Error(_info, __type__) {}
+const_cstring MathError::__type__ = TO_STRING(MathError);
 
 void __show_data_only(const Error& e, std::ostream& _out) {
 	_out << "Exception : (" << e._type << ") " << e._info << std::flush;
@@ -51,12 +48,12 @@ void Exception(const Error& _err) {
 void Exception(bool _boolean, const Error& _err) {
 	if (_boolean) return;
 	else {
-		if (_err._type == MSTL_NOTERROR__) Assert(false);
+		if (_err._type == TO_STRING(Error)) Assert(false);
 		else Exception(_err);
 	}
 }
 
-inline void Assert(bool _boolean, const char* _info) {
+inline void Assert(bool _boolean, const char* _info) { // useless in release
 	if (_boolean) return;
 	else Exception(AssertError(_info));
 }

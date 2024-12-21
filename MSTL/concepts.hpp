@@ -33,14 +33,9 @@ namespace concepts {
 	template <typename T>
 	concept Volatile = std::is_volatile<T>::value;
 
-	template <typename T>
-	concept Comparable = requires(T _l, T _r) {
-		_l > _r;
-		_l < _r;
-		_l >= _r;
-		_l <= _r;
-		_l == _r;
-		_l != _r;
+	template<typename T, typename U>
+	concept Addable = requires(T a, U b) {
+		{ a + b } -> std::convertible_to<decltype(a + b)>;
 	};
 
 	template<size_t N>
@@ -57,6 +52,8 @@ namespace concepts {
 	concept Float = std::is_floating_point<T>::value;
 	template <typename T>
 	concept Number = std::integral<T> || std::floating_point<T> || std::unsigned_integral<T>;
+	template <typename T>
+	concept SignedNumber = Integral<T> || Float<T>;
 
 	template<typename T>
 	concept DefaultConstructible = std::is_default_constructible_v<T>;
@@ -83,6 +80,8 @@ namespace concepts {
 	concept Printable = requires(const T & t) {
 		{ std::cout << t } -> std::convertible_to<std::ostream&>;
 	};
+	template <typename T>
+	concept Swappable = std::_Is_swappable<T>::value;
 	template <typename T>
 	concept IteratorTypedef = requires() {
 		typename std::iterator_traits<T>::iterator_category;
@@ -135,6 +134,14 @@ namespace concepts {
 		{ it1[n] } -> std::convertible_to<typename std::iterator_traits<Iterator>::value_type>;
 	};
 
+	template <typename T>
+	concept PairLike = requires(T p) {
+		typename T::first_type;
+		typename T::second_type;
+		p.first;
+		p.second;
+	};
+
 	template<typename T>
 	concept BinaryFunction = requires(T f, typename T::first_argument_type a1, typename T::first_argument_type a2) {
 		{ f(a1, a2) } -> std::convertible_to<bool>;
@@ -143,10 +150,20 @@ namespace concepts {
 	concept UnaryFunction = requires(T f, typename T::argument_type a) {
 		{ f(a) } -> std::convertible_to<bool>;
 	};
-	template <typename T, typename Arg>
-	concept HashFunction = requires(T f, Arg a) {
+	template <typename Func, typename Arg>
+	concept HashFunction = requires(Func f, Arg a) {
 		{ f(a) } -> std::convertible_to<size_t>;
 	};
+	template <typename Func, typename Arg>
+	concept SelectPairFirstFunction = PairLike<Arg> && requires(Func f, const Arg& a) {
+		{ f(a) } -> std::convertible_to<decltype(a.first)>;
+	};
+	template <typename Func, typename Arg>
+	concept SelectPairSecondFunction = PairLike<Arg> && requires(Func f, const Arg& a) {
+		{ f(a) } -> std::convertible_to<decltype(a.second)>;
+	};
+	template <typename Func, typename Arg>
+	concept SelectPairFunction = SelectPairFirstFunction<Func, Arg> || SelectPairSecondFunction<Func, Arg>;
 
 #endif // MSTL_SUPPORT_CONCEPTS__
 }

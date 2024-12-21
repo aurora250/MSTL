@@ -5,12 +5,14 @@
 #include "memory.hpp"
 #include "vector.hpp"
 #include "type_traits.hpp"
+#include "concepts.hpp"
 #include "hash_function.hpp"
 //#ifdef MSTL_DLL_LINK__
 //#include <boost/container_hash/extensions.hpp>
 //using namespace boost;
 //#endif
 MSTL_BEGIN_NAMESPACE__
+using namespace concepts;
 
 template <class Value>
 struct __hashtable_node {
@@ -621,7 +623,7 @@ private:
         n->next = 0;
         MSTL_TRY__{
           MSTL::construct(&n->val, obj);
-          return std::move(n);
+          return n;
         }
         MSTL_CATCH_UNWIND_THROW_U__(alloc.deallocate(n));
     }
@@ -631,7 +633,7 @@ private:
         n->next = 0;
         MSTL_TRY__{
             MSTL::construct(&n->val, std::forward<decltype(args)>(args)...);
-            return std::move(n);
+            return n;
         }
         MSTL_CATCH_UNWIND_THROW_U__(alloc.deallocate(n));
     }

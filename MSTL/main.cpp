@@ -233,8 +233,28 @@ void try_pool() {
     }
 }
 
-int main() {
-    try_hash();
+void try_math() {
+    MSTL_NAMESPACE__;
+    std::cout << power(2, 10) << std::endl;
+    std::cout << (factorial(10)) << std::endl;
+    std::cout << sine(1) << std::endl;
+    std::cout << cosine(angular2radian(270)) << std::endl;
+    //std::cout << remainder(73.263, 0.9973) << std::endl;
+    std::cout << float_part(PI) << std::endl;
+    std::cout << exponential(3) << std::endl;
+    std::cout << logarithm_e(165) << std::endl;
+    std::cout << logarithm_10(147) << std::endl;
+    std::cout << logarithm_2(500) << std::endl;
+    std::cout << arctangent(100) << std::endl;
+    std::cout << radian2angular(arctangent(100)) << std::endl;
+    std::cout << arcsine(0.21) << std::endl;
+    std::cout << arccosine(0.62) << std::endl;
+    //std::cout << tangent(PI / 2) << std::endl;  // MathError
+    std::cout << around_pi(PI * 2 + 0.00000001) << " : " << around_pi(6.28) << std::endl;
+}
 
-    //getchar();
+int main() {
+    //try_pool();
+    //try_lls();
+    try_math();
 }

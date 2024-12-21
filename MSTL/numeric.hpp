@@ -80,27 +80,6 @@ OutputIterator partial_sum(InputIterator first, InputIterator  last, OutputItera
 	return ++result;
 }
 
-template <typename T, typename Integer>
-inline T power(T x, Integer n) {
-	return power(x, n, multiplies<T>());
-}
-template <typename T, typename Integer, typename MonoidOperation>
-T power(T x, Integer n, MonoidOperation op) {
-	if (n == 0) return identity_element(multiplies<T>());
-	while ((n & 1) == 0) {
-		n >>= 1;
-		x = op(x, x);
-	}
-	T result = x;
-	x >>= 1;  // 右移一位并赋值
-	while (n != 0) {
-		x = op(x, x);
-		if ((n & 1) != 0) result = op(result, x);
-		n >>= 1;
-	}
-	return result;
-}
-
 template <typename ForwardIterator, typename T>
 void iota(ForwardIterator first, ForwardIterator last, T value) {
 	while (first != last) *first++ = value++;   // 设置迭代器部分为value累进

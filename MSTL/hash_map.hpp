@@ -2,14 +2,17 @@
 #define MSTL_HASH_MAP_HPP__
 #include "hashtable.hpp"
 #include "functor.hpp"
+#include "concepts.hpp"
 
 MSTL_BEGIN_NAMESPACE__
+using namespace concepts;
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
     class Alloc = default_standard_alloc<__hashtable_node<pair<const Key, T>>>>
+    requires(HashFunction<HashFcn, Key> && BinaryFunction<EqualKey>)
 class hash_map {
 private:
-    typedef hashtable<pair<const Key, T>, Key, HashFcn, select1st<pair<const Key, T> >, EqualKey, Alloc> ht;
+    typedef hashtable<pair<const Key, T>, Key, HashFcn, select1st<pair<const Key, T>>, EqualKey, Alloc> ht;
     ht rep;
 public:
     typedef hash_map<Key, T, HashFcn, EqualKey, Alloc> self;
@@ -109,11 +112,13 @@ inline bool operator ==(const hash_map<Key, T, HashFcn, EqualKey, Alloc>& hm1,
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
     class Alloc = default_standard_alloc<__hashtable_node<pair<const Key, T>>>>
+    requires(HashFunction<HashFcn, Key>&& BinaryFunction<EqualKey>)
 using unordered_map = hash_map<Key, T, HashFcn, EqualKey, Alloc>;
 
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
     class Alloc = default_standard_alloc<__hashtable_node<pair<const Key, T>>>>
+    requires(HashFunction<HashFcn, Key>&& BinaryFunction<EqualKey>)
 class hash_multimap {
 private:
     typedef hashtable<pair<const Key, T>, Key, HashFcn, select1st<pair<const Key, T>>, EqualKey, Alloc> ht;
@@ -207,6 +212,7 @@ inline bool operator ==(const hash_multimap<Key, T, HF, EqKey, Alloc>& hm1,
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
     class Alloc = default_standard_alloc<__hashtable_node<pair<const Key, T>>>>
+    requires(HashFunction<HashFcn, Key>&& BinaryFunction<EqualKey>)
 using unordered_multimap = hash_multimap<Key, T, HashFcn, EqualKey, Alloc>;
 
 MSTL_END_NAMESPACE__
