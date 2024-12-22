@@ -252,9 +252,34 @@ void try_math() {
     //std::cout << tangent(PI / 2) << std::endl;  // MathError
     std::cout << around_pi(PI * 2 + 0.00000001) << " : " << around_pi(6.28) << std::endl;
 }
+void try_sql() {
+    MSTL_NAMESPACE__;
+
+    clock_t begin = clock();
+    ConnectPool* pool = new ConnectPool("root", "147258hu", "book");
+    for (int i = 0; i < 5000; i++) {
+        char sql[power(2, 10)] = { 0 };
+        sprintf_s(sql, "INSERT INTO Manager VALUES('%s', '%s', '%c', %d)",
+            "ADM000009", "Hu", 'M', 5000);
+        std::shared_ptr<Connect> ptr = pool->get_connect();
+        ptr->update(sql);
+    }
+    delete pool;
+    std::cout << clock() - begin << std::endl;
+
+    begin = clock();
+    for (int i = 0; i < 5000; i++) {
+        char sql[power(2, 10)] = { 0 };
+        sprintf_s(sql, "INSERT INTO Manager VALUES('%s', '%s', '%c', %d)",
+            "ADM000009", "Hu", 'M', 5000);
+        Connect* con = new Connect();
+        con->connect_to("root", "147258hu", "book");
+        con->update(sql);
+        delete con;
+    }
+    std::cout << clock() - begin << std::endl;
+}
 
 int main() {
-    //try_pool();
-    //try_lls();
-    try_math();
+    try_sql();
 }

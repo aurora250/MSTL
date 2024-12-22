@@ -61,8 +61,8 @@
 #define MSTL_NEED_SGI_TYPE_TRAITS__ 1
 #endif
 
-#if defined(MSTL_COMPILE_MSVC__)
-#define MSTL_DLL_LINK__ 0
+#if defined(MSTL_COMPILE_MSVC__) && defined(MSTL_STATE_DEBUG__)
+#define MSTL_DLL_LINK__ 1
 #endif // __GNUC__
 
 #if defined(MSTL_COMPILE_GNUC__)
@@ -73,14 +73,18 @@
 
 #define TO_STRING(VALUE) #VALUE
 #define FOR_EACH(VALUE, CONTAINER) for(auto VALUE = CONTAINER.begin(); VALUE != CONTAINER.end(); ++VALUE)
-#if defined(__FILE__)
-#define FILE_PATH TO_STRING(__FILE__)
+
+#ifdef MSTL_STATE_DEBUG__
+#define SIMPLE_LOG(COM) \
+	std::cout << __FILE__ << ":" << __LINE__ << " " << __TIMESTAMP__ << " : " << COM << std::endl;
+#else
+#define SIMPLE_LOG(COM) 
 #endif
 
-#if 0
-#define MSTL_CONSTEXPR__ constexpr
+#if 1
+#define MSTL_CONSTEXPR constexpr
 #else
-#define MSTL_CONSTEXPR__ 
+#define MSTL_CONSTEXPR
 #endif
 
 // #if defined(_HAS_CXX17)

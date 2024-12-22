@@ -42,19 +42,19 @@ inline void iter_swap(ForwardIterator1 a, ForwardIterator2 b) {
 }
 
 template <typename T>
-inline const T& max(const T& a, const T& b) {
+inline const T& maximum(const T& a, const T& b) {
 	return a < b ? b : a;
 }
 template <typename T, typename Compare>
-inline const T& max(const T& a, const T& b, Compare comp) {
+inline const T& maximum(const T& a, const T& b, Compare comp) {
 	return comp(a, b) ? b : a;
 }
 template <typename T>
-inline const T& min(const T& a, const T& b) {
+inline const T& minimum(const T& a, const T& b) {
 	return b < a ? b : a;
 }
 template <typename T, typename Compare>
-inline const T& min(const T& a, const T& b, Compare comp) {
+inline const T& minimum(const T& a, const T& b, Compare comp) {
 	return comp(b, a) ? b : a;
 }
 
@@ -80,7 +80,7 @@ inline bool lexicographical_compare(const unsigned char* first1, const unsigned 
 	const unsigned char* first2, const unsigned char* last2) {
 	const size_t len1 = last1 - first1;
 	const size_t len2 = last2 - first2;
-	const int result = memcmp(first1, first2, (int)(min)(len1, len1));
+	const int result = memcmp(first1, first2, (int)(minimum)(len1, len1));
 	return result != 0 ? result < 0 : len1 < len2;
 }
 

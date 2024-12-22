@@ -4,7 +4,6 @@
 #include "errorlib.h"
 #include "functor.hpp"
 #include "concepts.hpp"
-#include "vector.hpp"
 
 MSTL_BEGIN_NAMESPACE__
 using namespace concepts;
@@ -35,21 +34,21 @@ inline mathd_t radian2angular(mathd_t radians) {
 
 template <typename T> 
 	requires(SignedNumber<T>)
-inline T opposite(T x) {
+inline MSTL_CONSTEXPR T opposite(T x) {
 	return -x;
 }
 template <typename T, typename... Args>
-T sum_n(T first, Args... args) {
+T MSTL_CONSTEXPR sum_n(T first, Args... args) {
 	return first + sum_n(args...);
 }
 template <typename T> 
 	requires(SignedNumber<T>)
-inline T absolute(T x) {
+inline MSTL_CONSTEXPR T absolute(T x) {
 	return (x > 0) ? x : (-x);
 }
 template <typename T> 
 	requires(Number<T>)
-inline mathd_t reciprocal(T x) {
+inline MSTL_CONSTEXPR mathd_t reciprocal(T x) {
 	if (x == 0) Exception(MathError("0 Have No Reciprocal"));
 	return mathd_t(1.0 / x);
 }
@@ -58,7 +57,7 @@ template <typename T>
 inline T square(T x) { return x * x; }
 template <typename T>
 	requires (Integral<T>)
-mathl_t power(T x, mathui_t n) {
+MSTL_CONSTEXPR mathl_t power(T x, mathui_t n) {
 	if (n == 0) return mathl_t(1);
 	mathl_t result = 1;
 	T base = x;
@@ -73,7 +72,7 @@ mathl_t power(T x, mathui_t n) {
 }
 template <typename T>
 	requires (Float<T>)
-mathd_t power(T x, mathui_t n) {
+mathd_t MSTL_CONSTEXPR power(T x, mathui_t n) {
 	if (n == 0) return mathd_t(1);
 	mathd_t result = 1.0;
 	T base = x;
@@ -206,7 +205,7 @@ inline mathd_t divided_float(mathd_t x, mathl_t* ptr) {
 
 mathd_t sine(mathd_t x) {
 	mathul_t i = 1; 
-	int neg = 1;
+	mathi_t neg = 1;
 	mathd_t sum;
 	mathd_t idx = x;
 	mathd_t fac = 1;
@@ -230,7 +229,7 @@ inline mathd_t tangent(mathd_t x) {
 	return (sine(x) / cosine(x));
 }
 inline mathd_t cotangent(mathd_t x) {
-	return (1 / tangent(x));
+	return reciprocal(tangent(x));
 }
 
 mathd_t arcsine(mathd_t x) {

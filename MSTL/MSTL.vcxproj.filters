@@ -39,6 +39,9 @@
     <ClCompile Include="threadsafe_print.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="mysql_connect_pool.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="errorlib.h">
@@ -107,7 +110,7 @@
     <ClInclude Include="rb_tree.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="database.h">
+    <ClInclude Include="mysql_connect_pool.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="type_traits.hpp">

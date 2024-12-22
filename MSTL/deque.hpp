@@ -152,7 +152,7 @@ private:
     }
     void __create_map_and_nodes(size_type n) {
         size_type node_nums = n / buff_size() + 1;
-        map_size_ = max(size_type(8), node_nums + 2);
+        map_size_ = maximum(size_type(8), node_nums + 2);
         map_ = map_alloc_.allocate(map_size_);
         map_pointer nstart = map_ + (map_size_ - node_nums) / 2;
         map_pointer nfinish = nstart + node_nums - 1;
@@ -184,7 +184,7 @@ private:
             else MSTL::copy_backward(start_.node_, finish_.node_ + 1, new_start + old_num_nodes);
         }
         else {
-            size_type new_map_size = map_size_ + max(map_size_, nodes_to_add) + 2;
+            size_type new_map_size = map_size_ + maximum(map_size_, nodes_to_add) + 2;
             map_pointer new_map = map_alloc_.allocate(new_map_size);
             new_start = new_map + (new_map_size - new_num_nodes) / 2
                 + (add_at_front ? nodes_to_add : 0);

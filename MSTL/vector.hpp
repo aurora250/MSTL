@@ -134,7 +134,7 @@ private:
 		}
 		else {
 			const size_type old_size = size();
-			const size_type len = old_size + max(old_size, n);
+			const size_type len = old_size + maximum(old_size, n);
 			iterator new_start = alloc_.allocate(len);
 			iterator new_finish = new_start;
 			MSTL_TRY__{
@@ -315,7 +315,7 @@ public:
 		}
 		else {
 			const size_type old_size = size();
-			const size_type len = old_size + max(old_size, n);
+			const size_type len = old_size + maximum(old_size, n);
 			iterator new_start = alloc_.allocate(len);
 			iterator new_finish = new_start;
 			MSTL_TRY__{

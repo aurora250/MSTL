@@ -143,4 +143,3 @@ void detailof_safe(const Container& c, ThreadsafeOutput& out = sout) {
 
 MSTL_END_NAMESPACE__
 #endif
-

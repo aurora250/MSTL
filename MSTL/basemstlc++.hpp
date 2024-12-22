@@ -9,8 +9,7 @@
 #include "concepts.hpp"
 
 #include "function.hpp" // "functor.hpp"
-#include "iterator.hpp"
-#include "type_traits.hpp"
+#include "iterator.hpp" // "type_traits.hpp"
 //#include "numeric.hpp"
 //#include "algo.hpp" <- "algobase.hpp" <- "pair.hpp"
 #include "algorithm.hpp"

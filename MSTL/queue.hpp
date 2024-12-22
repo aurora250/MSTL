@@ -22,7 +22,7 @@ private:
     Sequence seq_;
 
     template <typename T, typename Sequence>
-    friend void detailof(const queue<T, Sequence>& pq, std::ostream& _out);
+    friend MSTL_CONSTEXPR void detailof(const queue<T, Sequence>& pq, std::ostream& _out);
 public:
     queue() : seq_(Sequence()) {}
     ~queue() = default;
@@ -38,15 +38,15 @@ public:
     bool empty() { return seq_.empty(); }
 };
 template <typename T, typename Sequence>
-bool operator==(const queue<T, Sequence>& x, const queue<T, Sequence>& y) {
+MSTL_CONSTEXPR bool operator==(const queue<T, Sequence>& x, const queue<T, Sequence>& y) {
     return x.seq_ == y.seq_;
 }
 template <typename T, typename Sequence>
-bool operator<(const queue<T, Sequence>& x, const queue<T, Sequence>& y) {
+MSTL_CONSTEXPR bool operator<(const queue<T, Sequence>& x, const queue<T, Sequence>& y) {
     return x.seq_ < y.seq_;
 }
 template <typename T, typename Sequence>
-void detailof(const queue<T, Sequence>& pq, std::ostream& _out = std::cout) {
+MSTL_CONSTEXPR void detailof(const queue<T, Sequence>& pq, std::ostream& _out = std::cout) {
     split_line(_out);
     _out << "type: " << check_type<queue<T, Sequence>>() << std::endl;
     _out << "size: " << pq.size() << std::endl;
@@ -72,7 +72,7 @@ private:
     Compare comp_;
 
     template <typename T, typename Sequence, typename Compare>
-    friend void detailof(const priority_queue<T, Sequence, Compare>& pq, std::ostream& _out);
+    friend MSTL_CONSTEXPR void detailof(const priority_queue<T, Sequence, Compare>& pq, std::ostream& _out);
 public:
     priority_queue() : seq_(), comp_() {}
     explicit priority_queue(const Compare& x) :seq_(), comp_(x) {}
@@ -105,7 +105,7 @@ public:
 };
 
 template <typename T, typename Sequence, typename Compare>
-void detailof(const priority_queue<T, Sequence, Compare>& pq, std::ostream& _out = std::cout) {
+MSTL_CONSTEXPR void detailof(const priority_queue<T, Sequence, Compare>& pq, std::ostream& _out = std::cout) {
     split_line(_out);
     _out << "type: " << check_type<priority_queue<T, Sequence, Compare>>() << std::endl;
     _out << "size: " << pq.size() << std::endl;
