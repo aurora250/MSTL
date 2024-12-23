@@ -42,6 +42,12 @@
     <ClCompile Include="mysql_connect_pool.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="mathlib.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="logging.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="errorlib.h">
@@ -165,6 +171,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="threadsafe_print.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="logging.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

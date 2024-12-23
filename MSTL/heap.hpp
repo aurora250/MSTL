@@ -1,6 +1,7 @@
 #ifndef MSTL_HEAP_HPP__
 #define MSTL_HEAP_HPP__
 #include "basiclib.h"
+#include "type_traits.hpp"
 
 MSTL_BEGIN_NAMESPACE__
 
@@ -66,7 +67,7 @@ inline void __pop_heap(RandomAccessIterator first, RandomAccessIterator last,
 	*result = *first;
 	__adjust_heap(first, Distance(0), Distance(last - first), value);
 }
-template <typename RandomAccessIterator, typename Distance, typename T>
+template <typename RandomAccessIterator, typename T>
 inline void __pop_heap_aux(RandomAccessIterator first, RandomAccessIterator last, T*) {
 	__pop_heap(first, last - 1, last - 1, T(*(last - 1)), (distance_type)(first));
 }
@@ -108,12 +109,12 @@ inline void pop_heap(RandomAccessIterator first, RandomAccessIterator last,
 }
 template <typename RandomAccessIterator>
 void sort_heap(RandomAccessIterator first, RandomAccessIterator last) {
-	while (last - first > 1) pop_heap(first, last--);
+	while (last - first > 1) MSTL::pop_heap(first, last--);
 }
 template <typename RandomAccessIterator, typename Compare>
 void sort_heap(RandomAccessIterator first, RandomAccessIterator last,
 	Compare comp) {
-	while (last - first > 1) pop_heap(first, last--, comp);
+	while (last - first > 1) MSTL::pop_heap(first, last--, comp);
 }
 template <typename RandomAccessIterator, typename Distance, typename T>
 void __make_heap(RandomAccessIterator first, RandomAccessIterator last, T*, Distance*) {

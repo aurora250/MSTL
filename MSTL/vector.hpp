@@ -178,7 +178,7 @@ public:
 		finish_ = start_ + (x.const_end() - x.const_begin());
 		end_of_storage_ = finish_;
 	}
-	explicit vector(const std::initializer_list<T>& l) : vector(l.begin(), l.end()) {}
+	vector(const std::initializer_list<T>& l) : vector(l.begin(), l.end()) {}
 	template <typename InputIterator>
 	vector(InputIterator first, InputIterator last) : start_(), finish_(), end_of_storage_() {
 		range_initialize(first, last, (MSTL::iterator_category)(first));

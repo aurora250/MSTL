@@ -9,13 +9,13 @@
 using namespace MSTL::concepts;
 MSTL_BEGIN_NAMESPACE__
 
-class __base_deposit {
+class __deposit_node_base {
 public:
-	virtual ~__base_deposit() = 0;
+	virtual ~__deposit_node_base() = 0;
 };
 
 template <NVoidT T, typename... Args>
-class deposit : public __base_deposit {
+class deposit : public __deposit_node_base {
 	using Func = std::function<T(Args...)>;
 public:
 	deposit(Func _func) : func_(_func) {}
@@ -25,7 +25,7 @@ private:
 };
 
 class Depositary {
-	using __base_deposit_ptr = std::shared_ptr<__base_deposit>;
+	using __base_deposit_ptr = std::shared_ptr<__deposit_node_base>;
 public:
 	template <typename Func>
 	void register_deposit(const std::string& register_name, Func&& func) {

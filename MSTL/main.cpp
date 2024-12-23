@@ -256,13 +256,10 @@ void try_sql() {
     MSTL_NAMESPACE__;
 
     clock_t begin = clock();
-    ConnectPool* pool = new ConnectPool("root", "147258hu", "book");
+    DBConnectPool* pool = new DBConnectPool("root", "147258hu", "book");
     for (int i = 0; i < 5000; i++) {
-        char sql[power(2, 10)] = { 0 };
-        sprintf_s(sql, "INSERT INTO Manager VALUES('%s', '%s', '%c', %d)",
-            "ADM000009", "Hu", 'M', 5000);
-        std::shared_ptr<Connect> ptr = pool->get_connect();
-        ptr->update(sql);
+        std::shared_ptr<DBConnect> ptr = pool->get_connect();
+        ptr->INSERT_INTO("Manager", "ADM00009", "Hu", 'M', 5000);
     }
     delete pool;
     std::cout << clock() - begin << std::endl;
@@ -272,14 +269,48 @@ void try_sql() {
         char sql[power(2, 10)] = { 0 };
         sprintf_s(sql, "INSERT INTO Manager VALUES('%s', '%s', '%c', %d)",
             "ADM000009", "Hu", 'M', 5000);
-        Connect* con = new Connect();
+        DBConnect* con = new DBConnect();
         con->connect_to("root", "147258hu", "book");
-        con->update(sql);
+        con->exec(sql);
         delete con;
     }
     std::cout << clock() - begin << std::endl;
 }
+#include "logging.h"
 
+void foo() {
+    MSTL_NAMESPACE__;
+    for (int i = 0; i < 5; i++) { LOG_DEBUG("i: %d", i); }
+}
+
+void bar() {
+    MSTL_NAMESPACE__;
+    for (char c = 'a'; c < 'f'; c++) { LOG_DEBUG("c: %c", c); }
+}
+
+void try_log() {
+    MSTL_NAMESPACE__;
+    set_log_level(LOG_LEVEL_VERBOSE);
+    LOG_VERBOSE("test log v");
+    TIMERLOG_START(task);
+    std::thread t1(foo);
+    std::thread t2(bar);
+    t1.join();
+    t2.join();
+    TIMERLOG_END(task);
+}
+void try_sort() {
+    MSTL_NAMESPACE__;
+    vector<int> vec = { 5, 3, 8, 4, 2 };
+    //bubble_sort(vec.begin(), vec.end());
+    //MSTL::partial_sort(vec.begin(), ------vec.end(), vec.end());
+    //insertion_sort(vec.begin(), vec.end());
+    sort(vec.begin(), vec.end());
+    for (const auto& num : vec) {
+        std::cout << num << " ";
+    }
+    std::cout << std::endl;
+}
 int main() {
-    try_sql();
+    try_sort();
 }

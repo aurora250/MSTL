@@ -3,7 +3,7 @@
 #include "basiclib.h"
 #include "queue.hpp"
 #include <iostream>
-#include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <thread>
 #include <condition_variable>
@@ -69,7 +69,7 @@ public:
     template <typename T>
     ThreadsafeOutput& operator <<(const T& str) {
         {
-            std::lock_guard<std::mutex> lock(mutex_);
+            std::unique_lock<std::mutex> lock(mutex_);
             buffer_ << str;
             queue_.push(buffer_.str());
             buffer_.str(""); buffer_.clear();

@@ -10,6 +10,8 @@
 #define MSTL_PLATFORM_LINUX__	1
 #elif defined(__APPLE__) || defined(TARGET_OS_IPHONE) || defined(TARGET_IPHONE_SIMULATOR) || defined(TARGET_OS_MAC)
 #define MSTL_PLATFORM_IOS__     1
+#elif defined(_POSIX_)
+#define MSTL_PLATFORM_POSIX__	1
 #else
 #define MSTL_PLATFORM_UNKNOWN__	1
 #endif

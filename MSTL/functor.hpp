@@ -4,6 +4,7 @@
 #include "concepts.hpp"
 
 MSTL_BEGIN_NAMESPACE__
+using namespace concepts;
 
 template <typename Arg, typename Result>
 struct unary_function {

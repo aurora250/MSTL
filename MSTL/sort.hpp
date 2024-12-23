@@ -3,35 +3,39 @@
 #include "basiclib.h"
 #include "algo.hpp"
 #include "heap.hpp"
+#include "iterator.hpp"
 #include "tempbuf.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 // bubble sort
-//template <typename BidirectionalIterator>
-//void bubble_sort(BidirectionalIterator start, BidirectionalIterator end) {
-//    bool notfinished;
-//    auto before_start = --start;
-//    for (auto iter = end, --iter; iter != before_start; --iter) {
-//        notfinished = false;
-//        for (auto it = start; it != iter; it++) {
-//            if (*it > *++it) {
-//                (iter_swap)(it, ++it);
-//                notfinished = true;
-//            }
-//        }
-//        if (not notfinished) break;
-//    }
-//}
+template <typename BidirectionalIterator>
+void bubble_sort(BidirectionalIterator start, BidirectionalIterator end) {
+    auto reverse_end = std::make_reverse_iterator(start);
+    MSTL::advance(end, -1);
+    auto reverse_start = std::make_reverse_iterator(end);
+    for (auto iter = reverse_start; iter != reverse_end; ++iter) {
+        bool notfinished = false;
+        auto current_end = iter.base();
+        auto inner_start = start;
+        for (auto it = inner_start; it != current_end; ++it) {
+            if (*it > *(it + 1)) {
+                MSTL::iter_swap(it, it + 1);
+                notfinished = true;
+            }
+        }
+        if (!notfinished) break;
+    }
+}
 
 // partial sort (heap sort)
 template <class RandomAccessIterator, class T>
 void __partial_sort(RandomAccessIterator first, RandomAccessIterator middle, RandomAccessIterator last, T*) {
-	make_heap(first, middle);
+    MSTL::make_heap(first, middle);
 	for (RandomAccessIterator i = middle; i < last; ++i) {
 		if (*i < *first)
 			__pop_heap(first, middle, i, T(*i), (distance_type)(first));
 	}
-	sort_heap(first, middle);
+	MSTL::sort_heap(first, middle);
 }
 template <class RandomAccessIterator>
 inline void partial_sort(RandomAccessIterator first, RandomAccessIterator middle, RandomAccessIterator last) {
@@ -41,12 +45,12 @@ inline void partial_sort(RandomAccessIterator first, RandomAccessIterator middle
 template <class RandomAccessIterator, class T, class Compare>
 void __partial_sort(RandomAccessIterator first, RandomAccessIterator middle, RandomAccessIterator last,
 	T*, Compare comp) {
-	make_heap(first, middle, comp);
+    MSTL::make_heap(first, middle, comp);
 	for (RandomAccessIterator i = middle; i < last; ++i) {
 		if (comp(*i, *first))
 			__pop_heap(first, middle, i, T(*i), comp, (distance_type)(first));
 	}
-	sort_heap(first, middle, comp);
+    MSTL::sort_heap(first, middle, comp);
 }
 template <class RandomAccessIterator, class Compare>
 inline void partial_sort(RandomAccessIterator first, RandomAccessIterator middle, RandomAccessIterator last,
@@ -64,14 +68,14 @@ RandomAccessIterator __partial_sort_copy(InputIterator first, InputIterator last
 		++result_real_last;
 		++first;
 	}
-	make_heap(result_first, result_real_last);
+    MSTL::make_heap(result_first, result_real_last);
 	while (first != last) {
 		if (*first < *result_first)
 			__adjust_heap(result_first, Distance(0),
 				Distance(result_real_last - result_first), T(*first));
 		++first;
 	}
-	sort_heap(result_first, result_real_last);
+    MSTL::sort_heap(result_first, result_real_last);
 	return result_real_last;
 }
 template <class InputIterator, class RandomAccessIterator>
@@ -91,7 +95,7 @@ RandomAccessIterator __partial_sort_copy(InputIterator first, InputIterator last
 		++result_real_last;
 		++first;
 	}
-	make_heap(result_first, result_real_last, comp);
+    MSTL::make_heap(result_first, result_real_last, comp);
 	while (first != last) {
 		if (comp(*first, *result_first)) {
 			__adjust_heap(result_first, Distance(0), Distance(result_real_last - result_first),
@@ -99,7 +103,7 @@ RandomAccessIterator __partial_sort_copy(InputIterator first, InputIterator last
 		}
 		++first;
 	}
-	sort_heap(result_first, result_real_last, comp);
+    MSTL::sort_heap(result_first, result_real_last, comp);
 	return result_real_last;
 }
 template <typename InputIterator, typename RandomAccessIterator, typename Compare>
@@ -110,34 +114,34 @@ inline RandomAccessIterator partial_sort_copy(InputIterator first, InputIterator
 }
 
 
+
 template <class RandomAccessIterator, class T>
-RandomAccessIterator __unguarded_partition(RandomAccessIterator first, RandomAccessIterator last, T pivot) {
+RandomAccessIterator __unguarded_partition(RandomAccessIterator first, 
+    RandomAccessIterator last, T pivot) {
     while (true) {
         while (*first < pivot) ++first;
         --last;
         while (pivot < *last) --last;
         if (!(first < last)) return first;
-        (iter_swap)(first, last);
+        MSTL::iter_swap(first, last);
         ++first;
     }
 }
 
 template <class RandomAccessIterator, class T, class Compare>
 RandomAccessIterator __unguarded_partition(RandomAccessIterator first,
-    RandomAccessIterator last,
-    T pivot, Compare comp) {
+    RandomAccessIterator last, T pivot, Compare comp) {
     while (1) {
         while (comp(*first, pivot)) ++first;
         --last;
         while (comp(pivot, *last)) --last;
         if (!(first < last)) return first;
-        iter_swap(first, last);
+        MSTL::iter_swap(first, last);
         ++first;
     }
 }
 
-const int __stl_threshold = 16;
-
+static const int threshold__ = 16;
 
 template <class RandomAccessIterator, class T>
 void __unguarded_linear_insert(RandomAccessIterator last, T value) {
@@ -152,8 +156,7 @@ void __unguarded_linear_insert(RandomAccessIterator last, T value) {
 }
 
 template <class RandomAccessIterator, class T, class Compare>
-void __unguarded_linear_insert(RandomAccessIterator last, T value,
-    Compare comp) {
+void __unguarded_linear_insert(RandomAccessIterator last, T value, Compare comp) {
     RandomAccessIterator next = last;
     --next;
     while (comp(value, *next)) {
@@ -165,11 +168,10 @@ void __unguarded_linear_insert(RandomAccessIterator last, T value,
 }
 
 template <class RandomAccessIterator, class T>
-inline void __linear_insert(RandomAccessIterator first,
-    RandomAccessIterator last, T*) {
+inline void __linear_insert(RandomAccessIterator first, RandomAccessIterator last, T*) {
     T value = *last;
     if (value < *first) {
-        copy_backward(first, last, last + 1);
+        MSTL::copy_backward(first, last, last + 1);
         *first = value;
     }
     else
@@ -177,11 +179,10 @@ inline void __linear_insert(RandomAccessIterator first,
 }
 
 template <class RandomAccessIterator, class T, class Compare>
-inline void __linear_insert(RandomAccessIterator first,
-    RandomAccessIterator last, T*, Compare comp) {
+inline void __linear_insert(RandomAccessIterator first, RandomAccessIterator last, T*, Compare comp) {
     T value = *last;
     if (comp(value, *first)) {
-        copy_backward(first, last, last + 1);
+        MSTL::copy_backward(first, last, last + 1);
         *first = value;
     }
     else
@@ -192,65 +193,58 @@ template <class RandomAccessIterator>
 void insertion_sort(RandomAccessIterator first, RandomAccessIterator last) {
     if (first == last) return;
     for (RandomAccessIterator i = first + 1; i != last; ++i)
-        __linear_insert(first, i, value_type(first));
+        __linear_insert(first, i, (value_type)(first));
 }
 
 template <class RandomAccessIterator, class Compare>
-void insertion_sort(RandomAccessIterator first,
-    RandomAccessIterator last, Compare comp) {
+void insertion_sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
     if (first == last) return;
     for (RandomAccessIterator i = first + 1; i != last; ++i)
-        __linear_insert(first, i, value_type(first), comp);
+        __linear_insert(first, i, (value_type)(first), comp);
 }
 
 template <class RandomAccessIterator, class T>
-void __unguarded_insertion_sort_aux(RandomAccessIterator first,
-    RandomAccessIterator last, T*) {
+void __unguarded_insertion_sort_aux(RandomAccessIterator first, RandomAccessIterator last, T*) {
     for (RandomAccessIterator i = first; i != last; ++i)
         __unguarded_linear_insert(i, T(*i));
 }
 
 template <class RandomAccessIterator>
-inline void __unguarded_insertion_sort(RandomAccessIterator first,
-    RandomAccessIterator last) {
-    __unguarded_insertion_sort_aux(first, last, value_type(first));
+inline void __unguarded_insertion_sort(RandomAccessIterator first, RandomAccessIterator last) {
+    __unguarded_insertion_sort_aux(first, last, (value_type)(first));
 }
 
 template <class RandomAccessIterator, class T, class Compare>
 void __unguarded_insertion_sort_aux(RandomAccessIterator first,
-    RandomAccessIterator last,
-    T*, Compare comp) {
+    RandomAccessIterator last, T*, Compare comp) {
     for (RandomAccessIterator i = first; i != last; ++i)
         __unguarded_linear_insert(i, T(*i), comp);
 }
 
 template <class RandomAccessIterator, class Compare>
 inline void __unguarded_insertion_sort(RandomAccessIterator first,
-    RandomAccessIterator last,
-    Compare comp) {
-    __unguarded_insertion_sort_aux(first, last, value_type(first), comp);
+    RandomAccessIterator last, Compare comp) {
+    __unguarded_insertion_sort_aux(first, last, (value_type)(first), comp);
 }
 
 template <class RandomAccessIterator>
-void __final_insertion_sort(RandomAccessIterator first,
-    RandomAccessIterator last) {
-    if (last - first > __stl_threshold) {
-        insertion_sort(first, first + __stl_threshold);
-        __unguarded_insertion_sort(first + __stl_threshold, last);
+void __final_insertion_sort(RandomAccessIterator first, RandomAccessIterator last) {
+    if (last - first > threshold__) {
+        MSTL::insertion_sort(first, first + threshold__);
+        __unguarded_insertion_sort(first + threshold__, last);
     }
     else
-        insertion_sort(first, last);
+        MSTL::insertion_sort(first, last);
 }
 
 template <class RandomAccessIterator, class Compare>
-void __final_insertion_sort(RandomAccessIterator first,
-    RandomAccessIterator last, Compare comp) {
-    if (last - first > __stl_threshold) {
-        insertion_sort(first, first + __stl_threshold, comp);
-        __unguarded_insertion_sort(first + __stl_threshold, last, comp);
+void __final_insertion_sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
+    if (last - first > threshold__) {
+        MSTL::insertion_sort(first, first + threshold__, comp);
+        __unguarded_insertion_sort(first + threshold__, last, comp);
     }
     else
-        insertion_sort(first, last, comp);
+        MSTL::insertion_sort(first, last, comp);
 }
 
 inline size_t __lg(size_t n) {
@@ -258,39 +252,70 @@ inline size_t __lg(size_t n) {
     for (k = 0; n > 1; n >>= 1) ++k;
     return k;
 }
+template <class T>
+MSTL_CONSTEXPR inline const T& __median(const T& a, const T& b, const T& c) {
+    if (a < b)
+        if (b < c)
+            return b;
+        else if (a < c)
+            return c;
+        else
+            return a;
+    else if (a < c)
+        return a;
+    else if (b < c)
+        return c;
+    else
+        return b;
+}
+template <class T, class Compare>
+MSTL_CONSTEXPR inline const T& __median(const T& a, const T& b, const T& c, Compare comp) {
+    if (comp(a, b))
+        if (comp(b, c))
+            return b;
+        else if (comp(a, c))
+            return c;
+        else
+            return a;
+    else if (comp(a, c))
+        return a;
+    else if (comp(b, c))
+        return c;
+    else
+        return b;
+}
 
 template <class RandomAccessIterator, class T, class Size>
-void __introsort_loop(RandomAccessIterator first,
-    RandomAccessIterator last, T*,
-    Size depth_limit) {
-    while (last - first > __stl_threshold) {
+void __introsort_loop(RandomAccessIterator first, RandomAccessIterator last, T*, Size depth_limit) {
+    while (last - first > threshold__) {
         if (depth_limit == 0) {
-            partial_sort(first, last, last);
+            MSTL::partial_sort(first, last, last);
             return;
         }
         --depth_limit;
-        RandomAccessIterator cut = __unguarded_partition
-        (first, last, T(__median(*first, *(first + (last - first) / 2),
-            *(last - 1))));
-        __introsort_loop(cut, last, value_type(first), depth_limit);
+        RandomAccessIterator cut = __unguarded_partition(
+            first, last, T(
+                __median(*first, *(first + (last - first) / 2), *(last - 1))
+            ));
+        __introsort_loop(cut, last, (value_type)(first), depth_limit);
         last = cut;
     }
 }
 
-template <class RandomAccessIterator, class T, class Size, class Compare>
-void __introsort_loop(RandomAccessIterator first,
-    RandomAccessIterator last, T*,
-    Size depth_limit, Compare comp) {
-    while (last - first > __stl_threshold) {
+template <class RandomAccessIterator, class T, class Compare>
+void __introsort_loop(RandomAccessIterator first, RandomAccessIterator last,
+    T*, size_t depth_limit, Compare comp) {
+    while (last - first > threshold__) {
         if (depth_limit == 0) {
-            partial_sort(first, last, last, comp);
+            MSTL::partial_sort(first, last, last, comp);
             return;
         }
         --depth_limit;
-        RandomAccessIterator cut = __unguarded_partition
-        (first, last, T(__median(*first, *(first + (last - first) / 2),
-            *(last - 1), comp)), comp);
-        __introsort_loop(cut, last, value_type(first), depth_limit, comp);
+        RandomAccessIterator cut = __unguarded_partition(
+            first, last, T(
+                __median(*first, *(first + (last - first) / 2), *(last - 1), comp)
+            ), comp);
+        __introsort_loop(cut, last, (value_type)(first), depth_limit, comp);
         last = cut;
     }
 }
@@ -298,17 +323,15 @@ void __introsort_loop(RandomAccessIterator first,
 template <class RandomAccessIterator>
 inline void sort(RandomAccessIterator first, RandomAccessIterator last) {
     if (first != last) {
-        __introsort_loop(first, last, value_type(first), __lg(last - first) * 2);
+        __introsort_loop(first, last, (value_type)(first), (__lg)(last - first) * 2);
         __final_insertion_sort(first, last);
     }
 }
 
 template <class RandomAccessIterator, class Compare>
-inline void sort(RandomAccessIterator first, RandomAccessIterator last,
-    Compare comp) {
+inline void sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
     if (first != last) {
-        __introsort_loop(first, last, value_type(first), __lg(last - first) * 2,
-            comp);
+        __introsort_loop(first, last, (value_type)(first), (__lg)(last - first) * 2, comp);
         __final_insertion_sort(first, last, comp);
     }
 }

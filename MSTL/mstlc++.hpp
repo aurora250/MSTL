@@ -1,8 +1,6 @@
 // STL六大组件： 
 // 容器Container / 算法Algorithm / 仿函数Functor / 迭代器Iterator / 适配器Adaptor / 分配器Allocator
 
-// MSTL旨在重构除分配器外的STL组件，在实现STL协同性的同时增加新的标准与操作
-
 #ifndef MSTL_MSTLCPP_HPP__
 #define MSTL_MSTLCPP_HPP__
 #include "basemstlc++.hpp"
