@@ -39,6 +39,7 @@ inline void iter_swap(ForwardIterator1 a, ForwardIterator2 b) {
 	T tmp = *a;
 	*a = *b;
 	*b = tmp;
+	// std::swap<T>(*a, *b);
 }
 
 template <typename T>

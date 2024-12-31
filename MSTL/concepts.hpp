@@ -125,11 +125,11 @@ namespace concepts {
 	concept RandomAccessIterator = BidirectionalIterator<Iterator> &&
 		requires(Iterator it1, Iterator it2, typename std::iterator_traits<Iterator>::difference_type n) 
 	{
-		{ it1 + n } -> std::same_as<Iterator>;
-		{ n + it1 } -> std::same_as<Iterator>;
-		{ it1 - n } -> std::same_as<Iterator>;
-		{ it1 += n } -> std::same_as<Iterator>;
-		{ it1 -= n } -> std::same_as<Iterator>;
+		{ it1 + n } -> std::convertible_to<Iterator>;
+		{ n + it1 } -> std::convertible_to<Iterator>;
+		{ it1 - n } -> std::convertible_to<Iterator>;
+		{ it1 += n } -> std::convertible_to<Iterator>;
+		{ it1 -= n } -> std::convertible_to<Iterator>;
 		{ it2 - it1 } -> std::convertible_to<typename std::iterator_traits<Iterator>::difference_type>;
 		{ it1[n] } -> std::convertible_to<typename std::iterator_traits<Iterator>::value_type>;
 	};

@@ -1,22 +1,23 @@
 #ifndef MSTL_SORT_HPP__
 #define MSTL_SORT_HPP__
 #include "basiclib.h"
-#include "algo.hpp"
+#include "algobase.hpp"
 #include "heap.hpp"
 #include "iterator.hpp"
+#include "concepts.hpp"
 #include "tempbuf.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 // bubble sort
-template <typename BidirectionalIterator>
-void bubble_sort(BidirectionalIterator start, BidirectionalIterator end) {
-    auto reverse_end = std::make_reverse_iterator(start);
-    MSTL::advance(end, -1);
-    auto reverse_start = std::make_reverse_iterator(end);
+template <typename Iterator> 
+    requires(concepts::BidirectionalIterator<Iterator>)
+void bubble_sort(Iterator begin, Iterator end) {
+    auto reverse_end = std::make_reverse_iterator(begin);
+    auto reverse_start = std::make_reverse_iterator(--end);
     for (auto iter = reverse_start; iter != reverse_end; ++iter) {
         bool notfinished = false;
         auto current_end = iter.base();
-        auto inner_start = start;
+        auto inner_start = begin;
         for (auto it = inner_start; it != current_end; ++it) {
             if (*it > *(it + 1)) {
                 MSTL::iter_swap(it, it + 1);
@@ -24,6 +25,38 @@ void bubble_sort(BidirectionalIterator start, BidirectionalIterator end) {
             }
         }
         if (!notfinished) break;
+    }
+}
+
+// select sort
+template <typename Iterator> 
+    requires(concepts::ForwardIterator<Iterator>)
+void select_sort(Iterator begin, Iterator end) {
+    Iterator min;
+    for (Iterator i = begin; i != end; ++i) {
+        min = i;
+        for (Iterator j = i + 1; j != end; ++j) {
+            if (*j < *min) {
+                min = j;
+            }
+        }
+        MSTL::iter_swap(i, min);
+    }
+}
+
+// shell sort
+template <typename Iterator> 
+    requires(concepts::RandomAccessIterator<Iterator>)
+void shell_sort(Iterator start, Iterator end) {
+    auto dist = MSTL::distance(start, end);
+    for (auto gap = dist / 2; gap > 0; gap /= 2) {
+        for (auto i = start; i != start + gap; ++i) {
+            auto j = i + gap;
+            for (; j < end && *j < *i; j += gap) {
+                *(j - gap) = *j;
+            }
+            *(j - gap) = *i;
+        }
     }
 }
 

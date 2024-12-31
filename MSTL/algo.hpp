@@ -1,10 +1,6 @@
 #ifndef MSTL_ALGO_HPP__
 #define MSTL_ALGO_HPP__
-#include "algobase.hpp"
 #include "sort.hpp"
-#include "iterator.hpp"
-#include "concepts.hpp"
-
 MSTL_BEGIN_NAMESPACE__
 //set:
 template <typename InputIterator1, typename InputIterator2, typename OutputIterator>

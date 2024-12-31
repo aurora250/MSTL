@@ -37,8 +37,7 @@ void __push_heap(RandomAccessIterator first, Distance holeIndex,
 template <typename RandomAccessIterator, typename Compare, typename Distance, typename T>
 inline void __push_heap_aux(RandomAccessIterator first, RandomAccessIterator last, 
 	Compare comp, Distance*, T*) {
-	__push_heap(first, Distance((last - first) - 1), Distance(0),
-		T(*(last - 1)), comp);
+	__push_heap(first, Distance((last - first) - 1), Distance(0), T(*(last - 1)), comp);
 }
 template <typename RandomAccessIterator, typename Compare>
 inline void push_heap(RandomAccessIterator first, RandomAccessIterator last,

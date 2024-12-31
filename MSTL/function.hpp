@@ -43,9 +43,9 @@ class binder1st :
 	public unary_function<typename Operation::second_argument_type, typename Operation::result_type> {
 protected:
 	Operation op;
-	typename Operation::first_srgument_type value;
+	typename Operation::first_argument_type value;
 public:
-	explicit binder1st(const Operation x, const typename Operation::first_srgument_type y) : op(x), value(y) {}
+	explicit binder1st(const Operation x, const typename Operation::first_argument_type& y) : op(x), value(y) {}
 	typename Operation::result_type operator ()(const typename Operation::second_argument_type& x) {
 		return op(value, x);
 	}

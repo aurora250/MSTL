@@ -31,7 +31,7 @@ public:
 	__thread(ThreadFunc func);
 	~__thread();
 
-	int get_id() const;
+	MSTL_NODISCARD__ int get_id() const;
 	void start();
 private:
 	ThreadFunc func_;
@@ -43,6 +43,10 @@ class ThreadPool {
 public:
 	ThreadPool();
 	~ThreadPool();
+	ThreadPool(const ThreadPool&) = delete;
+	ThreadPool(ThreadPool&&) = delete;
+	ThreadPool& operator =(const ThreadPool&) = delete;
+	ThreadPool& operator =(ThreadPool&&) = delete;
 
 	void set_mode(POOL_MODE mode);
 	void set_taskque_max_thresh_hold(size_t threshHold);
@@ -51,7 +55,7 @@ public:
 	void start(unsigned int initThreadSize = 2);
 
 	template <typename Func, typename... Args>
-	decltype(auto) submit_task(Func&& func, Args&&... args) {
+	MSTL_NODISCARD__ decltype(auto) submit_task(Func&& func, Args&&... args) {
 		using Result = decltype(func(args...));
 		auto task = std::make_shared<std::packaged_task<Result()>>(
 			std::bind(std::forward<Func>(func), std::forward<Args>(args)...));
@@ -84,12 +88,9 @@ public:
 		}
 		return res;
 	}
-
-	ThreadPool(const ThreadPool&) = delete;
-	ThreadPool& operator =(const ThreadPool&) = delete;
 private:
 	void thread_function(int threadid);
-	bool running() const;
+	MSTL_NODISCARD__ bool running() const;
 private:
 	typedef std::function<void()> Task;
 

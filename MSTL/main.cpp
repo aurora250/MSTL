@@ -191,6 +191,7 @@ void try_pque() {
 void try_map() {
     MSTL_NAMESPACE__;
     map<int, char> m;
+    m.insert(pair(1, 'c'));
     m[1] = 'c';
     m[100] = 'x';
     m[2] = 'l';
@@ -278,23 +279,17 @@ void try_sql() {
 }
 #include "logging.h"
 
-void foo() {
-    MSTL_NAMESPACE__;
-    for (int i = 0; i < 5; i++) { LOG_DEBUG("i: %d", i); }
-}
-
-void bar() {
-    MSTL_NAMESPACE__;
-    for (char c = 'a'; c < 'f'; c++) { LOG_DEBUG("c: %c", c); }
-}
-
 void try_log() {
     MSTL_NAMESPACE__;
     set_log_level(LOG_LEVEL_VERBOSE);
     LOG_VERBOSE("test log v");
     TIMERLOG_START(task);
-    std::thread t1(foo);
-    std::thread t2(bar);
+    std::thread t1([]() {
+        for (int i = 0; i < 5; i++) { LOG_DEBUG("i: %d", i); }
+        });
+    std::thread t2([]() {
+        for (char c = 'a'; c < 'f'; c++) { LOG_DEBUG("c: %c", c); }
+        });
     t1.join();
     t2.join();
     TIMERLOG_END(task);
@@ -305,12 +300,37 @@ void try_sort() {
     //bubble_sort(vec.begin(), vec.end());
     //MSTL::partial_sort(vec.begin(), ------vec.end(), vec.end());
     //insertion_sort(vec.begin(), vec.end());
-    sort(vec.begin(), vec.end());
+    //select_sort(vec.begin(), vec.end());
+    shell_sort(vec.begin(), vec.end());
+    //sort(vec.begin(), vec.end());
     for (const auto& num : vec) {
         std::cout << num << " ";
     }
     std::cout << std::endl;
 }
+
+void try_avl() {
+    MSTL_NAMESPACE__;
+    avl_tree<int, pair<int, char>, select1st<pair<int, char>>, less<int>> tree;
+    tree.insert(pair(100, 'b'));
+    tree.insert(pair(80, 'v'));
+    tree.insert(pair(110, 'x'));
+    tree.insert(pair(70, 'x'));
+    tree.insert(pair(95, 'x'));
+    tree.insert(pair(105, 'x'));
+    tree.insert(pair(120, 'x'));
+    tree.insert(pair(60, 'x'));
+    tree.insert(pair(125, 'x'));
+    tree.insert(pair(90, 'x'));
+    tree.insert(pair(92, 'x'));
+    tree.insert(pair(115, 'x'));
+    tree.insert(pair(85, 'x'));
+    tree.insert(pair(98, 'x'));
+    //std::cout << *tree.begin() << std::endl;
+    for (auto it = tree.begin(); it != tree.end(); ++it) {
+        std::cout << *it << std::endl;
+    }
+}
 int main() {
-    try_sort();
+    try_avl();
 }

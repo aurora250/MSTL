@@ -25,10 +25,10 @@ extern const mathui_t TAYLOR_CONVERGENCE;
 extern const mathd_t PRECISE_TOLERANCE;
 extern const mathd_t LOW_PRECISE_TOLERANCE;
 
-inline mathd_t angular2radian(mathd_t angular) {
+inline MSTL_CONSTEXPR mathd_t angular2radian(mathd_t angular) {
 	return (angular * PI / SEMI_CIRCLE);
 }
-inline mathd_t radian2angular(mathd_t radians) {
+inline MSTL_CONSTEXPR mathd_t radian2angular(mathd_t radians) {
 	return radians * (SEMI_CIRCLE / PI);
 }
 
@@ -54,7 +54,7 @@ inline MSTL_CONSTEXPR mathd_t reciprocal(T x) {
 }
 
 template <typename T>
-inline T square(T x) { return x * x; }
+inline MSTL_CONSTEXPR T square(T x) { return x * x; }
 template <typename T>
 	requires (Integral<T>)
 MSTL_CONSTEXPR mathl_t power(T x, mathui_t n) {
@@ -85,7 +85,7 @@ mathd_t MSTL_CONSTEXPR power(T x, mathui_t n) {
 	}
 	return result;
 }
-inline mathd_t exponential(mathd_t n) {
+inline MSTL_CONSTEXPR mathd_t exponential(mathui_t n) {
 	return power(EULER, n);
 }
 mathd_t logarithm_e(mathd_t x);
@@ -133,13 +133,13 @@ inline bool around_pi(mathd_t x, mathd_t toler = LOW_PRECISE_TOLERANCE) {
 	return around_multiple(x, PI, toler);
 }
 
-inline mathd_t remainder(mathd_t x, mathd_t y) {
+inline MSTL_CONSTEXPR mathd_t remainder(mathd_t x, mathd_t y) {
 	return (x - y * (x / y));
 }
-inline mathd_t float_part(mathd_t x) {
+inline MSTL_CONSTEXPR mathd_t float_part(mathd_t x) {
 	return (x - (mathl_t)x);
 }
-inline mathd_t divided_float(mathd_t x, mathl_t* ptr) {
+inline MSTL_CONSTEXPR mathd_t divided_float(mathd_t x, mathl_t* ptr) {
 	*ptr = mathl_t(x);
 	x -= (*ptr);
 	return x;

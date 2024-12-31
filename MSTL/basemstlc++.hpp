@@ -8,6 +8,7 @@
 #include "hash_function.hpp"
 #include "concepts.hpp"
 
+#include "tuple.hpp"
 #include "function.hpp" // "functor.hpp"
 #include "iterator.hpp" // "type_traits.hpp"
 //#include "numeric.hpp"

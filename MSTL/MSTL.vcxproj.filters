@@ -48,6 +48,9 @@
     <ClCompile Include="logging.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="avl_tree.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="errorlib.h">
@@ -164,7 +167,7 @@
     <ClInclude Include="thread_pool.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="avl_tree.hpp">
+    <ClInclude Include="avl_tree.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="container.h">
@@ -174,6 +177,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="logging.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="avl_map.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

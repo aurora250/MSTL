@@ -85,6 +85,10 @@ public:
 		const std::string& dbname, const std::string& ip = DEFAULT_IP, unsigned int port = DEFAULT_PORT);
 	std::shared_ptr<DBConnect> get_connect();
 	~DBConnectPool() = default;
+	DBConnectPool(const DBConnectPool&) = delete;
+	DBConnectPool(DBConnectPool&&) = delete;
+	DBConnectPool& operator =(const DBConnectPool&) = delete;
+	DBConnectPool& operator =(DBConnectPool&&) = delete;
 private:
 	void produce_connect_task();
 	void scanner_connect_task();

@@ -7,7 +7,7 @@
 
 #include "list.hpp"
 #include "vector.hpp"
-#include "string.h"
+//#include "avl_tree.hpp"
 #include "deque.hpp"
 #include "stack.hpp"
 #include "queue.hpp"
@@ -16,8 +16,7 @@
 #include "map.hpp"
 #include "hash_map.hpp"
 #include "hash_set.hpp"
-
-#include "tuple.hpp"
+#include "avl_tree.h"
 
 #include "depositary.h"
 #include "jsonlib.h"

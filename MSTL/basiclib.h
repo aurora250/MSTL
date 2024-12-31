@@ -50,22 +50,30 @@
 #define MSTL_NAMESPACE__ using namespace MSTL;
 #define MSTL_BEGIN_NAMESPACE__ namespace MSTL {
 #define MSTL_END_NAMESPACE__ }
+#define MSTL_SET_CONCEPTS__ namespace concepts {
+#define MSTL_END_CONCEPTS__ }
 
 #if defined(_HAS_CXX20)
-#define MSTL_SUPPORT_CONCEPTS__ 1
+#define MSTL_SUPPORT_CONCEPTS__		1
+#endif
+#if defined(_HAS_CXX17)
+#define MSTL_SUPPORT_NODISCARD__	1
 #endif
 
+#define MSTL_SUPPORT_CONSTEXPR__	1
+
+
 #if !(defined(_GLIBCXX_ITERATOR) || defined(_GLIBCXX_PARALLEL_ITERATOR_H) || defined(_ITERATOR_))
-#define MSTL_NEED_ITERATOR_TAG__ 1
+#define MSTL_NEED_ITERATOR_TAG__	1
 #endif
 
 #if !defined(__TYPE_TRAITS_H)
-#define MSTL_NEED_SGI_TYPE_TRAITS__ 1
+#define MSTL_NEED_SGI_TYPE_TRAITS__	1
 #endif
 
 #if defined(MSTL_COMPILE_MSVC__) && defined(MSTL_STATE_DEBUG__)
 #define MSTL_DLL_LINK__ 1
-#endif // __GNUC__
+#endif
 
 #if defined(MSTL_COMPILE_GNUC__)
 #define MSTL_ITERATOR_TRATIS_FROM__ std::
@@ -83,10 +91,16 @@
 #define SIMPLE_LOG(COM) 
 #endif
 
-#if 1
+#if MSTL_SUPPORT_CONSTEXPR__
 #define MSTL_CONSTEXPR constexpr
 #else
 #define MSTL_CONSTEXPR
+#endif
+
+#if MSTL_SUPPORT_NODISCARD__
+#define MSTL_NODISCARD__ [[nodiscard]]
+#else
+#define MSTL_NODISCARD__
 #endif
 
 // #if defined(_HAS_CXX17)
