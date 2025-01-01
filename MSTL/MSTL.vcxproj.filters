@@ -42,9 +42,6 @@
     <ClCompile Include="mysql_connect_pool.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="mathlib.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="logging.cpp">
       <Filter>源文件</Filter>
     </ClCompile>

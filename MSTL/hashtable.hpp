@@ -577,7 +577,7 @@ public:
                             first = buckets_[bucket];
                         }
                     }
-                    buckets_.swap(tmp);
+                    buckets_.swap(std::move(tmp));
                 }
                 MSTL_CATCH_UNWIND__{
                     for (size_type bucket = 0; bucket < tmp.size(); ++bucket) {

@@ -1,9 +1,6 @@
 #include "basiclib.h"
 #include <assert.h>
-
 MSTL_BEGIN_NAMESPACE__
-
-const size_t MSTL_SPLIT_LENGHT = 15;
 
 void split_line(std::ostream& _out, size_t _size) {
 	while (_size) _out << '-', _size--;
@@ -110,10 +107,6 @@ char* memstr(char* _data, int _len, char* _sub) {
 		_cur++;
 	}
 	return NULL;
-}
-
-size_t deque_buf_size(size_t n, size_t sz) {
-	return n != 0 ? n : (sz < 512 ? size_t(512 / sz) : 1);
 }
 
 MSTL_END_NAMESPACE__

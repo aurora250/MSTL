@@ -17,8 +17,8 @@ struct pair {
 
 	template <typename U1 = T1, typename U2 = T2>
 	requires(DefaultConstructible<U1>&& DefaultConstructible<U2>)
-	MSTL_CONSTEXPR explicit(not std::conjunction_v<std::_Is_implicitly_default_constructible<U1>,
-		std::_Is_implicitly_default_constructible<U2>>)
+	MSTL_CONSTEXPR explicit(not std::conjunction_v<std::is_default_constructible<U1>,
+		std::is_default_constructible<U2>>)
 		pair() 
 		noexcept(NothrowDefaultConstructible<U1>&& NothrowDefaultConstructible<U2>)
 		: first(), second() {}
@@ -134,12 +134,12 @@ template <class T1, class T2>
 }
 template <typename T1, typename T2>
 	requires(Printable<T1> && Printable<T2>)
-inline MSTL_CONSTEXPR void __show_data_only(const pair<T1, T2>& p, std::ostream& _out) {
+inline void __show_data_only(const pair<T1, T2>& p, std::ostream& _out) {
 	_out << "{ " << p.first << ", " << p.second << " }";
 }
 template <typename T1, typename T2>
 	requires(Printable<T1>&& Printable<T2>)
-MSTL_CONSTEXPR std::ostream& operator <<(std::ostream& _out, const pair<T1, T2>& _p) {
+std::ostream& operator <<(std::ostream& _out, const pair<T1, T2>& _p) {
 	__show_data_only(_p, _out);
 	return _out;
 }

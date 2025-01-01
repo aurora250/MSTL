@@ -31,7 +31,7 @@ public:
 	__thread(ThreadFunc func);
 	~__thread();
 
-	MSTL_NODISCARD__ int get_id() const;
+	MSTL_NODISCARD int get_id() const;
 	void start();
 private:
 	ThreadFunc func_;
@@ -55,7 +55,7 @@ public:
 	void start(unsigned int initThreadSize = 2);
 
 	template <typename Func, typename... Args>
-	MSTL_NODISCARD__ decltype(auto) submit_task(Func&& func, Args&&... args) {
+	MSTL_NODISCARD decltype(auto) submit_task(Func&& func, Args&&... args) {
 		using Result = decltype(func(args...));
 		auto task = std::make_shared<std::packaged_task<Result()>>(
 			std::bind(std::forward<Func>(func), std::forward<Args>(args)...));
@@ -90,7 +90,7 @@ public:
 	}
 private:
 	void thread_function(int threadid);
-	MSTL_NODISCARD__ bool running() const;
+	MSTL_NODISCARD bool running() const;
 private:
 	typedef std::function<void()> Task;
 

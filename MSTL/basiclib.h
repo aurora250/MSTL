@@ -50,6 +50,7 @@
 #define MSTL_NAMESPACE__ using namespace MSTL;
 #define MSTL_BEGIN_NAMESPACE__ namespace MSTL {
 #define MSTL_END_NAMESPACE__ }
+#define MSTL_CONCEPTS__ using namespace MSTL::concepts;
 #define MSTL_SET_CONCEPTS__ namespace concepts {
 #define MSTL_END_CONCEPTS__ }
 
@@ -58,10 +59,8 @@
 #endif
 #if defined(_HAS_CXX17)
 #define MSTL_SUPPORT_NODISCARD__	1
-#endif
-
 #define MSTL_SUPPORT_CONSTEXPR__	1
-
+#endif
 
 #if !(defined(_GLIBCXX_ITERATOR) || defined(_GLIBCXX_PARALLEL_ITERATOR_H) || defined(_ITERATOR_))
 #define MSTL_NEED_ITERATOR_TAG__	1
@@ -91,14 +90,14 @@
 #define SIMPLE_LOG(COM) 
 #endif
 
-#if MSTL_SUPPORT_CONSTEXPR__
+#ifdef MSTL_SUPPORT_CONSTEXPR__
 #define MSTL_CONSTEXPR constexpr
 #else
 #define MSTL_CONSTEXPR
 #endif
 
-#if MSTL_SUPPORT_NODISCARD__
-#define MSTL_NODISCARD__ [[nodiscard]]
+#ifdef MSTL_SUPPORT_NODISCARD__
+#define MSTL_NODISCARD [[nodiscard]]
 #else
 #define MSTL_NODISCARD__
 #endif
@@ -124,7 +123,7 @@ typedef MSTL_LONG_LONG_TYPE__ intptr_t;
 typedef const char* cstring;
 typedef const char* const const_cstring;
 
-extern const size_t MSTL_SPLIT_LENGHT;
+MSTL_CONSTEXPR size_t MSTL_SPLIT_LENGTH = 15;
 
 extern void* memcpy(void* _dest, void* _rsc, int _byte);
 extern int memcmp(const void* _dest, const void* _rsc, int _byte);
@@ -137,8 +136,7 @@ extern int strcmp(const char* _des, const char* _sou);
 extern const char* strstr(const char* _des, const char* _sou);
 extern char* memstr(char* _data, int _len, char* _sub);
 
-extern void split_line(std::ostream & _out = std::cout, size_t _size = MSTL_SPLIT_LENGHT);
-extern size_t deque_buf_size(size_t n, size_t sz);
+extern void split_line(std::ostream & _out = std::cout, size_t _size = MSTL_SPLIT_LENGTH);
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_BASICLIB_H__

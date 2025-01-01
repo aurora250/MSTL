@@ -65,9 +65,10 @@ private:
     typedef Alloc   data_allocator;
     data_allocator alloc;
 public:
-    typedef T       value_type;
-    typedef T*      pointer;
-    typedef size_t  size_type;
+    typedef T           value_type;
+    typedef T*          pointer;
+    typedef size_t      size_type;
+    typedef ptrdiff_t   difference_type;
 
     pointer allocate(const size_type n) {
         return 0 == n ? 0 : (pointer)alloc.allocate(n * sizeof(value_type));

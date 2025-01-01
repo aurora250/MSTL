@@ -11,7 +11,7 @@ public:
     typedef typename Sequence::difference_type  difference_type;
     typedef typename Sequence::size_type        size_type;
     typedef typename Sequence::reference        reference;
-    typedef typename Sequence::reference_const  reference_const;
+    typedef typename Sequence::const_reference  const_reference;
     typedef stack<T, Sequence>                  self;
 private:
     Sequence seq;
@@ -20,9 +20,10 @@ public:
     ~stack() = default;
 
     void push(const value_type& x) { seq.push_back(x); }
+    void push(value_type&& x) { seq.push_back(std::move(x)); }
     void pop() { seq.pop_back(); }
     reference top() { return seq.back(); }
-    reference_const top() const { return seq.back(); }
+    const_reference top() const { return seq.back(); }
     size_type size() const { return seq.size(); }
     bool empty() const { return seq.empty(); }
 };

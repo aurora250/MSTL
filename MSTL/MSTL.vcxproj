@@ -142,7 +142,6 @@
     <ClCompile Include="logging.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="errorlib.cpp" />
-    <ClCompile Include="mathlib.cpp" />
     <ClCompile Include="mysql_connect_pool.cpp" />
     <ClCompile Include="rb_tree.cpp" />
     <ClCompile Include="threadsafe_print.cpp" />

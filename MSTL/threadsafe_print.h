@@ -108,7 +108,7 @@ struct AuxEndl {
 static AuxEndl endl;
 
 
-void split_line(Output& _out, size_t _size = MSTL_SPLIT_LENGHT);
+void split_line(Output& _out, size_t _size = MSTL_SPLIT_LENGTH);
 
 template <typename Container>
     requires(Detailable<Container>)

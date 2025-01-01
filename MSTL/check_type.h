@@ -231,7 +231,7 @@ CHECK_TYPE_MEM_FUNC__(volatile)
 CHECK_TYPE_MEM_FUNC__(const volatile)
 
 template <typename T>
-std::string check_type() {
+MSTL_CONSTEXPR std::string check_type() {
     // check_type<decltype(object)>()
     std::string str;
     check<T> c(str);

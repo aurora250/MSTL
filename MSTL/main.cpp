@@ -26,6 +26,12 @@ void try_lls() {
     lls.pop_back();
     lls.pop_front();
     detailof_safe(lls);
+    list<int> lls2 = { 3,2,1,1 };
+    detailof(lls2);
+    lls2.sort();
+    detailof(lls2);
+    lls2.unique();
+    detailof(lls2);
     Output out;
     out << lls.at(0) << ':' << lls[0] << endl;
     sout << out;
@@ -133,7 +139,12 @@ void try_deq() {
     deque<int> b{ 1,2,3,4,5 };
     sout << b.front() << endl;
     detailof_safe(b);
-    b.clear();
+    deque<int> c(std::move(b));
+    c.resize(10, 6);
+    detailof_safe(c);
+    std::cout << c.at(5) << std::endl;
+    deque<char> d = { 'a', 'b' };
+    //sout << b.empty() <<endl;
 }
 void try_stack() {
     using namespace MSTL;
@@ -146,10 +157,11 @@ void try_stack() {
     queue<int> q;
     q.push(2);
 }
+#include <vector>
 void try_vec() {
     MSTL_NAMESPACE__;
     MSTL_TRY__{
-        vector<int> v;  //{ 1,2,3,4 }
+        vector<int> v{ 1,2,3,4 };
         v.push_back(3);
         v.push_back(4);
         detailof(v);
@@ -157,7 +169,7 @@ void try_vec() {
         display_enter out;
         out(v.front());
         MSTL_TRY__{
-            out(v[10]);
+            out(v[1]);
         }
         MSTL_CATCH_ERROR__{
             std::cout << "err" << std::endl;
@@ -172,7 +184,12 @@ void try_vec() {
         FOR_EACH(it, v2) {
             std::cout << *it << std::endl;
         }
-        MSTL_EXEC_MEMORY__;
+        auto v3 = std::move(v2);
+        detailof(v3);
+        //detailof(v2);
+        vector<int> v4 = { 3,2,1 };
+        detailof(v4);
+        out(*v4.data());
     }
     MSTL_CATCH_ERROR__{
         __show_data_only(error, std::cout);
@@ -241,7 +258,7 @@ void try_math() {
     std::cout << sine(1) << std::endl;
     std::cout << cosine(angular2radian(270)) << std::endl;
     //std::cout << remainder(73.263, 0.9973) << std::endl;
-    std::cout << float_part(PI) << std::endl;
+    std::cout << float_part(constants::PI) << std::endl;
     std::cout << exponential(3) << std::endl;
     std::cout << logarithm_e(165) << std::endl;
     std::cout << logarithm_10(147) << std::endl;
@@ -251,7 +268,7 @@ void try_math() {
     std::cout << arcsine(0.21) << std::endl;
     std::cout << arccosine(0.62) << std::endl;
     //std::cout << tangent(PI / 2) << std::endl;  // MathError
-    std::cout << around_pi(PI * 2 + 0.00000001) << " : " << around_pi(6.28) << std::endl;
+    std::cout << around_pi(constants::PI * 2 + 0.00000001) << " : " << around_pi(6.28) << std::endl;
 }
 void try_sql() {
     MSTL_NAMESPACE__;
@@ -308,7 +325,6 @@ void try_sort() {
     }
     std::cout << std::endl;
 }
-#include "avl_set.hpp"
 void try_avl() {
     MSTL_NAMESPACE__;
     avl_set<int> tree;
@@ -337,5 +353,5 @@ void try_avl() {
     }
 }
 int main() {
-    try_avl();
+    try_pque();
 }

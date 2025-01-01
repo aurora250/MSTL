@@ -1,15 +1,17 @@
 #ifndef MSTL_TUPLE_HPP__
 #define MSTL_TUPLE_HPP__
 #include "basiclib.h"
+#include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 #ifdef MSTL_SUPPORT_CONCEPTS__
+MSTL_CONCEPTS__
 
 template<typename... Types>
 class __tuple_impl;
 
 MSTL_TEMPLATE_NULL__ struct __tuple_impl<> {
-    explicit __tuple_impl() = default;
+    MSTL_CONSTEXPR explicit __tuple_impl() noexcept = default;
     ~__tuple_impl() noexcept = default;
 };
 
@@ -19,11 +21,13 @@ public:
     typedef Head value_type;
     typedef __tuple_impl<Tail...> base_type;
     
-    value_type value;
+    value_type data_;
     
-    __tuple_impl() {};
-    explicit __tuple_impl(Head&& head, Tail&&... tail)
-        : base_type(std::forward<Tail>(tail)...), value(std::forward<Head>(head)) {}
+    MSTL_CONSTEXPR __tuple_impl() {};
+    template <typename First, typename... Other>
+    MSTL_CONSTEXPR explicit __tuple_impl(First&& head, Other&&... tail)
+        noexcept(NothrowConstructibleFrom<value_type, First>)
+        : base_type(std::forward<Other>(tail)...), data_(std::forward<First>(head)) {}
     ~__tuple_impl() noexcept = default;
 };
 
@@ -58,33 +62,34 @@ class __tuple : __tuple_impl<Types...> {
 public:
     typedef __tuple_impl<Types...> base_type;
     
-    explicit __tuple(Types&&... args) : base_type(std::forward<Types>(args)...) {}
+    MSTL_CONSTEXPR explicit __tuple(Types&&... args) noexcept 
+        : base_type(std::forward<Types>(args)...) {}
     ~__tuple() noexcept = default;
 
     template <size_t Index, typename... ElemTypes>
-    friend decltype(auto) get(const __tuple<ElemTypes...>& tuple);
+    friend MSTL_CONSTEXPR decltype(auto) get(const __tuple<ElemTypes...>& tuple) noexcept;
     template <size_t Index, typename... ElemTypes>
-    friend decltype(auto) get(__tuple<ElemTypes...>&& tuple);
+    friend MSTL_CONSTEXPR decltype(auto) get(__tuple<ElemTypes...>&& tuple) noexcept;
     friend class tuple<Types...>;
     
     template <size_t Index, typename... ElemTypes>
-    friend decltype(auto) get(const tuple<ElemTypes...>& tuple);
+    friend MSTL_CONSTEXPR decltype(auto) get(const tuple<ElemTypes...>& tuple) noexcept;
     template <size_t Index, typename... ElemTypes>
-    friend decltype(auto) get(tuple<ElemTypes...>&& tuple);
+    friend MSTL_CONSTEXPR decltype(auto) get(tuple<ElemTypes...>&& tuple) noexcept;
 };
 MSTL_TEMPLATE_NULL__ class __tuple<> {};
 
 template <size_t Index, typename... ElemTypes>
-decltype(auto) get(const __tuple<ElemTypes...>& tup) {
+MSTL_CONSTEXPR decltype(auto) get(const __tuple<ElemTypes...>& tup) noexcept {
     using base_type = typename tuple_helper<Index, ElemTypes...>::type;
-    return (static_cast<const base_type&>(tup).value);
+    return (static_cast<const base_type&>(tup).data_);
 }
 
 template <size_t Index, typename... ElemTypes>
-decltype(auto) get(__tuple<ElemTypes...>&& tup) {
+MSTL_CONSTEXPR decltype(auto) get(__tuple<ElemTypes...>&& tup) noexcept {
     using base_type = typename tuple_helper<Index, ElemTypes...>::type;
     using value_type = typename tuple_element<Index, ElemTypes...>::type;
-    return std::forward<value_type>(static_cast<base_type&&>(tup).value);
+    return std::forward<value_type>(static_cast<base_type&&>(tup).data_);
 }
 
 template <typename... Types>
@@ -93,44 +98,46 @@ public:
     using base_type = __tuple<Types...>;
     using size_type = size_t;
 private:
-    base_type* tup;
-    size_type _size;
+    base_type* tup_;
+    size_type size_;
 public:
-    explicit tuple(Types&&... args) : tup(nullptr), _size(sizeof...(Types)) {
-        tup = new base_type(std::forward<Types>(args)...);
+    MSTL_CONSTEXPR explicit tuple(Types&&... args) noexcept 
+        : tup_(nullptr), size_(sizeof...(Types)) {
+        tup_ = new base_type(std::forward<Types>(args)...);
     }
     ~tuple() noexcept {
-        delete tup;
-        _size = 0;
+        delete tup_;
+        size_ = 0;
     }
-    template <size_type idx> requires (idx < sizeof...(Types))
-    decltype(auto) get() {
+    template <size_type idx> 
+        requires (idx < sizeof...(Types))
+    MSTL_CONSTEXPR decltype(auto) get() noexcept {
         using base = typename tuple_helper<idx, Types...>::type;
-        return (static_cast<const base*>(tup)->value);
+        return (static_cast<const base*>(tup_)->data_);
     }
-    size_type size() const { return _size; }
+    MSTL_CONSTEXPR size_type size() const { return size_; }
 
     template <size_t Index, typename... ElemTypes>
-    friend decltype(auto) get(const tuple<ElemTypes...>& tuple);
+    friend MSTL_CONSTEXPR decltype(auto) get(const tuple<ElemTypes...>& tuple) noexcept;
     template <size_t Index, typename... ElemTypes>
-    friend decltype(auto) get(tuple<ElemTypes...>&& tuple);
+    friend MSTL_CONSTEXPR decltype(auto) get(tuple<ElemTypes...>&& tuple) noexcept;
 };
 
 template <size_t Index, typename... ElemTypes>
-decltype(auto) get(const tuple<ElemTypes...>& tup) {
+MSTL_CONSTEXPR decltype(auto) get(const tuple<ElemTypes...>& tup) noexcept {
     using base_type = typename tuple_helper<Index, ElemTypes...>::type;
-    return (static_cast<const base_type&>(*(tup.tup)).value);
+    return (static_cast<const base_type&>(*(tup.tup_)).data_);
 }
 
 template <size_t Index, typename... ElemTypes>
-decltype(auto) get(tuple<ElemTypes...>&& tup) {
+MSTL_CONSTEXPR decltype(auto) get(tuple<ElemTypes...>&& tup) noexcept {
     using base_type = typename tuple_helper<Index, ElemTypes...>::type;
     using value_type = typename tuple_element<Index, ElemTypes...>::type;
-    return std::forward<value_type>(static_cast<base_type&&>(*(tup.tup)).value);
+    return std::forward<value_type>(static_cast<base_type&&>(*(tup.tup_)).data_);
 }
 
 template <typename... Types>
-tuple<Types...> make_tuple(Types&&... args) {
+MSTL_CONSTEXPR tuple<Types...> make_tuple(Types&&... args) {
     return tuple<Types...>(std::forward<Types>(args)...);
 }
 

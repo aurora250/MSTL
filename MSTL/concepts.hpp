@@ -68,20 +68,28 @@ namespace concepts {
 	concept CopyAssignable = AssignableFrom<T, const T&>;
 	template<typename T>
 	concept MoveAssignable = AssignableFrom<T, T&&>;
+	template <typename T>
+	concept Swappable = std::_Is_swappable<T>::value;
 
 	template<typename T>
 	concept NothrowDefaultConstructible = std::is_nothrow_default_constructible_v<T>;
+	template<typename T>
+	concept NothrowCopyConstructible = std::is_nothrow_copy_constructible_v<T>;
+	template<typename T>
+	concept NothrowMoveConstructible = std::is_nothrow_move_constructible_v<T>;
 	template<typename T, typename U>
 	concept NothrowConstructibleFrom = std::is_nothrow_constructible_v<T, U>;
 	template<typename T, typename U>
 	concept NothrowAssignableFrom = noexcept(std::declval<T&>() = std::declval<U>());
+	template<typename T>
+	concept NothrowMoveAssignable = noexcept(std::is_nothrow_move_assignable_v<T>);
+	template <typename T>
+	concept NothrowSwappable = std::_Is_nothrow_swappable<T>::value;
 
 	template<typename T>
 	concept Printable = requires(const T & t) {
 		{ std::cout << t } -> std::convertible_to<std::ostream&>;
 	};
-	template <typename T>
-	concept Swappable = std::_Is_swappable<T>::value;
 	template <typename T>
 	concept IteratorTypedef = requires() {
 		typename std::iterator_traits<T>::iterator_category;
