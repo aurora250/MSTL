@@ -55,19 +55,24 @@ namespace concepts {
 	template <typename T>
 	concept SignedNumber = Integral<T> || Float<T>;
 
+	template <typename From, typename To>
+	concept Convertible = std::is_convertible_v<From, To>;
+	template <typename T, typename U>
+	concept Same = std::is_same_v<T, U>;
+
 	template<typename T>
 	concept DefaultConstructible = std::is_default_constructible_v<T>;
 	template<typename T>
 	concept CopyConstructible = std::is_copy_constructible_v<T>;
-	template<typename T, typename U>
-	concept ConstructibleFrom = std::is_constructible_v<T, U>;
+	template<typename T, typename... Args>
+	concept ConstructibleFrom = std::is_constructible_v<T, Args...>;
 
-	template<typename T, typename U>
-	concept AssignableFrom = std::is_assignable_v<T&, U>;
+	template<typename To, typename From>
+	concept Assignable = std::is_assignable_v<To, From>;
 	template<typename T>
-	concept CopyAssignable = AssignableFrom<T, const T&>;
+	concept CopyAssignable = std::is_copy_assignable_v<T>;
 	template<typename T>
-	concept MoveAssignable = AssignableFrom<T, T&&>;
+	concept MoveAssignable = std::is_move_assignable_v<T>;
 	template <typename T>
 	concept Swappable = std::_Is_swappable<T>::value;
 
@@ -77,12 +82,14 @@ namespace concepts {
 	concept NothrowCopyConstructible = std::is_nothrow_copy_constructible_v<T>;
 	template<typename T>
 	concept NothrowMoveConstructible = std::is_nothrow_move_constructible_v<T>;
-	template<typename T, typename U>
-	concept NothrowConstructibleFrom = std::is_nothrow_constructible_v<T, U>;
-	template<typename T, typename U>
-	concept NothrowAssignableFrom = noexcept(std::declval<T&>() = std::declval<U>());
+	template<typename T, typename... Args>
+	concept NothrowConstructible = std::is_nothrow_constructible_v<T, Args...>;
+	template<typename To, typename From>
+	concept NothrowAssignable = std::is_nothrow_assignable_v<To, From>;
 	template<typename T>
-	concept NothrowMoveAssignable = noexcept(std::is_nothrow_move_assignable_v<T>);
+	concept NothrowCopyAssignable = std::is_nothrow_copy_assignable_v<T>;
+	template<typename T>
+	concept NothrowMoveAssignable = std::is_nothrow_move_assignable_v<T>;
 	template <typename T>
 	concept NothrowSwappable = std::_Is_nothrow_swappable<T>::value;
 

@@ -26,7 +26,7 @@ public:
     MSTL_CONSTEXPR __tuple_impl() {};
     template <typename First, typename... Other>
     MSTL_CONSTEXPR explicit __tuple_impl(First&& head, Other&&... tail)
-        noexcept(NothrowConstructibleFrom<value_type, First>)
+        noexcept(NothrowConstructible<value_type, First>)
         : base_type(std::forward<Other>(tail)...), data_(std::forward<First>(head)) {}
     ~__tuple_impl() noexcept = default;
 };
