@@ -179,7 +179,10 @@
     <ClInclude Include="logging.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="avl_map.hpp">
+    <ClInclude Include="avl_set.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="skip_list.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

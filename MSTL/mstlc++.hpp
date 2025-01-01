@@ -17,6 +17,7 @@
 #include "hash_map.hpp"
 #include "hash_set.hpp"
 #include "avl_tree.h"
+#include "skip_list.hpp"
 
 #include "depositary.h"
 #include "jsonlib.h"

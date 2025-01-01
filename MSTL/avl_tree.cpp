@@ -34,15 +34,38 @@ void avl_tree_base_iterator::increment() {
 	}
 }
 void avl_tree_base_iterator::decrement() {
-
+	if (node_->left_ == nullptr && node_->right_ == nullptr) {
+		base_ptr parent = node_->parent_;
+		if (parent->right_ == node_) {
+			node_ = parent;
+		}
+		else if (parent->left_ == node_) {
+			while (node_->parent_->left_ == node_) {
+				node_ = node_->parent_;
+			}
+			node_ = node_->parent_;
+		}
+		else Exception(AssertError());
+	}
+	else {
+		base_ptr base_left = node_->left_;
+		if (base_left != nullptr) {
+			while (base_left->right_ != nullptr) {
+				base_left = base_left->right_;
+			}
+			node_ = base_left;
+		}
+		else
+			node_ = node_->parent_;
+	}
 }
 
 void __rotate_right(__avl_tree_node_base* parent, __avl_tree_node_base*& root) {
-	__avl_tree_node_base* header = nullptr;
-	if (parent->parent_ == root) {
-		header = root->parent_;
-		parent->parent_ = nullptr;
-	}
+	//__avl_tree_node_base* header = nullptr;
+	//if (parent->parent_ == root) {
+	//	header = root->parent_;
+	//	parent->parent_ = nullptr;
+	//}
 	__avl_tree_node_base* cur = parent->left_;
 	__avl_tree_node_base* cur_right = cur->right_;
 	parent->left_ = cur_right;
@@ -52,9 +75,9 @@ void __rotate_right(__avl_tree_node_base* parent, __avl_tree_node_base*& root) {
 	__avl_tree_node_base* grand_parent = parent->parent_;
 	cur->right_ = parent;
 	parent->parent_ = cur;
-	if (grand_parent == nullptr) {
+	if (parent == root) {
+		cur->parent_ = root->parent_;
 		root = cur;
-		cur->parent_ = nullptr;
 	}
 	else {
 		if (parent == grand_parent->left_)
@@ -65,14 +88,8 @@ void __rotate_right(__avl_tree_node_base* parent, __avl_tree_node_base*& root) {
 	}
 	parent->balance_ = 0;
 	cur->balance_ = 0;
-	if (header != nullptr) cur->parent_ = header;
 }
 void __rotate_left(__avl_tree_node_base* parent, __avl_tree_node_base*& root) {
-	__avl_tree_node_base* header = nullptr;
-	if (parent->parent_ == root) {
-		header = root->parent_;
-		parent->parent_ = nullptr;
-	}
 	__avl_tree_node_base* cur = parent->right_;
 	__avl_tree_node_base* cur_left = cur->left_;
 	parent->right_ = cur_left;
@@ -82,9 +99,9 @@ void __rotate_left(__avl_tree_node_base* parent, __avl_tree_node_base*& root) {
 	__avl_tree_node_base* grand_parent = parent->parent_;
 	cur->left_ = parent;
 	parent->parent_ = cur;
-	if (grand_parent == nullptr) {
+	if (parent == root) {
+		cur->parent_ = root->parent_;
 		root = cur;
-		cur->parent_ = nullptr;
 	}
 	else {
 		if (grand_parent->left_ == parent)
@@ -95,7 +112,6 @@ void __rotate_left(__avl_tree_node_base* parent, __avl_tree_node_base*& root) {
 	}
 	parent->balance_ = 0;
 	cur->balance_ = 0;
-	if (header != nullptr) cur->parent_ = header;
 }
 void __rotate_left_right(__avl_tree_node_base* parent, __avl_tree_node_base*& root) {
 	__avl_tree_node_base* cur = parent->left_;

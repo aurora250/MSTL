@@ -308,26 +308,31 @@ void try_sort() {
     }
     std::cout << std::endl;
 }
-
+#include "avl_set.hpp"
 void try_avl() {
     MSTL_NAMESPACE__;
-    avl_tree<int, pair<int, char>, select1st<pair<int, char>>, less<int>> tree;
-    tree.insert(pair(100, 'b'));
-    tree.insert(pair(80, 'v'));
-    tree.insert(pair(110, 'x'));
-    tree.insert(pair(70, 'x'));
-    tree.insert(pair(95, 'x'));
-    tree.insert(pair(105, 'x'));
-    tree.insert(pair(120, 'x'));
-    tree.insert(pair(60, 'x'));
-    tree.insert(pair(125, 'x'));
-    tree.insert(pair(90, 'x'));
-    tree.insert(pair(92, 'x'));
-    tree.insert(pair(115, 'x'));
-    tree.insert(pair(85, 'x'));
-    tree.insert(pair(98, 'x'));
+    avl_set<int> tree;
+    tree.insert(100);
+    tree.insert(80);
+    tree.insert(110);
+    tree.insert(70);
+    tree.insert(95);
+    tree.insert(105);
+    tree.insert(120);
+    tree.insert(60);
+    tree.insert(125);
+    tree.insert(90);
+    tree.insert(92);
+    tree.insert(115);
+    tree.insert(85);
+    tree.insert(98);
     //std::cout << *tree.begin() << std::endl;
     for (auto it = tree.begin(); it != tree.end(); ++it) {
+        std::cout << *it << std::endl;
+    }
+    //tree.clear();
+    std::cout << tree.empty() << std::endl;
+    for (auto it = tree.rbegin(); it != tree.rend(); --it) {
         std::cout << *it << std::endl;
     }
 }

@@ -153,7 +153,7 @@
     <ClInclude Include="algobase.hpp" />
     <ClInclude Include="algorithm.hpp" />
     <ClInclude Include="alloc.hpp" />
-    <ClInclude Include="avl_map.hpp" />
+    <ClInclude Include="avl_set.hpp" />
     <ClInclude Include="avl_tree.h" />
     <ClInclude Include="container.h" />
     <ClInclude Include="logging.h" />
@@ -184,6 +184,7 @@
     <ClInclude Include="queue.hpp" />
     <ClInclude Include="rb_tree.h" />
     <ClInclude Include="set.hpp" />
+    <ClInclude Include="skip_list.hpp" />
     <ClInclude Include="sort.hpp" />
     <ClInclude Include="stack.hpp" />
     <ClInclude Include="tempbuf.hpp" />

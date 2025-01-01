@@ -1,10 +1,10 @@
 #ifndef	MSTL_AVL_TREE_HPP__
 #define MSTL_AVL_TREE_HPP__
-#include "basiclib.h"
 #include "pair.hpp"
 #include "errorlib.h"
 #include "mathlib.h"
 #include "memory.hpp"
+#include "algobase.hpp"
 
 MSTL_BEGIN_NAMESPACE__
 struct __avl_tree_node_base {
@@ -99,8 +99,13 @@ template <typename Key, typename Value, typename KeyOfValue, typename Compare,
 	typename Alloc = default_standard_alloc<__avl_tree_node<Value>>>
 class avl_tree {
 public:
-	typedef Key									key_type;
-	typedef Value								value_type;
+	typedef Key                 key_type;
+	typedef Value               value_type;
+	typedef value_type*			pointer;
+	typedef const value_type*	const_pointer;
+	typedef value_type&			reference;
+	typedef const value_type&	const_reference;
+	typedef size_t				difference_type;
 	typedef __avl_tree_node<value_type>			node_type;
 	typedef typename node_type::balance_type	balance_type;
 	typedef node_type*							link_type;
@@ -108,14 +113,15 @@ public:
 	typedef typename __avl_tree_node_base::base_ptr					base_ptr;
 	typedef avl_tree_iterator<Value, Value&, Value*>				iterator;
 	typedef avl_tree_iterator<Value, const Value&, const Value*>	const_iterator;
+	typedef avl_tree<Key, Value, KeyOfValue, Compare, Alloc>		self;
 
 private:
-	bool __balanced(link_type root) {
+	bool __balanced(link_type root) const {
 		if (root == nullptr || root == header_) return true;
 		return absolute(depth(root->left_) - depth(root->right_)) < 2
 			&& __balanced(root->left_) && __balanced(root->right_);
 	}
-	void __in_order(base_ptr root) {
+	void __in_order(base_ptr root) const {
 		if (root == nullptr || root == header_) return;
 		__in_order(root->left_);
 		std::cout << link_type(root)->data_ << std::endl;
@@ -127,9 +133,14 @@ private:
 		__destroy_tree(root->right_);
 		delete link_type(root);
 	}
+	static const Key& key(link_type x) { return KeyOfValue()(x->data_); }
 
 public:
-	avl_tree() : header_(0), size_(0) {
+	avl_tree() : header_(0), size_(0), key_compare_(Compare()) {
+		header_ = new node_type();
+		header_->parent_ = header_;
+	}
+	avl_tree(Compare c = Compare()) : key_compare_(c) {
 		header_ = new node_type();
 		header_->parent_ = header_;
 	}
@@ -151,6 +162,26 @@ public:
 	iterator end() {
 		return iterator(header_);
 	}
+	const_iterator const_begin() const {
+		base_ptr b = header_->parent_;
+		while (b->left_ != nullptr) {
+			b = b->left_;
+		}
+		return const_iterator(link_type(b));
+	}
+	const_iterator const_end() const {
+		return const_iterator(header_);
+	}
+	iterator rbegin() {
+		base_ptr b = header_->parent_;
+		while (b->right_ != nullptr) {
+			b = b->right_;
+		}
+		return iterator(link_type(b));
+	}
+	iterator rend() {
+		return iterator(header_);
+	}
 
 	bool insert(const value_type& v) {
 		if (header_->parent_ == header_) {
@@ -162,25 +193,24 @@ public:
 		link_type parent = nullptr;
 		link_type cur = link_type(header_->parent_);
 		while (cur != nullptr) {
-			if (v.first < cur->data_.first) {
+			if (key_compare_(KeyOfValue()(v), key(cur))) {
 				parent = cur;
 				cur = link_type(cur->left_);
 			}
-			else if (v.first > cur->data_.first) {
+			else if (KeyOfValue()(v) == key(cur)) {
+				return false;
+			}
+			else {
 				parent = cur;
 				cur = link_type(cur->right_);
 			}
-			else
-				return false;
 		}
 
 		cur = new node_type(v);
-		if (parent->data_.first > v.first) {
+		if (key_compare_(KeyOfValue()(v), key(parent))) 
 			parent->left_ = cur;
-		}
-		else {
+		else 
 			parent->right_ = cur;
-		}
 		cur->parent_ = parent;
 
 		while (parent != header_) {
@@ -214,6 +244,12 @@ public:
 		size_++;
 		return true;
 	}
+	template <typename Iterator>
+	void insert(Iterator start, Iterator end) {
+		for (Iterator iter = start; start != end; ++iter)
+			insert(*iter);
+	}
+
 	bool erase(const Key& key) {
 		link_type parent = nullptr;
 		link_type cur = header_->parent_;
@@ -364,37 +400,57 @@ public:
 		size_--;
 		return true;
 	}
-
-	link_type find(const Key& k) {
+	void clear() {
+		__destroy_tree(header_->parent_);
+		header_->parent_ = header_;
+	}
+	link_type find(const Key& k) const {
 		link_type cur = header_->parent_;
 		while (cur) {
-			if (cur->data_.first > k)
+			if (key_compare_(k, key(cur)))
 				cur = cur->left_;
-			else if (cur->data_.first < k)
-				cur = cur->right_;
-			else
+			else if (k == key(cur))
 				return cur;
+			else
+				cur = cur->right_;
 		}
 		return nullptr;
 	}
-	size_type depth(link_type root) {
+	size_type depth(link_type root) const {
 		if (root == nullptr) 
 			return 0;
 		size_type left_depth = depth(root->left_);
 		size_type right_depth = depth(root->right_);
 		return left_depth > right_depth ? left_depth + 1 : right_depth + 1;
 	}
-	bool is_balanced() {
-		return __balanced(header_->parent_);
-	}
-	void in_order() {
+	size_type size() const { return size_; }
+	bool empty() const { return header_->parent_ == base_ptr(header_); }
+	bool is_balanced() { return __balanced(header_->parent_); }
+	void in_order() const {
 		__in_order(header_->parent_);
 		std::cout << std::endl;
 	}
+	void swap(const self& v) {
+		std::swap(this->header_, v.header_);
+		std::swap(this->size_, v.size_);
+	}
+	Compare key_comp() const { return key_compare_; }
 private:
+	Compare key_compare_;
 	link_type header_;
 	size_type size_;
 };
+
+template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
+inline bool operator ==(const avl_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
+	const avl_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) {
+	return x.size() == y.size() && MSTL::equal(x.const_begin(), x.const_end(), y.const_begin());
+}
+template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
+inline bool operator <(const avl_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
+	const avl_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) {
+	return MSTL::lexicographical_compare(x.const_begin(), x.const_end(), y.const_begin(), y.const_end());
+}
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_AVL_TREE_HPP__
