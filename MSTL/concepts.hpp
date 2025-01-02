@@ -170,11 +170,11 @@ namespace concepts {
 
 	template<typename T>
 	concept BinaryFunction = requires(T f, typename T::first_argument_type a1, typename T::second_argument_type a2) {
-		{ f(a1, a2) } -> std::convertible_to<bool>;
+		f(a1, a2);
 	};
 	template <typename T>
 	concept UnaryFunction = requires(T f, typename T::argument_type a) {
-		{ f(a) } -> std::convertible_to<bool>;
+		f(a);
 	};
 	template <typename Func, typename Arg>
 	concept HashFunction = requires(Func f, Arg a) {
