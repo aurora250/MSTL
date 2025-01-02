@@ -59,7 +59,12 @@
 #endif
 #if defined(_HAS_CXX17)
 #define MSTL_SUPPORT_NODISCARD__	1
+#endif
+#if defined(_HAS_CXX17)
 #define MSTL_SUPPORT_CONSTEXPR__	1
+#endif
+#if defined(_HAS_CXX17)
+#define MSTL_SUPPORT_NORETURN__		1
 #endif
 
 #if !(defined(_GLIBCXX_ITERATOR) || defined(_GLIBCXX_PARALLEL_ITERATOR_H) || defined(_ITERATOR_))
@@ -74,20 +79,16 @@
 #define MSTL_DLL_LINK__ 1
 #endif
 
-#if defined(MSTL_COMPILE_GNUC__)
 #define MSTL_ITERATOR_TRATIS_FROM__ std::
-#else 
-#define MSTL_ITERATOR_TRATIS_FROM__ 
-#endif
 
 #define TO_STRING(VALUE) #VALUE
 #define FOR_EACH(VALUE, CONTAINER) for(auto VALUE = CONTAINER.begin(); VALUE != CONTAINER.end(); ++VALUE)
 
 #ifdef MSTL_STATE_DEBUG__
-#define SIMPLE_LOG(COM) \
-	std::cout << __FILE__ << ":" << __LINE__ << " " << __TIMESTAMP__ << " : " << COM << std::endl;
+#define SIMPLE_LOG(MESG) \
+	std::cout << __FILE__ << ":" << __LINE__ << " " << __TIMESTAMP__ << " : " << MESG << std::endl;
 #else
-#define SIMPLE_LOG(COM) 
+#define SIMPLE_LOG(MESG) 
 #endif
 
 #ifdef MSTL_SUPPORT_CONSTEXPR__
@@ -102,9 +103,11 @@
 #define MSTL_NODISCARD__
 #endif
 
-// #if defined(_HAS_CXX17)
-// typedef decltype(nullptr) nullptr_t;
-// #endif
+#ifdef MSTL_SUPPORT_NORETURN__
+#define MSTL_NORETURN [[noreturn]]
+#else 
+#define MSTL_NORETURN 
+#endif
 
 #if defined(MSTL_PLATFORM_WINDOWS__) && defined(MSTL_COMPILE_MSVC__)
 #define MSTL_LONG_LONG_TYPE__ __int64
@@ -130,7 +133,7 @@ extern int memcmp(const void* _dest, const void* _rsc, int _byte);
 extern void* memmove(void* _dest, const void* _rsc, int _byte);
 extern void* memset(void* _dest, int _val, int _byte);
 
-extern size_t strlen(const char* _str);
+extern int strlen(const char* _str);
 extern char* strcpy(char* _dest, const char* _sou);
 extern int strcmp(const char* _des, const char* _sou);
 extern const char* strstr(const char* _des, const char* _sou);

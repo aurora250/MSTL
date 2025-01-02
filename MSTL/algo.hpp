@@ -738,7 +738,7 @@ ForwardIterator __lower_bound(ForwardIterator first, ForwardIterator last,
 }
 template <class RandomAccessIterator, class T, class Compare, class Distance>
 RandomAccessIterator __lower_bound(RandomAccessIterator first, RandomAccessIterator last,
-	const T& value, Compare comp, Distance*, MSTL_ITERATOR_TRATIS_FROM__ random_access_iterator_tag) {
+	const T& value, Compare comp, Distance*, std::random_access_iterator_tag) {
 	Distance len = last - first;
 	Distance half;
 	RandomAccessIterator middle;
@@ -977,7 +977,7 @@ void random_shuffle(RandomAccessIterator first, RandomAccessIterator last, Rando
 template <class ForwardIterator, class T, class Distance>
 pair<ForwardIterator, ForwardIterator>
 __equal_range(ForwardIterator first, ForwardIterator last, const T& value,
-	Distance*, forward_iterator_tag) {
+	Distance*, std::forward_iterator_tag) {
 	Distance len = 0;
 	distance(first, last, len);
 	Distance half;
@@ -1006,7 +1006,7 @@ __equal_range(ForwardIterator first, ForwardIterator last, const T& value,
 template <class RandomAccessIterator, class T, class Distance>
 pair<RandomAccessIterator, RandomAccessIterator>
 __equal_range(RandomAccessIterator first, RandomAccessIterator last,
-	const T& value, Distance*, random_access_iterator_tag) {
+	const T& value, Distance*, std::random_access_iterator_tag) {
 	Distance len = last - first;
 	Distance half;
 	RandomAccessIterator middle, left, right;
@@ -1039,7 +1039,7 @@ equal_range(ForwardIterator first, ForwardIterator last, const T& value) {
 template <class ForwardIterator, class T, class Compare, class Distance>
 pair<ForwardIterator, ForwardIterator>
 __equal_range(ForwardIterator first, ForwardIterator last, const T& value,
-	Compare comp, Distance*, forward_iterator_tag) {
+	Compare comp, Distance*, std::forward_iterator_tag) {
 	Distance len = 0;
 	distance(first, last, len);
 	Distance half;
@@ -1069,7 +1069,7 @@ template <class RandomAccessIterator, class T, class Compare, class Distance>
 pair<RandomAccessIterator, RandomAccessIterator>
 __equal_range(RandomAccessIterator first, RandomAccessIterator last,
 	const T& value, Compare comp, Distance*,
-	random_access_iterator_tag) {
+	std::random_access_iterator_tag) {
 	Distance len = last - first;
 	Distance half;
 	RandomAccessIterator middle, left, right;

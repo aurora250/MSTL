@@ -1,6 +1,8 @@
 #ifndef MSTL_ERRORLIB_H__
 #define MSTL_ERRORLIB_H__
 #include "basiclib.h"
+#include "logging.h"
+#include <assert.h>
 #include <memory>
 
 MSTL_BEGIN_NAMESPACE__
@@ -67,7 +69,7 @@ struct MathError : public Error {   // ÊýÑ§´íÎó
 	static MSTL_CONSTEXPR const_cstring __type__ = TO_STRING(MathError);
 };
 
-inline extern void __show_data_only(const Error& e, std::ostream& _out) {
+inline void __show_data_only(const Error& e, std::ostream& _out) {
 	_out << "Exception : (" << e._type << ") " << e._info << std::flush;
 }
 inline std::ostream& operator <<(const Error& err, std::ostream& _out) {
@@ -75,12 +77,13 @@ inline std::ostream& operator <<(const Error& err, std::ostream& _out) {
 	return _out;
 }
 
-extern void Exception(const Error& _err);
-inline extern void Assert(bool _boolean, const char* _info = MSTL_ASSERT_ERROR__) { // useless in release
+void Exception(const Error& _err);
+
+inline void Assert(bool _boolean, const char* _info = MSTL_ASSERT_ERROR__) { // useless in release
 	if (_boolean) return;
 	else Exception(AssertError(_info));
 }
-inline extern void Exception(bool _boolean, const Error& _err = Error()) {
+inline void Exception(bool _boolean, const Error& _err = Error()) {
 	if (_boolean) return;
 	else {
 		if (_err._type == TO_STRING(Error)) Assert(false);
@@ -88,8 +91,8 @@ inline extern void Exception(bool _boolean, const Error& _err = Error()) {
 	}
 }
 
-extern void Exit(bool _abort = false, void(* _func)(void) = nullptr);
 // just allow void(void) function to run before progess exit
+MSTL_NORETURN void Exit(bool _abort = false, void(*_func)(void) = nullptr);
 
 #define MSTL_EXEC_MEMORY__ Exception(MemoryError());
 
@@ -102,7 +105,18 @@ extern void Exit(bool _abort = false, void(* _func)(void) = nullptr);
 		MSTL_EXEC_MEMORY__ \
 	};
 #define MSTL_CATCH_ERROR__ catch(const Error& error)
+#define MSTL_CATCH_ERROR_UNUSE__ catch(const Error&)
+
+
+#define MSTL_REPORT_ERROR__(mesg) \
+    { LOG_ERROR(mesg); } assert(false);
+
+#ifdef MSTL_STATE_DEBUG__
+#define MSTL_DEBUG_VERIFY__(CON, MESG) \
+    { if (CON) {} else { MSTL_REPORT_ERROR__(MESG); } }
+#else
+#define MSTL_DEBUG_VERIFY__(con, mesg) 
+#endif
 
 MSTL_END_NAMESPACE__
-
 #endif // MSTL_ERRORLIB_H__

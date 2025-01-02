@@ -1,5 +1,4 @@
 #include "errorlib.h"
-
 MSTL_BEGIN_NAMESPACE__
 
 void Exception(const Error& _err) {
@@ -7,8 +6,7 @@ void Exception(const Error& _err) {
 	std::cerr << std::endl;
 	throw _err;
 }
-
-void Exit(bool _abort, void(* _func)(void)) {
+MSTL_NORETURN void Exit(bool _abort, void(*_func)(void)) {
 	if (_func) {
 #ifdef MSTL_STATE_DEBUG__
 		if (_abort)

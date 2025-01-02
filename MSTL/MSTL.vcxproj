@@ -190,7 +190,6 @@
     <ClInclude Include="threadsafe_print.h" />
     <ClInclude Include="thread_pool.h" />
     <ClInclude Include="tuple.hpp" />
-    <ClInclude Include="type_traits.hpp" />
     <ClInclude Include="vector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

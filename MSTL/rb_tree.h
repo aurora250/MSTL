@@ -3,8 +3,6 @@
 #include "pair.hpp"
 #include "memory.hpp"
 #include "iterator.hpp"
-#include <iterator>
-
 MSTL_BEGIN_NAMESPACE__
 
 typedef bool RB_TREE_COLORS;
@@ -20,13 +18,19 @@ struct __rb_tree_node_base {
     base_ptr left_;
     base_ptr right_;
 
-    static base_ptr minimum(base_ptr x);
-    static base_ptr maximum(base_ptr x);
+    static base_ptr minimum(base_ptr x) noexcept;
+    static base_ptr maximum(base_ptr x) noexcept;
 };
 template <typename T>
 struct __rb_tree_node : public __rb_tree_node_base {
     typedef __rb_tree_node<T>*  link_type;
     typedef T                   value_type;
+    
+    __rb_tree_node() = default;
+    __rb_tree_node(const __rb_tree_node&) = delete;
+    __rb_tree_node& operator =(const __rb_tree_node&) = delete;
+    ~__rb_tree_node() = default;
+
     T data_;
 };
 
@@ -36,8 +40,8 @@ struct __rb_tree_base_iterator {
     typedef ptrdiff_t                        difference_type;
     base_ptr node_;
 
-    void increment();
-    void decrement();
+    void increment() noexcept;
+    void decrement() noexcept;
 };
 
 template<typename T, typename Ref = T&, typename Ptr = T*>
@@ -51,38 +55,37 @@ struct rb_tree_iterator : public __rb_tree_base_iterator {
     typedef rb_tree_iterator<T, Ref, Ptr>           self;
     typedef __rb_tree_node<T>*                      link_type;
 
-    rb_tree_iterator() {}
+    rb_tree_iterator() = default;
     rb_tree_iterator(link_type x) { node_ = x; }
     rb_tree_iterator(const iterator& it) { node_ = it.node_; }
+    ~rb_tree_iterator() = default;
 
-    reference operator*() const { return link_type(node_)->data_; }
-    pointer operator->() const { return &(operator*()); }
+    MSTL_NODISCARD reference operator *() const noexcept { return link_type(node_)->data_; }
+    MSTL_NODISCARD pointer operator ->() const noexcept { return &(operator*()); }
 
-    self& operator++() {
+    self& operator ++() noexcept {
         increment();
         return *this;
     }
-    self& operator++(int) {
+    self& operator ++(int) noexcept {
         self tmp = *this;
         increment();
         return tmp;
     }
-    self& operator--() {
+    self& operator --() noexcept {
         decrement();
         return *this;
     }
-    self operator--(int) {
+    self operator --(int) noexcept {
         self tmp = *this;
         decrement();
         return tmp;
     }
 };
-inline bool operator ==(const __rb_tree_base_iterator& x,
-    const __rb_tree_base_iterator& y) {
+inline MSTL_NODISCARD bool operator ==(const __rb_tree_base_iterator& x, const __rb_tree_base_iterator& y) {
     return x.node_ == y.node_;
 }
-inline bool operator !=(const __rb_tree_base_iterator& x,
-    const __rb_tree_base_iterator& y) {
+inline MSTL_NODISCARD bool operator !=(const __rb_tree_base_iterator& x, const __rb_tree_base_iterator& y) {
     return x.node_ != y.node_;
 }
 
@@ -92,30 +95,26 @@ void __rb_tree_rebalance(__rb_tree_node_base* x, __rb_tree_node_base*& root);
 __rb_tree_node_base* __rb_tree_rebalance_for_erase(
     __rb_tree_node_base* z, __rb_tree_node_base*& root,
     __rb_tree_node_base*& leftmost, __rb_tree_node_base*& rightmost);
-
 int __black_count(__rb_tree_node_base* node, __rb_tree_node_base* root);
-
-
 
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, 
     typename Alloc = default_standard_alloc<__rb_tree_node<Value>> >
 class rb_tree {
 private:
-    typedef void*                   void_pointer;
     typedef __rb_tree_node_base*    base_ptr;
     typedef __rb_tree_node<Value>   rb_tree_node;
     typedef Alloc                   rb_tree_node_allocator;
     typedef RB_TREE_COLORS          color_type;
 public:
-    typedef Key                 key_type;
-    typedef Value               value_type;
-    typedef value_type*         pointer;
-    typedef const value_type*   const_pointer;
-    typedef value_type&         reference;
-    typedef const value_type&   const_reference;
-    typedef rb_tree_node*       link_type;
-    typedef size_t              size_type;
-    typedef ptrdiff_t           difference_type;
+    typedef Key                     key_type;
+    typedef Value                   value_type;
+    typedef value_type*             pointer;
+    typedef const value_type*       const_pointer;
+    typedef value_type&             reference;
+    typedef const value_type&       const_reference;
+    typedef rb_tree_node*           link_type;
+    typedef size_t                  size_type;
+    typedef ptrdiff_t               difference_type;
     typedef rb_tree<Key, Value, KeyOfValue, Compare, Alloc>                 self;
     typedef rb_tree_iterator<value_type, reference, pointer>                iterator;
     typedef rb_tree_iterator<value_type, const_reference, const_pointer>    const_iterator;

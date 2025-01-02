@@ -18,10 +18,11 @@ pair<T*, ptrdiff_t> get_temporary_buffer(ptrdiff_t len, T*) {
 }
 template <class T>
 void return_temporary_buffer(T* p) {
-    free(p);
+    std::free(p);
 }
 
-template <class ForwardIterator, class T = iterator_traits<ForwardIterator>::value_type>
+template <class Iterator, class T = std::iterator_traits<Iterator>::value_type>
+    requires(ForwardIterator<Iterator>)
 class temporary_buffer {
 private:
     ptrdiff_t original_len;
@@ -38,8 +39,8 @@ private:
             len /= 2;
         }
     }
-    void initialize_buffer(const T&, __true_type) {}
-    void initialize_buffer(const T& val, __false_type) {
+    void initialize_buffer(const T&) requires(TrivialCopyAssignable<T>) {}
+    void initialize_buffer(const T& val) requires(!TrivialCopyAssignable<T>) {
         (uninitialized_fill_n)(buffer, len, val);
     }
 
@@ -51,19 +52,18 @@ public:
 
     temporary_buffer(const temporary_buffer&) = delete;
     void operator =(const temporary_buffer&) = delete;
-    temporary_buffer(ForwardIterator first, ForwardIterator last) {
+    temporary_buffer(Iterator first, Iterator last) {
         MSTL_TRY__{
             len = 0;
             MSTL::distance(first, last, len);
             allocate_buffer();
-            if (len > 0)
-                initialize_buffer(*first, typename __type_traits<T>::has_trivial_default_constructor());
+            if (len > 0) initialize_buffer(*first);
         }
-        MSTL_CATCH_UNWIND_THROW_M__(free(buffer); buffer = 0; len = 0);
+        MSTL_CATCH_UNWIND_THROW_M__(std::free(buffer); buffer = 0; len = 0);
     }
     ~temporary_buffer() {
         MSTL::destroy(buffer, buffer + len);
-        free(buffer);
+        std::free(buffer);
     }
 };
 

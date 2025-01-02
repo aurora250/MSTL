@@ -4,7 +4,6 @@
 #include "algo.hpp"
 #include "memory.hpp"
 #include "vector.hpp"
-#include "type_traits.hpp"
 #include "concepts.hpp"
 #include "hash_function.hpp"
 //#ifdef MSTL_DLL_LINK__

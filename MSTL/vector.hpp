@@ -30,43 +30,38 @@ private:
 	data_allocator alloc_;
 
 	MSTL_CONSTEXPR void range_check(size_type _pos) const {
-		Exception(in_boundary(_pos), RangeError());
+		MSTL_DEBUG_VERIFY__(
+			_pos < static_cast<size_type>(finish_ - start_), "vector index out of range"
+		);
 	}
 	MSTL_CONSTEXPR bool in_boundary(size_type _pos) const noexcept {
-		if (_pos < 0) return false;
-		else return _pos < size() ? true : false;
+		return _pos < size() ? true : false;
 	}
-	MSTL_CONSTEXPR void fill_initialize(size_type n, const_reference value) {
-		start_ = allocate_and_fill(n, value);
+	MSTL_CONSTEXPR void fill_initialize(size_type n, T&& x) {
+		start_ = allocate_and_fill(n, std::forward<T>(x));
 		finish_ = start_ + n;
 		end_of_storage_ = finish_;
 	}
-	MSTL_CONSTEXPR iterator allocate_and_fill(size_type n, const_reference x) {
+	MSTL_CONSTEXPR iterator allocate_and_fill(size_type n, T&& x) {
 		iterator result = alloc_.allocate(n);
-		MSTL_TRY__{
-			MSTL::uninitialized_fill_n(result, n, x);
-		}
-		MSTL_CATCH_UNWIND_THROW_M__(alloc_.deallocate(result, n));
+		MSTL::uninitialized_fill_n(result, n, std::forward<T>(x));
 		return result;
 	}
 	template <typename Iterator>
 		requires(ForwardIterator<Iterator>)
 	MSTL_CONSTEXPR iterator allocate_and_copy(size_type n, Iterator first, Iterator last) {
 		iterator result = alloc_.allocate(n);
-		MSTL_TRY__{
-			MSTL::uninitialized_copy(first, last, result);
-		}
-		MSTL_CATCH_UNWIND_THROW_M__(alloc_.deallocate(result, n));
+		MSTL::uninitialized_copy(first, last, result);
 		return result;
 	}
 	template <typename Iterator>
 		requires(InputIterator<Iterator>)
-	MSTL_CONSTEXPR void range_initialize(Iterator first, Iterator last, std::input_iterator_tag) {
+	MSTL_CONSTEXPR void range_initialize(Iterator first, Iterator last) {
 		for (; first != last; ++first) push_back(*first);
 	}
 	template <typename Iterator>
 		requires(ForwardIterator<Iterator>)
-	MSTL_CONSTEXPR void range_initialize(Iterator first, Iterator last, std::forward_iterator_tag) {
+	MSTL_CONSTEXPR void range_initialize(Iterator first, Iterator last) {
 		size_type n = 0;
 		MSTL::distance(first, last, n);
 		start_ = allocate_and_copy(n, first, last);
@@ -76,28 +71,22 @@ private:
 	MSTL_CONSTEXPR void deallocate() {
 		if (start_) alloc_.deallocate(start_, end_of_storage_ - start_);
 	}
-	MSTL_CONSTEXPR void insert_aux(iterator position, const_reference x) {
+	MSTL_CONSTEXPR void insert_aux(iterator position, T&& x) {
 		if (finish_ != end_of_storage_) {
-			construct(finish_, *(finish_ - 1));
+			MSTL::construct(finish_, *(finish_ - 1));
 			++finish_;
-			value_type x_copy = x;
 			MSTL::copy_backward(position, finish_ - 2, finish_ - 1);
-			*position = x_copy;
+			*position = x;
 			return;
 		}
 		const size_type old_size = size();
 		const size_type len = old_size != 0 ? 2 * old_size : 1;
 		iterator new_start = alloc_.allocate(len);
 		iterator new_finish = new_start;
-		MSTL_TRY__{
-			new_finish = MSTL::uninitialized_copy(start_, position, new_start);
-			MSTL::construct(new_finish, x);
-			++new_finish;
-			new_finish = MSTL::uninitialized_copy(position, finish_, new_finish);
-		}
-		MSTL_CATCH_UNWIND_THROW_M__(
-			MSTL::destroy(new_start, new_finish);
-			alloc_.deallocate(new_start, len));
+		new_finish = MSTL::uninitialized_copy(start_, position, new_start);
+		MSTL::construct(new_finish, std::forward<T>(x));
+		++new_finish;
+		new_finish = MSTL::uninitialized_copy(position, finish_, new_finish);
 		MSTL::destroy(begin(), end());
 		deallocate();
 		start_ = new_start;
@@ -106,15 +95,15 @@ private:
 	}
 	template <typename Iterator>
 		requires(InputIterator<Iterator>)
-	MSTL_CONSTEXPR void range_insert(iterator pos, Iterator first, Iterator last, std::input_iterator_tag) {
+	MSTL_CONSTEXPR void range_insert(iterator pos, Iterator first, Iterator last) {
 		for (; first != last; ++first) {
-			pos = insert(pos, *first);
+			pos = this->insert(pos, *first);
 			++pos;
 		}
 	}
 	template <typename Iterator>
 		requires(ForwardIterator<Iterator>)
-	MSTL_CONSTEXPR void range_insert(iterator position, Iterator first, Iterator last, std::forward_iterator_tag) {
+	MSTL_CONSTEXPR void range_insert(iterator position, Iterator first, Iterator last) {
 		if (first == last) return;
 		size_type n = 0;
 		MSTL::distance(first, last, n);
@@ -142,14 +131,9 @@ private:
 			const size_type len = old_size + maximum(old_size, n);
 			iterator new_start = alloc_.allocate(len);
 			iterator new_finish = new_start;
-			MSTL_TRY__{
-			  new_finish = MSTL::uninitialized_copy(start_, position, new_start);
-			  new_finish = MSTL::uninitialized_copy(first, last, new_finish);
-			  new_finish = MSTL::uninitialized_copy(position, finish_, new_finish);
-			}
-			MSTL_CATCH_UNWIND_THROW_M__(
-				MSTL::destroy(new_start, new_finish);
-				alloc_.deallocate(new_start, len));
+			new_finish = MSTL::uninitialized_copy(start_, position, new_start);
+			new_finish = MSTL::uninitialized_copy(first, last, new_finish);
+			new_finish = MSTL::uninitialized_copy(position, finish_, new_finish);
 			MSTL::destroy(start_, finish_);
 			deallocate();
 			start_ = new_start;
@@ -169,17 +153,17 @@ public:
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
 		fill_initialize(n, T());
 	}
-	MSTL_CONSTEXPR explicit vector(size_type n, const_reference value)
+	MSTL_CONSTEXPR explicit vector(size_type n, T&& value)
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
-		fill_initialize(n, value);
+		fill_initialize(n, std::forward<T>(value));
 	}
-	MSTL_CONSTEXPR explicit vector(int n, const_reference value)
+	MSTL_CONSTEXPR explicit vector(int n, T&& value)
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
-		fill_initialize(n, value);
+		fill_initialize(n, std::forward<T>(value));
 	}
-	MSTL_CONSTEXPR explicit vector(long n, const_reference value)
+	MSTL_CONSTEXPR explicit vector(long n, T&& value)
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
-		fill_initialize(n, value);
+		fill_initialize(n, std::forward<T>(value));
 	}
 
 	MSTL_CONSTEXPR vector(const self& x) 
@@ -190,23 +174,8 @@ public:
 	}
 	MSTL_CONSTEXPR self& operator =(const self& x) {
 		if (x == *this) return *this;
-		if (x.size() > capacity()) {
-			iterator new_ = (allocate_and_copy)(x.end() - x.begin(), x.begin(), x.end());
-			MSTL::destroy(start_, finish_);
-			deallocate();
-			start_ = new_;
-			end_of_storage_ = start_ + (x.end() - x.begin());
-		}
-		else if (size() >= x.size()) {
-			iterator i = copy(x.begin(), x.end(), begin());
-			MSTL::destroy(i, finish_);
-		}
-		else {
-			MSTL::copy(x.begin(), x.begin() + size(), start_);
-			MSTL::uninitialized_copy(x.begin() + size(), x.end(), finish_);
-		}
-		finish_ = start_ + x.size();
-		return *this;
+		clear();
+		insert(end(), x.const_begin(), x.const_end());
 	}
 	MSTL_CONSTEXPR vector(self&& x) noexcept
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
@@ -246,7 +215,7 @@ public:
 		requires(InputIterator<Iterator>)
 	MSTL_CONSTEXPR vector(Iterator first, Iterator last) 
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
-		range_initialize(first, last, (MSTL::iterator_category)(first));
+		range_initialize(first, last);
 	}
 
 	~vector() {
@@ -324,15 +293,15 @@ public:
 		return begin() + n;
 	}
 	MSTL_CONSTEXPR iterator insert(iterator position) {
-		return insert(position, T());
+		return this->insert(position, T());
 	}
 	template <typename Iterator>
 		requires(InputIterator<Iterator>)
 	MSTL_CONSTEXPR void insert(iterator position, Iterator first, Iterator last) {
-		range_insert(position, first, last, (iterator_category)(first));
+		this->range_insert(position, first, last);
 	}
 	MSTL_CONSTEXPR void insert(iterator position, std::initializer_list<T> l) {
-		range_insert(position, l.begin(), l.end(), (iterator_category)(l.begin()));
+		this->range_insert(position, l.begin(), l.end());
 	}
 	MSTL_CONSTEXPR void insert(iterator position, size_type n, T&& x) {
 		if (n == 0) return;
@@ -358,14 +327,9 @@ public:
 			const size_type len = old_size + maximum(old_size, n);
 			iterator new_start = alloc_.allocate(len);
 			iterator new_finish = new_start;
-			MSTL_TRY__{
-			  new_finish = MSTL::uninitialized_copy(start_, position, new_start);
-			  new_finish = MSTL::uninitialized_fill_n(new_finish, n, std::forward<T>(x));
-			  new_finish = MSTL::uninitialized_copy(position, finish_, new_finish);
-			}
-			MSTL_CATCH_UNWIND_THROW_M__(
-				MSTL::destroy(new_start, new_finish);
-				alloc_.deallocate(new_start, len));
+			new_finish = MSTL::uninitialized_copy(start_, position, new_start);
+			new_finish = MSTL::uninitialized_fill_n(new_finish, n, std::forward<T>(x));
+			new_finish = MSTL::uninitialized_copy(position, finish_, new_finish);
 			MSTL::destroy(start_, finish_);
 			deallocate();
 			start_ = new_start;

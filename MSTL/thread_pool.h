@@ -51,11 +51,11 @@ public:
 	void set_mode(POOL_MODE mode);
 	void set_taskque_max_thresh_hold(size_t threshHold);
 	void set_thread_size_thresh_hold(size_t threshHold);
-	size_t max_thread_size();
+	MSTL_NODISCARD size_t max_thread_size();
 	void start(unsigned int initThreadSize = 2);
 
 	template <typename Func, typename... Args>
-	MSTL_NODISCARD decltype(auto) submit_task(Func&& func, Args&&... args) {
+	decltype(auto) submit_task(Func&& func, Args&&... args) {
 		using Result = decltype(func(args...));
 		auto task = std::make_shared<std::packaged_task<Result()>>(
 			std::bind(std::forward<Func>(func), std::forward<Args>(args)...));

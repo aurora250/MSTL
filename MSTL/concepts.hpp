@@ -71,10 +71,14 @@ namespace concepts {
 	concept Assignable = std::is_assignable_v<To, From>;
 	template<typename T>
 	concept CopyAssignable = std::is_copy_assignable_v<T>;
+	template <typename T>
+	concept TrivialCopyAssignable = std::is_trivially_copy_assignable_v<T>;
 	template<typename T>
 	concept MoveAssignable = std::is_move_assignable_v<T>;
 	template <typename T>
-	concept Swappable = std::_Is_swappable<T>::value;
+	concept TrivialMoveAssignable = std::is_trivially_move_assignable_v<T>;
+	template <typename T>
+	concept TrivialAssignable = TrivialCopyAssignable<T> || TrivialMoveAssignable<T>;
 
 	template<typename T>
 	concept NothrowDefaultConstructible = std::is_nothrow_default_constructible_v<T>;
@@ -84,14 +88,21 @@ namespace concepts {
 	concept NothrowMoveConstructible = std::is_nothrow_move_constructible_v<T>;
 	template<typename T, typename... Args>
 	concept NothrowConstructible = std::is_nothrow_constructible_v<T, Args...>;
+
 	template<typename To, typename From>
 	concept NothrowAssignable = std::is_nothrow_assignable_v<To, From>;
 	template<typename T>
 	concept NothrowCopyAssignable = std::is_nothrow_copy_assignable_v<T>;
 	template<typename T>
 	concept NothrowMoveAssignable = std::is_nothrow_move_assignable_v<T>;
+
+	template <typename T>
+	concept Swappable = std::is_swappable_v<T>;
 	template <typename T>
 	concept NothrowSwappable = std::_Is_nothrow_swappable<T>::value;
+
+	template <typename T>
+	concept TrivialDestructible = std::is_trivially_destructible_v<T>;
 
 	template<typename T>
 	concept Printable = requires(const T & t) {
@@ -107,7 +118,7 @@ namespace concepts {
 	};
 
 	template <typename T>
-	concept Detailable = NPointer<T> &&  requires(const T& c) {
+	concept Detailable = NPointer<T> && requires(const T& c) {
 		{ c.const_begin() } -> std::convertible_to<typename T::const_iterator>;
 		{ c.const_end() } -> std::convertible_to<typename T::const_iterator>;
 		{ c.size() } -> std::convertible_to<size_t>;
@@ -158,7 +169,7 @@ namespace concepts {
 	};
 
 	template<typename T>
-	concept BinaryFunction = requires(T f, typename T::first_argument_type a1, typename T::first_argument_type a2) {
+	concept BinaryFunction = requires(T f, typename T::first_argument_type a1, typename T::second_argument_type a2) {
 		{ f(a1, a2) } -> std::convertible_to<bool>;
 	};
 	template <typename T>

@@ -2,16 +2,16 @@
 
 MSTL_BEGIN_NAMESPACE__
 
-__rb_tree_node_base::base_ptr __rb_tree_node_base::minimum(base_ptr x) {
+__rb_tree_node_base::base_ptr __rb_tree_node_base::minimum(base_ptr x) noexcept {
     while (x->left_ != 0) x = x->left_;
     return x;
 }
-__rb_tree_node_base::base_ptr __rb_tree_node_base::maximum(base_ptr x) {
+__rb_tree_node_base::base_ptr __rb_tree_node_base::maximum(base_ptr x) noexcept {
     while (x->right_ != 0) x = x->right_;
     return x;
 }
 
-void __rb_tree_base_iterator::increment() {
+void __rb_tree_base_iterator::increment() noexcept {
     if (node_->right_ != 0) {
         node_ = node_->right_;
         while (node_->left_ != 0) node_ = node_->left_;
@@ -25,7 +25,7 @@ void __rb_tree_base_iterator::increment() {
         if (node_->right_ != y) node_ = y;
     }
 }
-void __rb_tree_base_iterator::decrement() {
+void __rb_tree_base_iterator::decrement() noexcept {
     if (node_->color_ == RB_TREE_RED__ && node_->parent_->parent_ == node_) {
         node_ = node_->right_;
     }

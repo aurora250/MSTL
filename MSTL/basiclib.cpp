@@ -53,7 +53,7 @@ void* memset(void* _dest, int _val, int _size) {
 	return ret;
 }
 
-size_t strlen(const char* _str) {
+int strlen(const char* _str) {
 	if (*_str != '\0') return strlen(_str + 1) + 1;
 	else return 0;
 }
@@ -97,10 +97,9 @@ char* memstr(char* _data, int _len, char* _sub) {
 	if (_data == NULL || _len <= 0 || _sub == NULL) return NULL;
 	if (*_sub == '\0') return NULL;
 	int _sublen = strlen(_sub);
-	int i;
 	char* _cur = _data;
 	int _las = _len - _sublen + 1;
-	for (i = 0; i < _las; i++) {
+	for (int i = 0; i < _las; i++) {
 		if (*_cur == *_sub) {
 			if (memcmp(_cur, _sub, _sublen) == 0) return _cur;
 		}

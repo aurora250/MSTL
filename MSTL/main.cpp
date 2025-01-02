@@ -6,7 +6,7 @@ void try_exc() {
     try {
         MSTL_EXEC_MEMORY__;
     }
-    catch (Error& e) {
+    catch (Error&) {
         StopIterator it;
         Exit(true, try_lls);
         try_lls();
@@ -171,7 +171,7 @@ void try_vec() {
         MSTL_TRY__{
             out(v[1]);
         }
-        MSTL_CATCH_ERROR__{
+        MSTL_CATCH_ERROR_UNUSE__{
             std::cout << "err" << std::endl;
         }
         v.insert(v.end(), v2.const_begin(), v2.const_end());
@@ -353,5 +353,5 @@ void try_avl() {
     }
 }
 int main() {
-    try_pque();
+    try_vec();
 }
