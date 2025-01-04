@@ -119,9 +119,6 @@
     <ClInclude Include="mysql_connect_pool.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="type_traits.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="heap.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -180,6 +177,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="skip_list.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="adjacency_list.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

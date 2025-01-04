@@ -352,6 +352,43 @@ void try_avl() {
         std::cout << *it << std::endl;
     }
 }
+#include "adjacency_list.h"
+void try_graph() {
+    MSTL_NAMESPACE__;
+    adjacency_list graph;           // 创建图对象
+
+    graph.add_node("A", 10);    // 添加节点
+    graph.add_node("B", 3);
+    graph.add_node("C", 2);
+    graph.add_node("D", 6);
+    graph.add_node("E", 7);
+    graph.add_node("F", 10);
+    graph.add_node("G", 15);
+    graph.add_node("H", 100);
+
+    graph.add_edge("A", "B"); // 添加边
+    graph.add_edge("B", "C");
+    graph.add_edge("C", "D");
+    graph.add_edge("G", "H");
+
+    graph.print_graph();    // 打印图的邻接表
+    std::cout << graph.have_cycle() << '\n';
+
+    vector<__adj_node*> zeroIndegree = graph.get_zero_indegree_nodes();
+    std::cout << "Zero indegree nodes: ";
+    for (const auto& node : zeroIndegree) {
+        std::cout << node->name_ << " ";
+    }
+    std::cout << std::endl;
+
+    zeroIndegree = graph.get_zero_indegree_nodes();
+    std::cout << "Zero indegree nodes: ";
+    for (const auto& node : zeroIndegree) {
+        std::cout << node->name_ << " ";
+    }
+    std::cout << std::endl;
+}
+
 int main() {
-    try_vec();
+    try_graph();
 }

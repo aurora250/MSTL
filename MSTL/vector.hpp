@@ -93,6 +93,28 @@ private:
 		finish_ = new_finish;
 		end_of_storage_ = new_start + len;
 	}
+	MSTL_CONSTEXPR void insert_aux(iterator position, const T& x) {
+		if (finish_ != end_of_storage_) {
+			MSTL::construct(finish_, *(finish_ - 1));
+			++finish_;
+			MSTL::copy_backward(position, finish_ - 2, finish_ - 1);
+			*position = x;
+			return;
+		}
+		const size_type old_size = size();
+		const size_type len = old_size != 0 ? 2 * old_size : 1;
+		iterator new_start = alloc_.allocate(len);
+		iterator new_finish = new_start;
+		new_finish = MSTL::uninitialized_copy(start_, position, new_start);
+		MSTL::construct(new_finish, x);
+		++new_finish;
+		new_finish = MSTL::uninitialized_copy(position, finish_, new_finish);
+		MSTL::destroy(begin(), end());
+		deallocate();
+		start_ = new_start;
+		finish_ = new_finish;
+		end_of_storage_ = new_start + len;
+	}
 	template <typename Iterator>
 		requires(InputIterator<Iterator>)
 	MSTL_CONSTEXPR void range_insert(iterator pos, Iterator first, Iterator last) {
@@ -263,6 +285,13 @@ public:
 			++finish_;
 		}
 		else insert_aux(end(), std::forward<T>(val));
+	}
+	MSTL_CONSTEXPR void push_back(const T& val) {
+		if (finish_ != end_of_storage_) {
+			MSTL::construct(finish_, val);
+			++finish_;
+		}
+		else insert_aux(end(), val);
 	}
 	MSTL_CONSTEXPR void pop_back() noexcept {
 		MSTL::destroy(finish_);
