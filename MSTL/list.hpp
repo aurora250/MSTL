@@ -87,7 +87,7 @@ private:
     size_type size_;
 
     inline void range_check(size_type _pos) const noexcept {
-        Exception(this->in_boundary(_pos), RangeError());
+        Exception(this->in_boundary(_pos), StopIterator());
     }
     inline bool in_boundary(size_type _pos) const noexcept {
         if (_pos < 0) return false;

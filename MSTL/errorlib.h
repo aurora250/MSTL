@@ -55,13 +55,6 @@ struct ValueError : public Error {   // 函数的参数非法
 	static MSTL_CONSTEXPR const_cstring __type__ = TO_STRING(ValueError);
 };
 
-struct RangeError : public Error {   // 数组越界或无值
-	typedef RangeError self;
-	MSTL_CONSTEXPR explicit RangeError(cstring _info = "Index out of Range or Value is NULL.") noexcept
-		: Error(_info, __type__) {}
-	static MSTL_CONSTEXPR const_cstring __type__ = TO_STRING(RangeError);
-};
-
 struct MathError : public Error {   // 数学错误
 	typedef MathError self;
 	MSTL_CONSTEXPR explicit MathError(cstring _info = "Math Operation Failure!") noexcept

@@ -17,19 +17,19 @@ MSTL_BEGIN_NAMESPACE__
 
 static const size_t MSTL_TASK_MAX_THRESHHOLD__ = INT32_MAX;
 static const size_t MSTL_THREAD_MAX_THRESHHOLD__ = std::thread::hardware_concurrency();
-static const size_t MSTL_THREAD_MAX_IDLE_SECONDS__ = 60;
+static const MSTL_LONG_LONG_TYPE__ MSTL_THREAD_MAX_IDLE_SECONDS__ = 60;
 
 enum class POOL_MODE {
 	MODE_FIXED,  // static number
 	MODE_CACHED  // dynamic number
 };
 
-class __thread {
+class Thread__ {
 public:
 	typedef std::function<void(int)> ThreadFunc;
 
-	__thread(ThreadFunc func);
-	~__thread();
+	Thread__(ThreadFunc func);
+	~Thread__();
 
 	MSTL_NODISCARD int get_id() const;
 	void start();
@@ -80,7 +80,7 @@ public:
 #ifdef MSTL_STATE_DEBUG__
 			sout << ">>> creat new thread\n";
 #endif
-			auto ptr = std::make_shared<__thread>(std::bind(&ThreadPool::thread_function, this, std::placeholders::_1));
+			auto ptr = std::make_shared<Thread__>(std::bind(&ThreadPool::thread_function, this, std::placeholders::_1));
 			int threadid = ptr->get_id();
 			threads_.emplace(threadid, std::move(ptr));
 			threads_[threadid]->start();
@@ -95,7 +95,7 @@ private:
 	typedef std::function<void()> Task;
 
 	//std::
-	unordered_map<int, std::shared_ptr<__thread>> threads_;
+	unordered_map<int, std::shared_ptr<Thread__>> threads_;
 
 	size_t init_thread_size_;
 	size_t thread_size_thresh_hold_;

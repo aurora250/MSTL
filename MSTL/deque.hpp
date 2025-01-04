@@ -400,17 +400,19 @@ public:
     deque(const std::initializer_list<T>& _lls)
         : deque(_lls.begin(), _lls.end()) {}
     self& operator =(const std::initializer_list<T>& x) {
-        if (*this == x) return;
+        if (*this == x) return *this;
         clear();
         insert(end(), x.begin(), x.end());
+        return *this;
     }
 
     deque(const self& x) 
         : deque(x.const_begin(), x.const_end()) {}
     self& operator =(const self& x) {
-        if (*this == x) return;
+        if (*this == x) return *this;
         clear();
         insert(end(), x.const_begin(), x.const_end());
+        return *this;
     }
 
     explicit deque(self&& x) noexcept : data_alloc_(), map_alloc_(),

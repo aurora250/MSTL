@@ -1,19 +1,19 @@
 #include "thread_pool.h"
 MSTL_BEGIN_NAMESPACE__
 
-int __thread::generateId_ = 0;
+int Thread__::generateId_ = 0;
 
-__thread::__thread(ThreadFunc func)
+Thread__::Thread__(ThreadFunc func)
 	: func_(func),
 	threadId_(generateId_++) {
 }
-__thread::~__thread() {}
+Thread__::~Thread__() {}
 
-void __thread::start() {
+void Thread__::start() {
 	std::thread t(func_, threadId_);
 	t.detach();
 }
-int __thread::get_id() const {
+int Thread__::get_id() const {
 	return threadId_;
 }
 
@@ -54,7 +54,7 @@ void ThreadPool::start(unsigned int initThreadSize) {
 	is_running_ = true;
 	init_thread_size_ = initThreadSize;
 	for (size_t i = 0; i < init_thread_size_; i++) {
-		auto ptr = std::make_shared<__thread>(std::bind(&ThreadPool::thread_function, this, std::placeholders::_1));
+		auto ptr = std::make_shared<Thread__>(std::bind(&ThreadPool::thread_function, this, std::placeholders::_1));
 		threads_.emplace(ptr->get_id(), std::move(ptr));
 	}
 	for (int i = 0; i < init_thread_size_; i++) {

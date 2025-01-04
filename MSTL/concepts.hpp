@@ -62,6 +62,20 @@ namespace concepts {
 
 	template<typename T>
 	concept DefaultConstructible = std::is_default_constructible_v<T>;
+#ifdef MSTL_COMPILE_MSVC__
+	template<typename T>
+	concept DefaultImplicitConstructible = std::_Is_implicitly_default_constructible<T>::value;
+#elif defined(MSTL_COMPILE_GNUC__)
+	template <class T, class = void>
+	struct _Is_implicitly_default_constructible : std::false_type {};
+	template <class T>
+	inline void _Implicitly_default_construct(const T&) {}
+	template <class T>
+	struct _Is_implicitly_default_constructible < T, std::void_t<decltype(_Implicitly_default_construct<T>({})) >> : std::true_type {};
+
+	template<typename T>
+	concept DefaultImplicitConstructible = _Is_implicitly_default_constructible<T>::value;
+#endif
 	template<typename T>
 	concept CopyConstructible = std::is_copy_constructible_v<T>;
 	template<typename T, typename... Args>
@@ -98,8 +112,46 @@ namespace concepts {
 
 	template <typename T>
 	concept Swappable = std::is_swappable_v<T>;
+#ifdef MSTL_COMPILE_MSVC__
 	template <typename T>
 	concept NothrowSwappable = std::_Is_nothrow_swappable<T>::value;
+#else
+	template <class _Ty1, class _Ty2, class = void>
+	struct _Swappable_with_helper : std::false_type {};
+	template <class _Ty1, class _Ty2>
+	struct _Swappable_with_helper<_Ty1, _Ty2, std::void_t<decltype(swap(std::declval<_Ty1>(), 
+		std::declval<_Ty2>()))>> : std::true_type {};
+
+	template <class _Ty1, class _Ty2>
+	struct _Is_swappable_with
+		: std::bool_constant<std::conjunction_v<_Swappable_with_helper<_Ty1, _Ty2>, 
+		_Swappable_with_helper<_Ty2, _Ty1>>> {
+	};
+	template <class _Ty>
+	struct _Is_swappable
+		: _Is_swappable_with<std::add_lvalue_reference_t<_Ty>,
+		std::add_lvalue_reference_t<_Ty>>::type {
+	};
+	template <class _Ty1, class _Ty2>
+	struct _Swap_cannot_throw
+		: std::bool_constant<noexcept(swap(std::declval<_Ty1>(), std::declval<_Ty2>()))
+		&& noexcept(swap(std::declval<_Ty2>(), std::declval<_Ty1>()))> {
+	};
+
+	template <class _Ty1, class _Ty2>
+	struct _Is_nothrow_swappable_with
+		: std::bool_constant<std::conjunction_v<_Is_swappable_with<_Ty1, _Ty2>,
+		_Swap_cannot_throw<_Ty1, _Ty2>>> {
+	};
+	template <class _Ty>
+	struct _Is_nothrow_swappable
+		: _Is_nothrow_swappable_with<std::add_lvalue_reference_t<_Ty>,
+		std::add_lvalue_reference_t<_Ty>>::type {
+	};
+
+	template <typename T>
+	concept NothrowSwappable = _Is_nothrow_swappable<T>::value;
+#endif
 
 	template <typename T>
 	concept TrivialDestructible = std::is_trivially_destructible_v<T>;

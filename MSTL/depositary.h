@@ -32,16 +32,6 @@ public:
 		//deposit_map_.insert(pair(_register_name, __base_deposit_ptr(new DeposT(_target))));
 		deposit_map_.emplace(register_name, __base_deposit_ptr(&std::forward<Func>(func)));
 	};
-	template <typename Func, typename... Args>
-	decltype(auto) register_deposit(const std::string& register_name, Func&& func, Args&&... args) {
-		using Result = decltype(func(args));
-		auto deposit = std::make_shared<std::packaged_task<Result()>>(
-			std::bind(std::forward<Func>(func), std::forward<Args>(args)...));
-		deposit_map_.emplace(register_name, __base_deposit_ptr(&std::forward<Func>(func)));
-		auto res = deposit->get_future();
-		return res;
-	}
-
 
 	template <NVoidT T, typename... Args>
 	T excute(const std::string& _register_name, Args&&... _args) {

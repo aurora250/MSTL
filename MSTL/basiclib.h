@@ -29,7 +29,7 @@
 #define MSTL_COMPILE_UNKNOW__	1
 #endif
 
-#if defined(DEBUG) || defined(_DEBUG)
+#if defined(DEBUG) || defined(_DEBUG) || defined(QT_QML_DEBUG)
 #define MSTL_STATE_DEBUG__		1
 #else
 #define MSTL_STATE_RELEASE__	1
@@ -54,16 +54,16 @@
 #define MSTL_SET_CONCEPTS__ namespace concepts {
 #define MSTL_END_CONCEPTS__ }
 
-#if defined(_HAS_CXX20)
+#if defined(_HAS_CXX20) || (__cplusplus >= 202002L)
 #define MSTL_SUPPORT_CONCEPTS__		1
 #endif
-#if defined(_HAS_CXX17)
+#if defined(_HAS_CXX17) || (__cplusplus >= 201703L)
 #define MSTL_SUPPORT_NODISCARD__	1
 #endif
-#if defined(_HAS_CXX17)
+#if defined(_HAS_CXX17) || (__cplusplus >= 201703L)
 #define MSTL_SUPPORT_CONSTEXPR__	1
 #endif
-#if defined(_HAS_CXX17)
+#if defined(_HAS_CXX17) || (__cplusplus >= 201703L)
 #define MSTL_SUPPORT_NORETURN__		1
 #endif
 
