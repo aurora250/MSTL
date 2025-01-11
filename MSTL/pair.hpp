@@ -4,7 +4,7 @@
 #include "container.h"
 
 MSTL_BEGIN_NAMESPACE__
-using namespace MSTL::concepts;
+MSTL_CONCEPTS__
 
 template <typename T1, typename T2>
 struct pair {
@@ -31,7 +31,7 @@ struct pair {
 		requires(ConstructibleFrom<T1, U1> && ConstructibleFrom<T2, U2>)
 	MSTL_CONSTEXPR explicit(!(Convertible<T1, U1>&& Convertible<T2, U2>))
 		pair(U1&& a, U2&& b) 
-		noexcept(NothrowConstructible<T1, U1> && NothrowConstructible<T2, U2>)
+		noexcept(NothrowConstructibleFrom<T1, U1> && NothrowConstructibleFrom<T2, U2>)
 		: first(std::forward<U1>(a)), second(std::forward<U2>(b)) {}
 
 	pair(const pair& p) = default;
@@ -41,20 +41,22 @@ struct pair {
 		requires(ConstructibleFrom<T1, const U1&> && ConstructibleFrom<T2, const U2&>)
 	MSTL_CONSTEXPR explicit(!(Convertible<const U1&, T1> && Convertible<const U2&, T2>))
 		pair(const pair<U1, U2>& p) 
-		noexcept(NothrowConstructible<T1, const U1&> && NothrowConstructible<T2, const U2&>)
+		noexcept(NothrowConstructibleFrom<T1, const U1&>
+			&& NothrowConstructibleFrom<T2, const U2&>)
 		: first(p.first), second(p.second) {}
 
 	template <class U1, class U2>
 		requires(ConstructibleFrom<T1, U1> && ConstructibleFrom<T2, U2>)
 	MSTL_CONSTEXPR explicit(!(Convertible<U1, T1> && Convertible<U2, T2>))
 		pair(pair<U1, U2>&& p) 
-		noexcept(NothrowConstructible<T1, U1> && NothrowConstructible<T2, U2>)
+		noexcept(NothrowConstructibleFrom<T1, U1> && NothrowConstructibleFrom<T2, U2>)
 		: first(std::forward<U1>(p.first)), second(std::forward<U2>(p.second)) {}
 
 	pair& operator =(const volatile pair&) = delete;
 
 	template <class self = pair>
-		requires(CopyAssignable<typename self::first_type> && CopyAssignable<typename self::second_type>)
+		requires(CopyAssignable<typename self::first_type> 
+	&& CopyAssignable<typename self::second_type>)
 	MSTL_CONSTEXPR pair& operator =(const self& p)
 		noexcept(NothrowCopyAssignable<T1> && NothrowCopyAssignable<T2>) {
 		first = p.first;
@@ -70,17 +72,19 @@ struct pair {
 		return *this;
 	}
 	template <class U1, class U2>
-		requires((!Same<pair, pair<U1, U2>>) && Assignable<T1&, const U1&> && Assignable<T2&, const U2&>)
+		requires((!SameTo<pair, pair<U1, U2>>) 
+	&& AssignableFrom<T1&, const U1&> && AssignableFrom<T2&, const U2&>)
 	MSTL_CONSTEXPR pair& operator =(const pair<U1, U2>& p)
-		noexcept(NothrowAssignable<T1&, const U1&> && NothrowAssignable<T2&, const U2&>) {
+		noexcept(NothrowAssignableFrom<T1&, const U1&> && NothrowAssignableFrom<T2&, const U2&>) {
 		first = p.first;
 		second = p.second;
 		return *this;
 	}
 	template <class U1, class U2>
-		requires((!Same<pair, pair<U1, U2>>) && Assignable<T1&, U1>&& Assignable<T2&, U2>)
+		requires((!Same<pair, pair<U1, U2>>) 
+	&& AssignableFrom<T1&, U1>&& AssignableFrom<T2&, U2>)
 	MSTL_CONSTEXPR pair& operator =(pair<U1, U2>&& p)
-		noexcept(NothrowAssignable<T1&, U1> && NothrowAssignable<T2&, U2>) {
+		noexcept(NothrowAssignableFrom<T1&, U1> && NothrowAssignableFrom<T2&, U2>) {
 		first = std::forward<U1>(p.first);
 		second = std::forward<U2>(p.second);
 		return *this;

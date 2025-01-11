@@ -16,6 +16,7 @@
 #include "hash_set.hpp"
 #include "skip_list.hpp"
 #include "avl_set.hpp"
+#include "adjacency_list.h"
 
 #include "depositary.h"
 #include "jsonlib.h"

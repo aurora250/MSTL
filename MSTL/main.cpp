@@ -121,8 +121,7 @@ void try_copy() {
     ////输出区间的起点和输入区间重叠 可能会出现问题
     //MSTL::copy(first, last, result);
     //std::for_each(id.begin(), id.end(), display<int>()); //0 1 2 3 2 3 4 5 6
-    ////STL源码剖析 此处会出现错误，原因在于copy算法不再使用memcove()执行实际的复制操作
-    ////但是实际没有出现错误
+    ////此处会出现错误，原因在于copy算法不再使用memcove()执行实际的复制操作 但是实际没有出现错误
     //std::cout << std::endl;
 }
 void try_deq() {
@@ -217,12 +216,11 @@ void try_map() {
 }
 void try_tup() {
     MSTL_NAMESPACE__;
-    tuple<int, char, const char*> tup(1, 't', "MSTL");
-    __tuple<int, char, const char*> t(1, 't', "MSTL");
-    std::cout << get<0, int, char, const char*>(t) << std::endl;
-    std::cout << tup.size() << std::endl;
-    std::cout << tup.get<2>() << std::endl;
-    std::cout << get<2>(tup) << std::endl;
+    const tuple<int, char, const char*> t(1, 't', "MSTL");
+    auto a = MSTL::get<0>(t);
+    std::cout << MSTL::get<1>(t) << std::endl;
+    auto tup = make_tuple(1, 2, "e");
+    auto forw = forward_as_tuple(9, 'f');
 }
 void try_hash() {
     MSTL_NAMESPACE__;
@@ -352,43 +350,12 @@ void try_avl() {
         std::cout << *it << std::endl;
     }
 }
-#include "adjacency_list.h"
+
 void try_graph() {
     MSTL_NAMESPACE__;
-    adjacency_list graph;           // 创建图对象
-
-    graph.add_node("A", 10);    // 添加节点
-    graph.add_node("B", 3);
-    graph.add_node("C", 2);
-    graph.add_node("D", 6);
-    graph.add_node("E", 7);
-    graph.add_node("F", 10);
-    graph.add_node("G", 15);
-    graph.add_node("H", 100);
-
-    graph.add_edge("A", "B"); // 添加边
-    graph.add_edge("B", "C");
-    graph.add_edge("C", "D");
-    graph.add_edge("G", "H");
-
-    graph.print_graph();    // 打印图的邻接表
-    std::cout << graph.have_cycle() << '\n';
-
-    vector<__adj_node*> zeroIndegree = graph.get_zero_indegree_nodes();
-    std::cout << "Zero indegree nodes: ";
-    for (const auto& node : zeroIndegree) {
-        std::cout << node->name_ << " ";
-    }
-    std::cout << std::endl;
-
-    zeroIndegree = graph.get_zero_indegree_nodes();
-    std::cout << "Zero indegree nodes: ";
-    for (const auto& node : zeroIndegree) {
-        std::cout << node->name_ << " ";
-    }
-    std::cout << std::endl;
+    adjacency_list graph;
 }
 
 int main() {
-    try_graph();
+    try_tup();
 }

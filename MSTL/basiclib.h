@@ -37,11 +37,7 @@
 
 #ifndef NULL
 #ifdef __cplusplus
-#ifdef _WIN64
-#define NULL 0LL
-#else // not define _WIN64
 #define NULL 0
-#endif // _WIN64
 #else // not define __cplusplus
 #define NULL ((void *)0)
 #endif // __cplusplus
@@ -50,9 +46,11 @@
 #define MSTL_NAMESPACE__ using namespace MSTL;
 #define MSTL_BEGIN_NAMESPACE__ namespace MSTL {
 #define MSTL_END_NAMESPACE__ }
+#define MSTL_ MSTL::
 #define MSTL_CONCEPTS__ using namespace MSTL::concepts;
 #define MSTL_SET_CONCEPTS__ namespace concepts {
 #define MSTL_END_CONCEPTS__ }
+#define CONCEPTS_ MSTL::concepts:: 
 
 #if defined(_HAS_CXX20) || (__cplusplus >= 202002L)
 #define MSTL_SUPPORT_CONCEPTS__		1
@@ -75,9 +73,7 @@
 #define MSTL_NEED_SGI_TYPE_TRAITS__	1
 #endif
 
-#if defined(MSTL_COMPILE_MSVC__) && defined(MSTL_STATE_DEBUG__)
-#define MSTL_DLL_LINK__ 1
-#endif
+#define MSTL_DLL_LINK__				1
 
 #define MSTL_ITERATOR_TRATIS_FROM__ std::
 
@@ -123,8 +119,8 @@ typedef unsigned MSTL_LONG_LONG_TYPE__ size_t;
 typedef MSTL_LONG_LONG_TYPE__ ptrdiff_t;
 typedef MSTL_LONG_LONG_TYPE__ intptr_t;
 
-typedef const char* cstring;
-typedef const char* const const_cstring;
+typedef const char* cstring_t;
+typedef const char* const ccstring_t;
 
 MSTL_CONSTEXPR size_t MSTL_SPLIT_LENGTH = 15;
 

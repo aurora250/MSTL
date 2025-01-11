@@ -238,7 +238,7 @@ private:
     }
     template <typename U>
     iterator insert_aux(iterator pos, U&& x) 
-        requires(NothrowMoveAssignable<value_type> && NothrowAssignable<T, U>) {
+        requires(NothrowMoveAssignable<value_type> && NothrowAssignableFrom<T, U>) {
         difference_type index = pos - start_;
         if (size_t(index < size() / 2)) {
             push_front(front());

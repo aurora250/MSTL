@@ -7,59 +7,59 @@
 
 MSTL_BEGIN_NAMESPACE__
 
-static MSTL_CONSTEXPR const_cstring MSTL_ASSERT_ERROR__ = "Assert Error!";
+static MSTL_CONSTEXPR ccstring_t MSTL_ASSERT_ERROR__ = "Assert Error!";
 
 struct Error {
 	typedef Error self;
-	cstring _info;
-	cstring _type;
+	cstring_t _info;
+	cstring_t _type;
 
-	MSTL_CONSTEXPR explicit Error(cstring _info = __type__, cstring _type = __type__) noexcept 
+	MSTL_CONSTEXPR explicit Error(cstring_t _info = __type__, cstring_t _type = __type__) noexcept 
 		: _info(_info), _type(_type) {}
 	virtual ~Error() = default;
-	static MSTL_CONSTEXPR const_cstring __type__ = TO_STRING(Error);
+	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(Error);
 };
 
 struct StopIterator : public Error {  // 迭代器越界或无值
 	typedef StopIterator self;
-	MSTL_CONSTEXPR explicit StopIterator(cstring _info = "Iterator out of Range or is NULL.") noexcept
+	MSTL_CONSTEXPR explicit StopIterator(cstring_t _info = "Iterator out of Range or is NULL.") noexcept
 		: Error(_info, __type__) {}
-	static MSTL_CONSTEXPR const_cstring __type__ = TO_STRING(StopIterator);
+	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(StopIterator);
 };
 
 struct AssertError : public Error {  // 断言错误 断言错误太宽泛，不爱用
 	typedef AssertError self;
-	MSTL_CONSTEXPR explicit AssertError(cstring _info = MSTL_ASSERT_ERROR__) noexcept
+	MSTL_CONSTEXPR explicit AssertError(cstring_t _info = MSTL_ASSERT_ERROR__) noexcept
 		: Error(_info, __type__) {}
-	static MSTL_CONSTEXPR const_cstring __type__ = TO_STRING(AssertError);
+	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(AssertError);
 };
 
 struct AttributeError : public Error {   // 对象无此属性
 	typedef AttributeError self;
-	MSTL_CONSTEXPR explicit AttributeError(cstring _info = "No This Attriubte in This Object.") noexcept
+	MSTL_CONSTEXPR explicit AttributeError(cstring_t _info = "No This Attriubte in This Object.") noexcept
 		: Error(_info, __type__) {}
-	static MSTL_CONSTEXPR const_cstring __type__ = TO_STRING(AttributeError);
+	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(AttributeError);
 };
 
 struct MemoryError : public Error {   // 内存操作失败
 	typedef MemoryError self;
-	MSTL_CONSTEXPR explicit MemoryError(cstring _info = "Memory Operation Falied!") noexcept
+	MSTL_CONSTEXPR explicit MemoryError(cstring_t _info = "Memory Operation Falied!") noexcept
 		: Error(_info, __type__) {}
-	static MSTL_CONSTEXPR const_cstring __type__ = TO_STRING(MemoryError);
+	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(MemoryError);
 };
 
 struct ValueError : public Error {   // 函数的参数非法
 	typedef ValueError self;
-	MSTL_CONSTEXPR explicit ValueError(cstring _info = "Function Refused This Value.") noexcept
+	MSTL_CONSTEXPR explicit ValueError(cstring_t _info = "Function Refused This Value.") noexcept
 		: Error(_info, __type__) {}
-	static MSTL_CONSTEXPR const_cstring __type__ = TO_STRING(ValueError);
+	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(ValueError);
 };
 
 struct MathError : public Error {   // 数学错误
 	typedef MathError self;
-	MSTL_CONSTEXPR explicit MathError(cstring _info = "Math Operation Failure!") noexcept
+	MSTL_CONSTEXPR explicit MathError(cstring_t _info = "Math Operation Failure!") noexcept
 		: Error(_info, __type__) {}
-	static MSTL_CONSTEXPR const_cstring __type__ = TO_STRING(MathError);
+	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(MathError);
 };
 
 inline void __show_data_only(const Error& e, std::ostream& _out) {

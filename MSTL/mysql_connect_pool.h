@@ -13,7 +13,6 @@
 #include <condition_variable>
 #include <sstream>
 #include "queue.hpp"
-#include "errorlib.h"
 #include "tuple.hpp"
 MSTL_BEGIN_NAMESPACE__
 
@@ -51,8 +50,8 @@ private:
 	template <typename Tuple, size_t... Index>
 	void create_sql(const Tuple& t, std::index_sequence<Index...>) {
 		((Index == sizeof...(Index) - 1 ?
-			__create_sql_last(MSTL::get<Index>(t)) :
-			__create_sql(MSTL::get<Index>(t))), ...);
+			__create_sql_last(std::get<Index>(t)) :
+			__create_sql(std::get<Index>(t))), ...);
 	}
 public:
 	DBConnect();
@@ -64,7 +63,7 @@ public:
 	template <typename... Args>
 	bool INSERT_INTO(std::string table, Args... args) {
 		ss << "INSERT INTO " << table << " VALUES (";
-		auto tuple = MSTL::make_tuple(std::forward<Args>(args)...);
+		auto tuple = std::make_tuple(std::forward<Args>(args)...);
 		(create_sql)(tuple, std::make_index_sequence<sizeof...(Args)>{});
 		ss << ")";
 		std::string sql = ss.str(); ss.str("");

@@ -58,13 +58,13 @@ namespace concepts {
 	template <typename From, typename To>
 	concept Convertible = std::is_convertible_v<From, To>;
 	template <typename T, typename U>
-	concept Same = std::is_same_v<T, U>;
+	concept SameTo = std::is_same_v<T, U>;
 
-	template<typename T>
-	concept DefaultConstructible = std::is_default_constructible_v<T>;
+	template<typename... T>
+	concept DefaultConstructible = (... && std::is_default_constructible_v<T>);
 #ifdef MSTL_COMPILE_MSVC__
-	template<typename T>
-	concept DefaultImplicitConstructible = std::_Is_implicitly_default_constructible<T>::value;
+	template<typename... T>
+	concept DefaultImplicitConstructible = (... && std::_Is_implicitly_default_constructible<T>::value);
 #elif defined(MSTL_COMPILE_GNUC__)
 	template <class T, class = void>
 	struct _Is_implicitly_default_constructible : std::false_type {};
@@ -76,45 +76,45 @@ namespace concepts {
 	template<typename T>
 	concept DefaultImplicitConstructible = _Is_implicitly_default_constructible<T>::value;
 #endif
-	template<typename T>
-	concept CopyConstructible = std::is_copy_constructible_v<T>;
+	template<typename... T>
+	concept CopyConstructible = (... && std::is_copy_constructible_v<T>);
 	template<typename T, typename... Args>
 	concept ConstructibleFrom = std::is_constructible_v<T, Args...>;
 
 	template<typename To, typename From>
-	concept Assignable = std::is_assignable_v<To, From>;
-	template<typename T>
-	concept CopyAssignable = std::is_copy_assignable_v<T>;
-	template <typename T>
-	concept TrivialCopyAssignable = std::is_trivially_copy_assignable_v<T>;
-	template<typename T>
-	concept MoveAssignable = std::is_move_assignable_v<T>;
-	template <typename T>
-	concept TrivialMoveAssignable = std::is_trivially_move_assignable_v<T>;
-	template <typename T>
-	concept TrivialAssignable = TrivialCopyAssignable<T> || TrivialMoveAssignable<T>;
+	concept AssignableFrom = std::is_assignable_v<To, From>;
+	template<typename... T>
+	concept CopyAssignable = (... && std::is_copy_assignable_v<T>);
+	template <typename... T>
+	concept TrivialCopyAssignable = (... && std::is_trivially_copy_assignable_v<T>);
+	template<typename... T>
+	concept MoveAssignable = (... && std::is_move_assignable_v<T>);
+	template <typename... T>
+	concept TrivialMoveAssignable = (... && std::is_trivially_move_assignable_v<T>);
+	template <typename... T>
+	concept TrivialAssignable = TrivialCopyAssignable<T...> || TrivialMoveAssignable<T...>;
 
-	template<typename T>
-	concept NothrowDefaultConstructible = std::is_nothrow_default_constructible_v<T>;
-	template<typename T>
-	concept NothrowCopyConstructible = std::is_nothrow_copy_constructible_v<T>;
-	template<typename T>
-	concept NothrowMoveConstructible = std::is_nothrow_move_constructible_v<T>;
+	template<typename... T>
+	concept NothrowDefaultConstructible = (... && std::is_nothrow_default_constructible_v<T>);
+	template<typename... T>
+	concept NothrowCopyConstructible = (... && std::is_nothrow_copy_constructible_v<T>);
+	template<typename... T>
+	concept NothrowMoveConstructible = (... && std::is_nothrow_move_constructible_v<T>);
 	template<typename T, typename... Args>
-	concept NothrowConstructible = std::is_nothrow_constructible_v<T, Args...>;
+	concept NothrowConstructibleFrom = std::is_nothrow_constructible_v<T, Args...>;
 
 	template<typename To, typename From>
-	concept NothrowAssignable = std::is_nothrow_assignable_v<To, From>;
-	template<typename T>
-	concept NothrowCopyAssignable = std::is_nothrow_copy_assignable_v<T>;
-	template<typename T>
-	concept NothrowMoveAssignable = std::is_nothrow_move_assignable_v<T>;
+	concept NothrowAssignableFrom = std::is_nothrow_assignable_v<To, From>;
+	template<typename... T>
+	concept NothrowCopyAssignable = (... && std::is_nothrow_copy_assignable_v<T>);
+	template<typename... T>
+	concept NothrowMoveAssignable = (... && std::is_nothrow_move_assignable_v<T>);
 
-	template <typename T>
-	concept Swappable = std::is_swappable_v<T>;
+	template <typename... T>
+	concept Swappable = (... && std::is_swappable_v<T>);
 #ifdef MSTL_COMPILE_MSVC__
-	template <typename T>
-	concept NothrowSwappable = std::_Is_nothrow_swappable<T>::value;
+	template <typename... T>
+	concept NothrowSwappable = (... && std::_Is_nothrow_swappable<T>::value);
 #else
 	template <class _Ty1, class _Ty2, class = void>
 	struct _Swappable_with_helper : std::false_type {};
@@ -153,8 +153,8 @@ namespace concepts {
 	concept NothrowSwappable = _Is_nothrow_swappable<T>::value;
 #endif
 
-	template <typename T>
-	concept TrivialDestructible = std::is_trivially_destructible_v<T>;
+	template <typename... T>
+	concept TrivialDestructible = (... && std::is_trivially_destructible_v<T>);
 
 	template<typename T>
 	concept Printable = requires(const T & t) {
