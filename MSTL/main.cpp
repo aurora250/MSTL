@@ -165,6 +165,7 @@ void try_vec() {
         v.push_back(4);
         detailof(v);
         vector<int> v2(v);
+        back_insert_iterator it(v2);
         display_enter out;
         out(v.front());
         MSTL_TRY__{

@@ -44,7 +44,7 @@ void __rb_tree_base_iterator::decrement() noexcept {
     }
 }
 
-void __rb_tree_rotate_left(__rb_tree_node_base* x, __rb_tree_node_base*& root) {
+void __rb_tree_rotate_left(__rb_tree_node_base* x, __rb_tree_node_base*& root) noexcept {
     __rb_tree_node_base* y = x->right_;
     x->right_ = y->left_;
     if (y->left_ != 0) y->left_->parent_ = x;
@@ -55,7 +55,7 @@ void __rb_tree_rotate_left(__rb_tree_node_base* x, __rb_tree_node_base*& root) {
     y->left_ = x;
     x->parent_ = y;
 }
-void __rb_tree_rotate_right(__rb_tree_node_base* x, __rb_tree_node_base*& root) {
+void __rb_tree_rotate_right(__rb_tree_node_base* x, __rb_tree_node_base*& root) noexcept {
     __rb_tree_node_base* y = x->left_;
     x->left_ = y->right_;
     if (y->right_ != 0) y->right_->parent_ = x;
@@ -66,7 +66,7 @@ void __rb_tree_rotate_right(__rb_tree_node_base* x, __rb_tree_node_base*& root) 
     y->right_ = x;
     x->parent_ = y;
 }
-void __rb_tree_rebalance(__rb_tree_node_base* x, __rb_tree_node_base*& root) {
+void __rb_tree_rebalance(__rb_tree_node_base* x, __rb_tree_node_base*& root) noexcept {
     x->color_ = RB_TREE_RED__;
     while (x != root && x->parent_->color_ == RB_TREE_RED__) {
         if (x->parent_ == x->parent_->parent_->left_) {
@@ -110,7 +110,7 @@ void __rb_tree_rebalance(__rb_tree_node_base* x, __rb_tree_node_base*& root) {
 }
 __rb_tree_node_base* __rb_tree_rebalance_for_erase(
     __rb_tree_node_base* z, __rb_tree_node_base*& root,
-    __rb_tree_node_base*& leftmost, __rb_tree_node_base*& rightmost) {
+    __rb_tree_node_base*& leftmost, __rb_tree_node_base*& rightmost) noexcept {
     __rb_tree_node_base* y = z;
     __rb_tree_node_base* x = 0;
     __rb_tree_node_base* x_parent = 0;
@@ -226,7 +226,7 @@ __rb_tree_node_base* __rb_tree_rebalance_for_erase(
     return y;
 }
 
-int __black_count(__rb_tree_node_base* node, __rb_tree_node_base* root) {
+int __black_count(__rb_tree_node_base* node, __rb_tree_node_base* root) noexcept {
     if (node == 0) return 0;
     else {
         int bc = node->color_ == RB_TREE_BLACK__ ? 1 : 0;

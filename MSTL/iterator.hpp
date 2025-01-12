@@ -71,9 +71,9 @@ distance(Iterator first, Iterator last) {
 }
 
 template <typename Container>
+    requires requires(Container& c, const typename Container::value_type& lv,
+typename Container::value_type&& rv) { c.push_back(lv); c.push_back(rv); }
 class back_insert_iterator {
-private:
-    Container* container;
 public:
     typedef std::output_iterator_tag        iterator_category;
     typedef void                            value_type;
@@ -82,24 +82,32 @@ public:
     typedef void                            reference;
     typedef back_insert_iterator<Container> self;
 
-    explicit back_insert_iterator(Container& x) : container(&x) {}
-    self& operator =(const typename Container::value_type& value) {
+    MSTL_CONSTEXPR explicit back_insert_iterator(Container& x) noexcept
+        : container(std::addressof(x)) {}
+    MSTL_CONSTEXPR self& operator =(const typename Container::value_type& value) {
         container->push_back(value);
         return *this;
     }
-    self& operator *() { return *this; }
-    self& operator ++() { return *this; }
-    self& operator ++(int) { return *this; }
+    MSTL_CONSTEXPR self& operator =(typename Container::value_type&& value) {
+        container->push_back(std::move(value));
+        return *this;
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR self& operator *() noexcept { return *this; }
+    MSTL_CONSTEXPR self& operator ++() noexcept { return *this; }
+    MSTL_CONSTEXPR self& operator ++(int) noexcept { return *this; }
+
+private:
+    Container* container;
 };
 template <typename Container>
-inline back_insert_iterator<Container> back_inserter(Container& x) {
+MSTL_NODISCARD MSTL_CONSTEXPR back_insert_iterator<Container> back_inserter(Container& x) noexcept {
     return back_insert_iterator<Container>(x);
 }
 
 template <typename Container>
+    requires requires(Container& c, const typename Container::value_type& lv,
+typename Container::value_type&& rv) { c.push_front(lv); c.push_front(rv); }
 class front_insert_iterator {
-private:
-    Container* container;
 public:
     typedef std::output_iterator_tag    iterator_category;
     typedef void                        value_type;
@@ -108,25 +116,33 @@ public:
     typedef void                        reference;
     typedef front_insert_iterator<Container> self;
 
-    explicit front_insert_iterator(Container& x) : container(&x) {}
-    self& operator =(const typename Container::value_type& value) {
+    MSTL_CONSTEXPR explicit front_insert_iterator(Container& x) noexcept
+        : container(std::addressof(x)) {}
+    MSTL_CONSTEXPR self& operator =(const typename Container::value_type& value) {
         container->push_front(value);
         return *this;
     }
-    self& operator *() { return *this; }
-    self& operator ++() { return *this; }
-    self& operator ++(int) { return *this; }
+    MSTL_CONSTEXPR self& operator =(typename Container::value_type&& value) {
+        container->push_front(std::move(value));
+        return *this;
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR self& operator *() noexcept { return *this; }
+    MSTL_CONSTEXPR self& operator ++() noexcept { return *this; }
+    MSTL_CONSTEXPR self& operator ++(int) noexcept { return *this; }
+
+private:
+    Container* container;
 };
 template <typename Container>
-inline front_insert_iterator<Container> front_inserter(Container& x) {
+MSTL_NODISCARD MSTL_CONSTEXPR front_insert_iterator<Container> front_inserter(Container& x) noexcept {
     return front_insert_iterator<Container>(x);
 }
 
 template <typename Container>
+    requires requires(Container& c, const typename Container::value_type& lv,
+typename Container::value_type&& rv, typename Container::iterator it) 
+{ c.insert(it, lv); c.insert(it, rv); }
 class insert_iterator {
-private:
-    Container* container;
-    typename Container::iterator iter;
 public:
     typedef std::output_iterator_tag    iterator_category;
     typedef void                        value_type;
@@ -135,20 +151,30 @@ public:
     typedef void                        reference;
     typedef insert_iterator<Container>  self;
 
-    insert_iterator(Container& x, typename Container::iterator i)
-        : container(&x), iter(i) {}
-    self& operator =(const typename Container::value_type& value) {
+    MSTL_CONSTEXPR insert_iterator(Container& x, typename Container::iterator it) noexcept
+        : container(std::addressof(x)), iter(std::move(it)) {}
+    MSTL_CONSTEXPR self& operator =(const typename Container::value_type& value) {
         iter = container->insert(iter, value);
         ++iter;
         return *this;
     }
-    self& operator *() { return *this; }
-    self& operator ++() { return *this; }
-    self& operator ++(int) { return *this; }
+    MSTL_CONSTEXPR self& operator =(typename Container::value_type&& value) {
+        iter = container->insert(iter, std::move(value));
+        ++iter;
+        return *this;
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR self& operator *() noexcept { return *this; }
+    MSTL_CONSTEXPR self& operator ++() noexcept { return *this; }
+    MSTL_CONSTEXPR self& operator ++(int) noexcept { return *this; }
+
+private:
+    Container* container;
+    typename Container::iterator iter;
 };
-template <typename Container, typename Iterator>
-inline insert_iterator<Container> inserter(Container& x, Iterator i) {
-    return insert_iterator<Container>(x, typename Container::iterator(i));
+template <typename Container>
+MSTL_NODISCARD MSTL_CONSTEXPR insert_iterator<Container> 
+inserter(Container& x, typename Container::iterator it) noexcept {
+    return insert_iterator<Container>(x, it);
 }
 
 MSTL_END_NAMESPACE__

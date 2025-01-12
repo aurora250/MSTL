@@ -82,23 +82,25 @@ struct rb_tree_iterator : public __rb_tree_base_iterator {
         return tmp;
     }
 };
-inline MSTL_NODISCARD bool operator ==(const __rb_tree_base_iterator& x, const __rb_tree_base_iterator& y) {
+inline MSTL_NODISCARD bool operator ==(const __rb_tree_base_iterator& x,
+    const __rb_tree_base_iterator& y) noexcept {
     return x.node_ == y.node_;
 }
-inline MSTL_NODISCARD bool operator !=(const __rb_tree_base_iterator& x, const __rb_tree_base_iterator& y) {
+inline MSTL_NODISCARD bool operator !=(const __rb_tree_base_iterator& x,
+    const __rb_tree_base_iterator& y) noexcept {
     return x.node_ != y.node_;
 }
 
-void __rb_tree_rotate_left(__rb_tree_node_base* x, __rb_tree_node_base*& root);
-void __rb_tree_rotate_right(__rb_tree_node_base* x, __rb_tree_node_base*& root);
-void __rb_tree_rebalance(__rb_tree_node_base* x, __rb_tree_node_base*& root);
+void __rb_tree_rotate_left(__rb_tree_node_base* x, __rb_tree_node_base*& root) noexcept;
+void __rb_tree_rotate_right(__rb_tree_node_base* x, __rb_tree_node_base*& root) noexcept;
+void __rb_tree_rebalance(__rb_tree_node_base* x, __rb_tree_node_base*& root) noexcept;
 __rb_tree_node_base* __rb_tree_rebalance_for_erase(
     __rb_tree_node_base* z, __rb_tree_node_base*& root,
-    __rb_tree_node_base*& leftmost, __rb_tree_node_base*& rightmost);
-int __black_count(__rb_tree_node_base* node, __rb_tree_node_base* root);
+    __rb_tree_node_base*& leftmost, __rb_tree_node_base*& rightmost) noexcept;
+int __black_count(__rb_tree_node_base* node, __rb_tree_node_base* root) noexcept;
 
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, 
-    typename Alloc = default_standard_alloc<__rb_tree_node<Value>> >
+    typename Alloc = default_standard_alloc<__rb_tree_node<Value>>>
 class rb_tree {
 private:
     typedef __rb_tree_node_base*    base_ptr;
@@ -127,13 +129,13 @@ private:
     link_type get_node() {
         return alloc_.allocate();
     }
-    void put_node(link_type p) {
+    void put_node(link_type p) noexcept {
         alloc_.deallocate(p);
     }
     link_type create_node(const_reference x) {
         link_type tmp = get_node();
         MSTL_TRY__{
-            construct(&tmp->data_, x);
+            MSTL::construct(&tmp->data_, x);
         }
         MSTL_CATCH_UNWIND_THROW_M__(put_node(tmp));
         return tmp;
@@ -145,7 +147,7 @@ private:
         tmp->right_ = 0;
         return tmp;
     }
-    void destroy_node(link_type p) {
+    void destroy_node(link_type p) noexcept {
         destroy(&p->data_);
         put_node(p);
     }
@@ -162,10 +164,14 @@ private:
     static const Key& key(link_type x) { return KeyOfValue()(value(x)); }
     static color_type& color(link_type x) { return (color_type&)(x->color_); }
 
-    static link_type minimum(link_type x) { return (link_type)__rb_tree_node_base::minimum(x); }
-    static link_type maximum(link_type x) { return (link_type)__rb_tree_node_base::maximum(x); }
+    static link_type minimum(link_type x) noexcept { 
+        return (link_type)__rb_tree_node_base::minimum(x); 
+    }
+    static link_type maximum(link_type x) noexcept { 
+        return (link_type)__rb_tree_node_base::maximum(x); 
+    }
 
-    iterator __insert(base_ptr x_, base_ptr y_, const_reference v) {
+    iterator insert_aux(base_ptr x_, base_ptr y_, const_reference v) {
         link_type x = (link_type)x_;
         link_type y = (link_type)y_;
         link_type z;
@@ -190,28 +196,28 @@ private:
         ++node_num_;
         return iterator(z);
     }
-    link_type __copy(link_type x, link_type p) {
+    link_type copy_aux(link_type x, link_type p) {
         link_type top = clone_node(x);
         top->parent_ = p;
         MSTL_TRY__{
-            if (x->right_) top->right_ = __copy(right(x), top);
+            if (x->right_) top->right_ = copy_aux(right(x), top);
             p = top;
             x = left(x);
             while (x != 0) {
                 link_type y = clone_node(x);
                 p->left_ = y;
                 y->parent_ = p;
-                if (x->right_) y->right_ = __copy(right(x), y);
+                if (x->right_) y->right_ = copy_aux(right(x), y);
                 p = y;
                 x = left(x);
             }
         }
-        MSTL_CATCH_UNWIND_THROW_M__(__erase(top));
+        MSTL_CATCH_UNWIND_THROW_M__(erase_aux(top));
         return top;
     }
-    void __erase(link_type x) {
+    void erase_aux(link_type x) noexcept {
         while (x != 0) {
-            __erase(right(x));
+            erase_aux(right(x));
             link_type y = left(x);
             destroy_node(x);
             x = y;
@@ -240,7 +246,7 @@ public:
         }
         else {
             MSTL_TRY__{
-              root() = __copy(x.root(), header_);
+              root() = copy_aux(x.root(), header_);
             }
             MSTL_CATCH_UNWIND_THROW_M__(put_node(header_));
             leftmost() = minimum(root());
@@ -259,7 +265,7 @@ public:
             rightmost() = header_;
         }
         else {
-            root() = __copy(x.root(), header_);
+            root() = copy_aux(x.root(), header_);
             leftmost() = minimum(root());
             rightmost() = maximum(root());
             node_num_ = x.node_num_;
@@ -271,19 +277,18 @@ public:
         put_node(header_);
     }
 
-    iterator begin() { return leftmost(); }
-    iterator end() { return header_; }
-    const_iterator const_begin() const { return leftmost(); }
-    const_iterator const_end() const { return header_; }
-    void swap(self& rep) {
+    iterator begin() noexcept { return leftmost(); }
+    iterator end() noexcept { return header_; }
+    const_iterator const_begin() const noexcept { return leftmost(); }
+    const_iterator const_end() const noexcept { return header_; }
+    void swap(self&& rep) {
         std::swap(header_, rep.header_);
         std::swap(node_num_, rep.node_num_);
         std::swap(key_compare_, rep.key_compare_);
     }
-    bool empty() const { return node_num_ == 0; }
-    Compare key_comp() const { return key_compare_; }
-    size_type size() const { return node_num_; }
-    // size_type max_height() const { return 2 * log2(node_count + 1); }
+    bool empty() const noexcept { return node_num_ == 0; }
+    Compare key_comp() const noexcept { return key_compare_; }
+    size_type size() const noexcept { return node_num_; }
 
     pair<iterator, bool> insert_unique(const Value& v) {
         link_type y = header_;
@@ -297,22 +302,22 @@ public:
         iterator j = iterator(y);
         if (comp) {
             if (j == begin()) 
-                return pair<iterator, bool>(__insert(x, y, v), true);
+                return pair<iterator, bool>(insert_aux(x, y, v), true);
             else --j;
         }
         if (key_compare_(KeyOfValue()(value(link_type(j.node_))), KeyOfValue()(v)))
-            return pair<iterator, bool>(__insert(x, y, v), true);
+            return pair<iterator, bool>(insert_aux(x, y, v), true);
         return pair<iterator, bool>(iterator(j), false);
     }
     iterator insert_unique(iterator position, const_reference v) {
         if (position.node_ == header_->left_) {
             if (size() > 0 && key_compare_(KeyOfValue()(v), key(position.node_)))
-                return __insert(position.node_, position.node_, v);
+                return insert_aux(position.node_, position.node_, v);
             else  return insert_unique(v).first;
         }
         else if (position.node_ == header_) {
             if (key_compare_(key(rightmost()), KeyOfValue()(v)))
-                return __insert(0, rightmost(), v);
+                return insert_aux(0, rightmost(), v);
             else  return insert_unique(v).first;
         }
         else {
@@ -321,8 +326,8 @@ public:
             if (key_compare_(key(before.node_), KeyOfValue()(v))
                 && key_compare_(KeyOfValue()(v), key(position.node_)))
                 if (right(before.node_) == 0)
-                    return __insert(0, before.node_, v);
-                else  return __insert(position.node_, position.node_, v);
+                    return insert_aux(0, before.node_, v);
+                else  return insert_aux(position.node_, position.node_, v);
             else  return insert_unique(v).first;
         }
     }
@@ -337,18 +342,18 @@ public:
             y = x;
             x = key_compare_(KeyOfValue()(v), key(x)) ? left(x) : right(x);
         }
-        return __insert(x, y, v);
+        return insert_aux(x, y, v);
     }
     iterator insert_equal(iterator position, const_reference v) {
         if (position.node_ == header_->left_) {
             if (size() > 0 && key_compare_(KeyOfValue()(v), key(position.node_)))
-                return __insert(position.node_, position.node_, v);
+                return insert_aux(position.node_, position.node_, v);
             else  return insert_equal(v);
 
         }
         else if (position.node_ == header_) {
             if (!key_compare_(KeyOfValue()(v), key(rightmost())))
-                return __insert(0, rightmost(), v);
+                return insert_aux(0, rightmost(), v);
             else  return insert_equal(v);
         }
         else {
@@ -356,8 +361,8 @@ public:
             --before;
             if (!key_compare_(KeyOfValue()(v), key(before.node_))
                 && !key_compare_(key(position.node_), KeyOfValue()(v)))
-                if (right(before.node_) == 0) return __insert(0, before.node_, v);
-                else  return __insert(position.node_, position.node_, v);
+                if (right(before.node_) == 0) return insert_aux(0, before.node_, v);
+                else  return insert_aux(position.node_, position.node_, v);
             else  return insert_equal(v);
         }
     }
@@ -365,37 +370,38 @@ public:
     void insert_equal(Iterator first, Iterator last) {
         for (; first != last; ++first) insert_equal(*first);
     }
-    size_type erase(const Key& x) {
+    size_type erase(const Key& x) noexcept {
         pair<iterator, iterator> p = equal_range(x);
         size_type n = 0;
         distance(p.first, p.second, n);
         erase(p.first, p.second);
         return n;
     }
-    void erase(iterator position) {
+    void erase(iterator position) noexcept {
         link_type y = (link_type)
-            __rb_tree_rebalance_for_erase(position.node_, header_->parent_, header_->left_, header_->right_);
+            __rb_tree_rebalance_for_erase(position.node_, header_->parent_,
+                header_->left_, header_->right_);
         destroy_node(y);
         --node_num_;
     }
-    void erase(iterator first, iterator last) {
+    void erase(iterator first, iterator last) noexcept {
         if (first == begin() && last == end()) clear();
         else
             while (first != last) erase(first++);
     }
-    void erase(const Key* first, const Key* last) {
+    void erase(const Key* first, const Key* last) noexcept {
         while (first != last) erase(*first++);
     }
-    void clear() {
+    void clear() noexcept {
         if (node_num_ == 0) return;
-        __erase(root());
+        erase_aux(root());
         leftmost() = header_;
         root() = 0;
         rightmost() = header_;
         node_num_ = 0;
     }
 
-    iterator find(const Key& k) {
+    iterator find(const Key& k) noexcept {
         link_type y = header_;
         link_type x = root();
         while (x != 0) {
@@ -408,7 +414,7 @@ public:
         iterator j = iterator(y);
         return (j == end() || key_compare_(k, KeyOfValue()(y->data_))) ? end() : j;
     }
-    const_iterator find(const Key& k) const {
+    const_iterator find(const Key& k) const noexcept {
         link_type y = header_;
         link_type x = root();
         while (x != 0) {
@@ -421,7 +427,7 @@ public:
         const_iterator j = const_iterator(y);
         return (j == end() || key_compare_(k, KeyOfValue()(y->data_))) ? end() : j;
     }
-    size_type count(const Key& k) const {
+    size_type count(const Key& k) const noexcept {
         pair<const_iterator, const_iterator> p = equal_range(k);
         size_type n = 0;
         MSTL::distance(p.first, p.second, n);
@@ -481,7 +487,7 @@ public:
     inline pair<const_iterator, const_iterator> equal_range(const Key& k) const {
         return pair<const_iterator, const_iterator>(lower_bound(k), upper_bound(k));
     }
-    bool __rb_verify() const {
+    bool rb_state_verify() const {
         if (node_num_ == 0 || begin() == end())
             return node_num_ == 0 && begin() == end() &&
             header_->left_ == header_ && header_->right_ == header_;
@@ -503,17 +509,19 @@ public:
     }
 };
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
-inline bool operator ==(const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
-    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) {
+MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(
+    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
+    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) noexcept {
     return x.size() == y.size() && equal(x.const_begin(), x.const_end(), y.const_begin());
 }
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
-inline bool operator <(const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
-    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) {
+MSTL_NODISCARD MSTL_CONSTEXPR bool operator <(
+    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
+    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) noexcept {
     return lexicographical_compare(x.const_begin(), x.const_end(), y.const_begin(), y.const_end());
 }
 template <class Key, class Value, class KeyOfValue, class Compare, class Alloc>
-inline void swap(rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
+void swap(rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
     rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) {
     x.swap(y);
 }
