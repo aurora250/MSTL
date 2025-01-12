@@ -649,7 +649,7 @@ MSTL_NODISCARD inline bool operator >=(const deque<T, Alloc>& lh, const deque<T,
     return !(lh < rh);
 }
 template <class T, class Alloc>
-inline void swap(deque<T, Alloc>& lh, deque<T, Alloc>& rh) {
+void swap(deque<T, Alloc>& lh, deque<T, Alloc>& rh) noexcept(noexcept(lh.swap(rh))) {
     lh.swap(rh);
 }
 

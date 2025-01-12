@@ -389,14 +389,16 @@ public:
 };
 template <typename T, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(const vector<T, Alloc>& lh, const vector<T, Alloc>& rh) {
-	return lh.size() == rh.size() && MSTL::equal(lh.const_begin(), lh.const_end(), rh.const_begin());
+	return lh.size() == rh.size() && MSTL::equal(
+		lh.const_begin(), lh.const_end(), rh.const_begin());
 }
 template <typename T, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator <(const vector<T, Alloc>& lh, const vector<T, Alloc>& rh) {
-	return MSTL::lexicographical_compare(lh.const_begin(), lh.const_end(), rh.const_begin(), rh.const_end());
+	return MSTL::lexicographical_compare(
+		lh.const_begin(), lh.const_end(), rh.const_begin(), rh.const_end());
 }
 template <class T, class Alloc>
-MSTL_CONSTEXPR void swap(vector<T, Alloc>& x, vector<T, Alloc>& y) noexcept {
+MSTL_CONSTEXPR void swap(vector<T, Alloc>& x, vector<T, Alloc>& y) noexcept(noexcept(x.swap(y))) {
 	x.swap(y);
 }
 

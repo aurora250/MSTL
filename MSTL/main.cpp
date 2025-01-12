@@ -220,7 +220,8 @@ void try_tup() {
     auto a = MSTL::get<0>(t);
     std::cout << MSTL::get<1>(t) << std::endl;
     auto tup = make_tuple(1, 2, "e");
-    auto forw = forward_as_tuple(9, 'f');
+    auto forw = forward_as_tuple(9, 0);
+    std::cout << hash<tuple<int&&, int&&>>()(forw);
 }
 void try_hash() {
     MSTL_NAMESPACE__;
@@ -292,8 +293,6 @@ void try_sql() {
     }
     std::cout << clock() - begin << std::endl;
 }
-#include "logging.h"
-
 void try_log() {
     MSTL_NAMESPACE__;
     set_log_level(LOG_LEVEL_VERBOSE);
@@ -357,5 +356,5 @@ void try_graph() {
 }
 
 int main() {
-    try_map();
+    try_tup();
 }

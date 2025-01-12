@@ -7,6 +7,7 @@
 #include "mathlib.h"
 #include "hash_function.hpp"
 #include "concepts.hpp"
+#include "logging.h"
 
 #include "tuple.hpp"
 #include "function.hpp" // "functor.hpp"
