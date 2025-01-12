@@ -9,7 +9,7 @@ MSTL_CONCEPTS__
 
 template <typename Iterator1, typename Iterator2>
 	requires(InputIterator<Iterator1> && InputIterator<Iterator2>)
-MSTL_CONSTEXPR bool equal(Iterator1 first1, Iterator1 last1, Iterator2 first2) {
+MSTL_NODISCARD MSTL_CONSTEXPR bool equal(Iterator1 first1, Iterator1 last1, Iterator2 first2) noexcept {
 	for (; first1 != last1; ++first1, ++first2) {
 		if (*first1 != *first2) return false;
 	}
@@ -17,8 +17,8 @@ MSTL_CONSTEXPR bool equal(Iterator1 first1, Iterator1 last1, Iterator2 first2) {
 }
 template <typename Iterator1, typename Iterator2, typename BinaryPredicate>
 	requires(InputIterator<Iterator1> && InputIterator<Iterator2> && BinaryFunction<BinaryPredicate>)
-MSTL_CONSTEXPR bool equal(Iterator1 first1, Iterator1 last1,
-	Iterator2 first2, BinaryPredicate binary_pred) {
+MSTL_NODISCARD MSTL_CONSTEXPR bool equal(Iterator1 first1, Iterator1 last1,
+	Iterator2 first2, BinaryPredicate binary_pred) noexcept {
 	for (; first1 != last1; ++first1, ++first2) {
 		if (!binary_pred(*first1, *first2)) return false;
 	}
@@ -67,8 +67,8 @@ MSTL_CONSTEXPR const T& minimum(const T& a, const T& b, Compare comp) {
 
 template <typename Iterator1, typename Iterator2>
 	requires(InputIterator<Iterator1> && InputIterator<Iterator2>)
-MSTL_CONSTEXPR bool lexicographical_compare(Iterator1 first1, Iterator1 last1,
-	Iterator2 first2, Iterator2 last2) {
+MSTL_NODISCARD MSTL_CONSTEXPR bool lexicographical_compare(Iterator1 first1, Iterator1 last1,
+	Iterator2 first2, Iterator2 last2) noexcept {
 	for (; first1 != last1 && first2 != last2; ++first1, ++first2) {
 		if (*first1 < *first2) return true;
 		if (*first2 < *first1) return false;
@@ -77,16 +77,16 @@ MSTL_CONSTEXPR bool lexicographical_compare(Iterator1 first1, Iterator1 last1,
 }
 template <typename Iterator1, typename Iterator2, typename Compare>
 	requires(InputIterator<Iterator1> && InputIterator<Iterator2> && BinaryFunction<Compare>)
-MSTL_CONSTEXPR bool lexicographical_compare(Iterator1 first1, Iterator1 last1,
-	Iterator2 first2, Iterator2 last2, Compare comp) {
+MSTL_NODISCARD MSTL_CONSTEXPR bool lexicographical_compare(Iterator1 first1, Iterator1 last1,
+	Iterator2 first2, Iterator2 last2, Compare comp) noexcept {
 	for (; first1 != last1 && first2 != last2; ++first1, ++first2) {
 		if (comp(*first1, *first2)) return true;
 		if (comp(*first2, *first1)) return false;
 	}
 	return first1 == last1 && first2 != last2;
 }
-inline bool lexicographical_compare(const unsigned char* first1, const unsigned char* last1,
-	const unsigned char* first2, const unsigned char* last2) {
+inline MSTL_NODISCARD bool lexicographical_compare(const unsigned char* first1,
+	const unsigned char* last1, const unsigned char* first2, const unsigned char* last2) noexcept {
 	const size_t len1 = last1 - first1;
 	const size_t len2 = last2 - first2;
 	const int result = MSTL::memcmp(first1, first2, (int)MSTL::minimum(len1, len1));

@@ -357,5 +357,5 @@ void try_graph() {
 }
 
 int main() {
-    try_tup();
+    try_map();
 }
