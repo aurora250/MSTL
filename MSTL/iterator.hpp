@@ -2,6 +2,7 @@
 #define MSTL_ITERATOR_HPP__
 #include "basiclib.h"
 #include "concepts.hpp"
+#include "algobase.hpp"
 MSTL_BEGIN_NAMESPACE__
 MSTL_CONCEPTS__
 
@@ -54,11 +55,10 @@ template <typename Iterator, typename Distance>
 MSTL_CONSTEXPR void distance(Iterator first, Iterator last, Distance& n) {
     n += last - first;
 }
-
 template <typename Iterator>
     requires(InputIterator<Iterator>)
 MSTL_CONSTEXPR typename std::iterator_traits<Iterator>::difference_type
-distance(Iterator first, Iterator last, std::input_iterator_tag) {
+distance(Iterator first, Iterator last) {
     typename std::iterator_traits<Iterator>::difference_type n = 0;
     while (first != last) { ++first; ++n; }
     return n;
@@ -69,6 +69,7 @@ MSTL_CONSTEXPR typename std::iterator_traits<Iterator>::difference_type
 distance(Iterator first, Iterator last) {
     return last - first;
 }
+
 
 template <typename Container>
     requires requires(Container& c, const typename Container::value_type& lv,
@@ -175,6 +176,166 @@ template <typename Container>
 MSTL_NODISCARD MSTL_CONSTEXPR insert_iterator<Container> 
 inserter(Container& x, typename Container::iterator it) noexcept {
     return insert_iterator<Container>(x, it);
+}
+
+template <class Iterator, class T = typename Iterator::value_type,
+    class Dist = typename Iterator::difference_type>
+    requires(RandomAccessIterator<Iterator>)
+class reverse_iterator {
+public:
+    typedef std::random_access_iterator_tag iterator_category;
+    typedef T                               value_type;
+    typedef Dist                            difference_type;
+    typedef T*                              pointer;
+    typedef T&                              reference;
+    typedef reverse_iterator<Iterator, T, Dist> self;
+
+    MSTL_CONSTEXPR reverse_iterator() = default;
+    MSTL_CONSTEXPR explicit reverse_iterator(Iterator x)
+        noexcept(NothrowMoveConstructible<Iterator>)
+        : current(std::move(x)) {}
+
+    template <typename U>
+        requires(!SameTo<U, Iterator> && Convertible<const U&, Iterator>)
+    MSTL_CONSTEXPR explicit reverse_iterator(const reverse_iterator<U>& x)
+        noexcept(NothrowConstructibleFrom<self, const U&>)
+        : current(x.current) {}
+
+    template <typename U>
+        requires(!SameTo<U, Iterator> && Convertible<const U&, Iterator>
+    && AssignableFrom<Iterator&, const U&>)
+        MSTL_CONSTEXPR self& operator =(const reverse_iterator<U>& x)
+        noexcept(NothrowAssignableFrom<self&, const U&>) {
+        current = x.current;
+        return *this;
+    }
+
+    MSTL_NODISCARD MSTL_CONSTEXPR const Iterator& base() const noexcept {
+        return current;
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR reference operator *() const 
+        noexcept(NothrowCopyConstructible<Iterator> && noexcept(*--(std::declval<Iterator&>()))) {
+        Iterator iter = current;
+        return *--iter;
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR pointer operator ->() const
+        noexcept(NothrowCopyConstructible<Iterator> && noexcept(*--(std::declval<Iterator&>()))) {
+        return &(operator*());
+    }
+    MSTL_CONSTEXPR self& operator ++()
+         noexcept(noexcept(--current)) {
+        --current;
+        return *this;
+    }
+    MSTL_CONSTEXPR self operator ++(int)
+        noexcept(NothrowCopyConstructible<Iterator> && noexcept(--current)) {
+        self tmp = *this;
+        --current;
+        return tmp;
+    }
+    MSTL_CONSTEXPR self& operator --()
+        noexcept(noexcept(++current)) {
+        ++current;
+        return *this;
+    }
+    MSTL_CONSTEXPR self operator --(int)
+        noexcept(NothrowCopyConstructible<Iterator> && noexcept(++current)) {
+        self tmp = *this;
+        ++current;
+        return tmp;
+    }
+    MSTL_CONSTEXPR self operator +(const difference_type n) const 
+        noexcept(noexcept(self(current - n))) {
+        return self(current - n);
+    }
+    MSTL_CONSTEXPR self& operator +=(const difference_type n) 
+        noexcept(noexcept(current -= n)) {
+        current -= n;
+        return *this;
+    }
+    MSTL_CONSTEXPR self operator -(const difference_type n) const 
+        noexcept(noexcept(self(current + n))) {
+        return self(current + n);
+    }
+    MSTL_CONSTEXPR self& operator -=(const difference_type n)
+        noexcept(noexcept(current += n)) {
+        current += n;
+        return *this;
+    }
+    MSTL_CONSTEXPR reference operator[](const difference_type n) const
+        noexcept(noexcept(*this + n)) {
+        return *(*this + n);
+    }
+
+private:
+    Iterator current;
+};
+template <class Iterator1, class Iterator2>
+    requires(RandomAccessIterator<Iterator1> && RandomAccessIterator<Iterator2>)
+MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(
+    const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
+    noexcept(noexcept(x.base() == y.base())) requires requires {
+        { x.base() == y.base() } -> std::convertible_to<bool>; } {
+    return x.base() == y.base();
+}
+template <class Iterator1, class Iterator2>
+    requires(RandomAccessIterator<Iterator1>&& RandomAccessIterator<Iterator2>)
+MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(
+    const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
+    noexcept(noexcept(x.base() != y.base())) requires requires {
+        { x.base() != y.base() } -> std::convertible_to<bool>; } {
+    return x.base() != y.base();
+}
+template <class Iterator1, class Iterator2>
+    requires(RandomAccessIterator<Iterator1>&& RandomAccessIterator<Iterator2>)
+MSTL_NODISCARD MSTL_CONSTEXPR bool operator <(
+    const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
+    noexcept(noexcept(x.base() > y.base())) requires requires {
+        { x.base() > y.base() } -> std::convertible_to<bool>; } {
+    return x.base() > y.base();
+}
+template <class Iterator1, class Iterator2>
+    requires(RandomAccessIterator<Iterator1>&& RandomAccessIterator<Iterator2>)
+MSTL_NODISCARD MSTL_CONSTEXPR bool operator >(
+    const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
+    noexcept(noexcept(x.base() < y.base())) requires requires {
+        { x.base() < y.base() } -> std::convertible_to<bool>; } {
+    return x.base() < y.base();
+}
+template <class Iterator1, class Iterator2>
+    requires(RandomAccessIterator<Iterator1>&& RandomAccessIterator<Iterator2>)
+MSTL_NODISCARD MSTL_CONSTEXPR bool operator <=(
+    const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
+    noexcept(noexcept(x.base() >= y.base())) requires requires {
+        { x.base() >= y.base() } -> std::convertible_to<bool>; } {
+    return x.base() >= y.base();
+}
+template <class Iterator1, class Iterator2>
+    requires(RandomAccessIterator<Iterator1>&& RandomAccessIterator<Iterator2>)
+MSTL_NODISCARD MSTL_CONSTEXPR bool operator >=(
+    const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
+    noexcept(noexcept(x.base() <= y.base())) requires requires {
+        { x.base() <= y.base() } -> std::convertible_to<bool>; } {
+    return x.base() <= y.base();
+}
+template <class Iterator1, class Iterator2>
+    requires(RandomAccessIterator<Iterator1>&& RandomAccessIterator<Iterator2>)
+MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator -(
+    const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
+    noexcept(noexcept(y.base() - x.base())) {
+    return y.base() - x.base();
+}
+template <class Iterator>
+    requires(RandomAccessIterator<Iterator>)
+MSTL_CONSTEXPR reverse_iterator<Iterator> operator +(
+    typename reverse_iterator<Iterator>::difference_type n, const reverse_iterator<Iterator>& x) 
+    noexcept(noexcept(x + n)) {
+    return x + n;
+}
+template <typename Iterator, typename T, typename Dist>
+MSTL_NODISCARD MSTL_CONSTEXPR reverse_iterator<Iterator> 
+make_reverse_iterator(Iterator it) noexcept(NothrowMoveConstructible<Iterator>) {
+    return reverse_iterator<Iterator, T, Dist>(std::move(it));
 }
 
 MSTL_END_NAMESPACE__

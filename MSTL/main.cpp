@@ -156,7 +156,6 @@ void try_stack() {
     queue<int> q;
     q.push(2);
 }
-#include <vector>
 void try_vec() {
     MSTL_NAMESPACE__;
     MSTL_TRY__{

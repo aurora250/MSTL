@@ -41,7 +41,9 @@ template <typename Iterator1, typename Iterator2>
 	requires(ForwardIterator<Iterator1> && ForwardIterator<Iterator2>)
 MSTL_CONSTEXPR void iter_swap(Iterator1 a, Iterator2 b) {
 	using T = typename std::iterator_traits<Iterator1>::value_type;
-	std::swap<T>(*a, *b);
+	T tmp = *a;
+	*a = *b;
+	*b = tmp;
 }
 
 template <typename T>
@@ -128,7 +130,7 @@ MSTL_CONSTEXPR Iterator2 __copy(Iterator1 first, Iterator1 last, Iterator2 resul
 template <typename Iterator1, typename Iterator2>
 	requires(RandomAccessIterator<Iterator1> && RandomAccessIterator<Iterator2>)
 MSTL_CONSTEXPR Iterator2 __copy(Iterator1 first, Iterator1 last, Iterator2 result) {
-	return MSTL::__copy_d(first, last, result, MSTL::distance_type(first));
+	return MSTL::__copy_d(first, last, result, distance_type(first));
 }
 template <typename T>
 	requires(TrivialCopyAssignable<T>)
