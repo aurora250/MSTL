@@ -19,29 +19,47 @@ struct binary_function {
 };
 
 //arithmetic:
-template <typename T> requires(Addable<T, T>)
+template <typename T>
 struct plus : public binary_function<T, T, T> {
-	MSTL_CONSTEXPR T operator()(const T& x, const T& y) const { return x + y; }
+	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const
+		noexcept(noexcept(x + y)) {
+		return x + y;
+	}
 };
 template <typename T>
 struct minus : public binary_function<T, T, T> {
-	MSTL_CONSTEXPR T operator()(const T& x, const T& y) const { return x - y; }
+	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const
+		noexcept(noexcept(x - y)) {
+		return x - y;
+	}
 };
 template <typename T>
 struct multiplies : public binary_function<T, T, T> {
-	MSTL_CONSTEXPR T operator()(const T& x, const T& y) const { return x * y; }
+	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const
+		noexcept(noexcept(x * y)) {
+		return x * y;
+	}
 };
 template <typename T>
 struct divides : public binary_function<T, T, T> {
-	MSTL_CONSTEXPR T operator()(const T& x, const T& y) const { return x / y; }
+	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const
+		noexcept(noexcept(x / y)) {
+		return x / y;
+	}
 };
 template <typename T>
 struct modulus : public binary_function<T, T, T> {
-	MSTL_CONSTEXPR T operator()(const T& x, const T& y) const { return x % y; }
+	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const
+		noexcept(noexcept(x % y)) {
+		return x % y;
+	}
 };
 template <typename T>
 struct negate : public unary_function<T, T> {
-	MSTL_CONSTEXPR T operator()(const T& x) const { return -x; }
+	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x) const
+		noexcept(noexcept(-x)) {
+		return -x;
+	}
 };
 
 //identity element:
@@ -53,73 +71,125 @@ MSTL_CONSTEXPR T indetity_element(multiplies<T>) { return T(1); }
 //relational:
 template <typename T>
 struct equal_to : public binary_function<T, T, bool> {
-	MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const { return x == y; }
+	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const 
+		noexcept(noexcept(x == y)) {
+		return x == y;
+	}
 };
 template <typename T>
 struct not_equal_to : public binary_function<T, T, bool> {
-	MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const { return x != y; }
+	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const
+		noexcept(noexcept(x != y)) {
+		return x != y;
+	}
 };
 template <typename T>
 struct greater : public binary_function<T, T, bool> {
-	MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const { return x > y; }
+	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const
+		noexcept(noexcept(x > y)) {
+		return x > y;
+	}
 };
 template <typename T>
 struct less : public binary_function<T, T, bool> {
-	MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const { return x < y; }
+	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const
+		noexcept(noexcept(x < y)) {
+		return x < y;
+	}
 };
 template <typename T>
 struct greater_equal : public binary_function<T, T, bool> {
-	MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const { return x >= y; }
+	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const
+		noexcept(noexcept(x >= y)) {
+		return x >= y;
+	}
 };
 template <typename T>
 struct less_equal : public binary_function<T, T, bool> {
-	MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const { return x <= y; }
+	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const
+		noexcept(noexcept(x <= y)) {
+		return x <= y;
+	}
 };
 
 //logical:
 template <typename T>
 struct logical_and : public binary_function<T, T, bool> {
-	MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const { return x && y; }
+	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const
+		noexcept(noexcept(x && y)) {
+		return x && y;
+	}
 };
 template <typename T>
 struct logical_or : public binary_function<T, T, bool> {
-	MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const { return x || y; }
+	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const
+		noexcept(noexcept(x || y)) {
+		return x || y;
+	}
 };
 template <typename T>
 struct logical_not : public unary_function<T, bool> {
-	MSTL_CONSTEXPR bool operator()(const T& x) const { return !x; }
+	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x) const
+		noexcept(noexcept(!x)) {
+		return !x;
+	}
 };
 
 //others:
 template <typename T>
 struct identity : public unary_function<T, T> {
-	MSTL_CONSTEXPR const T& operator()(const T& x) const { return x; }
+	template <typename U = T>
+	MSTL_NODISCARD MSTL_CONSTEXPR U&& operator()(U&& x) const noexcept {
+		return std::forward<U>(x);
+	}
 };
 
 template <typename Pair>
+	requires(PairLike<Pair>)
 struct select1st : public unary_function<Pair, typename Pair::first_type> {
-	MSTL_CONSTEXPR typename Pair::first_type& operator()(const Pair& x) const { return x.first; }
+	MSTL_NODISCARD MSTL_CONSTEXPR typename Pair::first_type&& operator()(
+		Pair&& x) const noexcept {
+		return std::forward<typename Pair::first_type>(x.first);
+	}
+	MSTL_NODISCARD MSTL_CONSTEXPR const typename Pair::first_type& operator()(
+		const Pair& x) const noexcept {
+		return x.first;
+	}
 };
 template <typename Pair>
+	requires(PairLike<Pair>)
 struct select2nd : public unary_function<Pair, typename Pair::second_type> {
-	MSTL_CONSTEXPR typename Pair::second_type& operator()(const Pair& x) const { return x.second; }
-};
-template <typename Arg1, typename Arg2>
-struct project1st : public binary_function<Arg1, Arg2, Arg1> {
-	MSTL_CONSTEXPR Arg1 operator()(const Arg1& x, const Arg2&) const { return x; }
-};
-template <typename Arg1, typename Arg2>
-struct project2nd : public binary_function<Arg1, Arg2, Arg2> {
-	MSTL_CONSTEXPR Arg2 operator()(const Arg1&, const Arg2& y) const { return y; }
+	MSTL_NODISCARD MSTL_CONSTEXPR typename Pair::second_type&& operator()(
+		Pair&& x) const noexcept {
+		return std::forward<typename Pair::second_type>(x.second);
+	}
+	MSTL_NODISCARD MSTL_CONSTEXPR const typename Pair::second_type& operator()(
+		const Pair& x) const noexcept {
+		return x.second;
+	}
 };
 
 struct display {
-	const display& operator ()() { return *this; }
-	void operator()(const auto& value) { std::cout << value << std::flush; }
-};
-struct display_enter {
-	const display_enter& operator ()() { return *this; }
-	void operator ()(const auto& value) { std::cout << value << std::endl; }
+	typedef display self;
+
+	display(const char* finish = "", const char* split = "")
+		noexcept(NothrowConstructibleFrom<std::string, const char*>)
+		: split_(split), finish_(finish) {}
+	explicit display(const std::string& split, const std::string& finish) 
+		noexcept(NothrowCopyConstructible<std::string>)
+		: split_(split), finish_(finish) {}
+	explicit display(std::string&& split, std::string&& finish)
+		noexcept(NothrowMoveConstructible<std::string>)
+		: split_(std::forward<std::string>(split)), finish_(std::forward<std::string>(finish)) {}
+
+	template <typename... T>
+	self& operator ()(T&&... value) {
+		((std::cout << std::forward<T>(value) << split_), ...);
+		std::cout << finish_ << std::flush;
+		return *this;
+	}
+	std::string split_;
+	std::string finish_;
 };
 
 MSTL_END_NAMESPACE__

@@ -155,6 +155,8 @@ namespace concepts {
 
 	template <typename... T>
 	concept TrivialDestructible = (... && std::is_trivially_destructible_v<T>);
+	template <typename T>
+	concept NothrowDestructable = std::is_nothrow_destructible_v<T>;
 
 	template<typename T>
 	concept Printable = requires(const T & t) {

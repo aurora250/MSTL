@@ -165,7 +165,7 @@ void try_vec() {
         detailof(v);
         vector<int> v2(v);
         back_insert_iterator it(v2);
-        display_enter out;
+        display out("\n");
         out(v.front());
         MSTL_TRY__{
             out(v[1]);
@@ -354,7 +354,6 @@ void try_graph() {
     MSTL_NAMESPACE__;
     adjacency_list graph;
 }
-
 int main() {
-    try_tup();
+    try_vec();
 }

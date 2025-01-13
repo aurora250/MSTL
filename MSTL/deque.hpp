@@ -9,7 +9,7 @@ MSTL_BEGIN_NAMESPACE__
 MSTL_CONCEPTS__
 
 MSTL_CONSTEXPR size_t deque_buf_size(size_t n, size_t sz) noexcept {
-    return n != 0 ? n : (sz < size_t(power(2, 9)) ? size_t(size_t(power(2, 9)) / sz) : 1);
+    return n != 0 ? n : (sz < size_t(power(2, 9)) ? size_t(power(2, 9) / sz) : 1);
 }
 
 template <typename T, typename Ref = T&, typename Ptr = T*, size_t BufSize = 0>

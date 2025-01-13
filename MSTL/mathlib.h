@@ -29,25 +29,25 @@ struct constants {
 	static MSTL_CONSTEXPR mathd_t INFINITY_LD = 1.7976931348623158e+308L;
 };
 
-MSTL_CONSTEXPR mathd_t angular2radian(mathd_t angular) {
+MSTL_CONSTEXPR mathd_t angular2radian(mathd_t angular) noexcept {
 	return (angular * constants::PI / constants::SEMI_CIRCLE);
 }
-MSTL_CONSTEXPR mathd_t radian2angular(mathd_t radians) {
+MSTL_CONSTEXPR mathd_t radian2angular(mathd_t radians) noexcept {
 	return radians * (constants::SEMI_CIRCLE / constants::PI);
 }
 
 template <typename T> 
 	requires(SignedNumber<T>)
-MSTL_CONSTEXPR T opposite(T x) {
+MSTL_CONSTEXPR T opposite(T x) noexcept {
 	return -x;
 }
 template <typename T, typename... Args>
-MSTL_CONSTEXPR T sum_n(T first, Args... args) {
+MSTL_CONSTEXPR T sum_n(T first, Args... args) noexcept {
 	return first + sum_n(args...);
 }
 template <typename T> 
 	requires(SignedNumber<T>)
-MSTL_CONSTEXPR T absolute(T x) {
+MSTL_CONSTEXPR T absolute(T x) noexcept {
 	return (x > 0) ? x : (-x);
 }
 template <typename T> 
@@ -58,10 +58,10 @@ inline mathd_t reciprocal(T x) {
 }
 
 template <typename T>
-MSTL_CONSTEXPR T square(T x) { return x * x; }
+MSTL_CONSTEXPR T square(T x) noexcept { return x * x; }
 template <typename T>
 	requires (Integral<T>)
-MSTL_CONSTEXPR mathl_t power(T x, mathui_t n) {
+MSTL_CONSTEXPR mathl_t power(T x, mathui_t n) noexcept {
 	if (n == 0) return mathl_t(1);
 	mathl_t result = 1;
 	T base = x;
@@ -76,7 +76,7 @@ MSTL_CONSTEXPR mathl_t power(T x, mathui_t n) {
 }
 template <typename T>
 	requires (Float<T>)
-mathd_t MSTL_CONSTEXPR power(T x, mathui_t n) {
+mathd_t MSTL_CONSTEXPR power(T x, mathui_t n) noexcept {
 	if (n == 0) return mathd_t(1);
 	mathd_t result = 1.0;
 	T base = x;
@@ -89,10 +89,10 @@ mathd_t MSTL_CONSTEXPR power(T x, mathui_t n) {
 	}
 	return result;
 }
-MSTL_CONSTEXPR mathd_t exponential(mathui_t n) {
+MSTL_CONSTEXPR mathd_t exponential(mathui_t n) noexcept {
 	return power(constants::EULER, n);
 }
-MSTL_CONSTEXPR mathd_t logarithm_e(mathd_t x) {
+MSTL_CONSTEXPR mathd_t logarithm_e(mathd_t x) noexcept {
 	mathui_t N = constants::TAYLOR_CONVERGENCE;
 	mathd_t a = (x - 1) / (x + 1);
 	mathd_t a_sqar = square(a);
@@ -105,17 +105,17 @@ MSTL_CONSTEXPR mathd_t logarithm_e(mathd_t x) {
 	return (2.0 * a * y);
 }
 
-MSTL_CONSTEXPR mathd_t logarithm(mathd_t x, mathui_t base) {
+MSTL_CONSTEXPR mathd_t logarithm(mathd_t x, mathui_t base) noexcept {
 	return logarithm_e(x) / logarithm_e(base);
 }
-MSTL_CONSTEXPR mathd_t logarithm_2(mathd_t x) {
+MSTL_CONSTEXPR mathd_t logarithm_2(mathd_t x) noexcept {
 	return logarithm(x, 2);
 }
-MSTL_CONSTEXPR mathd_t logarithm_10(mathd_t x) {
+MSTL_CONSTEXPR mathd_t logarithm_10(mathd_t x) noexcept {
 	return logarithm(x, 10);
 }
 
-MSTL_CONSTEXPR mathd_t square_root(mathd_t x, mathd_t precise) {
+MSTL_CONSTEXPR mathd_t square_root(mathd_t x, mathd_t precise) noexcept {
 	mathd_t t = 0.0;
 	mathd_t result = x;
 	while (absolute(result - t) > precise) {
@@ -125,14 +125,14 @@ MSTL_CONSTEXPR mathd_t square_root(mathd_t x, mathd_t precise) {
 	return result;
 }
 
-MSTL_CONSTEXPR mathul_t factorial(mathul_t n) {
+MSTL_CONSTEXPR mathul_t factorial(mathul_t n) noexcept {
 	mathul_t h = 1;
 	for (mathul_t i = 1; i <= n; i++)
 		h *= i;
 	return h;
 }
 
-MSTL_CONSTEXPR mathd_t floor_bit(mathd_t x, mathui_t bit) { // bit ¾«È·µ½µÚ¼¸Î»£¬>0 ²Ù×÷Ð¡ÊýÎ»£¬¡Ü0 ²Ù×÷ÕûÊýÎ»
+MSTL_CONSTEXPR mathd_t floor_bit(mathd_t x, mathui_t bit) noexcept { // bit ¾«È·µ½µÚ¼¸Î»£¬>0 ²Ù×÷Ð¡ÊýÎ»£¬¡Ü0 ²Ù×÷ÕûÊýÎ»
 	mathd_t times = power(10.0, bit);
 	mathl_t int_part = (mathl_t)(x * times);
 	if (x < 0 && (mathl_t)(x * times * 10) / 10.0 != int_part) {
@@ -142,7 +142,7 @@ MSTL_CONSTEXPR mathd_t floor_bit(mathd_t x, mathui_t bit) { // bit ¾«È·µ½µÚ¼¸Î»£
 		return int_part / times;
 	}
 }
-MSTL_CONSTEXPR mathd_t ceil_bit(mathd_t x, mathui_t bit) {
+MSTL_CONSTEXPR mathd_t ceil_bit(mathd_t x, mathui_t bit) noexcept {
 	mathd_t times = power(10.0, bit);
 	mathl_t int_part = (mathl_t)(x * times);
 	if (x > 0 && (mathl_t)(x * times * 10) / 10.0 != int_part) {
@@ -153,15 +153,15 @@ MSTL_CONSTEXPR mathd_t ceil_bit(mathd_t x, mathui_t bit) {
 	}
 }
 
-MSTL_CONSTEXPR mathd_t round_bit(mathd_t x, mathui_t bit) {
+MSTL_CONSTEXPR mathd_t round_bit(mathd_t x, mathui_t bit) noexcept {
 	return x < 0 ? ceil_bit(x - 0.5 / power(10.0, bit), bit) 
 		: floor_bit(x + 0.5 / power(10.0, bit), bit);
 }
-MSTL_CONSTEXPR mathd_t truncate_bit(mathd_t x, mathui_t bit) {
+MSTL_CONSTEXPR mathd_t truncate_bit(mathd_t x, mathui_t bit) noexcept {
 	return x < 0 ? ceil_bit(x, bit) 
 		: floor_bit(x, bit);
 }
-MSTL_CONSTEXPR mathd_t floor(mathd_t x, mathui_t bit) {
+MSTL_CONSTEXPR mathd_t floor(mathd_t x, mathui_t bit) noexcept {
 	mathd_t times = power(10.0, bit);
 	mathl_t int_part = (mathl_t)(x * times);
 	if (x < 0 && x * times != int_part)
@@ -169,7 +169,7 @@ MSTL_CONSTEXPR mathd_t floor(mathd_t x, mathui_t bit) {
 	else
 		return int_part / times;
 }
-MSTL_CONSTEXPR mathd_t ceil(mathd_t x, mathui_t bit) {
+MSTL_CONSTEXPR mathd_t ceil(mathd_t x, mathui_t bit) noexcept {
 	mathd_t times = power(10.0, bit);
 	mathl_t int_part = (mathl_t)(x * times);
 	if (x > 0 && x * times != int_part)
@@ -178,16 +178,17 @@ MSTL_CONSTEXPR mathd_t ceil(mathd_t x, mathui_t bit) {
 		return int_part / times;
 }
 
-MSTL_CONSTEXPR mathd_t round(mathd_t x, mathui_t bit) {
+MSTL_CONSTEXPR mathd_t round(mathd_t x, mathui_t bit) noexcept {
 	return x < 0 ? ceil(x - 0.5 / power(10.0, bit), bit) 
 		: floor(x + 0.5 / power(10.0, bit), bit);
 }
-MSTL_CONSTEXPR mathd_t truncate(mathd_t x, int bit) {
+MSTL_CONSTEXPR mathd_t truncate(mathd_t x, int bit) noexcept {
 	return x < 0 ? ceil(x, bit) 
 		: floor(x, bit);
 }
 
-inline bool around_multiple(mathd_t x, mathd_t axis, mathd_t toler = constants::PRECISE_TOLERANCE) {
+inline bool around_multiple(
+	mathd_t x, mathd_t axis, mathd_t toler = constants::PRECISE_TOLERANCE) {
 	x = absolute(x);
 	axis = absolute(axis);
 	if (axis < constants::PRECISE_TOLERANCE) Exception(MathError("Axis Cannot be 0"));
@@ -199,22 +200,22 @@ inline bool around_pi(mathd_t x, mathd_t toler = constants::LOW_PRECISE_TOLERANC
 	return around_multiple(x, constants::PI, toler);
 }
 inline bool around_zero(mathd_t x, mathd_t toler = constants::PRECISE_TOLERANCE) {
-	return around_multiple(x, 0.0, toler);
+	return around_multiple(x, 0.0L, toler);
 }
 
-MSTL_CONSTEXPR mathd_t remainder(mathd_t x, mathd_t y) {
+MSTL_CONSTEXPR mathd_t remainder(mathd_t x, mathd_t y) noexcept {
 	return (x - y * (x / y));
 }
-MSTL_CONSTEXPR mathd_t float_part(mathd_t x) {
+MSTL_CONSTEXPR mathd_t float_part(mathd_t x) noexcept {
 	return (x - (mathl_t)x);
 }
-MSTL_CONSTEXPR mathd_t divided_float(mathd_t x, mathl_t* ptr) {
+MSTL_CONSTEXPR mathd_t divided_float(mathd_t x, mathl_t* ptr) noexcept {
 	*ptr = mathl_t(x);
 	x -= (*ptr);
 	return x;
 }
 
-MSTL_CONSTEXPR mathd_t sine(mathd_t x) {
+MSTL_CONSTEXPR mathd_t sine(mathd_t x) noexcept {
 	mathul_t i = 1;
 	mathi_t neg = 1;
 	mathd_t sum;
@@ -232,7 +233,7 @@ MSTL_CONSTEXPR mathd_t sine(mathd_t x) {
 	return taylor;
 }
 
-MSTL_CONSTEXPR mathd_t cosine(mathd_t x) {
+MSTL_CONSTEXPR mathd_t cosine(mathd_t x) noexcept {
 	return sine((constants::PI / 2.0) - x);
 }
 inline mathd_t tangent(mathd_t x) {
@@ -259,7 +260,7 @@ inline mathd_t arccosine(mathd_t x) {
 	if (x > 1 || x < -1) Exception(MathError("Arccosine Range Exceeded"));
 	return constants::PI / 2.0 - arcsine(x);
 }
-MSTL_CONSTEXPR mathd_t arctangent_taylor(mathd_t x) {
+MSTL_CONSTEXPR mathd_t arctangent_taylor(mathd_t x) noexcept {
 	mathd_t y = 0.0;
 	mathd_t tmp = x;
 	mathul_t N = 1;
@@ -271,7 +272,7 @@ MSTL_CONSTEXPR mathd_t arctangent_taylor(mathd_t x) {
 	return y;
 }
 
-MSTL_CONSTEXPR mathd_t arctangent(mathd_t x) {
+MSTL_CONSTEXPR mathd_t arctangent(mathd_t x) noexcept {
 	if (x > 1)
 		return constants::PI / 2 - arctangent_taylor(1 / x);
 	else if (x < -1)

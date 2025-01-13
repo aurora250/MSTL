@@ -62,9 +62,17 @@ struct list_iterator {
         --(*this);
         return _old;
     }
-    MSTL_NODISCARD bool operator ==(const self& _iter) const noexcept { return this->node_ == _iter.node_; }
-    MSTL_NODISCARD bool operator !=(const self& _iter) const noexcept { return this->node_ != _iter.node_; }
 };
+template <typename T, typename Ref, typename Ptr>
+MSTL_NODISCARD bool operator ==(const list_iterator<T, Ref, Ptr>& x,
+    const list_iterator<T, Ref, Ptr>& y) noexcept(noexcept(x.node_ == y.node_)) {
+    return x.node_ == y.node_;
+}
+template <typename T, typename Ref, typename Ptr>
+MSTL_NODISCARD bool operator !=(const list_iterator<T, Ref, Ptr>& x,
+    const list_iterator<T, Ref, Ptr>& y) noexcept(noexcept(x.node_ != y.node_)) {
+    return x.node_ != y.node_;
+}
 
 template <typename T, typename Alloc = default_standard_alloc<__list_node<T>>>
 class list {
@@ -86,7 +94,7 @@ private:
     list_node_allocator alloc_;
     size_type size_;
 
-    inline void range_check(size_type _pos) const noexcept {
+    inline void range_check(size_type _pos) const {
         Exception(this->in_boundary(_pos), StopIterator());
     }
     inline bool in_boundary(size_type _pos) const noexcept {

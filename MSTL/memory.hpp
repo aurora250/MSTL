@@ -13,13 +13,14 @@ MSTL_CONSTEXPR void construct(T1* p, T2&&... value) {
     new (p) T1(std::forward<T2>(value)...);
 }
 template <typename T>
-MSTL_CONSTEXPR void destroy(T* pointer) noexcept {
+MSTL_CONSTEXPR void destroy(T* pointer) noexcept(NothrowDestructable<T>) {
     pointer->~T();
 }
 template <typename Iterator>
     requires(ForwardIterator<Iterator> && (!TrivialDestructible<
         typename std::iterator_traits<Iterator>::value_type>))
-MSTL_CONSTEXPR void destroy(Iterator first, Iterator last) noexcept {
+MSTL_CONSTEXPR void destroy(Iterator first, Iterator last) 
+noexcept(NothrowDestructable<typename std::iterator_traits<Iterator>::value_type>) {
     for (; first < last; ++first) MSTL::destroy(&*first);
 }
 template <typename Iterator>

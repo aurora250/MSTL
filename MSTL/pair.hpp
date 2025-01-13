@@ -81,7 +81,7 @@ struct pair {
 		return *this;
 	}
 	template <class U1, class U2>
-		requires((!Same<pair, pair<U1, U2>>) 
+		requires((!SameTo<pair, pair<U1, U2>>) 
 	&& AssignableFrom<T1&, U1>&& AssignableFrom<T2&, U2>)
 	MSTL_CONSTEXPR pair& operator =(pair<U1, U2>&& p)
 		noexcept(NothrowAssignableFrom<T1&, U1> && NothrowAssignableFrom<T2&, U2>) {
