@@ -362,11 +362,11 @@ noexcept(noexcept(__make_from_tuple<T>(std::forward<Tuple>(t),
 }
 
 template <typename... Types>
-MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) make_tuple(Types&&... args) {
+MSTL_NODISCARD MSTL_CONSTEXPR tuple<Types...> make_tuple(Types&&... args) {
 	return tuple<Types...>(std::forward<Types>(args)...);
 }
 template <typename... Types>
-MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) tie(Types&... args) noexcept {
+MSTL_NODISCARD MSTL_CONSTEXPR tuple<Types&...> tie(Types&... args) noexcept {
 	return tuple<Types&...>(args...);
 }
 template <typename... Types>

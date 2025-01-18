@@ -5,17 +5,18 @@
 #include "concepts.hpp"
 
 MSTL_BEGIN_NAMESPACE__
-using namespace concepts;
+MSTL_CONCEPTS__
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
     class Alloc = default_standard_alloc<__hashtable_node<pair<const Key, T>>>>
-    requires(HashFunction<HashFcn, Key> && BinaryFunction<EqualKey>)
+    requires(HashFunction<HashFcn, Key> && BinaryFunction<EqualKey> && DefaultConstructible<T>)
 class hash_map {
 private:
-    typedef hashtable<pair<const Key, T>, Key, HashFcn, select1st<pair<const Key, T>>, EqualKey, Alloc> ht;
+    typedef hashtable<pair<const Key, T>, Key, HashFcn, 
+        select1st<pair<const Key, T>>, EqualKey, Alloc> ht;
+
     ht rep;
 public:
-    typedef hash_map<Key, T, HashFcn, EqualKey, Alloc> self;
     typedef typename ht::key_type key_type;
     typedef T data_type;
     typedef T mapped_type;
@@ -30,34 +31,57 @@ public:
     typedef typename ht::const_reference const_reference;
     typedef typename ht::iterator iterator;
     typedef typename ht::const_iterator const_iterator;
+    typedef hash_map<Key, T, HashFcn, EqualKey, Alloc> self;
 
-    hasher hash_funct() const { return rep.hash_funct(); }
-    key_equal key_eq() const { return rep.key_eq(); }
+    hasher hash_funct() const noexcept(noexcept(rep.hash_func())) { return rep.hash_func(); }
+    key_equal key_eq() const noexcept(noexcept(rep.key_eql())) { return rep.key_eql(); }
 
-    hash_map() : rep(100, hasher(), key_equal()) {}
-    explicit hash_map(size_type n) : rep(n, hasher(), key_equal()) {}
+    hash_map() : rep(10, hasher(), key_equal()) {}
+
+    explicit hash_map(size_type n) : rep(n) {}
     hash_map(size_type n, const hasher& hf) : rep(n, hf, key_equal()) {}
     hash_map(size_type n, const hasher& hf, const key_equal& eql) : rep(n, hf, eql) {}
-    template <class InputIterator>
-    hash_map(InputIterator f, InputIterator l) : rep(100, hasher(), key_equal()) {
-        rep.insert_unique(f, l);
+
+    hash_map(const self& ht) : rep(ht.rep) {}
+    self& operator =(const self& x) {
+        return (rep = x.rep);
     }
-    template <class InputIterator>
-    hash_map(InputIterator f, InputIterator l, size_type n) : rep(n, hasher(), key_equal()) {
-        rep.insert_unique(f, l);
-    }
-    template <class InputIterator>
-    hash_map(InputIterator f, InputIterator l, size_type n, const hasher& hf) : rep(n, hf, key_equal()) {
-        rep.insert_unique(f, l);
-    }
-    template <class InputIterator>
-    hash_map(InputIterator f, InputIterator l, size_type n, const hasher& hf,
-        const key_equal& eql) : rep(n, hf, eql) {
-        rep.insert_unique(f, l);
+    hash_map(self&& x) noexcept(noexcept(rep.swap(x.rep))) : rep(std::forward<ht>(x.rep)) {}
+    self& operator =(self&& x) noexcept(noexcept(rep.swap(x.rep))) {
+        return (rep = std::forward<ht>(x.rep));
     }
 
+    template <class Iterator>
+        requires(InputIterator<Iterator>)
+    hash_map(Iterator f, Iterator l) : rep(10, hasher(), key_equal()) {
+        rep.insert_unique(f, l);
+    }
+    template <class Iterator>
+        requires(InputIterator<Iterator>)
+    hash_map(Iterator f, Iterator l, size_type n) : rep(n, hasher(), key_equal()) {
+        rep.insert_unique(f, l);
+    }
+    template <class Iterator>
+        requires(InputIterator<Iterator>)
+    hash_map(Iterator f, Iterator l, size_type n, const hasher& hf) : rep(n, hf, key_equal()) {
+        rep.insert_unique(f, l);
+    }
+    template <class Iterator>
+        requires(InputIterator<Iterator>)
+    hash_map(Iterator f, Iterator l, size_type n, const hasher& hf, const key_equal& eql) 
+        : rep(n, hf, eql) {
+        rep.insert_unique(f, l);
+    }
+    hash_map(std::initializer_list<value_type> l) 
+        : hash_map(l.begin(), l.end()) {}
+    hash_map(std::initializer_list<value_type> l, size_type n) 
+        : hash_map(l.begin(), l.end(), n) {}
+    hash_map(std::initializer_list<value_type> l, size_type n, const hasher& hf)
+        : hash_map(l.begin(), l.end(), n, hf) {}
+    hash_map(std::initializer_list<value_type> l, size_type n, const hasher& hf, const key_equal& eql)
+        : hash_map(l.begin(), l.end(), n, hf, eql) {}
+
     size_type size() const { return rep.size(); }
-    size_type max_size() const { return rep.max_size(); }
     bool empty() const { return rep.empty(); }
     void swap(hash_map& hs) { rep.swap(hs.rep); }
     iterator begin() { return rep.begin(); }
@@ -66,19 +90,22 @@ public:
     const_iterator const_end() const { return rep.const_end(); }
     friend bool operator ==(const hash_map&, const hash_map&);
 
-    pair<iterator, bool> insert(const value_type& obj) { return rep.insert_unique(obj); }
-    pair<iterator, bool> insert(const Key& k, const T& v) { return rep.insert_unique(value_type(k, v)); }
-    pair<iterator, bool> insert(Key&& k, T&& v) { 
-        return rep.insert_unique(value_type(std::move(k), std::move(v))); 
+    template <typename T = value_type>
+    pair<iterator, bool> insert(T&& obj) { 
+        return rep.insert_unique(std::forward<T>(obj));
     }
     template<typename... Args>
     void emplace(Args&&... args) {
         rep.emplace_unique(std::forward<Args>(args)...);
     }
 
-    template <class InputIterator>
-    void insert(InputIterator f, InputIterator l) { rep.insert_unique(f, l); }
-    pair<iterator, bool> insert_noresize(const value_type& obj) { return rep.insert_unique_noresize(obj); }
+    template <class Iterator>
+        requires(InputIterator<Iterator>)
+    void insert(Iterator f, Iterator l) { rep.insert_unique(f, l); }
+    template <typename T = value_type>
+    pair<iterator, bool> insert_noresize(T&& obj) { 
+        return rep.insert_unique_noresize(std::forward<T>(obj));
+    }
 
     iterator find(const key_type& key) { return rep.find(key); }
     const_iterator find(const key_type& key) const { return rep.find(key); }
@@ -88,6 +115,7 @@ public:
     T& operator[](key_type&& key) {
         return rep.find_or_insert(value_type(std::forward<key_type>(key), T())).second;
     }
+
 
     size_type count(const key_type& key) const { return rep.count(key); }
     pair<iterator, iterator> equal_range(const key_type& key) { return rep.equal_range(key); }
@@ -100,9 +128,10 @@ public:
     void clear() { rep.clear(); }
 
     void resize(size_type hint) { rep.resize(hint); }
-    size_type bucket_count() const { return rep.bucket_count(); }
-    size_type max_bucket_count() const { return rep.max_bucket_count(); }
-    size_type elems_in_bucket(size_type n) const { return rep.elems_in_bucket(n); }
+    size_type bucket_count() const { return rep.buckets_size(); }
+    size_type max_bucket_count() const { return rep.max_buckets_size(); }
+    size_type elems_in_bucket(size_type n) const { return rep.bucket_count(n); }
+    void swap() noexcept(noexcept(rep.swap())) { rep.swap(); }
 };
 template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
 inline bool operator ==(const hash_map<Key, T, HashFcn, EqualKey, Alloc>& hm1,
@@ -140,19 +169,18 @@ public:
     typedef typename ht::iterator iterator;
     typedef typename ht::const_iterator const_iterator;
 
-    hasher hash_funct() const { return rep.hash_funct(); }
-    key_equal key_eq() const { return rep.key_eq(); }
+    hasher hash_funct() const { return rep.hash_func(); }
+    key_equal key_eq() const { return rep.key_eql(); }
 
-    hash_multimap() : rep(100, hasher(), key_equal()) {}
-    explicit hash_multimap(size_type n) : rep(n, hasher(), key_equal()) {}
-    explicit hash_multimap(size_type n, const hasher& hf) : rep(n, hf, key_equal()) {}
+    hash_multimap() : rep(10) {}
+    explicit hash_multimap(size_type n) : rep(n) {}
     explicit hash_multimap(size_type n, const hasher& hf, const key_equal& eql) : rep(n, hf, eql) {}
     template <class InputIterator>
-    hash_multimap(InputIterator f, InputIterator l) : rep(100, hasher(), key_equal()) {
+    hash_multimap(InputIterator f, InputIterator l) : rep(10) {
         rep.insert_equal(f, l);
     }
     template <class InputIterator>
-    hash_multimap(InputIterator f, InputIterator l, size_type n) : rep(n, hasher(), key_equal()) {
+    hash_multimap(InputIterator f, InputIterator l, size_type n) : rep(n) {
         rep.insert_equal(f, l);
     }
     template <class InputIterator>
@@ -200,9 +228,9 @@ public:
     void erase(iterator f, iterator l) { rep.erase(f, l); }
     void clear() { rep.clear(); }
     void resize(size_type hint) { rep.resize(hint); }
-    size_type bucket_count() const { return rep.bucket_count(); }
-    size_type max_bucket_count() const { return rep.max_bucket_count(); }
-    size_type elems_in_bucket(size_type n) const { return rep.elems_in_bucket(n); }
+    size_type bucket_count() const { return rep.buckets_size(); }
+    size_type max_bucket_count() const { return rep.max_buckets_size(); }
+    size_type elems_in_bucket(size_type n) const { return rep.bucket_count(n); }
 };
 template <class Key, class T, class HF, class EqKey, class Alloc>
 inline bool operator ==(const hash_multimap<Key, T, HF, EqKey, Alloc>& hm1, 

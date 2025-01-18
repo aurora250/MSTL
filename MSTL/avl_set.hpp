@@ -1,7 +1,7 @@
 #ifndef MSTL_AVL_SET_HPP__
 #define MSTL_AVL_SET_HPP__
 #include "avl_tree.h"
-#include "alloc.hpp"
+#include "memory.hpp"
 #include "functor.hpp"
 MSTL_BEGIN_NAMESPACE__
 

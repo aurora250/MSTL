@@ -147,7 +147,7 @@ private:
     iterator start_;
     iterator finish_;
 
-    MSTL_CONSTEXPR static size_t buff_size() {
+    MSTL_CONSTEXPR static size_t buff_size() noexcept {
         return deque_buf_size(BufSize, sizeof(T));
     }
     void create_map_and_nodes(size_type n) {
@@ -224,13 +224,13 @@ private:
         start_.cur_ = start_.last_ - 1;
         MSTL::construct(start_.cur_, x);
     }
-    void pop_back_aux() {
+    void pop_back_aux() noexcept {
         data_alloc_.deallocate(finish_.first_, buff_size());
         finish_.set_node(finish_.node_ - 1);
         finish_.cur_ = finish_.last_ - 1;
         MSTL::destroy(finish_.cur_);
     }
-    void pop_front_aux() {
+    void pop_front_aux() noexcept {
         MSTL::destroy(start_.cur_);
         data_alloc_.deallocate(start_.first_, buff_size());
         start_.set_node(start_.node_ + 1);
@@ -456,10 +456,12 @@ public:
     void resize(size_type new_size) { resize(new_size, value_type()); }
 
     void reserve_map_at_back(size_type nodes_to_add = 1) {
-        if (map_size_ - (finish_.node_ - map_) - 1 < nodes_to_add) reallocate_map(nodes_to_add, false);
+        if (map_size_ - (finish_.node_ - map_) - 1 < nodes_to_add) 
+            reallocate_map(nodes_to_add, false);
     }
     void reserve_map_at_front(size_type nodes_to_add = 1) {
-        if (size_type(start_.node_ - map_) < nodes_to_add) reallocate_map(nodes_to_add, true);
+        if (size_type(start_.node_ - map_) < nodes_to_add) 
+            reallocate_map(nodes_to_add, true);
     }
 
     void push_back(T&& x) {
@@ -582,14 +584,15 @@ public:
     }
     iterator insert(iterator position, size_t n, T&& x) {
         if (position == start_) {
-            for (size_t i = 0; i < n; i++) push_front(std::forward<T>(x));
+            for (size_t i = 0; i < n; i++) push_front(x);
             return start_;
         }
         else if (position == finish_) {
-            for (size_t i = 0; i < n; i++) push_back(std::forward<T>(x));
+            for (size_t i = 0; i < n; i++) push_back(x);
             return finish_ - 1;
         }
-        else return insert_aux(position, size_type(n), std::forward<T>(x));
+        else 
+            return insert_aux(position, size_type(n), std::forward<T>(x));
 
     }
     iterator insert(iterator position, T&& x) {
@@ -601,7 +604,8 @@ public:
             push_back(std::forward<T>(x));
             return finish_ - 1;
         }
-        else return insert_aux(position, std::forward<T>(x));
+        else 
+            return insert_aux(position, std::forward<T>(x));
     }
     void swap(self&& x) noexcept {
         std::swap(start_, x.start_);

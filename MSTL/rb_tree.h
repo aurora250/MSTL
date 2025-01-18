@@ -201,7 +201,7 @@ private:
         link_type x = (link_type)x_;
         link_type y = (link_type)y_;
         link_type z;
-        if (y == header_ || x != 0 || key_compare_(KeyOfValue()(std::forward<value_type>(v)), key(y))) {
+        if (y == header_ || x != 0 || key_compare_(KeyOfValue()(v), key(y))) {
             z = create_node(std::forward<value_type>(v));
             left(y) = z;
             if (y == header_) {

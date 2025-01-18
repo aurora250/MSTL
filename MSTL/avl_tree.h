@@ -140,7 +140,7 @@ public:
 		header_ = new node_type();
 		header_->parent_ = header_;
 	}
-	avl_tree(Compare c = Compare()) : key_compare_(c) {
+	avl_tree(Compare c) : key_compare_(c) {
 		header_ = new node_type();
 		header_->parent_ = header_;
 	}

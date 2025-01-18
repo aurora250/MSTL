@@ -201,12 +201,12 @@ public:
 	}
 	MSTL_CONSTEXPR vector(self&& x) noexcept
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
-		swap(std::forward<self>(x));
+		swap(x);
 	}
 	MSTL_CONSTEXPR self& operator =(self&& x) noexcept {
 		if (x == *this) return *this;
 		clear();
-		swap(std::forward<self>(x));
+		swap(x);
 		return *this;
 	}
 
@@ -366,24 +366,24 @@ public:
 			end_of_storage_ = new_start + len;
 		}
 	}
-	MSTL_CONSTEXPR void swap(self&& x) noexcept {
+	MSTL_CONSTEXPR void swap(self& x) noexcept {
 		std::swap(start_, x.start_);
 		std::swap(finish_, x.finish_);
 		std::swap(end_of_storage_, x.end_of_storage_);
 	}
-	MSTL_NODISCARD MSTL_CONSTEXPR const_reference at(size_type _pos) const noexcept {
+	MSTL_NODISCARD MSTL_CONSTEXPR const_reference at(size_type _pos) const {
 		range_check(_pos);
 		return *(start_ + _pos);
 	}
-	MSTL_NODISCARD MSTL_CONSTEXPR reference at(size_type _pos) noexcept {
+	MSTL_NODISCARD MSTL_CONSTEXPR reference at(size_type _pos) {
 		return const_cast<reference>(
 			static_cast<const self*>(this)->at(_pos)
 			);
 	}
-	MSTL_NODISCARD MSTL_CONSTEXPR const_reference operator [](size_type _pos) const noexcept {
+	MSTL_NODISCARD MSTL_CONSTEXPR const_reference operator [](size_type _pos) const {
 		return this->at(_pos);
 	}
-	MSTL_NODISCARD MSTL_CONSTEXPR reference operator [](size_type _pos) noexcept {
+	MSTL_NODISCARD MSTL_CONSTEXPR reference operator [](size_type _pos) {
 		return this->at(_pos);
 	}
 };

@@ -27,8 +27,8 @@ public:
     typedef typename ht::const_iterator iterator;
     typedef typename ht::const_iterator const_iterator;
 
-    hasher hash_funct() const { return rep.hash_funct(); }
-    key_equal key_eq() const { return rep.key_eq(); }
+    hasher hash_funct() const { return rep.hash_func(); }
+    key_equal key_eq() const { return rep.key_eql(); }
 
     hash_set() : rep(100, hasher(), key_equal()) {}
     explicit hash_set(size_type n) : rep(n, hasher(), key_equal()) {}
@@ -79,9 +79,9 @@ public:
     void erase(iterator f, iterator l) { rep.erase(f, l); }
     void clear() { rep.clear(); }
     void resize(size_type hint) { rep.resize(hint); }
-    size_type bucket_count() const { return rep.bucket_count(); }
-    size_type max_bucket_count() const { return rep.max_bucket_count(); }
-    size_type elems_in_bucket(size_type n) const { return rep.elems_in_bucket(n); }
+    size_type bucket_count() const { return rep.buckets_size(); }
+    size_type max_bucket_count() const { return rep.max_buckets_size(); }
+    size_type elems_in_bucket(size_type n) const { return rep.bucket_count(n); }
 };
 
 template <class Value, class HashFcn, class EqualKey, class Alloc>
@@ -116,8 +116,8 @@ public:
     typedef typename ht::const_iterator iterator;
     typedef typename ht::const_iterator const_iterator;
 
-    hasher hash_funct() const { return rep.hash_funct(); }
-    key_equal key_eq() const { return rep.key_eq(); }
+    hasher hash_funct() const { return rep.hash_func(); }
+    key_equal key_eq() const { return rep.key_eql(); }
 
     hash_multiset() : rep(100, hasher(), key_equal()) {}
     explicit hash_multiset(size_type n) : rep(n, hasher(), key_equal()) {}
@@ -161,9 +161,9 @@ public:
     void erase(iterator f, iterator l) { rep.erase(f, l); }
     void clear() { rep.clear(); }
     void resize(size_type hint) { rep.resize(hint); }
-    size_type bucket_count() const { return rep.bucket_count(); }
-    size_type max_bucket_count() const { return rep.max_bucket_count(); }
-    size_type elems_in_bucket(size_type n) const { return rep.elems_in_bucket(n); }
+    size_type bucket_count() const { return rep.buckets_size(); }
+    size_type max_bucket_count() const { return rep.max_buckets_size(); }
+    size_type elems_in_bucket(size_type n) const { return rep.bucket_count(n); }
 };
 template <class Val, class HashFcn, class EqualKey, class Alloc>
 inline bool operator ==(const hash_multiset<Val, HashFcn, EqualKey, Alloc>& hs1,

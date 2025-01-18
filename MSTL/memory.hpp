@@ -2,10 +2,34 @@
 #define MSTL_MEMORY_HPP__
 #include "algobase.hpp"
 #include "errorlib.h"
-#include "alloc.hpp"
 #include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
 MSTL_CONCEPTS__
+
+template <typename T, typename Alloc = std::allocator<T>>
+class default_standard_alloc {
+private:
+    typedef Alloc   data_allocator;
+    data_allocator alloc;
+public:
+    typedef T           value_type;
+    typedef T* pointer;
+    typedef size_t      size_type;
+    typedef ptrdiff_t   difference_type;
+
+    pointer allocate(const size_type n) {
+        return 0 == n ? 0 : (pointer)alloc.allocate(n * sizeof(value_type));
+    }
+    pointer allocate(void) {
+        return (pointer)alloc.allocate(sizeof(value_type));
+    }
+    void deallocate(pointer const p) noexcept {
+        alloc.deallocate(p, sizeof(value_type));
+    }
+    void deallocate(pointer const p, const size_type n) noexcept {
+        if (n != 0)alloc.deallocate(p, n * sizeof(value_type));
+    }
+};
 
 template <typename T1, typename... T2>
     requires(ConstructibleFrom<T1, T2...>)

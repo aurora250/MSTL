@@ -39,6 +39,13 @@ noexcept(noexcept(*first = std::forward<T>(value))) {
 	return first;
 }
 
+template <typename T>
+MSTL_CONSTEXPR void swap(T& lh, T& rh) noexcept(
+	NothrowMoveConstructible<T> && NothrowMoveAssignable<T>) {
+	T tmp = std::move(lh);
+	lh = std::move(rh);
+	rh = std::move(tmp);
+}
 template <typename Iterator1, typename Iterator2>
 	requires(ForwardIterator<Iterator1> && ForwardIterator<Iterator2> 
 && SameTo<typename std::iterator_traits<Iterator1>::value_type,

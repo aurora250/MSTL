@@ -228,11 +228,13 @@ void try_hash() {
     hash_map<int, char> m;
     m[1] = 'a';
     m[2] = 'b';
-    m.insert(3, 'c');
+    m.insert(pair(3, 'c'));
     m.emplace(2, 'c');
-    m.insert(1, 'b');
+    m.insert(pair(1, 'b'));
     detailof(m);
-    std::cout<< *++m.begin() << std::endl;
+    auto m2 = std::move(m);
+    detailof(m2);
+    std::cout<< *++m2.begin() << std::endl;
     hash_multimap<std::string, int> mm;
     mm.insert("hello", 1);
     detailof(mm);
@@ -349,11 +351,10 @@ void try_avl() {
         std::cout << *it << std::endl;
     }
 }
-
 void try_graph() {
     MSTL_NAMESPACE__;
-    adjacency_list graph;
+    //adjacency_list graph;
 }
 int main() {
-    try_vec();
+    try_hash();
 }

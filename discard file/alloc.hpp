@@ -59,32 +59,6 @@ void (*__malloc_alloc_template<inst>::malloc_alloc_oom_handler__)() = 0;
 typedef __malloc_alloc_template<0> malloc_alloc;
 
 
-template <typename T, typename Alloc = std::allocator<T>>
-class default_standard_alloc {
-private:
-    typedef Alloc   data_allocator;
-    data_allocator alloc;
-public:
-    typedef T           value_type;
-    typedef T*          pointer;
-    typedef size_t      size_type;
-    typedef ptrdiff_t   difference_type;
-
-    pointer allocate(const size_type n) {
-        return 0 == n ? 0 : (pointer)alloc.allocate(n * sizeof(value_type));
-    }
-    pointer allocate(void) {
-        return (pointer)alloc.allocate(sizeof(value_type));
-    }
-    void deallocate(pointer const p) {
-        alloc.deallocate(p, sizeof(value_type));
-    }
-    void deallocate(pointer const p, const size_type n) {
-        if (n != 0)alloc.deallocate(p, n * sizeof(value_type));
-    }
-};
-
-
 enum { __ALIGN = 8 };
 enum { __MAX_BYTES = 128 };
 enum { __NFREELISTS = __MAX_BYTES / __ALIGN };

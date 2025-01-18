@@ -8,6 +8,7 @@
 MSTL_BEGIN_NAMESPACE__
 using namespace concepts;
 
+typedef unsigned short mathus_t;
 typedef int mathi_t;
 typedef unsigned int mathui_t;
 typedef MSTL_LONG_LONG_TYPE__ mathl_t;
@@ -27,6 +28,16 @@ struct constants {
 	static MSTL_CONSTEXPR mathd_t LOW_PRECISE_TOLERANCE = TAYLOR_CONVERGENCE * PRECISE_TOLERANCE;
 	static MSTL_CONSTEXPR mathul_t INFINITY_ULL = 18446744073709551615ULL;
 	static MSTL_CONSTEXPR mathd_t INFINITY_LD = 1.7976931348623158e+308L;
+};
+
+static MSTL_CONSTEXPR mathus_t PRIMER_COUNT__ = 28;
+static MSTL_CONSTEXPR mathui_t PRIME_LIST[PRIMER_COUNT__] = {
+  53,         97,           193,         389,       769,
+  1543,       3079,         6151,        12289,     24593,
+  49157,      98317,        196613,      393241,    786433,
+  1572869,    3145739,      6291469,     12582917,  25165843,
+  50331653,   100663319,    201326611,   402653189, 805306457,
+  1610612741, 3221225473u,  4294967291u
 };
 
 MSTL_CONSTEXPR mathd_t angular2radian(mathd_t angular) noexcept {

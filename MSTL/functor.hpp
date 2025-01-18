@@ -21,43 +21,37 @@ struct binary_function {
 //arithmetic:
 template <typename T>
 struct plus : public binary_function<T, T, T> {
-	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const
-		noexcept(noexcept(x + y)) {
+	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const noexcept {
 		return x + y;
 	}
 };
 template <typename T>
 struct minus : public binary_function<T, T, T> {
-	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const
-		noexcept(noexcept(x - y)) {
+	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const noexcept {
 		return x - y;
 	}
 };
 template <typename T>
 struct multiplies : public binary_function<T, T, T> {
-	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const
-		noexcept(noexcept(x * y)) {
+	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const noexcept {
 		return x * y;
 	}
 };
 template <typename T>
 struct divides : public binary_function<T, T, T> {
-	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const
-		noexcept(noexcept(x / y)) {
+	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const noexcept {
 		return x / y;
 	}
 };
 template <typename T>
 struct modulus : public binary_function<T, T, T> {
-	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const
-		noexcept(noexcept(x % y)) {
+	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const noexcept {
 		return x % y;
 	}
 };
 template <typename T>
 struct negate : public unary_function<T, T> {
-	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x) const
-		noexcept(noexcept(-x)) {
+	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x) const noexcept {
 		return -x;
 	}
 };
@@ -71,43 +65,37 @@ MSTL_CONSTEXPR T indetity_element(multiplies<T>) { return T(1); }
 //relational:
 template <typename T>
 struct equal_to : public binary_function<T, T, bool> {
-	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const 
-		noexcept(noexcept(x == y)) {
+	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const noexcept {
 		return x == y;
 	}
 };
 template <typename T>
 struct not_equal_to : public binary_function<T, T, bool> {
-	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const
-		noexcept(noexcept(x != y)) {
+	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const noexcept {
 		return x != y;
 	}
 };
 template <typename T>
 struct greater : public binary_function<T, T, bool> {
-	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const
-		noexcept(noexcept(x > y)) {
+	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const noexcept {
 		return x > y;
 	}
 };
 template <typename T>
 struct less : public binary_function<T, T, bool> {
-	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const
-		noexcept(noexcept(x < y)) {
+	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const noexcept {
 		return x < y;
 	}
 };
 template <typename T>
 struct greater_equal : public binary_function<T, T, bool> {
-	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const
-		noexcept(noexcept(x >= y)) {
+	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const noexcept {
 		return x >= y;
 	}
 };
 template <typename T>
 struct less_equal : public binary_function<T, T, bool> {
-	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const
-		noexcept(noexcept(x <= y)) {
+	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const noexcept {
 		return x <= y;
 	}
 };
@@ -115,22 +103,19 @@ struct less_equal : public binary_function<T, T, bool> {
 //logical:
 template <typename T>
 struct logical_and : public binary_function<T, T, bool> {
-	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const
-		noexcept(noexcept(x && y)) {
+	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const noexcept {
 		return x && y;
 	}
 };
 template <typename T>
 struct logical_or : public binary_function<T, T, bool> {
-	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const
-		noexcept(noexcept(x || y)) {
+	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const noexcept {
 		return x || y;
 	}
 };
 template <typename T>
 struct logical_not : public unary_function<T, bool> {
-	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x) const
-		noexcept(noexcept(!x)) {
+	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x) const noexcept {
 		return !x;
 	}
 };
