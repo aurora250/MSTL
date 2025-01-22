@@ -160,18 +160,20 @@ private:
         MSTL_TRY__{
             for (cur = nstart; cur <= nfinish; ++cur) *cur = data_alloc_.allocate(buff_size());
         }
-        MSTL_CATCH_UNWIND_THROW_M__(std::cout << "error" << std::endl);
+        MSTL_CATCH_UNWIND_THROW_M__(
+            for (cur = nstart; cur <= nfinish; ++cur) data_alloc_.deallocate(*cur, buff_size()););
         start_.set_node(nstart);
         finish_.set_node(nfinish);
         start_.cur_ = start_.first_;
         finish_.cur_ = finish_.first_ + n % buff_size();
     }
-    void fill_initialize(size_type n, T&& x) {
+    template <typename U = T>
+    void fill_initialize(size_type n, U&& x) {
         create_map_and_nodes(n);
         map_pointer cur;
         for (cur = start_.node_; cur < finish_.node_; ++cur)
-            MSTL::uninitialized_fill(*cur, *cur + buff_size(), std::forward<T>(x));
-        MSTL::uninitialized_fill(finish_.first_, finish_.cur_, std::forward<T>(x));
+            MSTL::uninitialized_fill(*cur, *cur + buff_size(), std::forward<U>(x));
+        MSTL::uninitialized_fill(finish_.first_, finish_.cur_, std::forward<U>(x));
     }
     void reallocate_map(size_type nodes_to_add, bool add_at_front) {
         size_type old_num_nodes = finish_.node_ - start_.node_ + 1;
@@ -196,33 +198,21 @@ private:
         start_.set_node(new_start);
         finish_.set_node(new_start + old_num_nodes - 1);
     }
-    void push_back_aux(T&& x) {
+    template <typename... U>
+    void push_back_aux(U&&... args) {
         reserve_map_at_back();
         *(finish_.node_ + 1) = data_alloc_.allocate(buff_size());
-        MSTL::construct(finish_.cur_, std::forward<T>(x));
+        MSTL::construct(finish_.cur_, std::forward<U>(args)...);
         finish_.set_node(finish_.node_ + 1);
         finish_.cur_ = finish_.first_;
     }
-    void push_back_aux(const T& x) {
-        reserve_map_at_back();
-        *(finish_.node_ + 1) = data_alloc_.allocate(buff_size());
-        MSTL::construct(finish_.cur_, x);
-        finish_.set_node(finish_.node_ + 1);
-        finish_.cur_ = finish_.first_;
-    }
-    void push_front_aux(T&& x) {
+    template <typename... U>
+    void push_front_aux(U&&... args) {
         reserve_map_at_front();
         *(start_.node_ - 1) = data_alloc_.allocate(buff_size());
         start_.set_node(start_.node_ - 1);
         start_.cur_ = start_.last_ - 1;
-        MSTL::construct(start_.cur_, std::forward<T>(x));
-    }
-    void push_front_aux(const T& x) {
-        reserve_map_at_front();
-        *(start_.node_ - 1) = data_alloc_.allocate(buff_size());
-        start_.set_node(start_.node_ - 1);
-        start_.cur_ = start_.last_ - 1;
-        MSTL::construct(start_.cur_, x);
+        MSTL::construct(start_.cur_, std::forward<U>(args)...);
     }
     void pop_back_aux() noexcept {
         data_alloc_.deallocate(finish_.first_, buff_size());
@@ -236,7 +226,7 @@ private:
         start_.set_node(start_.node_ + 1);
         start_.cur_ = start_.first_;
     }
-    template <typename U>
+    template <typename U = T>
     iterator insert_aux(iterator pos, U&& x) 
         requires(NothrowMoveAssignable<value_type> && NothrowAssignableFrom<T, U>) {
         difference_type index = pos - start_;
@@ -260,7 +250,7 @@ private:
             pos = start_ + index;
             MSTL::copy_backward(pos, back2, back1);
         }
-        *pos = x;
+        *pos = std::forward<U>(x);
         return pos;
     }
     template <typename Iterator>
@@ -318,14 +308,15 @@ private:
         }
         return pos;
     }
-    iterator insert_aux(iterator pos, size_type n, T&& x) {
+    template <typename U = T>
+    iterator insert_aux(iterator pos, size_type n, U&& x) {
         difference_type index = pos - start_;
         if (index < difference_type(size() / 2)) {
             if (n <= size_type(start_.cur_ - start_.first_)) {
                 iterator new_start = start_ - n;
                 MSTL::copy(start_, pos, new_start);
                 pos = new_start + index;
-                MSTL::fill_n(pos, n, std::forward<T>(x));
+                MSTL::fill_n(pos, n, std::forward<U>(x));
                 start_ = new_start;
             }
             else {
@@ -340,7 +331,7 @@ private:
                 iterator new_start = start_ - n;
                 MSTL::copy(start_, pos, new_start);
                 pos = new_start + index;
-                MSTL::fill_n(pos, n, std::forward<T>(x));
+                MSTL::fill_n(pos, n, std::forward<U>(x));
                 start_ = new_start;
             }
         }
@@ -348,7 +339,7 @@ private:
             if (n <= size_type(finish_.last_ - finish_.cur_ - 1)) {
                 iterator new_finish = finish_ + n;
                 MSTL::copy_backward(pos, finish_, new_finish);
-                MSTL::fill_n(pos, n, std::forward<T>(x));
+                MSTL::fill_n(pos, n, std::forward<U>(x));
                 finish_ = new_finish;
                 pos = start_ + index;
             }
@@ -363,7 +354,7 @@ private:
                 }
                 iterator new_finish = finish_ + n;
                 MSTL::copy_backward(pos, finish_, new_finish);
-                MSTL::fill_n(pos, n, std::forward<T>(x));
+                MSTL::fill_n(pos, n, std::forward<U>(x));
                 finish_ = new_finish;
                 pos = start_ + index;
             }
@@ -464,34 +455,37 @@ public:
             reallocate_map(nodes_to_add, true);
     }
 
-    void push_back(T&& x) {
+    template <typename U = T>
+    void push_back(U&& x) {
         if (finish_.cur_ != finish_.last_ - 1) {
-            MSTL::construct(finish_.cur_, std::forward<T>(x));
+            MSTL::construct(finish_.cur_, std::forward<U>(x));
             ++finish_.cur_;
         }
-        else push_back_aux(std::forward<T>(x));
+        else push_back_aux(std::forward<U>(x));
     }
-    void push_back(const T& x) {
+    template <typename U = T>
+    void push_front(U&& x) {
+        if (start_.cur_ != start_.first_) {
+            MSTL::construct(start_.cur_ - 1, std::forward<U>(x));
+            --start_.cur_;
+        }
+        else push_front_aux(std::forward<U>(x));
+    }
+    template <typename... U>
+    void emplace_back(U&&... args) {
         if (finish_.cur_ != finish_.last_ - 1) {
-            MSTL::construct(finish_.cur_, x);
+            MSTL::construct(finish_.cur_, std::forward<U>(args)...);
             ++finish_.cur_;
         }
-        else push_back_aux(x);
+        else (push_back_aux)(std::forward<U>(args)...);
     }
-
-    void push_front(T&& x) {
+    template <typename... U>
+    void emplace_front(U&&... args) {
         if (start_.cur_ != start_.first_) {
-            MSTL::construct(start_.cur_ - 1, std::forward<T>(x));
+            MSTL::construct(start_.cur_ - 1, std::forward<U>(args)...);
             --start_.cur_;
         }
-        else push_front_aux(std::forward<T>(x));
-    }
-    void push_front(const T& x) {
-        if (start_.cur_ != start_.first_) {
-            MSTL::construct(start_.cur_ - 1, x);
-            --start_.cur_;
-        }
-        else push_front_aux(x);
+        else (push_front_aux)(std::forward<U>(args)...);
     }
 
     void pop_back() noexcept {

@@ -244,100 +244,70 @@ public:
         std::swap(size_, ht.size_);
     }
 
-    MSTL_NODISCARD size_type buckets_size() const { return buckets_.size(); }
-    MSTL_NODISCARD size_type max_buckets_size() const { return PRIME_LIST[PRIMER_COUNT__ - 1]; }
-    MSTL_NODISCARD size_type bucket_count(size_type bucket) const {
+    MSTL_NODISCARD size_type buckets_size() const noexcept { return buckets_.size(); }
+    MSTL_NODISCARD size_type max_buckets_size() const noexcept { 
+        return PRIME_LIST[PRIMER_COUNT__ - 1];
+    }
+    MSTL_NODISCARD size_type bucket_count(size_type bucket) const noexcept {
         size_type result = 0;
         for (node_type* cur = buckets_[bucket]; cur; cur = cur->next_) 
             result++;
         return result;
     }
+    MSTL_NODISCARD size_type count(const key_type& key) const noexcept {
+        const size_type n = bkt_num_key(key);
+        size_type result = 0;
+        for (const node_type* cur = buckets_[n]; cur; cur = cur->next_) {
+            if (equals_(get_key_(cur->data_), key)) ++result;
+        }
+        return result;
+    }
 
-    pair<iterator, bool> insert_unique(const value_type& obj) {
+    template <typename T = value_type>
+    pair<iterator, bool> insert_unique(T&& x) {
         resize(size_ + 1);
-        return insert_unique_noresize(obj);
+        return insert_unique_noresize(std::forward<T>(x));
     }
-    pair<iterator, bool> insert_unique(const Key& key, value_of_key&& val) {
+    template <typename T = value_type>
+    iterator insert_equal(T&& x) {
         resize(size_ + 1);
-        return insert_unique_noresize(key, std::forward<value_of_key>(val));
+        return insert_equal_noresize(std::forward<T>(x));
     }
-    iterator insert_equal(const value_type& obj) {
-        resize(size_ + 1);
-        return insert_equal_noresize(obj);
-    }
-    iterator insert_equal(const Key& key, value_of_key&& val) {
-        resize(size_ + 1);
-        return insert_equal_noresize(key, std::forward<value_of_key>(val));
-    }
-    pair<iterator, bool> insert_unique_noresize(const value_type& obj) {
-        const size_type n = bkt_num(obj);
+    template <typename T = value_type> 
+    pair<iterator, bool> insert_unique_noresize(T&& x) {
+        const size_type n = bkt_num(x);
         node_type* first = buckets_[n];
         for (node_type* cur = first; cur; cur = cur->next_) {
-            if (equals_(get_key_(cur->data_), get_key_(obj))) {
+            if (equals_(get_key_(cur->data_), get_key_(x))) {
                 buckets_[n] = cur->next_;
                 delete_node(cur);
-                node_type* tmp = new_node(obj);
+                node_type* tmp = new_node(std::forward<T>(x));
                 tmp->next_ = buckets_[n];
                 buckets_[n] = tmp;
                 return pair<iterator, bool>(iterator(tmp, this), false);
             }
         }
-        node_type* tmp = new_node(obj);
+        node_type* tmp = new_node(std::forward<T>(x));
         tmp->next_ = first;
         buckets_[n] = tmp;
         ++size_;
         return pair<iterator, bool>(iterator(tmp, this), true);
     }
-    pair<iterator, bool> insert_unique_noresize(const Key& key, value_of_key&& val) {
-        const size_type n = bkt_num_key(key, buckets_.size());
+    
+    template <typename T = value_type>
+    iterator insert_equal_noresize(T&& x) {
+        const size_type n = bkt_num(x);
         node_type* first = buckets_[n];
         for (node_type* cur = first; cur; cur = cur->next_) {
-            if (equals_(get_key_(cur->data_), key)) {
-                buckets_[n] = cur->next_;
-                delete_node(cur);
-                node_type* tmp = new_node(key, std::forward<value_of_key>(val));
-                tmp->next_ = buckets_[n];
-                buckets_[n] = tmp;
-                return pair<iterator, bool>(iterator(cur, this), false);
-            }
-        }
-        node_type* tmp = new_node(key, std::forward<value_of_key>(val));
-        tmp->next_ = first;
-        buckets_[n] = tmp;
-        ++size_;
-        return pair<iterator, bool>(iterator(tmp, this), true);
-    }
-    iterator insert_equal_noresize(const value_type& obj) {
-        const size_type n = bkt_num(obj);
-        node_type* first = buckets_[n];
-        for (node_type* cur = first; cur; cur = cur->next_) {
-            if (equals_(get_key_(cur->data_), get_key_(obj))) {
-                node_type* tmp = new_node(obj);
+            if (equals_(get_key_(cur->data_), get_key_(x))) {
+                node_type* tmp = new_node(std::forward<T>(x));
                 tmp->next_ = cur->next_;
                 cur->next_ = tmp;
                 ++size_;
                 return iterator(tmp, this);
             }
         }
-        node_type* tmp = new_node(obj);
-        tmp->next_ = first;
-        buckets_[n] = tmp;
-        ++size_;
-        return iterator(tmp, this);
-    }
-    iterator insert_equal_noresize(const Key& key, value_of_key&& val) {
-        const size_type n = bkt_num_key(key, buckets_.size());
-        node_type* first = buckets_[n];
-        for (node_type* cur = first; cur; cur = cur->next_) {
-            if (equals_(get_key_(cur->data_), key)) {
-                node_type* tmp = new_node(key, std::forward<value_of_key>(val));
-                tmp->next_ = cur->next_;
-                cur->next_ = tmp;
-                ++size_;
-                return iterator(tmp, this);
-            }
-        }
-        node_type* tmp = new_node(key, std::forward<value_of_key>(val));
+        node_type* tmp = new_node(std::forward<T>(x));
         tmp->next_ = first;
         buckets_[n] = tmp;
         ++size_;
@@ -371,32 +341,21 @@ public:
         for (; n > 0; --n, ++f) insert_equal_noresize(*f);
     }
 
-    reference find_or_insert(const value_type& obj) {
+    template <typename T = value_type> 
+    reference find_or_insert(T&& x) {
         resize(size_ + 1);
-        size_type n = bkt_num(obj);
+        size_type n = bkt_num(x);
         node_type* first = buckets_[n];
         for (node_type* cur = first; cur; cur = cur->next_) {
-            if (equals_(get_key_(cur->data_), get_key_(obj))) return cur->data_;
+            if (equals_(get_key_(cur->data_), get_key_(x))) return cur->data_;
         }
-        node_type* tmp = new_node(obj);
+        node_type* tmp = new_node(std::forward<T>(x));
         tmp->next_ = first;
         buckets_[n] = tmp;
         ++size_;
         return tmp->data_;
     }
-    reference find_or_insert(const Key& key, value_of_key&& val) {
-        resize(size_ + 1);
-        size_type n = bkt_num_key(key, buckets_.size());
-        node_type* first = buckets_[n];
-        for (node_type* cur = first; cur; cur = cur->next_) {
-            if (equals_(get_key_(cur->data_), key)) return cur->data_;
-        }
-        node_type* tmp = new_node(key, std::forward<value_of_key>(val));
-        tmp->next_ = first;
-        buckets_[n] = tmp;
-        ++size_;
-        return tmp->data_;
-    }
+
     MSTL_NODISCARD iterator find(const key_type& key) {
         size_type n = bkt_num_key(key);
         node_type* first;
@@ -404,7 +363,6 @@ public:
             first = first->next_);
         return iterator(first, this);
     }
-
     MSTL_NODISCARD const_iterator find(const key_type& key) const {
         size_type n = bkt_num_key(key);
         const node_type* first;
@@ -417,21 +375,23 @@ public:
         requires(ConstructibleFrom<value_type, Args...>)
     pair<iterator, bool> emplace_unique(Args&&... args) {
         resize(size_ + 1);
-
-        auto [key, value_args] = std::forward_as_tuple(std::forward<Args>(args)...);
+        // structured binding
+        auto [key, value_args] = MSTL::forward_as_tuple(std::forward<Args>(args)...);
         const size_type n = bkt_num_key(key, buckets_.size());
         node_type* first = buckets_[n];
         for (node_type* cur = first; cur; cur = cur->next_) {
             if (equals_(get_key_(cur->data_), key)) {
                 buckets_[n] = cur->next_;
                 delete_node(cur);
-                node_type* tmp = new_node(key, std::forward<value_of_key>(value_args));
+                node_type* tmp = new_node(std::forward<decltype(key)>(key),
+                    std::forward<decltype(value_args)>(value_args));
                 tmp->next_ = buckets_[n];
                 buckets_[n] = tmp;
                 return pair<iterator, bool>(iterator(tmp, this), false);
             }
         }
-        node_type* tmp = new_node(key, std::forward<decltype(value_args)>(value_args));
+        node_type* tmp = new_node(std::forward<decltype(key)>(key),
+            std::forward<decltype(value_args)>(value_args));
         tmp->next_ = first;
         buckets_[n] = tmp;
         ++size_;
@@ -442,12 +402,12 @@ public:
         requires(ConstructibleFrom<value_type, Args...>)
     iterator emplace_equal(Args&&... args) {
         resize(size_ + 1);
-        auto [key, value_args] = std::forward_as_tuple(std::forward<Args>(args)...);
+        auto [key, value_args] = MSTL::forward_as_tuple(std::forward<Args>(args)...);
         const size_type n = bkt_num_key(key, buckets_.size());
         node_type* first = buckets_[n];
         for (node_type* cur = first; cur; cur = cur->next_) {
             if (equals_(get_key_(cur->data_), key)) {
-                node_type* tmp = new_node(key, std::forward<value_of_key>(value_args));
+                node_type* tmp = new_node(key, std::forward<decltype(value_args)>(value_args));
                 tmp->next_ = cur->next_;
                 cur->next_ = tmp;
                 ++size_;
@@ -459,15 +419,6 @@ public:
         buckets_[n] = tmp;
         ++size_;
         return iterator(tmp, this);
-    }
-
-    MSTL_NODISCARD size_type count(const key_type& key) const noexcept {
-        const size_type n = bkt_num_key(key);
-        size_type result = 0;
-        for (const node_type* cur = buckets_[n]; cur; cur = cur->next_) {
-            if (equals_(get_key_(cur->data_), key)) ++result;
-        }
-        return result;
     }
 
     pair<iterator, iterator> equal_range(const key_type& key) {
@@ -563,7 +514,7 @@ public:
             }
         }
     }
-    void erase(iterator first, iterator last) noexcept {
+    void erase(iterator first, iterator last) noexcept { // range optimize
         size_type f_bucket = first.cur_ ? bkt_num(first.cur_->data_) : buckets_.size();
         size_type l_bucket = last.cur_ ? bkt_num(last.cur_->data_) : buckets_.size();
         if (first.cur_ == last.cur_) return;
@@ -586,9 +537,6 @@ public:
             iterator(const_cast<node_type*>(last.cur_), const_cast<hashtable*>(last.ht_)));
     }
 
-    void reserve(size_type new_size) {
-        resize(new_size);
-    }
     void resize(size_type new_size) {
         const size_type old_size = buckets_.size();
         if (new_size > old_size) {
@@ -627,7 +575,7 @@ public:
             while (cur != 0) {
                 node_type* next = cur->next_;
                 delete_node(cur);
-                cur = next;
+                cur = next; // stack like
             }
             buckets_[i] = 0;
         }
@@ -644,32 +592,23 @@ private:
         buckets_.insert(buckets_.end(), n_buckets, (node_type*)0);
         size_ = 0;
     }
-    size_type bkt_num_key(const key_type& key) const noexcept {
-        return bkt_num_key(key, buckets_.size());
+    template <typename T = key_type>
+    size_type bkt_num_key(T&& key) const noexcept {
+        return bkt_num_key(std::forward<T>(key), buckets_.size());
     }
-    size_type bkt_num(const value_type& obj) const noexcept {
-        return bkt_num_key(get_key_(obj));
+    template <typename T = value_type>
+    size_type bkt_num(T&& obj) const noexcept {
+        return bkt_num_key(get_key_(std::forward<T>(obj)));
     }
-    size_type bkt_num_key(const key_type& key, size_t n) const noexcept {
-        return hasher_(key) % n;
+    template <typename T = key_type>
+    size_type bkt_num_key(T&& key, size_t n) const noexcept {
+        return hasher_(std::forward<T>(key)) % n;
     }
-    size_type bkt_num(const value_type& obj, size_t n) const noexcept {
-        return bkt_num_key(get_key_(obj), n);
+    template <typename T = value_type>
+    size_type bkt_num(T&& obj, size_t n) const noexcept {
+        return bkt_num_key(get_key_(std::forward<T>(obj)), n);
     }
 
-    node_type* new_node(const value_type& obj) {
-        node_type* n = alloc_.allocate();
-        n->next_ = 0;
-        MSTL_TRY__{
-        MSTL::construct(&n->data_, obj);
-        return n;
-        }
-        MSTL_CATCH_UNWIND__{
-        alloc_.deallocate(n);
-        MSTL_EXEC_MEMORY__;
-        return nullptr;
-        }
-    }
     template <typename... Args>
         requires(ConstructibleFrom<value_type, Args...>)
     node_type* new_node(Args&&... args) {
@@ -757,8 +696,7 @@ template <typename Value, typename Key, typename HashFcn,
     typename ExtractKey, typename EqualKey, typename Alloc>
 MSTL_NODISCARD bool operator ==(
     const hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& lh,
-    const hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& rh) 
-noexcept(noexcept(lh.buckets_[0] == rh.buckets_[0])) {
+    const hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& rh) noexcept {
     typedef typename hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::node_type node;
     if (lh.buckets_.size() != rh.buckets_.size()) return false;
     for (size_t n = 0; n < lh.buckets_.size(); n++) {

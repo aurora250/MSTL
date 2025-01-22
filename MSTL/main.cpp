@@ -234,10 +234,14 @@ void try_hash() {
     detailof(m);
     auto m2 = std::move(m);
     detailof(m2);
-    std::cout<< *++m2.begin() << std::endl;
+    std::cout << *++m2.begin() << ":";
+    // std::cout << m2.at(4) << std::endl;
     hash_multimap<std::string, int> mm;
     mm.insert("hello", 1);
     detailof(mm);
+    hash_map<int, std::unique_ptr<int>> uncopy;
+    uncopy.emplace(1, std::make_unique<int>(1));
+    detailof(uncopy);
 }
 
 void try_pool() {

@@ -20,9 +20,9 @@ struct Error {
 	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(Error);
 };
 
-struct StopIterator : public Error {  // 迭代器越界或无值
+struct StopIterator : public Error {  // 迭代器/索引越界
 	typedef StopIterator self;
-	MSTL_CONSTEXPR explicit StopIterator(cstring_t _info = "Iterator out of Range or is NULL.") noexcept
+	MSTL_CONSTEXPR explicit StopIterator(cstring_t _info = "Iterator out of Range.") noexcept
 		: Error(_info, __type__) {}
 	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(StopIterator);
 };

@@ -71,12 +71,13 @@ private:
 	MSTL_CONSTEXPR void deallocate() {
 		if (start_) alloc_.deallocate(start_, end_of_storage_ - start_);
 	}
-	MSTL_CONSTEXPR void insert_aux(iterator position, T&& x) {
+	template <typename U = T>
+	MSTL_CONSTEXPR void insert_aux(iterator position, U&& x) {
 		if (finish_ != end_of_storage_) {
 			MSTL::construct(finish_, *(finish_ - 1));
 			++finish_;
 			MSTL::copy_backward(position, finish_ - 2, finish_ - 1);
-			*position = x;
+			*position = std::forward<U>(x);
 			return;
 		}
 		const size_type old_size = size();
@@ -84,7 +85,7 @@ private:
 		iterator new_start = alloc_.allocate(len);
 		iterator new_finish = new_start;
 		new_finish = MSTL::uninitialized_copy(start_, position, new_start);
-		MSTL::construct(new_finish, std::forward<T>(x));
+		MSTL::construct(new_finish, std::forward<U>(x));
 		++new_finish;
 		new_finish = MSTL::uninitialized_copy(position, finish_, new_finish);
 		MSTL::destroy(begin(), end());
@@ -93,12 +94,13 @@ private:
 		finish_ = new_finish;
 		end_of_storage_ = new_start + len;
 	}
-	MSTL_CONSTEXPR void insert_aux(iterator position, const T& x) {
+	template <typename... U>
+	MSTL_CONSTEXPR void insert_aux(iterator position, U&&... args) {
 		if (finish_ != end_of_storage_) {
 			MSTL::construct(finish_, *(finish_ - 1));
 			++finish_;
 			MSTL::copy_backward(position, finish_ - 2, finish_ - 1);
-			*position = x;
+			*position = T(std::forward<U>(args)...);
 			return;
 		}
 		const size_type old_size = size();
@@ -106,7 +108,7 @@ private:
 		iterator new_start = alloc_.allocate(len);
 		iterator new_finish = new_start;
 		new_finish = MSTL::uninitialized_copy(start_, position, new_start);
-		MSTL::construct(new_finish, x);
+		MSTL::construct(new_finish, std::forward<U>(args)...);
 		++new_finish;
 		new_finish = MSTL::uninitialized_copy(position, finish_, new_finish);
 		MSTL::destroy(begin(), end());
@@ -279,23 +281,25 @@ public:
 	MSTL_CONSTEXPR void resize(size_type new_size) {
 		resize(new_size, T());
 	}
-	MSTL_CONSTEXPR void push_back(T&& val) {
+	template <typename U = T>
+	MSTL_CONSTEXPR void push_back(U&& val) {
 		if (finish_ != end_of_storage_) {
-			MSTL::construct(finish_, std::forward<T>(val));
+			MSTL::construct(finish_, std::forward<U>(val));
 			++finish_;
 		}
-		else insert_aux(end(), std::forward<T>(val));
-	}
-	MSTL_CONSTEXPR void push_back(const T& val) {
-		if (finish_ != end_of_storage_) {
-			MSTL::construct(finish_, val);
-			++finish_;
-		}
-		else insert_aux(end(), val);
+		else insert_aux(end(), std::forward<U>(val));
 	}
 	MSTL_CONSTEXPR void pop_back() noexcept {
 		MSTL::destroy(finish_);
 		--finish_;
+	}
+	template <typename... U>
+	MSTL_CONSTEXPR void emplace_back(U&&... args) {
+		if (finish_ != end_of_storage_) {
+			MSTL::construct(finish_, std::forward<U>(args)...);
+			++finish_;
+		}
+		else insert_aux(end(), std::forward<U>(args)...);
 	}
 	MSTL_CONSTEXPR iterator erase(iterator first, iterator last) 
 		noexcept(NothrowMoveAssignable<value_type>) {

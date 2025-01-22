@@ -16,6 +16,8 @@ private:
         select1st<pair<const Key, T>>, EqualKey, Alloc> ht;
 
     ht rep;
+
+    friend bool operator ==(const hash_map&, const hash_map&) noexcept;
 public:
     typedef typename ht::key_type key_type;
     typedef T data_type;
@@ -81,14 +83,13 @@ public:
     hash_map(std::initializer_list<value_type> l, size_type n, const hasher& hf, const key_equal& eql)
         : hash_map(l.begin(), l.end(), n, hf, eql) {}
 
-    size_type size() const { return rep.size(); }
-    bool empty() const { return rep.empty(); }
-    void swap(hash_map& hs) { rep.swap(hs.rep); }
-    iterator begin() { return rep.begin(); }
-    iterator end() { return rep.end(); }
-    const_iterator const_begin() const { return rep.const_begin(); }
-    const_iterator const_end() const { return rep.const_end(); }
-    friend bool operator ==(const hash_map&, const hash_map&);
+    MSTL_NODISCARD size_type size() const noexcept { return rep.size(); }
+    MSTL_NODISCARD bool empty() const noexcept { return rep.empty(); }
+
+    MSTL_NODISCARD iterator begin() noexcept { return rep.begin(); }
+    MSTL_NODISCARD iterator end() noexcept { return rep.end(); }
+    MSTL_NODISCARD const_iterator const_begin() const noexcept { return rep.const_begin(); }
+    MSTL_NODISCARD const_iterator const_end() const noexcept { return rep.const_end(); }
 
     template <typename T = value_type>
     pair<iterator, bool> insert(T&& obj) { 
@@ -103,40 +104,53 @@ public:
         requires(InputIterator<Iterator>)
     void insert(Iterator f, Iterator l) { rep.insert_unique(f, l); }
     template <typename T = value_type>
-    pair<iterator, bool> insert_noresize(T&& obj) { 
-        return rep.insert_unique_noresize(std::forward<T>(obj));
+    pair<iterator, bool> insert_noresize(T&& x) { 
+        return rep.insert_unique_noresize(std::forward<T>(x));
     }
 
-    iterator find(const key_type& key) { return rep.find(key); }
-    const_iterator find(const key_type& key) const { return rep.find(key); }
-    T& operator[](const key_type& key) {
-        return rep.find_or_insert(value_type(key, T())).second;
+    MSTL_NODISCARD iterator find(const key_type& key) { return rep.find(key); }
+    MSTL_NODISCARD const_iterator find(const key_type& key) const { return rep.find(key); }
+    MSTL_NODISCARD T& operator[](const key_type& key) {
+        return rep.find_or_insert(std::move(value_type(key, T()))).second;
     }
-    T& operator[](key_type&& key) {
-        return rep.find_or_insert(value_type(std::forward<key_type>(key), T())).second;
+    MSTL_NODISCARD T& at(const key_type& key) {
+        auto iter = rep.find(key);
+        Exception(iter != end(), StopIterator());
+        return (*iter).second;
+    }
+    MSTL_NODISCARD const T& at(const key_type& key) const {
+        auto iter = rep.find(key);
+        Exception(iter != const_end(), StopIterator());
+        return (*iter).second;
     }
 
-
-    size_type count(const key_type& key) const { return rep.count(key); }
     pair<iterator, iterator> equal_range(const key_type& key) { return rep.equal_range(key); }
     pair<const_iterator, const_iterator> equal_range(const key_type& key) const {
         return rep.equal_range(key);
     }
-    size_type erase(const key_type& key) { return rep.erase(key); }
-    void erase(iterator it) { rep.erase(it); }
-    void erase(iterator f, iterator l) { rep.erase(f, l); }
-    void clear() { rep.clear(); }
+    size_type erase(const key_type& key) noexcept { return rep.erase(key); }
+    void erase(iterator it) noexcept { rep.erase(it); }
+    void erase(iterator f, iterator l) noexcept { rep.erase(f, l); }
+    void clear() noexcept { rep.clear(); }
 
     void resize(size_type hint) { rep.resize(hint); }
-    size_type bucket_count() const { return rep.buckets_size(); }
-    size_type max_bucket_count() const { return rep.max_buckets_size(); }
-    size_type elems_in_bucket(size_type n) const { return rep.bucket_count(n); }
-    void swap() noexcept(noexcept(rep.swap())) { rep.swap(); }
+
+    MSTL_NODISCARD size_type count(const key_type& key) const noexcept { return rep.count(key); }
+    MSTL_NODISCARD size_type bucket_size() const noexcept { return rep.buckets_size(); }
+    MSTL_NODISCARD size_type max_bucket_count() const noexcept { return rep.max_buckets_size(); }
+    MSTL_NODISCARD size_type bucket_count(size_type n) const noexcept { return rep.bucket_count(n); }
+    void swap(hash_map& hs) noexcept(noexcept(rep.swap(hs.rep))) { rep.swap(hs.rep); }
 };
 template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
-inline bool operator ==(const hash_map<Key, T, HashFcn, EqualKey, Alloc>& hm1,
-    const hash_map<Key, T, HashFcn, EqualKey, Alloc>& hm2) {
-    return hm1.rep == hm2.rep;
+MSTL_NODISCARD bool operator ==(
+    const hash_map<Key, T, HashFcn, EqualKey, Alloc>& lh,
+    const hash_map<Key, T, HashFcn, EqualKey, Alloc>& rh) noexcept {
+    return lh.rep == rh.rep;
+}
+template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
+void swap(const hash_map<Key, T, HashFcn, EqualKey, Alloc>& lh,
+    const hash_map<Key, T, HashFcn, EqualKey, Alloc>& rh) noexcept(noexcept(lh.swap(rh))) {
+    lh.swap(rh);
 }
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
@@ -234,7 +248,7 @@ public:
 };
 template <class Key, class T, class HF, class EqKey, class Alloc>
 inline bool operator ==(const hash_multimap<Key, T, HF, EqKey, Alloc>& hm1, 
-    const hash_multimap<Key, T, HF, EqKey, Alloc>& hm2) {
+    const hash_multimap<Key, T, HF, EqKey, Alloc>& hm2) noexcept {
     return hm1.rep == hm2.rep;
 }
 

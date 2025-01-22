@@ -6,6 +6,8 @@ MSTL_BEGIN_NAMESPACE__
 
 template <typename... Args>
 struct tuple;
+template <typename... Types>
+MSTL_NODISCARD MSTL_CONSTEXPR tuple<Types&...> tie(Types&... args) noexcept;
 
 MSTL_END_NAMESPACE__
 
@@ -13,6 +15,19 @@ namespace std {
 	template <typename... Types>
 	struct tuple_size<MSTL::tuple<Types...>> 
 		: integral_constant<size_t, sizeof...(Types)> {};  // size of MSTL tuple
+
+	template<std::size_t N, typename Key, typename... ValueArgs>
+	struct tuple_element<N, MSTL::tuple<Key, ValueArgs...>>;
+
+	template<typename Key, typename... ValueArgs>
+	struct tuple_element<0, MSTL::tuple<Key, ValueArgs...>> {
+		using type = Key;
+	};
+	template<std::size_t N, typename Key, typename... ValueArgs>
+	struct tuple_element<N, MSTL::tuple<Key, ValueArgs...>> {
+		static_assert(N > 0 && N <= 1 + sizeof...(ValueArgs), "Index out of range");
+		using type = std::tuple_element_t<N - 1, MSTL::tuple<ValueArgs...>>;
+	};
 }
 
 MSTL_BEGIN_NAMESPACE__
@@ -263,6 +278,9 @@ public:
 	friend MSTL_NODISCARD MSTL_CONSTEXPR const tuple_element_t<Index, Types...>&& 
 		get(const tuple<Types...>&& t) noexcept;
 
+	static auto tie(const tuple& t) {
+		return MSTL::tie(t.data_, t.get_rest());
+	}
 private:
 	this_type data_;
 };

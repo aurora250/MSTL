@@ -80,7 +80,7 @@ public:
 #ifdef MSTL_STATE_DEBUG__
 			sout << ">>> creat new thread\n";
 #endif
-			auto ptr = std::make_shared<Thread__>(std::bind(&ThreadPool::thread_function, this, std::placeholders::_1));
+			auto ptr = std::make_unique<Thread__>(std::bind(&ThreadPool::thread_function, this, std::placeholders::_1));
 			int threadid = ptr->get_id();
 			threads_.emplace(threadid, std::move(ptr));
 			threads_[threadid]->start();
@@ -94,8 +94,7 @@ private:
 private:
 	typedef std::function<void()> Task;
 
-	//std::
-	unordered_map<int, std::shared_ptr<Thread__>> threads_;
+	unordered_map<int, std::unique_ptr<Thread__>> threads_;
 
 	size_t init_thread_size_;
 	size_t thread_size_thresh_hold_;

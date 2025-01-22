@@ -29,10 +29,10 @@ public:
     explicit queue(Sequence&& x) 
         noexcept(NothrowMoveConstructible<Sequence>) : seq_(std::move(x)) {}
     ~queue() = default;
-
-    void push(value_type&& x) { seq_.push_back(std::move(x)); }
-    void push(const value_type& x) { seq_.push_back(x); }
-    void emplace(value_type&& x) { seq_.push_back(std::move(x)); }
+    template <typename U = value_type>
+    void push(U&& x) { seq_.push_back(std::forward<U>(x)); }
+    template <typename... U>
+    void emplace(U&&... x) { seq_.emplace_back(std::forward<U>(x)...); }
     void pop() noexcept { seq_.pop_front(); }
 
     MSTL_NODISCARD reference front() { return seq_.front(); }

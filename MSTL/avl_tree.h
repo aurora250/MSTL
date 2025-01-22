@@ -83,10 +83,12 @@ struct avl_tree_iterator : public avl_tree_base_iterator {
 		return tmp;
 	}
 };
-inline bool operator ==(const avl_tree_base_iterator& x, const avl_tree_base_iterator& y) {
+MSTL_NODISCARD inline bool operator ==(
+	const avl_tree_base_iterator& x, const avl_tree_base_iterator& y) {
 	return x.node_ == y.node_;
 }
-inline bool operator !=(const avl_tree_base_iterator& x, const avl_tree_base_iterator& y) {
+MSTL_NODISCARD inline bool operator !=(
+	const avl_tree_base_iterator& x, const avl_tree_base_iterator& y) {
 	return x.node_ != y.node_;
 }
 
@@ -116,24 +118,24 @@ public:
 	typedef avl_tree<Key, Value, KeyOfValue, Compare, Alloc>		self;
 
 private:
-	bool __balanced(link_type root) const {
+	bool balanced_aux(link_type root) const {
 		if (root == nullptr || root == header_) return true;
 		return absolute(depth(root->left_) - depth(root->right_)) < 2
-			&& __balanced(root->left_) && __balanced(root->right_);
+			&& balanced_aux(root->left_) && balanced_aux(root->right_);
 	}
-	void __in_order(base_ptr root) const {
+	void in_order_aux(base_ptr root) const {
 		if (root == nullptr || root == header_) return;
-		__in_order(root->left_);
+		in_order_aux(root->left_);
 		std::cout << link_type(root)->data_ << std::endl;
-		__in_order(root->right_);
+		in_order_aux(root->right_);
 	}
-	void __destroy_tree(base_ptr root) {
+	void destroy_tree_aux(base_ptr root) {
 		if (root == nullptr) return;
-		__destroy_tree(root->left_);
-		__destroy_tree(root->right_);
+		destroy_tree_aux(root->left_);
+		destroy_tree_aux(root->right_);
 		delete link_type(root);
 	}
-	static const Key& key(link_type x) { return KeyOfValue()(x->data_); }
+	Key& get_key(link_type x) const { return KeyOfValue()(x->data_); }
 
 public:
 	avl_tree() : header_(0), size_(0), key_compare_(Compare()) {
@@ -148,7 +150,7 @@ public:
 		if (header_->parent_ = header_) 
 			delete link_type(header_);
 		else 
-			__destroy_tree(header_->parent_);
+			destroy_tree_aux(header_->parent_);
 		size_ = 0;
 	}
 
@@ -193,11 +195,11 @@ public:
 		link_type parent = nullptr;
 		link_type cur = link_type(header_->parent_);
 		while (cur != nullptr) {
-			if (key_compare_(KeyOfValue()(v), key(cur))) {
+			if (key_compare_(KeyOfValue()(v), get_key(cur))) {
 				parent = cur;
 				cur = link_type(cur->left_);
 			}
-			else if (KeyOfValue()(v) == key(cur)) {
+			else if (KeyOfValue()(v) == get_key(cur)) {
 				return false;
 			}
 			else {
@@ -207,7 +209,7 @@ public:
 		}
 
 		cur = new node_type(v);
-		if (key_compare_(KeyOfValue()(v), key(parent))) 
+		if (key_compare_(KeyOfValue()(v), get_key(parent))) 
 			parent->left_ = cur;
 		else 
 			parent->right_ = cur;
@@ -401,15 +403,15 @@ public:
 		return true;
 	}
 	void clear() {
-		__destroy_tree(header_->parent_);
+		destroy_tree_aux(header_->parent_);
 		header_->parent_ = header_;
 	}
 	link_type find(const Key& k) const {
 		link_type cur = header_->parent_;
 		while (cur) {
-			if (key_compare_(k, key(cur)))
+			if (key_compare_(k, get_key(cur)))
 				cur = cur->left_;
-			else if (k == key(cur))
+			else if (k == get_key(cur))
 				return cur;
 			else
 				cur = cur->right_;
@@ -425,9 +427,9 @@ public:
 	}
 	size_type size() const { return size_; }
 	bool empty() const { return header_->parent_ == base_ptr(header_); }
-	bool is_balanced() { return __balanced(header_->parent_); }
+	bool is_balanced() { return balanced_aux(header_->parent_); }
 	void in_order() const {
-		__in_order(header_->parent_);
+		in_order_aux(header_->parent_);
 		std::cout << std::endl;
 	}
 	void swap(const self& v) {
