@@ -71,17 +71,12 @@ inline std::ostream& operator <<(const Error& err, std::ostream& _out) {
 }
 
 void Exception(const Error& _err);
-
-inline void Assert(bool _boolean, const char* _info = MSTL_ASSERT_ERROR__) { // useless in release
-	if (_boolean) return;
-	else Exception(AssertError(_info));
-}
 inline void Exception(bool _boolean, const Error& _err = Error()) {
 	if (_boolean) return;
-	else {
-		if (_err._type == TO_STRING(Error)) Assert(false);
-		else Exception(_err);
-	}
+	else Exception(_err);
+}
+inline void Assert(bool _boolean, const char* _info = MSTL_ASSERT_ERROR__) { // useless in release
+	Exception(_boolean, AssertError(_info));
 }
 
 // just allow void(void) function to run before progess exit

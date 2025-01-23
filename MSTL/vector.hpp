@@ -34,17 +34,16 @@ private:
 			_pos < static_cast<size_type>(finish_ - start_), "vector index out of range"
 		);
 	}
-	MSTL_CONSTEXPR bool in_boundary(size_type _pos) const noexcept {
-		return _pos < size() ? true : false;
-	}
-	MSTL_CONSTEXPR void fill_initialize(size_type n, T&& x) {
-		start_ = allocate_and_fill(n, std::forward<T>(x));
+	template <typename U = T>
+	MSTL_CONSTEXPR void fill_initialize(size_type n, U&& x) {
+		start_ = allocate_and_fill(n, std::forward<U>(x));
 		finish_ = start_ + n;
 		end_of_storage_ = finish_;
 	}
-	MSTL_CONSTEXPR iterator allocate_and_fill(size_type n, T&& x) {
+	template <typename U = T>
+	MSTL_CONSTEXPR iterator allocate_and_fill(size_type n, U&& x) {
 		iterator result = alloc_.allocate(n);
-		MSTL::uninitialized_fill_n(result, n, std::forward<T>(x));
+		MSTL::uninitialized_fill_n(result, n, std::forward<U>(x));
 		return result;
 	}
 	template <typename Iterator>
@@ -71,36 +70,13 @@ private:
 	MSTL_CONSTEXPR void deallocate() {
 		if (start_) alloc_.deallocate(start_, end_of_storage_ - start_);
 	}
-	template <typename U = T>
-	MSTL_CONSTEXPR void insert_aux(iterator position, U&& x) {
-		if (finish_ != end_of_storage_) {
-			MSTL::construct(finish_, *(finish_ - 1));
-			++finish_;
-			MSTL::copy_backward(position, finish_ - 2, finish_ - 1);
-			*position = std::forward<U>(x);
-			return;
-		}
-		const size_type old_size = size();
-		const size_type len = old_size != 0 ? 2 * old_size : 1;
-		iterator new_start = alloc_.allocate(len);
-		iterator new_finish = new_start;
-		new_finish = MSTL::uninitialized_copy(start_, position, new_start);
-		MSTL::construct(new_finish, std::forward<U>(x));
-		++new_finish;
-		new_finish = MSTL::uninitialized_copy(position, finish_, new_finish);
-		MSTL::destroy(begin(), end());
-		deallocate();
-		start_ = new_start;
-		finish_ = new_finish;
-		end_of_storage_ = new_start + len;
-	}
 	template <typename... U>
-	MSTL_CONSTEXPR void insert_aux(iterator position, U&&... args) {
+	MSTL_CONSTEXPR void emplace_aux(iterator position, U&&... args) {
 		if (finish_ != end_of_storage_) {
 			MSTL::construct(finish_, *(finish_ - 1));
 			++finish_;
 			MSTL::copy_backward(position, finish_ - 2, finish_ - 1);
-			*position = T(std::forward<U>(args)...);
+			MSTL::construct(position, std::forward<U>(args)...);
 			return;
 		}
 		const size_type old_size = size();
@@ -121,7 +97,7 @@ private:
 		requires(InputIterator<Iterator>)
 	MSTL_CONSTEXPR void range_insert(iterator pos, Iterator first, Iterator last) {
 		for (; first != last; ++first) {
-			pos = this->insert(pos, *first);
+			pos = insert(pos, *first);
 			++pos;
 		}
 	}
@@ -177,6 +153,18 @@ public:
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
 		fill_initialize(n, T());
 	}
+	MSTL_CONSTEXPR explicit vector(size_type n, const T& value)
+		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
+		fill_initialize(n, value);
+	}
+	MSTL_CONSTEXPR explicit vector(int n, const T& value)
+		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
+		fill_initialize(n, value);
+	}
+	MSTL_CONSTEXPR explicit vector(long n, const T& value)
+		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
+		fill_initialize(n, value);
+	}
 	MSTL_CONSTEXPR explicit vector(size_type n, T&& value)
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
 		fill_initialize(n, std::forward<T>(value));
@@ -197,7 +185,7 @@ public:
 		end_of_storage_ = finish_;
 	}
 	MSTL_CONSTEXPR self& operator =(const self& x) {
-		if (x == *this) return *this;
+		if (std::addressof(x) == this) return *this;
 		clear();
 		insert(end(), x.const_begin(), x.const_end());
 	}
@@ -206,16 +194,15 @@ public:
 		swap(x);
 	}
 	MSTL_CONSTEXPR self& operator =(self&& x) noexcept {
-		if (x == *this) return *this;
+		if (std::addressof(x) == this) return *this;
 		clear();
 		swap(x);
 		return *this;
 	}
 
-	MSTL_CONSTEXPR vector(std::initializer_list<T>&& x) 
+	MSTL_CONSTEXPR vector(const std::initializer_list<T>& x) 
 		: vector(x.begin(), x.end()) {}
-	MSTL_CONSTEXPR self& operator =(std::initializer_list<T>&& x) {
-		if (x == *this) return *this;
+	MSTL_CONSTEXPR self& operator =(const std::initializer_list<T>& x) {
 		if (x.size() > capacity()) {
 			iterator new_ = (allocate_and_copy)(x.end() - x.begin(), x.begin(), x.end());
 			MSTL::destroy(start_, finish_);
@@ -224,7 +211,7 @@ public:
 			end_of_storage_ = start_ + (x.end() - x.begin());
 		}
 		else if (size() >= x.size()) {
-			iterator i = copy(x.begin(), x.end(), begin());
+			iterator i = MSTL::copy(x.begin(), x.end(), begin());
 			MSTL::destroy(i, finish_);
 		}
 		else {
@@ -267,12 +254,16 @@ public:
 	MSTL_CONSTEXPR void reserve(size_type n) {
 		if (capacity() > n) return;
 		size_type old_size = size();
-		iterator tmp = allocate_and_copy(n, start_, finish_);
+		iterator tmp = (allocate_and_copy)(n, start_, finish_);
 		MSTL::destroy(start_, finish_);
 		deallocate();
 		start_ = tmp;
 		finish_ = tmp + old_size;
 		end_of_storage_ = start_ + n;
+	}
+	MSTL_CONSTEXPR void resize(size_type new_size, const T& x) {
+		if (new_size < size()) erase(begin() + new_size, end());
+		else insert(end(), new_size - size(), x);
 	}
 	MSTL_CONSTEXPR void resize(size_type new_size, T&& x) {
 		if (new_size < size()) erase(begin() + new_size, end());
@@ -281,13 +272,19 @@ public:
 	MSTL_CONSTEXPR void resize(size_type new_size) {
 		resize(new_size, T());
 	}
-	template <typename U = T>
-	MSTL_CONSTEXPR void push_back(U&& val) {
+	MSTL_CONSTEXPR void push_back(const T& val) {
 		if (finish_ != end_of_storage_) {
-			MSTL::construct(finish_, std::forward<U>(val));
+			MSTL::construct(finish_, val);
 			++finish_;
 		}
-		else insert_aux(end(), std::forward<U>(val));
+		else (emplace_aux)(end(), val);
+	}
+	MSTL_CONSTEXPR void push_back(T&& val) {
+		if (finish_ != end_of_storage_) {
+			MSTL::construct(finish_, std::forward<T>(val));
+			++finish_;
+		}
+		else (emplace_aux)(end(), std::forward<T>(val));
 	}
 	MSTL_CONSTEXPR void pop_back() noexcept {
 		MSTL::destroy(finish_);
@@ -299,7 +296,7 @@ public:
 			MSTL::construct(finish_, std::forward<U>(args)...);
 			++finish_;
 		}
-		else insert_aux(end(), std::forward<U>(args)...);
+		else (emplace_aux)(end(), std::forward<U>(args)...);
 	}
 	MSTL_CONSTEXPR iterator erase(iterator first, iterator last) 
 		noexcept(NothrowMoveAssignable<value_type>) {
@@ -316,27 +313,29 @@ public:
 		return position;
 	}
 	MSTL_CONSTEXPR void clear() noexcept { erase(begin(), end()); }
-	MSTL_CONSTEXPR iterator insert(iterator position, T&& x) {
+	template <typename U = T>
+	MSTL_CONSTEXPR iterator insert(iterator position, U&& x) {
 		size_type n = position - begin();
 		if (finish_ != end_of_storage_ && position == end()) {
-			MSTL::construct(finish_, std::forward<T>(x));
+			MSTL::construct(finish_, std::forward<U>(x));
 			++finish_;
 		}
-		else insert_aux(position, std::forward<T>(x));
+		else (emplace_aux)(position, std::forward<U>(x));
 		return begin() + n;
 	}
 	MSTL_CONSTEXPR iterator insert(iterator position) {
-		return this->insert(position, T());
+		return insert(position, T());
 	}
 	template <typename Iterator>
 		requires(InputIterator<Iterator>)
 	MSTL_CONSTEXPR void insert(iterator position, Iterator first, Iterator last) {
-		this->range_insert(position, first, last);
+		range_insert(position, first, last);
 	}
 	MSTL_CONSTEXPR void insert(iterator position, std::initializer_list<T> l) {
-		this->range_insert(position, l.begin(), l.end());
+		range_insert(position, l.begin(), l.end());
 	}
-	MSTL_CONSTEXPR void insert(iterator position, size_type n, T&& x) {
+	template <typename U = T>
+	MSTL_CONSTEXPR void insert(iterator position, size_type n, U&& x) {
 		if (n == 0) return;
 		if (size_type(end_of_storage_ - finish_) >= n) {
 			const size_type elems_after = finish_ - position;
@@ -345,14 +344,14 @@ public:
 				MSTL::uninitialized_copy(finish_ - n, finish_, finish_);
 				finish_ += n;
 				MSTL::copy_backward(position, old_finish - n, old_finish);
-				MSTL::fill(position, position + n, std::forward<T>(x));
+				MSTL::fill(position, position + n, std::forward<U>(x));
 			}
 			else {
-				MSTL::uninitialized_fill_n(finish_, n - elems_after, std::forward<T>(x));
+				MSTL::uninitialized_fill_n(finish_, n - elems_after, std::forward<U>(x));
 				finish_ += n - elems_after;
 				MSTL::uninitialized_copy(position, old_finish, finish_);
 				finish_ += elems_after;
-				MSTL::fill(position, old_finish, std::forward<T>(x));
+				MSTL::fill(position, old_finish, std::forward<U>(x));
 			}
 		}
 		else {
@@ -361,7 +360,7 @@ public:
 			iterator new_start = alloc_.allocate(len);
 			iterator new_finish = new_start;
 			new_finish = MSTL::uninitialized_copy(start_, position, new_start);
-			new_finish = MSTL::uninitialized_fill_n(new_finish, n, std::forward<T>(x));
+			new_finish = MSTL::uninitialized_fill_n(new_finish, n, std::forward<U>(x));
 			new_finish = MSTL::uninitialized_copy(position, finish_, new_finish);
 			MSTL::destroy(start_, finish_);
 			deallocate();
@@ -397,9 +396,25 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(const vector<T, Alloc>& lh, const
 		lh.const_begin(), lh.const_end(), rh.const_begin());
 }
 template <typename T, typename Alloc>
+MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(const vector<T, Alloc>& lh, const vector<T, Alloc>& rh) {
+	return !(lh == rh);
+}
+template <typename T, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator <(const vector<T, Alloc>& lh, const vector<T, Alloc>& rh) {
 	return MSTL::lexicographical_compare(
 		lh.const_begin(), lh.const_end(), rh.const_begin(), rh.const_end());
+}
+template <typename T, typename Alloc>
+MSTL_NODISCARD MSTL_CONSTEXPR bool operator >(const vector<T, Alloc>& lh, const vector<T, Alloc>& rh) {
+	return rh < lh;
+}
+template <typename T, typename Alloc>
+MSTL_NODISCARD MSTL_CONSTEXPR bool operator >=(const vector<T, Alloc>& lh, const vector<T, Alloc>& rh) {
+	return !(lh < rh);
+}
+template <typename T, typename Alloc>
+MSTL_NODISCARD MSTL_CONSTEXPR bool operator <=(const vector<T, Alloc>& lh, const vector<T, Alloc>& rh) {
+	return !(lh > rh);
 }
 template <class T, class Alloc>
 MSTL_CONSTEXPR void swap(vector<T, Alloc>& x, vector<T, Alloc>& y) noexcept(noexcept(x.swap(y))) {

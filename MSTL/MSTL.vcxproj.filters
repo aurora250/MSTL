@@ -173,12 +173,6 @@
     <ClInclude Include="avl_set.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="skip_list.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="adjacency_list.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="matrix.hpp">
       <Filter>头文件</Filter>
     </ClInclude>

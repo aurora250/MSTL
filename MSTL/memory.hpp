@@ -32,7 +32,7 @@ public:
 
 template <typename T1, typename... T2>
     requires(ConstructibleFrom<T1, T2...>)
-MSTL_CONSTEXPR void construct(T1* p, T2&&... value) {
+MSTL_CONSTEXPR void construct(T1* p, T2&&... value) { // placement new
     new (p) T1(std::forward<T2>(value)...);
 }
 template <typename T>

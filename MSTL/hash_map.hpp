@@ -97,7 +97,7 @@ public:
     }
     template<typename... Args>
     void emplace(Args&&... args) {
-        rep.emplace_unique(std::forward<Args>(args)...);
+        rep.emplace_unique_pair(std::forward<Args>(args)...);
     }
 
     template <class Iterator>
@@ -116,12 +116,12 @@ public:
     MSTL_NODISCARD T& at(const key_type& key) {
         auto iter = rep.find(key);
         Exception(iter != end(), StopIterator());
-        return (*iter).second;
+        return iter->second;
     }
     MSTL_NODISCARD const T& at(const key_type& key) const {
         auto iter = rep.find(key);
         Exception(iter != const_end(), StopIterator());
-        return (*iter).second;
+        return iter->second;
     }
 
     pair<iterator, iterator> equal_range(const key_type& key) { return rep.equal_range(key); }
@@ -219,12 +219,10 @@ public:
 
     template<typename... Args>
     void emplace(Args&&... args) {
-        rep.emplace_equal(std::forward<Args>(args)...);
+        rep.emplace_equal_pair(std::forward<Args>(args)...);
     }
     iterator insert(value_type&& obj) { return rep.insert_equal(std::move(obj)); }
     iterator insert(const value_type& obj) { return rep.insert_equal(obj); }
-    iterator insert(Key&& k, T&& v) { return rep.insert_equal(value_type(std::forward<Key>(k), std::forward<T>(v))); }
-    iterator insert(const Key& k, const T& v) { return rep.insert_equal(value_type(k, v)); }
     template <class InputIterator>
     void insert(InputIterator f, InputIterator l) { rep.insert_equal(f, l); }
     iterator insert_noresize(const value_type& obj) {

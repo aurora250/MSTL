@@ -199,7 +199,7 @@ private:
         finish_.set_node(new_start + old_num_nodes - 1);
     }
     template <typename... U>
-    void push_back_aux(U&&... args) {
+    void emplace_back_aux(U&&... args) {
         reserve_map_at_back();
         *(finish_.node_ + 1) = data_alloc_.allocate(buff_size());
         MSTL::construct(finish_.cur_, std::forward<U>(args)...);
@@ -207,7 +207,7 @@ private:
         finish_.cur_ = finish_.first_;
     }
     template <typename... U>
-    void push_front_aux(U&&... args) {
+    void emplace_front_aux(U&&... args) {
         reserve_map_at_front();
         *(start_.node_ - 1) = data_alloc_.allocate(buff_size());
         start_.set_node(start_.node_ - 1);
@@ -326,7 +326,7 @@ private:
                 map_pointer cur = start_.node_ - 1;
                 for (; needs > 0; --cur, --needs) {
                     *cur = data_alloc_.allocate(buff_size());
-                    MSTL::uninitialized_fill_n(*cur, buff_size(), std::forward<T>(x));
+                    MSTL::uninitialized_fill_n(*cur, buff_size(), x);
                 }
                 iterator new_start = start_ - n;
                 MSTL::copy(start_, pos, new_start);
@@ -371,7 +371,15 @@ public:
         start_.cur_ = start_.first_;
         finish_.cur_ = finish_.first_;
     }
-    explicit deque(size_type n, T&& x = T()) :
+    explicit deque(size_type n) :
+        data_alloc_(), map_alloc_(), map_(0), map_size_(0), start_(), finish_() {
+        fill_initialize(n, T());
+    }
+    explicit deque(size_type n, const T& x) :
+        data_alloc_(), map_alloc_(), map_(0), map_size_(0), start_(), finish_() {
+        fill_initialize(n, x);
+    }
+    explicit deque(size_type n, T&& x) :
         data_alloc_(), map_alloc_(), map_(0), map_size_(0), start_(), finish_() {
         fill_initialize(n, std::forward<T>(x));
     }
@@ -397,7 +405,7 @@ public:
         return *this;
     }
 
-    deque(const self& x) 
+    explicit deque(const self& x) 
         : deque(x.const_begin(), x.const_end()) {}
     self& operator =(const self& x) {
         if (*this == x) return *this;
@@ -438,11 +446,12 @@ public:
     MSTL_NODISCARD size_type size() const noexcept { return finish_ - start_; }
     MSTL_NODISCARD bool empty() const noexcept { return finish_ == start_; }
 
-    void resize(size_type new_size, T&& x) {
+    template <typename U = T>
+    void resize(size_type new_size, U&& x) {
         if (new_size < size()) 
             erase(start_ + new_size, finish_);
         else 
-            insert(finish_, new_size - size(), std::forward<T>(x));
+            insert(finish_, new_size - size(), std::forward<U>(x));
     }
     void resize(size_type new_size) { resize(new_size, value_type()); }
 
@@ -455,21 +464,33 @@ public:
             reallocate_map(nodes_to_add, true);
     }
 
-    template <typename U = T>
-    void push_back(U&& x) {
+    void push_back(const T& x) {
         if (finish_.cur_ != finish_.last_ - 1) {
-            MSTL::construct(finish_.cur_, std::forward<U>(x));
+            MSTL::construct(finish_.cur_, x);
             ++finish_.cur_;
         }
-        else push_back_aux(std::forward<U>(x));
+        else (emplace_back_aux)(x);
     }
-    template <typename U = T>
-    void push_front(U&& x) {
+    void push_front(const T& x) {
         if (start_.cur_ != start_.first_) {
-            MSTL::construct(start_.cur_ - 1, std::forward<U>(x));
+            MSTL::construct(start_.cur_ - 1, x);
             --start_.cur_;
         }
-        else push_front_aux(std::forward<U>(x));
+        else (emplace_front_aux)(x);
+    }
+    void push_back(T&& x) {
+        if (finish_.cur_ != finish_.last_ - 1) {
+            MSTL::construct(finish_.cur_, std::forward<T>(x));
+            ++finish_.cur_;
+        }
+        else (emplace_back_aux)(std::forward<T>(x));
+    }
+    void push_front(T&& x) {
+        if (start_.cur_ != start_.first_) {
+            MSTL::construct(start_.cur_ - 1, std::forward<T>(x));
+            --start_.cur_;
+        }
+        else (emplace_front_aux)(std::forward<T>(x));
     }
     template <typename... U>
     void emplace_back(U&&... args) {
@@ -477,7 +498,7 @@ public:
             MSTL::construct(finish_.cur_, std::forward<U>(args)...);
             ++finish_.cur_;
         }
-        else (push_back_aux)(std::forward<U>(args)...);
+        else (emplace_back_aux)(std::forward<U>(args)...);
     }
     template <typename... U>
     void emplace_front(U&&... args) {
@@ -485,7 +506,7 @@ public:
             MSTL::construct(start_.cur_ - 1, std::forward<U>(args)...);
             --start_.cur_;
         }
-        else (push_front_aux)(std::forward<U>(args)...);
+        else (emplace_front_aux)(std::forward<U>(args)...);
     }
 
     void pop_back() noexcept {
@@ -576,13 +597,38 @@ public:
     iterator insert(iterator position, const std::initializer_list<T>& l) {
         insert(position, l.begin(), l.end());
     }
-    iterator insert(iterator position, size_t n, T&& x) {
+    iterator insert(iterator position, size_t n, const T& x) {
         if (position == start_) {
             for (size_t i = 0; i < n; i++) push_front(x);
             return start_;
         }
         else if (position == finish_) {
             for (size_t i = 0; i < n; i++) push_back(x);
+            return finish_ - 1;
+        }
+        else
+            return insert_aux(position, size_type(n), x);
+
+    }
+    iterator insert(iterator position, const T& x) {
+        if (position.cur_ == start_.cur_) {
+            push_front(x);
+            return start_;
+        }
+        else if (position.cur_ == finish_.cur_) {
+            push_back(x);
+            return finish_ - 1;
+        }
+        else
+            return insert_aux(position, x);
+    }
+    iterator insert(iterator position, size_t n, T&& x) {
+        if (position == start_) {
+            for (size_t i = 0; i < n; i++) push_front(std::forward<T>(x));
+            return start_;
+        }
+        else if (position == finish_) {
+            for (size_t i = 0; i < n; i++) push_back(std::forward<T>(x));
             return finish_ - 1;
         }
         else 

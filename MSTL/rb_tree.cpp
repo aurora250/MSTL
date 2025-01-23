@@ -66,7 +66,7 @@ void __rb_tree_rotate_right(__rb_tree_node_base* x, __rb_tree_node_base*& root) 
     y->right_ = x;
     x->parent_ = y;
 }
-void __rb_tree_rebalance(__rb_tree_node_base* x, __rb_tree_node_base*& root) noexcept {
+void rb_tree_rebalance(__rb_tree_node_base* x, __rb_tree_node_base*& root) noexcept {
     x->color_ = RB_TREE_RED__;
     while (x != root && x->parent_->color_ == RB_TREE_RED__) {
         if (x->parent_ == x->parent_->parent_->left_) {

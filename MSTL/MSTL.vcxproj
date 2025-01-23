@@ -148,7 +148,6 @@
     <ClCompile Include="thread_pool.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="adjacency_list.h" />
     <ClInclude Include="algo.hpp" />
     <ClInclude Include="algobase.hpp" />
     <ClInclude Include="algorithm.hpp" />
@@ -184,7 +183,6 @@
     <ClInclude Include="queue.hpp" />
     <ClInclude Include="rb_tree.h" />
     <ClInclude Include="set.hpp" />
-    <ClInclude Include="skip_list.hpp" />
     <ClInclude Include="sort.hpp" />
     <ClInclude Include="stack.hpp" />
     <ClInclude Include="tempbuf.hpp" />

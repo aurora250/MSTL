@@ -100,8 +100,7 @@ public:
 	void erase(iterator first, iterator last) noexcept { t.erase(first, last); }
 	void clear() noexcept { t.clear(); }
 
-	const_iterator find(const key_type& x) const { return t.find(x); }
-	const_iterator find(key_type&& x) const { return t.find(std::forward<Key>(x)); }
+	MSTL_NODISCARD const_iterator find(const key_type& x) const { return t.find(x); }
 	void swap(self& x) noexcept(noexcept(t.swap(x.t))) { t.swap(x.t); }
 	MSTL_NODISCARD size_type count(const key_type& x) const { 
 		return t.count(x); 
@@ -130,20 +129,15 @@ public:
 			insert(value_type(k, T()))
 			).first)).second;
 	}
-	T& operator[](key_type&& k) {
-		return (*((
-			insert(value_type(std::move(k), T()))
-			).first)).second;
-	}
 	MSTL_NODISCARD T& at(const key_type& k) {
 		auto iter = find(k);
-		if (iter == end()) Exception(StopIterator("Key does not exist"));
-		else return iter->second;
+		Exception(iter != end(), StopIterator("Key does not exist"));
+		return iter->second;
 	}
-	MSTL_NODISCARD T& at(key_type&& k) {
-		auto iter = find(std::move(k));
-		if (iter == end()) Exception(StopIterator("Key does not exist"));
-		else return iter->second;
+	MSTL_NODISCARD const T& at(const key_type& k) const {
+		auto iter = find(k);
+		Exception(iter != end(), StopIterator("Key does not exist"));
+		return iter->second;
 	}
 };
 template <class Key, class T, class Compare, class Alloc>

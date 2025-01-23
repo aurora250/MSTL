@@ -26,12 +26,15 @@ void try_lls() {
     lls.pop_back();
     lls.pop_front();
     detailof_safe(lls);
-    list<int> lls2 = { 3,2,1,1 };
+    list<int> lls2 = { 5,3,2,1,1 };
     detailof(lls2);
+    lls2.remove(5);
     lls2.sort();
     detailof(lls2);
     lls2.unique();
     detailof(lls2);
+    std::list<std::unique_ptr<int>> nocopy;
+    // nocopy.emplace_back(2); not support in std
     Output out;
     out << lls.at(0) << ':' << lls[0] << endl;
     sout << out;
@@ -237,7 +240,10 @@ void try_hash() {
     std::cout << *++m2.begin() << ":";
     // std::cout << m2.at(4) << std::endl;
     hash_multimap<std::string, int> mm;
-    mm.insert("hello", 1);
+    mm.insert(pair(std::string("a"), 1));
+    mm.emplace("a", 1);
+    detailof(mm);
+    mm.clear();
     detailof(mm);
     hash_map<int, std::unique_ptr<int>> uncopy;
     uncopy.emplace(1, std::make_unique<int>(1));
@@ -360,5 +366,5 @@ void try_graph() {
     //adjacency_list graph;
 }
 int main() {
-    try_hash();
+    try_lls();
 }

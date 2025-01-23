@@ -3,7 +3,9 @@
 #include "memory.hpp"
 #include "functor.hpp"
 #include "algobase.hpp"
+#include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
+MSTL_CONCEPTS__
 
 template <typename T>
 struct __list_node {
@@ -94,12 +96,8 @@ private:
     list_node_allocator alloc_;
     size_type size_;
 
-    inline void range_check(size_type _pos) const {
-        Exception(this->in_boundary(_pos), StopIterator());
-    }
-    inline bool in_boundary(size_type _pos) const noexcept {
-        if (_pos < 0) return false;
-        else return _pos < this->size_ ? true : false;
+    MSTL_NODISCARD void range_check(size_type _pos) const {
+        Exception(_pos < this->size_, StopIterator());
     }
     link_type get_node() {
         return alloc_.allocate();
@@ -107,28 +105,43 @@ private:
     void put_node(link_type p) noexcept {
         alloc_.deallocate(p);
     }
-    link_type create_node(T&& x) {
+    template <typename... Args>
+    link_type create_node(Args&&... args) {
         link_type p = get_node();
-        MSTL::construct(&(p->data_), std::forward<T>(x));
+        MSTL::construct(&(p->data_), std::forward<Args>(args)...);
         return p;
     }
     void destroy_node(link_type p) noexcept {
         MSTL::destroy(p);
         put_node(p);
     }
-    void transfer(iterator _pos, iterator _first, iterator _last) {
-        if (_pos == _last) return;
-        _last.node_->prev_->next_ = _pos.node_;
-        _first.node_->prev_->next_ = _last.node_;
-        _pos.node_->prev_->next_ = _first.node_;
-        link_type tmp = _pos.node_->prev_;
-        _pos.node_->prev_ = _last.node_->prev_;
-        _last.node_->prev_ = _first.node_->prev_;
-        _first.node_->prev_ = tmp;
+    template <typename... U>
+    iterator emplace_aux(iterator position, U&&... args) {
+        link_type temp = create_node(std::forward<U>(args)...);
+        temp->next_ = position.node_;
+        temp->prev_ = position.node_->prev_;
+        position.node_->prev_->next_ = temp;
+        position.node_->prev_ = temp;
+        ++size_;
+        return temp;
+    }
+    template <typename... U>
+    void emplace_n_aux(iterator position, size_type n, U&&... args) {
+        link_type cur = position.node_;
+        link_type temp;
+        while (n--) {
+            temp = create_node(std::forward<U>(args)...);
+            temp->next_ = cur;
+            temp->prev_ = cur->prev_;
+            cur->prev_->next_ = temp;
+            cur->prev_ = temp;
+            cur = temp;
+            ++size_;
+        }
     }
 public:
     void empty_initialize() {
-        node_ = new node_type();
+        node_ = create_node();
         node_->prev_ = node_->next_ = node_;
     }
     list() {
@@ -138,38 +151,36 @@ public:
         empty_initialize();
         while (n--) push_back(value_type());
     };
-    list(size_type n, const_reference x) {
+    list(size_type n, const T& x) {
         empty_initialize();
         while (n--) push_back(x);
     };
-    template <typename InputIterator>
-    list(InputIterator first, InputIterator last) {
+
+    template <typename Iterator> 
+        requires(InputIterator<Iterator>)
+    list(Iterator first, Iterator last) {
         empty_initialize();
         while (first != last) {
             push_back(*first);
             ++first;
         }
     };
-    list(const std::initializer_list<T>& l) {
-        empty_initialize();
-        for (auto iter = l.begin(); iter != l.end(); ++iter) {
-            push_back((T)*iter);
-        }
-    }
+
+    list(const std::initializer_list<T>& l) : list(l.begin(), l.end()) {}
     self& operator =(const std::initializer_list<T>& l) {
-        this->clear();
+        clear();
         for (auto it = l.begin(); it != l.end(); ++it) {
-            this->push_back(*it);
+            push_back(*it);
         }
         return *this;
     }
     list(const self& x) : list(x.const_begin(), x.const_end()) {}
     self& operator =(const self& x) {
-        if (*this == x) return *this;
-        this->clear();
+        if (std::addressof(x) == this) return *this;
+        clear();
         link_type p = x.node_->next_;
         while (p != x.node_) {
-            link_type q = new node_type(p->data);
+            link_type q = create_node(p->data);
             q->prev_ = node_->prev_;
             q->next_ = node_;
             node_->prev_->next_ = q;
@@ -181,12 +192,16 @@ public:
     }
     list(self&& x) noexcept {
         empty_initialize();
-        swap(std::forward<self>(x));
+        if (std::addressof(x) == this) x.clear();
+        else swap(x);
     }
     self& operator =(self&& x) noexcept {
-        if (*this == x) return *this;
+        if (std::addressof(x) == this) {
+            x.clear();
+            return *this;
+        }
         clear();
-        swap(std::forward<self>(x));
+        swap(x);
         return *this;
     }
     ~list() {
@@ -215,32 +230,34 @@ public:
     MSTL_NODISCARD reference back() noexcept { return this->node_->prev_->data_; }
     MSTL_NODISCARD const_reference back() const noexcept { return this->node_->prev_->data_; }
 
-    void pop_front() noexcept { this->erase(begin()); }
-    void pop_back() noexcept { this->erase(this->node_->prev_); }
+    void pop_front() noexcept { erase(begin()); }
+    void pop_back() noexcept { erase(node_->prev_); }
+
+    void push_front(const T& x) { insert(begin(), x); }
+    void push_back(const T& x) { insert(end(), x); }
     void push_front(T&& x) { insert(begin(), std::forward<T>(x)); }
     void push_back(T&& x) { insert(end(), std::forward<T>(x)); }
 
+    template <typename... Args>
+    void emplace_back(Args&&... args) {
+        emplace_aux(end(), std::forward<Args>(args)...);
+    }
+    template <typename... Args>
+    void emplace_front(Args&&... args) {
+        emplace_aux(begin(), std::forward<Args>(args)...);
+    }
+
+    iterator insert(iterator position, const T& x) {
+        return emplace_aux(position, x);
+    }
+    void insert(iterator position, size_type n, const T& x) {
+        emplace_n_aux(position, n, x);
+    }
     iterator insert(iterator position, T&& x) {
-        link_type temp = create_node(std::forward<T>(x));
-        temp->next_ = position.node_;
-        temp->prev_ = position.node_->prev_;
-        position.node_->prev_->next_ = temp;
-        position.node_->prev_ = temp;
-        ++size_;
-        return temp;
+        return emplace_aux(position, std::forward<T>(x));
     }
     void insert(iterator position, size_type n, T&& x) {
-        link_type cur = position.node_;
-        link_type temp;
-        while (n--) {
-            temp = create_node(std::forward<T>(x));
-            temp->next_ = cur;
-            temp->prev_ = cur->prev_;
-            cur->prev_->next_ = temp;
-            cur->prev_ = temp;
-            cur = temp;
-            ++size_;
-        }
+        emplace_n_aux(position, n, std::forward<T>(x));
     }
     template <typename InputIterator>
     void insert(iterator position, InputIterator first, InputIterator last) {
@@ -274,7 +291,7 @@ public:
         node_->next_ = node_;
     }
 
-    void remove(T&& x) {
+    void remove(const T& x) {
         return this->remove_if([&](const T& oth) -> bool { return oth == x; });
     }
     template <typename Pred>
@@ -299,11 +316,11 @@ public:
         if (first != last) transfer(position, first, last);
     }
 
-    void merge(self&& x) {
+    void merge(self& x) {
         this->merge(std::forward<self>(x), MSTL::less<T>());
     }
     template <typename Pred>
-    void merge(self&& x, Pred pred) {
+    void merge(self& x, Pred pred) {
         iterator first1 = begin(), first2 = x.begin();
         iterator last1 = end(), last2 = x.end();
         while (first1 != last1 && first2 != last2) {
@@ -334,7 +351,7 @@ public:
         }
     }
 
-    void swap(self&& _lis) noexcept {
+    void swap(self& _lis) noexcept {
         std::swap(_lis.node_, this->node_);
         std::swap(_lis.size_, this->size_);
     }
@@ -373,21 +390,32 @@ public:
         }
     }
 
-    const_reference at(size_type _pos) const noexcept {
+    void transfer(iterator _pos, iterator _first, iterator _last) {
+        if (_pos == _last) return;
+        _last.node_->prev_->next_ = _pos.node_;
+        _first.node_->prev_->next_ = _last.node_;
+        _pos.node_->prev_->next_ = _first.node_;
+        link_type tmp = _pos.node_->prev_;
+        _pos.node_->prev_ = _last.node_->prev_;
+        _last.node_->prev_ = _first.node_->prev_;
+        _first.node_->prev_ = tmp;
+    }
+
+    const_reference at(size_type _pos) const {
         this->range_check(_pos);
         const_iterator iter = const_begin();
         while (_pos--) iter++;
         return iter.node_->data_;
     }
-    reference at(size_type _pos) noexcept {
+    reference at(size_type _pos) {
         return const_cast<reference>(
             static_cast<const self*>(this)->at(_pos)
             );
     }
-    const_reference operator [](size_type _pos) const noexcept {
+    const_reference operator [](size_type _pos) const {
         return this->at(_pos);
     }
-    reference operator [](size_type _pos) noexcept {
+    reference operator [](size_type _pos) {
         return this->at(_pos);
     }
 };
@@ -398,6 +426,27 @@ void swap(list<T, Alloc>& lh, list<T, Alloc>& rh) noexcept {
 template <class T, class Alloc>
 MSTL_NODISCARD bool operator ==(const list<T, Alloc>& lh, const list<T, Alloc>& rh) noexcept {
     return lh.size() == rh.size() && MSTL::equal(lh.const_begin(), lh.const_end(), rh.const_begin());
+}
+template <class T, class Alloc>
+MSTL_NODISCARD bool operator !=(const list<T, Alloc>& lh, const list<T, Alloc>& rh) noexcept {
+    return !(lh == rh);
+}
+template <class T, class Alloc>
+MSTL_NODISCARD bool operator <(const list<T, Alloc>& lh, const list<T, Alloc>& rh) noexcept {
+    return MSTL::lexicographical_compare(
+        lh.const_begin(), lh.const_end(), rh.const_begin(), rh.const_end());
+}
+template <class T, class Alloc>
+MSTL_NODISCARD bool operator >(const list<T, Alloc>& lh, const list<T, Alloc>& rh) noexcept {
+    return rh < lh;
+}
+template <class T, class Alloc>
+MSTL_NODISCARD bool operator <=(const list<T, Alloc>& lh, const list<T, Alloc>& rh) noexcept {
+    return !(lh > rh);
+}
+template <class T, class Alloc>
+MSTL_NODISCARD bool operator >=(const list<T, Alloc>& lh, const list<T, Alloc>& rh) noexcept {
+    return !(lh < rh);
 }
 
 MSTL_END_NAMESPACE__

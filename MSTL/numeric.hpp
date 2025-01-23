@@ -68,10 +68,10 @@ MSTL_CONSTEXPR T inner_product(Iterator1 first1, Iterator1 last1, Iterator2 firs
 }
 
 template <typename Iterator1, typename Iterator2>
-	requires(InputIterator<Iterator1>&& InputIterator<Iterator2>)
+	requires(InputIterator<Iterator1> && InputIterator<Iterator2>)
 MSTL_CONSTEXPR Iterator2 partial_sum(Iterator1 first, Iterator1  last, Iterator2 result) {
 	if (first == last) return result;
-	using T = typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<Iterator1>::value_type;
+	using T = typename std::iterator_traits<Iterator1>::value_type;
 	*result = *first;
 	T value = *first;
 	while (++first != last) {
@@ -81,11 +81,11 @@ MSTL_CONSTEXPR Iterator2 partial_sum(Iterator1 first, Iterator1  last, Iterator2
 	return ++result;
 }
 template <typename Iterator1, typename Iterator2, typename BinaryOperation>
-	requires(InputIterator<Iterator1> && InputIterator<Iterator2>&& BinaryFunction<BinaryOperation>)
+	requires(InputIterator<Iterator1> && InputIterator<Iterator2> && BinaryFunction<BinaryOperation>)
 MSTL_CONSTEXPR Iterator2 partial_sum(
 	Iterator1 first, Iterator1 last, Iterator2 result, BinaryOperation binary_op) {
 	if (first == last) return result;
-	using T = typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<Iterator1>::value_type;
+	using T = typename std::iterator_traits<Iterator1>::value_type;
 	*result = *first;
 	T value = *first;
 	while (++first != last) {

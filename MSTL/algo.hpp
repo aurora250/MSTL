@@ -75,21 +75,23 @@ OutputIterator set_symmetric_difference(InputIterator1 first1, InputIterator1 la
 }
 
 //others:
-template <typename ForwardIterator>
-ForwardIterator adjacent_find(ForwardIterator first, ForwardIterator last) {  // 获取相邻值相同的首元素的迭代器
+template <typename Iterator>
+	requires(ForwardIterator<Iterator>)
+Iterator adjacent_find(Iterator first, Iterator last) {
 	if (first == last) return last;
-	ForwardIterator next = first;
+	Iterator next = first;
 	while (++next != last) {
 		if (*first == *next) return first;
 		first = next;
 	}
 	return last;
 }
-template <typename ForwardIterator, typename BinaryPredicate>
-ForwardIterator adjacent_find(ForwardIterator first, ForwardIterator last,
+template <typename Iterator, typename BinaryPredicate>
+	requires(ForwardIterator<Iterator>)
+Iterator adjacent_find(Iterator first, Iterator last,
 	BinaryPredicate binary_pred) {
 	if (first == last) return last;
-	ForwardIterator next = first;
+	Iterator next = first;
 	while (++next != last) {
 		if (binary_pred(*first, *next)) return first;
 		first = next;
@@ -97,35 +99,39 @@ ForwardIterator adjacent_find(ForwardIterator first, ForwardIterator last,
 	return last;
 }
 
-template <typename InputIterator, typename T>
-typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<InputIterator>::difference_type
-count(InputIterator first, InputIterator last, const T& value) {    // 等值计数
-	typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<InputIterator>::difference_type n = 0;
+template <typename Iterator, typename T>
+	requires(InputIterator<Iterator>)
+typename std::iterator_traits<Iterator>::difference_type
+count(Iterator first, Iterator last, T&& value) {
+	typename std::iterator_traits<Iterator>::difference_type n = 0;
 	for (; first != last; ++first) {
 		if (*first == value) ++n;
 	}
 	return n;
 }
-template <typename InputIterator, typename T, typename Predicate>
-typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<InputIterator>::difference_type
-count_if(InputIterator first, InputIterator last, const T& value, Predicate pred) {
-	typename MSTL_ITERATOR_TRATIS_FROM__ iterator_traits<InputIterator>::difference_type n = 0;
+template <typename Iterator, typename T, typename BinaryPredicate>
+	requires(InputIterator<Iterator> && BinaryFunction<BinaryPredicate>)
+typename std::iterator_traits<Iterator>::difference_type
+count_if(Iterator first, Iterator last, T&& value, BinaryPredicate pred) {
+	typename std::iterator_traits<Iterator>::difference_type n = 0;
 	for (; first != last; ++first) {
-		if (pred(*first)) ++n;
+		if (pred(*first, std::forward<T>(value))) ++n;
 	}
 	return n;
 }
 
-template <typename ForwardIterator1, typename ForwardIterator2, typename Distance1, typename Distance2>
-ForwardIterator1 __search(ForwardIterator1 first1, ForwardIterator1 last1,
-	ForwardIterator2 first2, ForwardIterator2 last2, Distance1*, Distance2*) {
+template <typename Iterator1, typename Iterator2>
+	requires(ForwardIterator<Iterator1> && ForwardIterator<Iterator2>)
+Iterator1 search(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2) {
+	using Distance1 = typename std::iterator_traits<Iterator1>::difference_type;
+	using Distance2 = typename std::iterator_traits<Iterator2>::difference_type;
 	Distance1 d1 = 0;
 	distance(first1, last1, d1);
 	Distance2 d2 = 0;
 	distance(first2, last2, d2);
 	if (d1 < d2) return last1;
-	ForwardIterator1 current1 = first1;
-	ForwardIterator2 current2 = first2;
+	Iterator1 current1 = first1;
+	Iterator2 current2 = first2;
 	while (current2 != last2) {
 		if (*current1 == *current1) {
 			++current1;
@@ -140,22 +146,20 @@ ForwardIterator1 __search(ForwardIterator1 first1, ForwardIterator1 last1,
 	}
 	return first1;
 }
-template <typename ForwardIterator1, typename ForwardIterator2>
-inline ForwardIterator1 search(ForwardIterator1 first1, ForwardIterator1 last1,
-	ForwardIterator2 first2, ForwardIterator2 last2) {
-	return __search(first1, last1, first2, last2, (distance_type)(first1), (distance_type)(first2));
-}
-template <class ForwardIterator1, class ForwardIterator2,
-	class BinaryPredicate, class Distance1, class Distance2>
-ForwardIterator1 __search(ForwardIterator1 first1, ForwardIterator1 last1, ForwardIterator2 first2, 
-	ForwardIterator2 last2, BinaryPredicate binary_pred, Distance1*, Distance2*) {
+
+template <typename Iterator1, typename Iterator2, typename BinaryPredicate>
+	requires(ForwardIterator<Iterator1> && ForwardIterator<Iterator2>)
+Iterator1 search(Iterator1 first1, Iterator1 last1, Iterator2 first2,
+	Iterator2 last2, BinaryPredicate binary_pred) {
+	using Distance1 = typename std::iterator_traits<Iterator1>::difference_type;
+	using Distance2 = typename std::iterator_traits<Iterator2>::difference_type;
 	Distance1 d1 = 0;
-	distance(first1, last1, d1);
+	MSTL::distance(first1, last1, d1);
 	Distance2 d2 = 0;
-	distance(first2, last2, d2);
+	MSTL::distance(first2, last2, d2);
 	if (d1 < d2) return last1;
-	ForwardIterator1 current1 = first1;
-	ForwardIterator2 current2 = first2;
+	Iterator1 current1 = first1;
+	Iterator2 current2 = first2;
 	while (current2 != last2) {
 		if (binary_pred(*current1, *current2)) {
 			++current1;
@@ -173,147 +177,136 @@ ForwardIterator1 __search(ForwardIterator1 first1, ForwardIterator1 last1, Forwa
 	}
 	return first1;
 }
-template <class ForwardIterator1, class ForwardIterator2, class BinaryPredicate>
-inline ForwardIterator1 search(ForwardIterator1 first1, ForwardIterator1 last1,
-	ForwardIterator2 first2, ForwardIterator2 last2, BinaryPredicate binary_pred) {
-	return __search(first1, last1, first2, last2, binary_pred, (distance_type)(first1), (distance_type)(first2));
-}
 
-template <class ForwardIterator, class Integer, class T>
-ForwardIterator search_n(ForwardIterator first, ForwardIterator last, Integer count, const T& value) {
-	if (count <= 0)
-		return first;
-	else {
-		first = find(first, last, value);
-		while (first != last) {
-			Integer n = count - 1;
-			ForwardIterator i = first;
+template <typename Iterator, typename T>
+	requires(ForwardIterator<Iterator>)
+Iterator search_n(Iterator first, Iterator last, size_t count, const T& value) {
+	first = find(first, last, value);
+	while (first != last) {
+		size_t n = count - 1;
+		Iterator i = first;
+		++i;
+		while (i != last && n != 0 && *i == value) {
 			++i;
-			while (i != last && n != 0 && *i == value) {
-				++i;
-				--n;
-			}
-			if (n == 0)
-				return first;
-			else
-				first = find(i, last, value);
+			--n;
 		}
-		return last;
+		if (n == 0)
+			return first;
+		else
+			first = find(i, last, value);
 	}
+	return last;
 }
-template <class ForwardIterator, class Integer, class T, class BinaryPredicate>
-ForwardIterator search_n(ForwardIterator first, ForwardIterator last,
-	Integer count, const T& value, BinaryPredicate binary_pred) {
-	if (count <= 0)
-		return first;
-	else {
-		while (first != last) {
-			if (binary_pred(*first, value)) break;
-			++first;
-		}
-		while (first != last) {
-			Integer n = count - 1;
-			ForwardIterator i = first;
+template <typename Iterator, typename T, typename BinaryPredicate>
+	requires(ForwardIterator<Iterator>)
+Iterator search_n(Iterator first, Iterator last, size_t count,
+	T&& value, BinaryPredicate binary_pred) {
+	while (first != last) {
+		if (binary_pred(*first, value)) break;
+		++first;
+	}
+	while (first != last) {
+		size_t n = count - 1;
+		Iterator i = first;
+		++i;
+		while (i != last && n != 0 && binary_pred(*i, value)) {
 			++i;
-			while (i != last && n != 0 && binary_pred(*i, value)) {
-				++i;
-				--n;
-			}
-			if (n == 0)
-				return first;
-			else {
-				while (i != last) {
-					if (binary_pred(*i, value)) break;
-					++i;
-				}
-				first = i;
-			}
+			--n;
 		}
-		return last;
+		if (n == 0)
+			return first;
+		else {
+			while (i != last) {
+				if (binary_pred(*i, value)) break;
+				++i;
+			}
+			first = i;
+		}
 	}
+	return last;
 }
 
 
-template <class InputIterator, class T>
-InputIterator find(InputIterator first, InputIterator last, const T& value) {
+template <typename Iterator, typename T>
+	requires(InputIterator<Iterator>)
+Iterator find(Iterator first, Iterator last, T&& value) {
 	while (first != last && *first != value) ++first;
 	return first;
 }
-template <typename InputIterator, typename T>
-InputIterator find_if(InputIterator first, InputIterator last, const T& value) {
+template <typename Iterator, typename T>
+	requires(InputIterator<Iterator>)
+Iterator find_if(Iterator first, Iterator last, T&& value) {
 	while (first != last && *first != value) ++first;
 	return first;
 }
-template <typename InputIterator, typename Predicate>
-InputIterator find_if(InputIterator first, InputIterator last, Predicate pred) {
+template <typename Iterator, typename Predicate>
+	requires(InputIterator<Iterator>)
+Iterator find_if(Iterator first, Iterator last, Predicate pred) {
 	while (first != last && !pred(*first)) ++first;
 	return first;
 }
-template <typename ForwardIterator1, typename ForwardIterator2>
-ForwardIterator1 __find_end(ForwardIterator1 first1, ForwardIterator1 last1,
-	ForwardIterator2 first2, ForwardIterator2 last2,
-	MSTL_ITERATOR_TRATIS_FROM__ forward_iterator_tag, MSTL_ITERATOR_TRATIS_FROM__ forward_iterator_tag) {
+template <typename Iterator1, typename Iterator2>
+	requires(ForwardIterator<Iterator1> && ForwardIterator<Iterator2>)
+Iterator1 find_end(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2) {
 	if (first2 == last2) return last1;
-	ForwardIterator1 result = last1;
+	Iterator1 result = last1;
 	while (true) {
-		ForwardIterator1 new_result = (search)(first1, last1, first2, last2);
+		Iterator1 new_result = (search)(first1, last1, first2, last2);
 		if (new_result == last1) return result;
 		result = new_result;
 		first1 = new_result;
 		++first1;
 	}
 }
-template <typename BidirectionalIterator1, typename BidirectionalIterator2>
-BidirectionalIterator1 __find_end(BidirectionalIterator1 first1, BidirectionalIterator1 last1,
-	BidirectionalIterator2 first2, BidirectionalIterator2 last2,
-	MSTL_ITERATOR_TRATIS_FROM__ bidirectional_iterator_tag, 
-	MSTL_ITERATOR_TRATIS_FROM__ bidirectional_iterator_tag) {
-	using reviter1 = typename std::reverse_iterator<BidirectionalIterator1>;
-	using reviter2 = typename std::reverse_iterator<BidirectionalIterator2>;
+template <typename Iterator1, typename Iterator2>
+	requires(BidirectionalIterator<Iterator1> && BidirectionalIterator<Iterator2>)
+Iterator1 find_end(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2) {
+	using reviter1 = typename std::reverse_iterator<Iterator1>;
+	using reviter2 = typename std::reverse_iterator<Iterator2>;
 	reviter1 rlast1(first1);
 	reviter2 rlast2(first2);
 	reviter1 rresult = (search)(reviter1(last1), rlast1, reviter2(last2), rlast2);
 	if (rresult == rlast1) return last1;
-	BidirectionalIterator1 result = rresult.base();
-	(advance)(result, -distance(first2, last2));
+	Iterator1 result = rresult.base();
+	MSTL::advance(result, -distance(first2, last2));
 	return result;
 }
-template <typename ForwardIterator1, typename ForwardIterator2>
-inline ForwardIterator1 find_end(ForwardIterator1 first1, ForwardIterator1 last1,
-	ForwardIterator2 first2, ForwardIterator2 last2) {
-	return __find_end(first1, last1, first2, last2, (iterator_category)(first1), (iterator_category)(first2));
-}
-template <class InputIterator, class ForwardIterator>
-InputIterator find_first_of(InputIterator first1, InputIterator last1,
-	ForwardIterator first2, ForwardIterator last2) {
+
+template <class Iterator1, class Iterator2>
+	requires(InputIterator<Iterator1> && ForwardIterator<Iterator2>)
+Iterator1 find_first_of(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2) {
 	for (; first1 != last1; ++first1)
-		for (ForwardIterator iter = first2; iter != last2; ++iter)
+		for (Iterator2 iter = first2; iter != last2; ++iter)
 			if (*first1 == *iter) return first1;
 	return last1;
 }
 
-template <class InputIterator, class ForwardIterator, class BinaryPredicate>
-InputIterator find_first_of(InputIterator first1, InputIterator last1,
-	ForwardIterator first2, ForwardIterator last2, BinaryPredicate comp){
+template <class Iterator1, class Iterator2, class BinaryPredicate>
+	requires(InputIterator<Iterator1> && ForwardIterator<Iterator2>)
+Iterator1 find_first_of(Iterator1 first1, Iterator1 last1,
+	Iterator2 first2, Iterator2 last2, BinaryPredicate comp){
 	for (; first1 != last1; ++first1)
-		for (ForwardIterator iter = first2; iter != last2; ++iter)
+		for (Iterator2 iter = first2; iter != last2; ++iter)
 			if (comp(*first1, *iter)) return first1;
 	return last1;
 }
 
-template <typename InputIterator, typename Function>
-Function for_each(InputIterator first, InputIterator last, Function f) {
+template <typename Iterator, typename Function>
+	requires(InputIterator<Iterator>)
+Function for_each(Iterator first, Iterator last, Function f) {
 	for (; first != last; ++first) f(*first);
 	return f;
 }
 
-template <class ForwardIterator, class Generator>
-void generate(ForwardIterator first, ForwardIterator last, Generator gen) {
+template <class Iterator, class Generator>
+	requires(InputIterator<Iterator>)
+void generate(Iterator first, Iterator last, Generator gen) {
 	for (; first != last; ++first)
 		*first = gen();
 }
-template <class OutputIterator, class Size, class Generator>
-OutputIterator generate_n(OutputIterator first, Size n, Generator gen) {
+template <class Iterator, class Generator>
+	requires(InputIterator<Iterator>)
+Iterator generate_n(Iterator first, size_t n, Generator gen) {
 	for (; n > 0; --n, ++first)
 		*first = gen();
 	return first;
@@ -344,37 +337,41 @@ bool includes(InputIterator1 first1, InputIterator1 last1,
 	return first2 == last2;
 }
 
-template <class ForwardIterator>
-ForwardIterator max_element(ForwardIterator first, ForwardIterator last) {
+template <class Iterator>
+	requires(ForwardIterator<Iterator>)
+Iterator max_element(Iterator first, Iterator last) {
 	if (first == last) return first;
-	ForwardIterator result = first;
+	Iterator result = first;
 	while (++first != last)
 		if (*result < *first) result = first;
 	return result;
 }
-template <class ForwardIterator, class Compare>
-ForwardIterator max_element(ForwardIterator first, ForwardIterator last,
+template <class Iterator, class Compare>
+	requires(ForwardIterator<Iterator>)
+Iterator max_element(Iterator first, Iterator last,
 	Compare comp) {
 	if (first == last) return first;
-	ForwardIterator result = first;
+	Iterator result = first;
 	while (++first != last)
 		if (comp(*result, *first)) result = first;
 	return result;
 }
 
-template <class ForwardIterator>
-ForwardIterator min_element(ForwardIterator first, ForwardIterator last) {
+template <class Iterator>
+	requires(ForwardIterator<Iterator>)
+Iterator min_element(Iterator first, Iterator last) {
 	if (first == last) return first;
-	ForwardIterator result = first;
+	Iterator result = first;
 	while (++first != last)
 		if (*first < *result) result = first;
 	return result;
 }
-template <class ForwardIterator, class Compare>
-ForwardIterator min_element(ForwardIterator first, ForwardIterator last,
+template <class Iterator, class Compare>
+	requires(ForwardIterator<Iterator>)
+Iterator min_element(Iterator first, Iterator last,
 	Compare comp) {
 	if (first == last) return first;
-	ForwardIterator result = first;
+	Iterator result = first;
 	while (++first != last)
 		if (comp(*first, *result)) result = first;
 	return result;
@@ -497,14 +494,14 @@ void replace_if(ForwardIterator first, ForwardIterator last, Predicate pred, con
 
 template <class BidirectionalIterator>
 void __reverse(BidirectionalIterator first, BidirectionalIterator last, 
-	MSTL_ITERATOR_TRATIS_FROM__ bidirectional_iterator_tag) {
+	std::bidirectional_iterator_tag) {
 	while (true)
 		if (first == last || first == --last) return;
 		else (iter_swap)(first++, last);
 }
 template <class RandomAccessIterator>
 void __reverse(RandomAccessIterator first, RandomAccessIterator last,
-	MSTL_ITERATOR_TRATIS_FROM__ random_access_iterator_tag) {
+	std::random_access_iterator_tag) {
 	while (first < last) (iter_swap)(first++, --last);
 }
 template <class BidirectionalIterator>
@@ -514,7 +511,7 @@ inline void reverse(BidirectionalIterator first, BidirectionalIterator last) {
 
 template <class ForwardIterator, class Distance>
 void __rotate(ForwardIterator first, ForwardIterator middle, ForwardIterator last,
-	Distance*, MSTL_ITERATOR_TRATIS_FROM__ forward_iterator_tag) {
+	Distance*, std::forward_iterator_tag) {
 	for (ForwardIterator i = middle; ;) {
 		(iter_swap)(first, i);
 		++first;
@@ -529,7 +526,7 @@ void __rotate(ForwardIterator first, ForwardIterator middle, ForwardIterator las
 }
 template <class BidirectionalIterator, class Distance>
 void __rotate(BidirectionalIterator first, BidirectionalIterator middle, BidirectionalIterator last,
-	Distance*, MSTL_ITERATOR_TRATIS_FROM__ bidirectional_iterator_tag) {
+	Distance*, std::bidirectional_iterator_tag) {
 	(reverse)(first, middle);
 	(reverse)(middle, last);
 	(reverse)(first, last);
@@ -561,7 +558,7 @@ void __rotate_cycle(RandomAccessIterator first, RandomAccessIterator last,
 }
 template <class RandomAccessIterator, class Distance>
 void __rotate(RandomAccessIterator first, RandomAccessIterator middle,
-	RandomAccessIterator last, Distance*, MSTL_ITERATOR_TRATIS_FROM__ random_access_iterator_tag) {
+	RandomAccessIterator last, Distance*, std::random_access_iterator_tag) {
 	Distance n = (__gcd)(last - first, middle - first);
 	while (n--)
 		(__rotate_cycle)(first, last, first + n, middle - first, (value_type)(first));
@@ -600,7 +597,7 @@ OutputIterator transform(InputIterator1 first1, InputIterator1 last1,
 
 template <class InputIterator, class ForwardIterator>
 ForwardIterator __unique_copy(InputIterator first, InputIterator last, 
-	ForwardIterator result, MSTL_ITERATOR_TRATIS_FROM__ forward_iterator_tag) {
+	ForwardIterator result, std::forward_iterator_tag) {
 	*result = *first;
 	while (++first != last)
 		if (*result != *first) *++result = *first;
@@ -621,7 +618,7 @@ OutputIterator __unique_copy(InputIterator first, InputIterator last, OutputIter
 
 template <class InputIterator, class OutputIterator>
 inline OutputIterator __unique_copy(InputIterator first, InputIterator last,
-	OutputIterator result, MSTL_ITERATOR_TRATIS_FROM__ output_iterator_tag) {
+	OutputIterator result, std::output_iterator_tag) {
 	return __unique_copy(first, last, result, (value_type)(first));
 }
 template <class InputIterator, class OutputIterator>
@@ -631,7 +628,7 @@ inline OutputIterator unique_copy(InputIterator first, InputIterator last, Outpu
 }
 template <class InputIterator, class ForwardIterator, class BinaryPredicate>
 ForwardIterator __unique_copy(InputIterator first, InputIterator last, ForwardIterator result,
-	BinaryPredicate binary_pred, MSTL_ITERATOR_TRATIS_FROM__ forward_iterator_tag) {
+	BinaryPredicate binary_pred, std::forward_iterator_tag) {
 	*result = *first;
 	while (++first != last)
 		if (!binary_pred(*result, *first)) *++result = *first;
@@ -652,7 +649,7 @@ OutputIterator __unique_copy(InputIterator first, InputIterator last, OutputIter
 }
 template <class InputIterator, class OutputIterator, class BinaryPredicate>
 inline OutputIterator __unique_copy(InputIterator first, InputIterator last, OutputIterator result,
-	BinaryPredicate binary_pred, MSTL_ITERATOR_TRATIS_FROM__ output_iterator_tag) {
+	BinaryPredicate binary_pred, std::output_iterator_tag) {
 	return __unique_copy(first, last, result, binary_pred, (value_type)(first));
 }
 template <class InputIterator, class OutputIterator, class BinaryPredicate>
@@ -676,7 +673,7 @@ ForwardIterator unique(ForwardIterator first, ForwardIterator last,
 
 template <class ForwardIterator, class T, class Distance>
 ForwardIterator __lower_bound(ForwardIterator first, ForwardIterator last,
-	const T& value, Distance*, MSTL_ITERATOR_TRATIS_FROM__ forward_iterator_tag) {
+	const T& value, Distance*, std::forward_iterator_tag) {
 	Distance len = 0;
 	distance(first, last, len);
 	Distance half;
@@ -696,7 +693,7 @@ ForwardIterator __lower_bound(ForwardIterator first, ForwardIterator last,
 }
 template <class RandomAccessIterator, class T, class Distance>
 RandomAccessIterator __lower_bound(RandomAccessIterator first, RandomAccessIterator last,
-	const T& value,Distance*, MSTL_ITERATOR_TRATIS_FROM__ random_access_iterator_tag) {
+	const T& value,Distance*, std::random_access_iterator_tag) {
 	Distance len = last - first;
 	Distance half;
 	RandomAccessIterator middle;
@@ -718,7 +715,7 @@ inline ForwardIterator lower_bound(ForwardIterator first, ForwardIterator last, 
 
 template <class ForwardIterator, class T, class Compare, class Distance>
 ForwardIterator __lower_bound(ForwardIterator first, ForwardIterator last,
-	const T& value, Compare comp, Distance*, MSTL_ITERATOR_TRATIS_FROM__ forward_iterator_tag) {
+	const T& value, Compare comp, Distance*, std::forward_iterator_tag) {
 	Distance len = 0;
 	distance(first, last, len);
 	Distance half;
@@ -761,7 +758,7 @@ inline ForwardIterator lower_bound(ForwardIterator first, ForwardIterator last,
 
 template <class ForwardIterator, class T, class Distance>
 ForwardIterator __upper_bound(ForwardIterator first, ForwardIterator last, const T& value, 
-	Distance*, MSTL_ITERATOR_TRATIS_FROM__ forward_iterator_tag) {
+	Distance*, std::forward_iterator_tag) {
 	Distance len = 0;
 	distance(first, last, len);
 	Distance half;
@@ -783,7 +780,7 @@ ForwardIterator __upper_bound(ForwardIterator first, ForwardIterator last, const
 }
 template <class RandomAccessIterator, class T, class Distance>
 RandomAccessIterator __upper_bound(RandomAccessIterator first, RandomAccessIterator last, const T& value,
-	Distance*, MSTL_ITERATOR_TRATIS_FROM__ random_access_iterator_tag) {
+	Distance*, std::random_access_iterator_tag) {
 	Distance len = last - first;
 	Distance half;
 	RandomAccessIterator middle;
@@ -806,7 +803,7 @@ inline ForwardIterator upper_bound(ForwardIterator first, ForwardIterator last, 
 
 template <class ForwardIterator, class T, class Compare, class Distance>
 ForwardIterator __upper_bound(ForwardIterator first, ForwardIterator last, const T& value, 
-	Compare comp, Distance*, MSTL_ITERATOR_TRATIS_FROM__ forward_iterator_tag) {
+	Compare comp, Distance*, std::forward_iterator_tag) {
 	Distance len = 0;
 	distance(first, last, len);
 	Distance half;
@@ -827,7 +824,7 @@ ForwardIterator __upper_bound(ForwardIterator first, ForwardIterator last, const
 }
 template <class RandomAccessIterator, class T, class Compare, class Distance>
 RandomAccessIterator __upper_bound(RandomAccessIterator first, RandomAccessIterator last,
-	const T& value, Compare comp, Distance*, MSTL_ITERATOR_TRATIS_FROM__ random_access_iterator_tag) {
+	const T& value, Compare comp, Distance*, std::random_access_iterator_tag) {
 	Distance len = last - first;
 	Distance half;
 	RandomAccessIterator middle;

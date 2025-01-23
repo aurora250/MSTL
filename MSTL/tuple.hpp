@@ -16,9 +16,9 @@ namespace std {
 	struct tuple_size<MSTL::tuple<Types...>> 
 		: integral_constant<size_t, sizeof...(Types)> {};  // size of MSTL tuple
 
+	// only for structured binding:
 	template<std::size_t N, typename Key, typename... ValueArgs>
 	struct tuple_element<N, MSTL::tuple<Key, ValueArgs...>>;
-
 	template<typename Key, typename... ValueArgs>
 	struct tuple_element<0, MSTL::tuple<Key, ValueArgs...>> {
 		using type = Key;

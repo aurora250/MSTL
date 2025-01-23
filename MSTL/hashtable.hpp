@@ -129,7 +129,7 @@ MSTL_NODISCARD bool operator !=(
     return !(lh == rh);
 }
 
-inline size_t hashtable_next_prime(size_t n) noexcept {
+MSTL_NODISCARD inline size_t hashtable_next_prime(size_t n) noexcept {
     const mathui_t* first = PRIME_LIST;
     const mathui_t* last = PRIME_LIST + PRIMER_COUNT__;
     const mathui_t* pos = lower_bound(first, last, n);
@@ -174,8 +174,15 @@ private:
 public:
     explicit hashtable(size_type n) 
         : hasher_(HashFcn()), equals_(EqualKey()), get_key_(ExtractKey()), size_(0) {}
-    hashtable(size_type n, const HashFcn& hf,
-        const EqualKey& eql, const ExtractKey& ext = ExtractKey())
+    hashtable(size_type n, const HashFcn& hf)
+        : hasher_(hf), equals_(EqualKey()), get_key_(ExtractKey()), size_(0) {
+        initialize_buckets(n);
+    }
+    hashtable(size_type n, const HashFcn& hf, const EqualKey& eql)
+        : hasher_(hf), equals_(eql), get_key_(ExtractKey()), size_(0) {
+        initialize_buckets(n);
+    }
+    hashtable(size_type n, const HashFcn& hf, const EqualKey& eql, const ExtractKey& ext)
         : hasher_(hf), equals_(eql), get_key_(ext), size_(0) {
         initialize_buckets(n);
     }
@@ -184,7 +191,7 @@ public:
         copy_from(ht);
     }
     self& operator =(const self& ht) {
-        if (ht != *this) return *this;
+        if (std::addressof(ht) != this) return *this;
         clear();
         hasher_ = ht.hasher_;
         equals_ = ht.equals_;
@@ -226,7 +233,8 @@ public:
 
     MSTL_NODISCARD const_iterator const_begin() const noexcept {
         for (size_type n = 0; n < buckets_.size(); ++n) {
-            if (buckets_[n]) return const_iterator(buckets_[n], this);
+            if (buckets_[n]) 
+                return const_iterator(buckets_[n], this);
         }
         return const_end();
     }
@@ -263,15 +271,21 @@ public:
         return result;
     }
 
-    template <typename T = value_type>
-    pair<iterator, bool> insert_unique(T&& x) {
+    pair<iterator, bool> insert_unique(const value_type& x) {
         resize(size_ + 1);
-        return insert_unique_noresize(std::forward<T>(x));
+        return insert_unique_noresize(x);
     }
-    template <typename T = value_type>
-    iterator insert_equal(T&& x) {
+    iterator insert_equal(const value_type& x) {
         resize(size_ + 1);
-        return insert_equal_noresize(std::forward<T>(x));
+        return insert_equal_noresize(x);
+    }
+    pair<iterator, bool> insert_unique(value_type&& x) {
+        resize(size_ + 1);
+        return insert_unique_noresize(std::forward<value_type>(x));
+    }
+    iterator insert_equal(value_type&& x) {
+        resize(size_ + 1);
+        return insert_equal_noresize(std::forward<value_type>(x));
     }
     template <typename T = value_type> 
     pair<iterator, bool> insert_unique_noresize(T&& x) {
@@ -347,7 +361,8 @@ public:
         size_type n = bkt_num(x);
         node_type* first = buckets_[n];
         for (node_type* cur = first; cur; cur = cur->next_) {
-            if (equals_(get_key_(cur->data_), get_key_(x))) return cur->data_;
+            if (equals_(get_key_(cur->data_), get_key_(x))) 
+                return cur->data_;
         }
         node_type* tmp = new_node(std::forward<T>(x));
         tmp->next_ = first;
@@ -372,8 +387,15 @@ public:
     }
 
     template <typename... Args>
-        requires(ConstructibleFrom<value_type, Args...>)
     pair<iterator, bool> emplace_unique(Args&&... args) {
+        return insert_unique_noresize(std::move(value_type(args...)));
+    }
+    template <typename... Args>
+    iterator emplace_equal(Args&&... args) {
+        return insert_equal_noresize(std::move(value_type(args...)));
+    }
+    template <typename... Args>
+    pair<iterator, bool> emplace_unique_pair(Args&&... args) {
         resize(size_ + 1);
         // structured binding
         auto [key, value_args] = MSTL::forward_as_tuple(std::forward<Args>(args)...);
@@ -397,24 +419,24 @@ public:
         ++size_;
         return pair<iterator, bool>(iterator(tmp, this), true);
     }
-
     template <typename... Args>
-        requires(ConstructibleFrom<value_type, Args...>)
-    iterator emplace_equal(Args&&... args) {
+    iterator emplace_equal_pair(Args&&... args) {
         resize(size_ + 1);
         auto [key, value_args] = MSTL::forward_as_tuple(std::forward<Args>(args)...);
         const size_type n = bkt_num_key(key, buckets_.size());
         node_type* first = buckets_[n];
         for (node_type* cur = first; cur; cur = cur->next_) {
             if (equals_(get_key_(cur->data_), key)) {
-                node_type* tmp = new_node(key, std::forward<decltype(value_args)>(value_args));
+                node_type* tmp = new_node(std::forward<decltype(key)>(key),
+                    std::forward<decltype(value_args)>(value_args));
                 tmp->next_ = cur->next_;
                 cur->next_ = tmp;
                 ++size_;
                 return iterator(tmp, this);
             }
         }
-        node_type* tmp = new_node(key, std::forward<decltype(value_args)>(value_args));
+        node_type* tmp = new_node(std::forward<decltype(key)>(key),
+            std::forward<decltype(value_args)>(value_args));
         tmp->next_ = first;
         buckets_[n] = tmp;
         ++size_;
@@ -542,11 +564,11 @@ public:
         if (new_size > old_size) {
             const size_type n = next_size(new_size);
             if (n > old_size) {
-                vector<node_type*> tmp(n, (node_type*)0);
+                vector<node_type*> tmp(n, nullptr);
                 MSTL_TRY__{
                     for (size_type bucket = 0; bucket < old_size; ++bucket) {
                         node_type* first = buckets_[bucket];
-                        while (first) {
+                        while (first != nullptr) {
                             size_type new_bucket = bkt_num(first->data_, n);
                             buckets_[bucket] = first->next_;
                             first->next_ = tmp[new_bucket];
@@ -558,7 +580,7 @@ public:
                 }
                 MSTL_CATCH_UNWIND__{
                     for (size_type bucket = 0; bucket < tmp.size(); ++bucket) {
-                        while (tmp[bucket]) {
+                        while (tmp[bucket] != nullptr) {
                             node_type* next = tmp[bucket]->next_;
                             delete_node(tmp[bucket]);
                             tmp[bucket] = next;
@@ -572,7 +594,7 @@ public:
     void clear() noexcept {
         for (size_type i = 0; i < buckets_.size(); ++i) {
             node_type* cur = buckets_[i];
-            while (cur != 0) {
+            while (cur != nullptr) {
                 node_type* next = cur->next_;
                 delete_node(cur);
                 cur = next; // stack like
@@ -589,7 +611,7 @@ private:
     void initialize_buckets(size_type n) {
         const size_type n_buckets = next_size(n);
         buckets_.reserve(n_buckets);
-        buckets_.insert(buckets_.end(), n_buckets, (node_type*)0);
+        buckets_.insert(buckets_.end(), n_buckets, nullptr);
         size_ = 0;
     }
     template <typename T = key_type>
@@ -610,18 +632,17 @@ private:
     }
 
     template <typename... Args>
-        requires(ConstructibleFrom<value_type, Args...>)
     node_type* new_node(Args&&... args) {
         node_type* n = alloc_.allocate();
         n->next_ = 0;
         MSTL_TRY__{
-        MSTL::construct(&n->data_, std::forward<decltype(args)>(args)...);
-        return n;
+            MSTL::construct(&n->data_, std::forward<decltype(args)>(args)...);
+            return n;
         }
         MSTL_CATCH_UNWIND__{
-        alloc_.deallocate(n);
-        MSTL_EXEC_MEMORY__;
-        return nullptr;
+            alloc_.deallocate(n);
+            MSTL_EXEC_MEMORY__;
+            return nullptr; // never run
         }
     }
     void delete_node(node_type* n) noexcept {
@@ -634,7 +655,7 @@ private:
         else {
             node_type* next;
             for (next = cur->next_; next != first; cur = next, next = cur->next_);
-            while (next) {
+            while (next != nullptr) {
                 cur->next_ = next->next_;
                 delete_node(next);
                 next = cur->next_;
@@ -654,25 +675,6 @@ private:
     }
 
     void copy_from(const hashtable& ht) {
-        buckets_.clear();
-        buckets_.reserve(ht.buckets_.size());
-        buckets_.insert(buckets_.end(), ht.buckets_.size(), (node_type*)0);
-        MSTL_TRY__{
-            for (size_type i = 0; i < ht.buckets_.size(); ++i) {
-                if (const node_type* cur = ht.buckets_[i]) {
-                    node_type* copy = new_node(cur->data_);
-                    buckets_[i] = copy;
-                    for (node_type* next = cur->next_; next; cur = next, next = cur->next_) {
-                        copy->next_ = new_node(next->data_);
-                        copy = copy->next_;
-                    }
-                }
-            }
-            size_ = ht.size_;
-        }
-        MSTL_CATCH_UNWIND_THROW_M__(clear());
-    }
-    void copy_from(hashtable&& ht) {
         buckets_.clear();
         buckets_.reserve(ht.buckets_.size());
         buckets_.insert(buckets_.end(), ht.buckets_.size(), (node_type*)0);
