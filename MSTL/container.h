@@ -10,28 +10,28 @@ MSTL_BEGIN_NAMESPACE__
 using namespace MSTL::concepts;
 
 template <typename Container> requires(Detailable<Container>)
-inline void __show_data_only(const Container& c, std::ostream& _out) {
+inline void show_data_only(const Container& c, std::ostream& _out) {
 	using const_iterator = typename Container::const_iterator;
 	size_t _band = c.size() - 1; size_t vl = 0;
 	_out << '[' << std::flush;
-	for (const_iterator iter = c.const_begin(); iter != c.const_end(); ++iter, ++vl) {
+	for (const_iterator iter = c.cbegin(); iter != c.cend(); ++iter, ++vl) {
 		_out << *iter << std::flush;
 		if (vl != _band) _out << ", " << std::flush;
 	}
 	_out << ']' << std::flush;
 }
 template <typename T1, typename T2> requires(Printable<T1> && Printable<T2>)
-inline void __show_data_only(const std::pair<T1, T2>& p, std::ostream& _out) {
+inline void show_data_only(const std::pair<T1, T2>& p, std::ostream& _out) {
 	_out << "{ " << p.first << ", " << p.second << " }";
 }
 
 template <typename Container> requires(Detailable<Container>)
 void detailof(const Container& c, std::ostream& _out = std::cout) {
 	split_line(_out);
-	_out << "type: " << check_type<Container>() << std::endl;
+	_out << "type: " << MSTL::check_type<Container>() << std::endl;
 	_out << "size: " << c.size() << std::endl;
 	_out << "data: " << std::flush;
-	__show_data_only(c, _out);
+	show_data_only(c, _out);
 	_out << std::endl;
 	split_line(_out);
 }

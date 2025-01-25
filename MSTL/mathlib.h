@@ -52,8 +52,13 @@ template <typename T>
 MSTL_CONSTEXPR T opposite(T x) noexcept {
 	return -x;
 }
+template <typename T>
+MSTL_CONSTEXPR decltype(auto) sum_n(T x) noexcept {
+	return x;
+}
 template <typename T, typename... Args>
-MSTL_CONSTEXPR T sum_n(T first, Args... args) noexcept {
+	requires(sizeof...(Args) > 0)
+MSTL_CONSTEXPR decltype(auto) sum_n(T first, Args... args) noexcept {
 	return first + sum_n(args...);
 }
 template <typename T> 
@@ -64,8 +69,24 @@ MSTL_CONSTEXPR T absolute(T x) noexcept {
 template <typename T> 
 	requires(Number<T>)
 inline mathd_t reciprocal(T x) {
-	if (x == 0) Exception(MathError("x cannot be zero"));
+	if (x == 0) Exception(ValueError("dividend cannot be zero"));
 	return mathd_t(1.0 / x);
+}
+
+template <typename T>
+	requires(Integral<T>)
+MSTL_CONSTEXPR T gcd(T m, T n) noexcept { // greatest common divisor
+	while (n != 0) {
+		T t = m % n;
+		m = n;
+		n = t;
+	}
+	return m;
+}
+template <typename T>
+	requires(Integral<T>)
+MSTL_CONSTEXPR T lcm(T m, T n) noexcept { // least common multiple
+	return MSTL::absolute(m * n) / MSTL::gcd(m, n);
 }
 
 template <typename T>
@@ -87,7 +108,7 @@ MSTL_CONSTEXPR mathl_t power(T x, mathui_t n) noexcept {
 }
 template <typename T>
 	requires (Float<T>)
-mathd_t MSTL_CONSTEXPR power(T x, mathui_t n) noexcept {
+MSTL_CONSTEXPR mathd_t power(T x, mathui_t n) noexcept {
 	if (n == 0) return mathd_t(1);
 	mathd_t result = 1.0;
 	T base = x;
@@ -200,9 +221,9 @@ MSTL_CONSTEXPR mathd_t truncate(mathd_t x, int bit) noexcept {
 
 inline bool around_multiple(
 	mathd_t x, mathd_t axis, mathd_t toler = constants::PRECISE_TOLERANCE) {
-	x = absolute(x);
 	axis = absolute(axis);
-	if (axis < constants::PRECISE_TOLERANCE) Exception(MathError("Axis Cannot be 0"));
+	if (axis < constants::PRECISE_TOLERANCE) Exception(ValueError("Axis Cannot be 0"));
+	x = absolute(x);
 	mathd_t multi = MSTL::round(x / axis, 0) * axis;
 	return absolute(x - multi) < toler;
 }
@@ -248,7 +269,7 @@ MSTL_CONSTEXPR mathd_t cosine(mathd_t x) noexcept {
 	return sine((constants::PI / 2.0) - x);
 }
 inline mathd_t tangent(mathd_t x) {
-	if (around_pi(x - constants::PI / 2.0)) Exception(MathError("Tangent Range Exceeded"));
+	if (around_pi(x - constants::PI / 2.0)) Exception(ValueError("Tangent Range Exceeded"));
 	return (sine(x) / cosine(x));
 }
 inline mathd_t cotangent(mathd_t x) {
@@ -256,7 +277,7 @@ inline mathd_t cotangent(mathd_t x) {
 }
 
 inline mathd_t arcsine(mathd_t x) {
-	if (x > 1 || x < -1) Exception(MathError("Arcsine Range Exceeded"));
+	if (x > 1 || x < -1) Exception(ValueError("Arcsine Range Exceeded"));
 	mathd_t y = x;
 	mathd_t tmp = x;
 	mathul_t N = 0;
@@ -268,7 +289,7 @@ inline mathd_t arcsine(mathd_t x) {
 }
 
 inline mathd_t arccosine(mathd_t x) {
-	if (x > 1 || x < -1) Exception(MathError("Arccosine Range Exceeded"));
+	if (x > 1 || x < -1) Exception(ValueError("Arccosine Range Exceeded"));
 	return constants::PI / 2.0 - arcsine(x);
 }
 MSTL_CONSTEXPR mathd_t arctangent_taylor(mathd_t x) noexcept {

@@ -1,16 +1,16 @@
 #ifndef MSTL_SORT_HPP__
 #define MSTL_SORT_HPP__
-#include "basiclib.h"
 #include "algobase.hpp"
 #include "heap.hpp"
 #include "iterator.hpp"
 #include "concepts.hpp"
 #include "tempbuf.hpp"
 MSTL_BEGIN_NAMESPACE__
+MSTL_CONCEPTS__
 
 // bubble sort
 template <typename Iterator> 
-    requires(concepts::BidirectionalIterator<Iterator>)
+    requires(BidirectionalIterator<Iterator>)
 void bubble_sort(Iterator begin, Iterator end) {
     auto reverse_end = std::make_reverse_iterator(begin);
     auto reverse_start = std::make_reverse_iterator(--end);
@@ -30,7 +30,7 @@ void bubble_sort(Iterator begin, Iterator end) {
 
 // select sort
 template <typename Iterator> 
-    requires(concepts::ForwardIterator<Iterator>)
+    requires(ForwardIterator<Iterator>)
 void select_sort(Iterator begin, Iterator end) {
     Iterator min;
     for (Iterator i = begin; i != end; ++i) {
@@ -46,7 +46,7 @@ void select_sort(Iterator begin, Iterator end) {
 
 // shell sort
 template <typename Iterator> 
-    requires(concepts::RandomAccessIterator<Iterator>)
+    requires(RandomAccessIterator<Iterator>)
 void shell_sort(Iterator start, Iterator end) {
     auto dist = MSTL::distance(start, end);
     for (auto gap = dist / 2; gap > 0; gap /= 2) {

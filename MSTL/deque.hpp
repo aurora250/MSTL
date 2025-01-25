@@ -406,11 +406,11 @@ public:
     }
 
     explicit deque(const self& x) 
-        : deque(x.const_begin(), x.const_end()) {}
+        : deque(x.cbegin(), x.cend()) {}
     self& operator =(const self& x) {
         if (*this == x) return *this;
         clear();
-        insert(end(), x.const_begin(), x.const_end());
+        insert(end(), x.cbegin(), x.cend());
         return *this;
     }
 
@@ -434,9 +434,9 @@ public:
     }
 
     MSTL_NODISCARD iterator begin() noexcept { return iterator(start_); }
-    MSTL_NODISCARD const_iterator const_begin() const noexcept { return const_iterator(start_); }
+    MSTL_NODISCARD const_iterator cbegin() const noexcept { return const_iterator(start_); }
     MSTL_NODISCARD iterator end() noexcept { return iterator(finish_); }
-    MSTL_NODISCARD const_iterator const_end() const noexcept { return const_iterator(finish_); }
+    MSTL_NODISCARD const_iterator cend() const noexcept { return const_iterator(finish_); }
 
     MSTL_NODISCARD reference front() noexcept { return *start_; }
     MSTL_NODISCARD const_reference front() const noexcept { return *start_; }

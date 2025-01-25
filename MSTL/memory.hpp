@@ -6,11 +6,11 @@
 MSTL_BEGIN_NAMESPACE__
 MSTL_CONCEPTS__
 
-template <typename T, typename Alloc = std::allocator<T>>
+template <typename T>
 class default_standard_alloc {
 private:
-    typedef Alloc data_allocator;
-    data_allocator alloc;
+    typedef std::allocator<T> alloc_type;
+    alloc_type alloc;
 public:
     typedef T           value_type;
     typedef T*          pointer;

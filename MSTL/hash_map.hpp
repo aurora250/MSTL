@@ -9,7 +9,7 @@ MSTL_CONCEPTS__
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
     class Alloc = default_standard_alloc<__hashtable_node<pair<const Key, T>>>>
-    requires(HashFunction<HashFcn, Key> && BinaryFunction<EqualKey> && DefaultConstructible<T>)
+    requires(HashFunction<HashFcn, Key> && BinaryFunction<EqualKey>)
 class hash_map {
 private:
     typedef hashtable<pair<const Key, T>, Key, HashFcn, 
@@ -35,9 +35,6 @@ public:
     typedef typename ht::const_iterator const_iterator;
     typedef hash_map<Key, T, HashFcn, EqualKey, Alloc> self;
 
-    hasher hash_funct() const noexcept(noexcept(rep.hash_func())) { return rep.hash_func(); }
-    key_equal key_eq() const noexcept(noexcept(rep.key_eql())) { return rep.key_eql(); }
-
     hash_map() : rep(10, hasher(), key_equal()) {}
 
     explicit hash_map(size_type n) : rep(n) {}
@@ -46,11 +43,13 @@ public:
 
     hash_map(const self& ht) : rep(ht.rep) {}
     self& operator =(const self& x) {
-        return (rep = x.rep);
+        rep = x.rep;
+        return *this;
     }
     hash_map(self&& x) noexcept(noexcept(rep.swap(x.rep))) : rep(std::forward<ht>(x.rep)) {}
     self& operator =(self&& x) noexcept(noexcept(rep.swap(x.rep))) {
-        return (rep = std::forward<ht>(x.rep));
+        rep = std::forward<self>(x.rep);
+        return *this;
     }
 
     template <class Iterator>
@@ -88,12 +87,17 @@ public:
 
     MSTL_NODISCARD iterator begin() noexcept { return rep.begin(); }
     MSTL_NODISCARD iterator end() noexcept { return rep.end(); }
-    MSTL_NODISCARD const_iterator const_begin() const noexcept { return rep.const_begin(); }
-    MSTL_NODISCARD const_iterator const_end() const noexcept { return rep.const_end(); }
+    MSTL_NODISCARD const_iterator cbegin() const noexcept { return rep.cbegin(); }
+    MSTL_NODISCARD const_iterator cend() const noexcept { return rep.cend(); }
 
-    template <typename T = value_type>
-    pair<iterator, bool> insert(T&& obj) { 
-        return rep.insert_unique(std::forward<T>(obj));
+    hasher hash_funct() const noexcept(noexcept(rep.hash_func())) { return rep.hash_func(); }
+    key_equal key_eq() const noexcept(noexcept(rep.key_eql())) { return rep.key_eql(); }
+
+    pair<iterator, bool> insert(const value_type& obj) {
+        return rep.insert_unique(obj);
+    }
+    pair<iterator, bool> insert(value_type&& obj) { 
+        return rep.insert_unique(std::forward<value_type>(obj));
     }
     template<typename... Args>
     void emplace(Args&&... args) {
@@ -120,7 +124,7 @@ public:
     }
     MSTL_NODISCARD const T& at(const key_type& key) const {
         auto iter = rep.find(key);
-        Exception(iter != const_end(), StopIterator());
+        Exception(iter != cend(), StopIterator());
         return iter->second;
     }
 
@@ -213,8 +217,8 @@ public:
     void swap(hash_multimap& hs) { rep.swap(hs.rep); }
     iterator begin() { return rep.begin(); }
     iterator end() { return rep.end(); }
-    const_iterator const_begin() const { return rep.const_begin(); }
-    const_iterator const_end() const { return rep.const_end(); }
+    const_iterator cbegin() const { return rep.cbegin(); }
+    const_iterator cend() const { return rep.cend(); }
     friend bool operator ==(const hash_multimap&, const hash_multimap&);
 
     template<typename... Args>

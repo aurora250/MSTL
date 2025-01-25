@@ -3,9 +3,12 @@
 #include "basiclib.h"
 #include "iterator.hpp"
 MSTL_BEGIN_NAMESPACE__
+MSTL_CONCEPTS__
 
-template <typename RandomAccessIterator, typename Distance, typename T>
-void __push_heap(RandomAccessIterator first, Distance hole_index, Distance top_index, T value) {
+// push heap
+template <typename Iterator, typename Distance, typename T>
+	requires(RandomAccessIterator<Iterator>)
+void push_heap_aux(Iterator first, Distance hole_index, Distance top_index, T value) {
 	Distance parent = (hole_index - 1) / 2;
 	while (hole_index > top_index && *(first + parent) < value) {
 		*(first + hole_index) = *(first + parent);
@@ -14,37 +17,37 @@ void __push_heap(RandomAccessIterator first, Distance hole_index, Distance top_i
 	}
 	*(first + hole_index) = value;
 }
-template <typename RandomAccessIterator, typename Distance, typename T>
-inline void __push_heap_aux(RandomAccessIterator first, RandomAccessIterator last, Distance*, T*) {
-	__push_heap(first, Distance((last - first) - 1), Distance(0), T(*(last - 1)));
+
+template <typename Iterator>
+	requires(RandomAccessIterator<Iterator>)
+inline void push_heap(Iterator first, Iterator last) {
+	using Distance = std::iterator_traits<Iterator>::difference_type;
+	MSTL::push_heap_aux(first, Distance((last - first) - 1), Distance(0), *(last - 1));
 }
-template <typename RandomAccessIterator>
-inline void push_heap(RandomAccessIterator first, RandomAccessIterator last) {
-	__push_heap_aux(first, last, (distance_type)(first), (value_type)(first));
-}
-template <typename RandomAccessIterator, typename Distance, typename T, typename Compare>
-void __push_heap(RandomAccessIterator first, Distance holeIndex,
-	Distance topIndex, T value, Compare comp) {
-	Distance parent = (holeIndex - 1) / 2;
-	while (holeIndex > topIndex && comp(*(first + parent), value)) {
-		*(first + holeIndex) = *(first + parent);
-		holeIndex = parent;
-		parent = (holeIndex - 1) / 2;
+
+template <typename Iterator, typename Distance, typename T, typename Compare>
+	requires(RandomAccessIterator<Iterator>)
+void push_heap_aux(Iterator first, Distance hole_index, Distance top_index, T value, Compare comp) {
+	Distance parent = (hole_index - 1) / 2;
+	while (hole_index > top_index && comp(*(first + parent), value)) {
+		*(first + hole_index) = *(first + parent);
+		hole_index = parent;
+		parent = (hole_index - 1) / 2;
 	}
-	*(first + holeIndex) = value;
+	*(first + hole_index) = value;
 }
-template <typename RandomAccessIterator, typename Compare, typename Distance, typename T>
-inline void __push_heap_aux(RandomAccessIterator first, RandomAccessIterator last, 
-	Compare comp, Distance*, T*) {
-	__push_heap(first, Distance((last - first) - 1), Distance(0), T(*(last - 1)), comp);
+
+template <typename Iterator, typename Compare>
+	requires(RandomAccessIterator<Iterator>)
+inline void push_heap(Iterator first, Iterator last, Compare comp) {
+	using Distance = std::iterator_traits<Iterator>::difference_type;
+	using T = std::iterator_traits<Iterator>::value_type;
+	MSTL::push_heap_aux(first, Distance((last - first) - 1), Distance(0), *(last - 1), comp);
 }
-template <typename RandomAccessIterator, typename Compare>
-inline void push_heap(RandomAccessIterator first, RandomAccessIterator last,
-	Compare comp) {
-	__push_heap_aux(first, last, comp, (distance_type)(first), (value_type)(first));
-}
-template <typename RandomAccessIterator, typename Distance, typename T>
-void __adjust_heap(RandomAccessIterator first, Distance hole_index, Distance len, T value) {
+// adjust heap
+template <typename Iterator, typename Distance, typename T>
+	requires(RandomAccessIterator<Iterator>)
+void adjust_heap(Iterator first, Distance hole_index, Distance len, T value) {
 	Distance top_index = hole_index;
 	Distance second_child = 2 * hole_index + 2;
 	while (second_child < len) {
@@ -57,24 +60,12 @@ void __adjust_heap(RandomAccessIterator first, Distance hole_index, Distance len
 		*(first + hole_index) = *(first + (second_child - 1));
 		hole_index = second_child - 1;
 	}
-	__push_heap(first, hole_index, top_index, value);
+	MSTL::push_heap_aux(first, hole_index, top_index, value);
 }
-template <typename RandomAccessIterator, typename Distance, typename T>
-inline void __pop_heap(RandomAccessIterator first, RandomAccessIterator last,
-	RandomAccessIterator result, T value, Distance*) {
-	*result = *first;
-	__adjust_heap(first, Distance(0), Distance(last - first), value);
-}
-template <typename RandomAccessIterator, typename T>
-inline void __pop_heap_aux(RandomAccessIterator first, RandomAccessIterator last, T*) {
-	__pop_heap(first, last - 1, last - 1, T(*(last - 1)), (distance_type)(first));
-}
-template <typename RandomAccessIterator>
-inline void pop_heap(RandomAccessIterator first, RandomAccessIterator last) {
-	__pop_heap_aux(first, last, (value_type)(first));
-}
-template <typename RandomAccessIterator, typename Distance, typename T, typename Compare>
-void __adjust_heap(RandomAccessIterator first, Distance holeIndex, Distance len, T value, Compare comp) {
+
+template <typename Iterator, typename Distance, typename T, typename Compare>
+	requires(RandomAccessIterator<Iterator>)
+void adjust_heap(Iterator first, Distance holeIndex, Distance len, T value, Compare comp) {
 	Distance topIndex = holeIndex;
 	Distance secondChild = 2 * holeIndex + 2;
 	while (secondChild < len) {
@@ -88,62 +79,67 @@ void __adjust_heap(RandomAccessIterator first, Distance holeIndex, Distance len,
 		*(first + holeIndex) = *(first + (secondChild - 1));
 		holeIndex = secondChild - 1;
 	}
-	__push_heap(first, holeIndex, topIndex, value, comp);
+	MSTL::push_heap_aux(first, holeIndex, topIndex, value, comp);
 }
-template <typename RandomAccessIterator, typename T, typename Compare, typename Distance>
-inline void __pop_heap(RandomAccessIterator first, RandomAccessIterator last,
-	RandomAccessIterator result, T value, Compare comp, Distance*) {
-	*result = *first;
-	__adjust_heap(first, Distance(0), Distance(last - first), value, comp);
+// pop heap
+template <typename Iterator>
+	requires(RandomAccessIterator<Iterator>)
+void pop_heap(Iterator first, Iterator last) {
+	using Distance = std::iterator_traits<Iterator>::difference_type;
+	--last;
+	*last = *first;
+	MSTL::adjust_heap(first, Distance(0), Distance(last - first), *last);
 }
-template <typename RandomAccessIterator, typename T, typename Compare>
-inline void __pop_heap_aux(RandomAccessIterator first, RandomAccessIterator last, T*, Compare comp) {
-	__pop_heap(first, last - 1, last - 1, T(*(last - 1)), comp, (distance_type)(first));
+
+template <typename Iterator, typename Compare>
+	requires(RandomAccessIterator<Iterator>)
+void pop_heap(Iterator first, Iterator last, Compare comp) {
+	using Distance = std::iterator_traits<Iterator>::difference_type;
+	--last;
+	*last = *first;
+	MSTL::adjust_heap(first, Distance(0), Distance(last - first), *last, comp);
 }
-template <typename RandomAccessIterator, typename Compare>
-inline void pop_heap(RandomAccessIterator first, RandomAccessIterator last,
-	Compare comp) {
-	__pop_heap_aux(first, last, (value_type)(first), comp);
+// sort heap
+template <typename Iterator>
+	requires(RandomAccessIterator<Iterator>)
+void sort_heap(Iterator first, Iterator last) {
+	while (last - first > 1) 
+		MSTL::pop_heap(first, last--);
 }
-template <typename RandomAccessIterator>
-void sort_heap(RandomAccessIterator first, RandomAccessIterator last) {
-	while (last - first > 1) MSTL::pop_heap(first, last--);
+
+template <typename Iterator, typename Compare>
+	requires(RandomAccessIterator<Iterator>)
+void sort_heap(Iterator first, Iterator last, Compare comp) {
+	while (last - first > 1)
+		MSTL::pop_heap(first, last--, comp);
 }
-template <typename RandomAccessIterator, typename Compare>
-void sort_heap(RandomAccessIterator first, RandomAccessIterator last,
-	Compare comp) {
-	while (last - first > 1) MSTL::pop_heap(first, last--, comp);
-}
-template <typename RandomAccessIterator, typename Distance, typename T>
-void __make_heap(RandomAccessIterator first, RandomAccessIterator last, T*, Distance*) {
-	if (last - first < 2)return;
+// make heap
+template <typename Iterator>
+	requires(RandomAccessIterator<Iterator>)
+void make_heap(Iterator first, Iterator last) {
+	if (last - first < 2) return;
+	using Distance = std::iterator_traits<Iterator>::difference_type;
 	Distance len = last - first;
 	Distance parent = (len - 2) / 2;
 	while (true) {
-		__adjust_heap(first, parent, len, T(*(first + parent)));
+		MSTL::adjust_heap(first, parent, len, *(first + parent));
 		if (parent == 0) return;
 		--parent;
 	}
 }
-template <typename RandomAccessIterator>
-inline void make_heap(RandomAccessIterator first, RandomAccessIterator last) {
-	__make_heap(first, last, (value_type)(first), (distance_type)(last));
-}
-template <typename RandomAccessIterator, typename Compare, typename T, typename Distance>
-void __make_heap(RandomAccessIterator first, RandomAccessIterator last, Compare comp, T*, Distance*) {
+
+template <typename Iterator, typename Compare>
+	requires(RandomAccessIterator<Iterator>)
+void make_heap(Iterator first, Iterator last, Compare comp) {
 	if (last - first < 2) return;
+	using Distance = std::iterator_traits<Iterator>::difference_type;
 	Distance len = last - first;
 	Distance parent = (len - 2) / 2;
 	while (true) {
-		__adjust_heap(first, parent, len, T(*(first + parent)), comp);
+		MSTL::adjust_heap(first, parent, len, *(first + parent), comp);
 		if (parent == 0) return;
-		parent--;
+		--parent;
 	}
-}
-template <typename RandomAccessIterator, typename Compare>
-inline void make_heap(RandomAccessIterator first, RandomAccessIterator last,
-	Compare comp) {
-	__make_heap(first, last, comp, (value_type)(first), (distance_type)(first));
 }
 
 MSTL_END_NAMESPACE__

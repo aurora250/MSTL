@@ -75,8 +75,8 @@ public:
 
 	MSTL_NODISCARD iterator begin() noexcept { return t.begin(); }
 	MSTL_NODISCARD iterator end() noexcept { return t.end(); }
-	MSTL_NODISCARD const_iterator const_begin() const noexcept { return t.const_begin(); }
-	MSTL_NODISCARD const_iterator const_end() const noexcept { return t.const_end(); }
+	MSTL_NODISCARD const_iterator cbegin() const noexcept { return t.cbegin(); }
+	MSTL_NODISCARD const_iterator cend() const noexcept { return t.cend(); }
 	MSTL_NODISCARD bool empty() const noexcept { return t.empty(); }
 	MSTL_NODISCARD size_type size() const noexcept { return t.size(); }
 	MSTL_NODISCARD key_compare key_comp() const noexcept { return t.key_comp(); }

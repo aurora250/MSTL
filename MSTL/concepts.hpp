@@ -173,8 +173,8 @@ namespace concepts {
 
 	template <typename T>
 	concept Detailable = NPointer<T> && requires(const T& c) {
-		{ c.const_begin() } -> std::convertible_to<typename T::const_iterator>;
-		{ c.const_end() } -> std::convertible_to<typename T::const_iterator>;
+		{ c.cbegin() } -> std::convertible_to<typename T::const_iterator>;
+		{ c.cend() } -> std::convertible_to<typename T::const_iterator>;
 		{ c.size() } -> std::convertible_to<size_t>;
 			requires Printable<typename std::iterator_traits<typename T::const_iterator>::value_type>;
 	};
@@ -186,7 +186,6 @@ namespace concepts {
 		{ it1++ } -> std::same_as<Iterator>;
 		{ it1 != it2 } -> std::convertible_to<bool>;
 		{ it1 == it2 } -> std::convertible_to<bool>;
-		//{ it1 == it1 } -> std::convertible_to<bool>;
 	};
 	template<typename Iterator>
 	concept ForwardIterator = InputIterator<Iterator> && requires(Iterator it1, Iterator it2) {

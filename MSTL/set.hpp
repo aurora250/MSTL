@@ -51,8 +51,8 @@ public:
 
 	iterator begin() { return rep_.begin(); }
 	iterator end() { return rep_.end(); }
-	const_iterator const_begin() const { return rep_.const_begin(); }
-	const_iterator const_end() const { return rep_.const_end(); }
+	const_iterator cbegin() const { return rep_.cbegin(); }
+	const_iterator cend() const { return rep_.cend(); }
 	bool empty() const { return rep_.empty(); }
 	size_type size() const { return rep_.size(); }
 	bool same_to(const self& rh) { return this->rep_ == rh.rep_; }

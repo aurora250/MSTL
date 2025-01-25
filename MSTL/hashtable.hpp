@@ -231,14 +231,14 @@ public:
     }
     MSTL_NODISCARD iterator end() noexcept { return iterator(nullptr, this); }
 
-    MSTL_NODISCARD const_iterator const_begin() const noexcept {
+    MSTL_NODISCARD const_iterator cbegin() const noexcept {
         for (size_type n = 0; n < buckets_.size(); ++n) {
             if (buckets_[n]) 
                 return const_iterator(buckets_[n], this);
         }
-        return const_end();
+        return cend();
     }
-    MSTL_NODISCARD const_iterator const_end() const noexcept {
+    MSTL_NODISCARD const_iterator cend() const noexcept {
         return const_iterator(nullptr, this);
     }
 

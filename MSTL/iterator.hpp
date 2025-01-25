@@ -27,12 +27,12 @@ value_type(const Iterator&) {
 }
 
 template <typename Iterator, typename Distance>
-    requires(InputIterator<Iterator> && Number<Distance>)
+    requires(InputIterator<Iterator>)
 MSTL_CONSTEXPR void advance(Iterator& i, Distance n) {
     while (n--) ++i;
 }
 template <typename Iterator, typename Distance>
-    requires(BidirectionalIterator<Iterator> && Number<Distance>)
+    requires(BidirectionalIterator<Iterator>)
 MSTL_CONSTEXPR void advance(Iterator& i, Distance n) {
     if (n >= 0)
         while (n--) ++i;
@@ -40,21 +40,11 @@ MSTL_CONSTEXPR void advance(Iterator& i, Distance n) {
         while (n++) --i;
 }
 template <typename Iterator, typename Distance>
-    requires(RandomAccessIterator<Iterator> && Number<Distance>)
+    requires(RandomAccessIterator<Iterator>)
 MSTL_CONSTEXPR void advance(Iterator& i, Distance n) {
     i += n;
 }
 
-template <typename Iterator, typename Distance>
-    requires(InputIterator<Iterator> && Number<Distance>)
-MSTL_CONSTEXPR void distance(Iterator first, Iterator last, Distance& n) {
-    while (first != last) { ++first; ++n; }
-}
-template <typename Iterator, typename Distance>
-    requires(RandomAccessIterator<Iterator> && Number<Distance>)
-MSTL_CONSTEXPR void distance(Iterator first, Iterator last, Distance& n) {
-    n += last - first;
-}
 template <typename Iterator>
     requires(InputIterator<Iterator>)
 MSTL_CONSTEXPR typename std::iterator_traits<Iterator>::difference_type

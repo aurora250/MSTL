@@ -2,7 +2,7 @@
 #define MSTL_THREADSAFE_PRINT_H__
 #include "basiclib.h"
 #include "queue.hpp"
-#include <iostream>
+#include "check_type.h"
 #include <shared_mutex>
 #include <string>
 #include <thread>
@@ -112,11 +112,11 @@ void split_line(Output& _out, size_t _size = MSTL_SPLIT_LENGTH);
 
 template <typename Container>
     requires(Detailable<Container>)
-inline void __show_data_only(const Container& c, Output& _out) {
+inline void show_data_only(const Container& c, Output& _out) {
     using const_iterator = typename Container::const_iterator;
     size_t _band = c.size() - 1; size_t vl = 0;
     _out << '[';
-    for (const_iterator iter = c.const_begin(); iter != c.const_end(); ++iter, ++vl) {
+    for (const_iterator iter = c.cbegin(); iter != c.cend(); ++iter, ++vl) {
         _out << *iter;
         if (vl != _band) _out << ", ";
     }
@@ -124,7 +124,7 @@ inline void __show_data_only(const Container& c, Output& _out) {
 }
 template <typename T1, typename T2> 
     requires (Printable<T1> && Printable<T2>)
-inline void __show_data_only(const std::pair<T1, T2>& p, Output& _out) {
+inline void show_data_only(const std::pair<T1, T2>& p, Output& _out) {
     _out << "{ " << p.first << ", " << p.second << " }";
 }
 template <typename Container> 
@@ -132,10 +132,10 @@ template <typename Container>
 void detailof_safe(const Container& c, ThreadsafeOutput& out = sout) {
     Output _out;
     split_line(_out);
-    _out << "type: " << check_type<Container>() << endl;
+    _out << "type: " << MSTL::check_type<Container>() << endl;
     _out << "size: " << c.size() << endl;
     _out << "data: ";
-    __show_data_only(c, _out);
+    show_data_only(c, _out);
     _out << endl;
     split_line(_out);
     out << _out;

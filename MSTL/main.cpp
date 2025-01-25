@@ -176,12 +176,12 @@ void try_vec() {
         MSTL_CATCH_ERROR_UNUSE__{
             std::cout << "err" << std::endl;
         }
-        v.insert(v.end(), v2.const_begin(), v2.const_end());
+        v.insert(v.end(), v2.cbegin(), v2.cend());
         detailof(v);
         v.pop_back();
         v.clear();
         std::cout << v.empty() << std::endl;
-        v.insert(v.end(), v2.const_begin(), v2.const_end());
+        v.insert(v.end(), v2.cbegin(), v2.cend());
         detailof(v);
         FOR_EACH(it, v2) {
             std::cout << *it << std::endl;
@@ -200,12 +200,13 @@ void try_vec() {
 }
 void try_pque() {
     MSTL_NAMESPACE__;
-    priority_queue<int*> q;
-    int val = 3;
+    priority_queue<int> q;
     std::cout << typeid(priority_queue<int*>).name() << std::endl;
-    q.push(&val);
-    q.push(&++++val);
+    q.push(6); q.push(9); q.push(1); q.push(5);
+    q.push(8); q.push(4); q.push(7);
+    detailof(q);
     q.pop();
+    detailof(q);
 }
 void try_map() {
     MSTL_NAMESPACE__;
@@ -280,6 +281,12 @@ void try_math() {
     std::cout << arccosine(0.62) << std::endl;
     //std::cout << tangent(PI / 2) << std::endl;  // MathError
     std::cout << around_pi(constants::PI * 2 + 0.00000001) << " : " << around_pi(6.28) << std::endl;
+    sout << sum_n(1, 2, 3, 4, 5) << endl << gcd(5, 10) << endl << lcm(10, 25) << endl;
+    int a = 2, b = 3;
+    int* p1 = &a;
+    int* p2 = &b;
+    iter_swap(p1, p2);
+    sout << *p1 << ' ' << *p2 << endl;
 }
 void try_sql() {
     MSTL_NAMESPACE__;
@@ -361,10 +368,10 @@ void try_avl() {
         std::cout << *it << std::endl;
     }
 }
-void try_graph() {
+void try_json() {
     MSTL_NAMESPACE__;
-    //adjacency_list graph;
+    
 }
 int main() {
-    try_lls();
+    try_pque();
 }

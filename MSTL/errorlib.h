@@ -55,13 +55,6 @@ struct ValueError : public Error {   // 函数的参数非法
 	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(ValueError);
 };
 
-struct MathError : public Error {   // 数学错误
-	typedef MathError self;
-	MSTL_CONSTEXPR explicit MathError(cstring_t _info = "Math Operation Failure!") noexcept
-		: Error(_info, __type__) {}
-	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(MathError);
-};
-
 inline void __show_data_only(const Error& e, std::ostream& _out) {
 	_out << "Exception : (" << e._type << ") " << e._info << std::flush;
 }

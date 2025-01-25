@@ -83,7 +83,7 @@ void detailof(const queue<T, Sequence>& pq, std::ostream& _out = std::cout) {
     _out << "type: " << check_type<queue<T, Sequence>>() << std::endl;
     _out << "size: " << pq.size() << std::endl;
     _out << "data: " << std::flush;
-    __show_data_only(pq.seq_, _out);
+    show_data_only(pq.seq_, _out);
     _out << std::endl;
     split_line(_out);
 }
@@ -121,27 +121,27 @@ public:
     template <typename Iterator>
         requires(InputIterator<Iterator>)
     priority_queue(Iterator first, Iterator last) : seq_(first, last) {
-        make_heap(seq_.begin(), seq_.end(), comp_);
+        MSTL::make_heap(seq_.begin(), seq_.end(), comp_);
     }
     template <typename Iterator>
         requires(InputIterator<Iterator>)
     priority_queue(Iterator first, Iterator last, const Compare& x) :
         seq_(first, last), comp_(x) {
-        make_heap(seq_.begin(), seq_.end(), comp_);
+        MSTL::make_heap(seq_.begin(), seq_.end(), comp_);
     }
     template <typename Iterator>
         requires(InputIterator<Iterator>)
     priority_queue(Iterator first, Iterator last, const Compare& c, const Sequence& s) :
         seq_(s), comp_(c) {
         seq_.insert(seq_.end(), first, last);
-        make_heap(seq_.begin(), seq_.end(), comp_);
+        MSTL::make_heap(seq_.begin(), seq_.end(), comp_);
     }
     template <typename Iterator>
         requires(InputIterator<Iterator>)
     priority_queue(Iterator first, Iterator last, const Compare& c, Sequence&& s) :
         seq_(std::move(s)), comp_(c) {
         seq_.insert(seq_.end(), first, last);
-        make_heap(seq_.begin(), seq_.end(), comp_);
+        MSTL::make_heap(seq_.begin(), seq_.end(), comp_);
     }
 
     MSTL_NODISCARD bool empty() const noexcept(noexcept(seq_.empty())) { return seq_.empty(); }
@@ -151,13 +151,13 @@ public:
     void push(T&& x) {
         MSTL_TRY__{
             seq_.push_back(std::forward<T>(x));
-            push_heap(seq_.begin(), seq_.end(), comp_);
+        MSTL::push_heap(seq_.begin(), seq_.end(), comp_);
         }
         MSTL_CATCH_UNWIND_THROW_M__(seq_.clear());
     }
     void pop() {
         MSTL_TRY__{
-            pop_heap(seq_.begin(), seq_.end(), comp_);
+            MSTL::pop_heap(seq_.begin(), seq_.end(), comp_);
             seq_.pop_back();
         }
         MSTL_CATCH_UNWIND_THROW_M__(seq_.clear());
@@ -180,7 +180,7 @@ void detailof(const priority_queue<T, Sequence, Compare>& pq, std::ostream& _out
     _out << "type: " << check_type<priority_queue<T, Sequence, Compare>>() << std::endl;
     _out << "size: " << pq.size() << std::endl;
     _out << "data: " << std::flush;
-    __show_data_only(pq.seq_, _out);
+    show_data_only(pq.seq_, _out);
     _out << std::endl;
     split_line(_out);
 }

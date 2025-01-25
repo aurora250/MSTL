@@ -174,7 +174,7 @@ public:
         }
         return *this;
     }
-    list(const self& x) : list(x.const_begin(), x.const_end()) {}
+    list(const self& x) : list(x.cbegin(), x.cend()) {}
     self& operator =(const self& x) {
         if (std::addressof(x) == this) return *this;
         clear();
@@ -215,9 +215,9 @@ public:
     }
 
     MSTL_NODISCARD iterator begin() noexcept { return this->node_->next_; }
-    MSTL_NODISCARD const_iterator const_begin() const noexcept { return this->node_->next_; }
+    MSTL_NODISCARD const_iterator cbegin() const noexcept { return this->node_->next_; }
     MSTL_NODISCARD iterator end() noexcept { return this->node_; }
-    MSTL_NODISCARD const_iterator const_end() const noexcept { return this->node_; }
+    MSTL_NODISCARD const_iterator cend() const noexcept { return this->node_; }
 
     MSTL_NODISCARD size_type size() const noexcept { return size_; }
     MSTL_NODISCARD bool empty() const noexcept {
@@ -403,7 +403,7 @@ public:
 
     const_reference at(size_type _pos) const {
         this->range_check(_pos);
-        const_iterator iter = const_begin();
+        const_iterator iter = cbegin();
         while (_pos--) iter++;
         return iter.node_->data_;
     }
@@ -425,7 +425,7 @@ void swap(list<T, Alloc>& lh, list<T, Alloc>& rh) noexcept {
 }
 template <class T, class Alloc>
 MSTL_NODISCARD bool operator ==(const list<T, Alloc>& lh, const list<T, Alloc>& rh) noexcept {
-    return lh.size() == rh.size() && MSTL::equal(lh.const_begin(), lh.const_end(), rh.const_begin());
+    return lh.size() == rh.size() && MSTL::equal(lh.cbegin(), lh.cend(), rh.cbegin());
 }
 template <class T, class Alloc>
 MSTL_NODISCARD bool operator !=(const list<T, Alloc>& lh, const list<T, Alloc>& rh) noexcept {
@@ -434,7 +434,7 @@ MSTL_NODISCARD bool operator !=(const list<T, Alloc>& lh, const list<T, Alloc>& 
 template <class T, class Alloc>
 MSTL_NODISCARD bool operator <(const list<T, Alloc>& lh, const list<T, Alloc>& rh) noexcept {
     return MSTL::lexicographical_compare(
-        lh.const_begin(), lh.const_end(), rh.const_begin(), rh.const_end());
+        lh.cbegin(), lh.cend(), rh.cbegin(), rh.cend());
 }
 template <class T, class Alloc>
 MSTL_NODISCARD bool operator >(const list<T, Alloc>& lh, const list<T, Alloc>& rh) noexcept {

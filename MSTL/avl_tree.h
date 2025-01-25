@@ -164,14 +164,14 @@ public:
 	iterator end() {
 		return iterator(header_);
 	}
-	const_iterator const_begin() const {
+	const_iterator cbegin() const {
 		base_ptr b = header_->parent_;
 		while (b->left_ != nullptr) {
 			b = b->left_;
 		}
 		return const_iterator(link_type(b));
 	}
-	const_iterator const_end() const {
+	const_iterator cend() const {
 		return const_iterator(header_);
 	}
 	iterator rbegin() {
@@ -446,12 +446,12 @@ private:
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 inline bool operator ==(const avl_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
 	const avl_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) {
-	return x.size() == y.size() && MSTL::equal(x.const_begin(), x.const_end(), y.const_begin());
+	return x.size() == y.size() && MSTL::equal(x.cbegin(), x.cend(), y.cbegin());
 }
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 inline bool operator <(const avl_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
 	const avl_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) {
-	return MSTL::lexicographical_compare(x.const_begin(), x.const_end(), y.const_begin(), y.const_end());
+	return MSTL::lexicographical_compare(x.cbegin(), x.cend(), y.cbegin(), y.cend());
 }
 
 MSTL_END_NAMESPACE__

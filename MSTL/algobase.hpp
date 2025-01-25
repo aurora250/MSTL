@@ -1,7 +1,6 @@
 #ifndef MSTL_ALGOBASE_HPP__
 #define MSTL_ALGOBASE_HPP__
 #include "iterator.hpp"
-#include "basiclib.h"
 #include "pair.hpp"
 #include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
@@ -27,36 +26,31 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool equal(Iterator1 first1, Iterator1 last1,
 
 template <typename Iterator, typename T>
 	requires(ForwardIterator<Iterator>)
-MSTL_CONSTEXPR void fill(Iterator first, Iterator last, T&& value) 
-noexcept(noexcept(*first = std::forward<T>(value))) {
+MSTL_CONSTEXPR void fill(Iterator first, Iterator last, T&& value) {
 	for (; first != last; ++first) *first = std::forward<T>(value);
 }
 template <typename Iterator, typename T>
 	requires(ForwardIterator<Iterator>)
-MSTL_CONSTEXPR Iterator fill_n(Iterator first, size_t n, T&& value)
-noexcept(noexcept(*first = std::forward<T>(value))) {
+MSTL_CONSTEXPR Iterator fill_n(Iterator first, size_t n, T&& value) {
 	for (; n > 0; --n, ++first) *first = std::forward<T>(value);
 	return first;
 }
 
 template <typename T>
 MSTL_CONSTEXPR void swap(T& lh, T& rh) noexcept(
-	NothrowMoveConstructible<T> && NothrowMoveAssignable<T>) {
+	NothrowMoveConstructible<T>&& NothrowMoveAssignable<T>) {
 	T tmp = std::move(lh);
 	lh = std::move(rh);
 	rh = std::move(tmp);
 }
+
 template <typename Iterator1, typename Iterator2>
-	requires(ForwardIterator<Iterator1> && ForwardIterator<Iterator2> 
-&& SameTo<typename std::iterator_traits<Iterator1>::value_type,
-typename std::iterator_traits<Iterator2>::value_type>)
+	requires(ForwardIterator<Iterator1>&& ForwardIterator<Iterator2>
+		&& SameTo<typename std::iterator_traits<Iterator1>::value_type,
+			typename std::iterator_traits<Iterator2>::value_type>)
 MSTL_CONSTEXPR void iter_swap(Iterator1& a, Iterator2& b)
-noexcept(NothrowCopyConstructible<typename std::iterator_traits<Iterator1>::value_type>
-	&& NothrowCopyAssignable<typename std::iterator_traits<Iterator1>::value_type>) {
-	using T = typename std::iterator_traits<Iterator1>::value_type;
-	T tmp = *a;
-	*a = *b;
-	*b = tmp;
+	noexcept(noexcept(MSTL::swap(*a, *b))) {
+	MSTL::swap(*a, *b);
 }
 
 template <typename T>

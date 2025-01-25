@@ -315,8 +315,8 @@ public:
 
     MSTL_NODISCARD iterator begin() noexcept { return leftmost(); }
     MSTL_NODISCARD iterator end() noexcept { return header_; }
-    MSTL_NODISCARD const_iterator const_begin() const noexcept { return leftmost(); }
-    MSTL_NODISCARD const_iterator const_end() const noexcept { return header_; }
+    MSTL_NODISCARD const_iterator cbegin() const noexcept { return leftmost(); }
+    MSTL_NODISCARD const_iterator cend() const noexcept { return header_; }
 
     void swap(self& rep) noexcept(noexcept(std::swap(key_compare_, rep.key_compare_))) {
         std::swap(header_, rep.header_);
@@ -568,7 +568,7 @@ template <typename Key, typename Value, typename KeyOfValue, typename Compare, t
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) noexcept {
-    return x.size() == y.size() && MSTL::equal(x.const_begin(), x.const_end(), y.const_begin());
+    return x.size() == y.size() && MSTL::equal(x.cbegin(), x.cend(), y.cbegin());
 }
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(
@@ -580,8 +580,8 @@ template <typename Key, typename Value, typename KeyOfValue, typename Compare, t
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator <(
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) noexcept {
-    return MSTL::lexicographical_compare(x.const_begin(), x.const_end(),
-        y.const_begin(), y.const_end());
+    return MSTL::lexicographical_compare(x.cbegin(), x.cend(),
+        y.cbegin(), y.cend());
 }
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator >(

@@ -49,8 +49,8 @@ public:
 
 	iterator begin() { return rep_.begin(); }
 	iterator end() { return rep_.end(); }
-	const_iterator const_begin() const { return rep_.const_begin(); }
-	const_iterator const_end() const { return rep_.const_end(); }
+	const_iterator cbegin() const { return rep_.cbegin(); }
+	const_iterator cend() const { return rep_.cend(); }
 	iterator rbegin() { return rep_.rbegin(); }
 	iterator rend() { return rep_.rend(); }
 	bool empty() const { return rep_.empty(); }

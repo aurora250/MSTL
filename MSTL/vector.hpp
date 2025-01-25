@@ -61,9 +61,8 @@ private:
 	template <typename Iterator>
 		requires(ForwardIterator<Iterator>)
 	MSTL_CONSTEXPR void range_initialize(Iterator first, Iterator last) {
-		size_type n = 0;
-		MSTL::distance(first, last, n);
-		start_ = allocate_and_copy(n, first, last);
+		size_type n = MSTL::distance(first, last);
+		start_ = (allocate_and_copy)(n, first, last);
 		finish_ = start_ + n;
 		end_of_storage_ = finish_;
 	}
@@ -95,18 +94,17 @@ private:
 	}
 	template <typename Iterator>
 		requires(InputIterator<Iterator>)
-	MSTL_CONSTEXPR void range_insert(iterator pos, Iterator first, Iterator last) {
+	MSTL_CONSTEXPR void range_insert(iterator position, Iterator first, Iterator last) {
 		for (; first != last; ++first) {
-			pos = insert(pos, *first);
-			++pos;
+			position = insert(position, *first);
+			++position;
 		}
 	}
 	template <typename Iterator>
 		requires(ForwardIterator<Iterator>)
 	MSTL_CONSTEXPR void range_insert(iterator position, Iterator first, Iterator last) {
 		if (first == last) return;
-		size_type n = 0;
-		MSTL::distance(first, last, n);
+		size_type n = MSTL::distance(first, last);
 		if (size_type(end_of_storage_ - finish_) >= n) {
 			const size_type elems_after = finish_ - position;
 			iterator old_finish = finish_;
@@ -180,14 +178,14 @@ public:
 
 	MSTL_CONSTEXPR vector(const self& x) 
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
-		start_ = (allocate_and_copy)(x.const_end() - x.const_begin(), x.const_begin(), x.const_end());
-		finish_ = start_ + (x.const_end() - x.const_begin());
+		start_ = (allocate_and_copy)(x.cend() - x.cbegin(), x.cbegin(), x.cend());
+		finish_ = start_ + (x.cend() - x.cbegin());
 		end_of_storage_ = finish_;
 	}
 	MSTL_CONSTEXPR self& operator =(const self& x) {
 		if (std::addressof(x) == this) return *this;
 		clear();
-		insert(end(), x.const_begin(), x.const_end());
+		insert(end(), x.cbegin(), x.cend());
 	}
 	MSTL_CONSTEXPR vector(self&& x) noexcept
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
@@ -235,9 +233,9 @@ public:
 	}
 
 	MSTL_NODISCARD MSTL_CONSTEXPR iterator begin() noexcept { return start_; }
-	MSTL_NODISCARD MSTL_CONSTEXPR const_iterator const_begin() const noexcept { return start_; }
+	MSTL_NODISCARD MSTL_CONSTEXPR const_iterator cbegin() const noexcept { return start_; }
 	MSTL_NODISCARD MSTL_CONSTEXPR iterator end() noexcept { return finish_; }
-	MSTL_NODISCARD MSTL_CONSTEXPR const_iterator const_end() const noexcept { return finish_; }
+	MSTL_NODISCARD MSTL_CONSTEXPR const_iterator cend() const noexcept { return finish_; }
 
 	MSTL_NODISCARD MSTL_CONSTEXPR size_type size() const noexcept { return size_type(finish_ - start_); }
 	MSTL_NODISCARD MSTL_CONSTEXPR size_type capacity() const noexcept { return size_type(end_of_storage_ - start_); }
@@ -393,7 +391,7 @@ public:
 template <typename T, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(const vector<T, Alloc>& lh, const vector<T, Alloc>& rh) {
 	return lh.size() == rh.size() && MSTL::equal(
-		lh.const_begin(), lh.const_end(), rh.const_begin());
+		lh.cbegin(), lh.cend(), rh.cbegin());
 }
 template <typename T, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(const vector<T, Alloc>& lh, const vector<T, Alloc>& rh) {
@@ -402,7 +400,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(const vector<T, Alloc>& lh, const
 template <typename T, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator <(const vector<T, Alloc>& lh, const vector<T, Alloc>& rh) {
 	return MSTL::lexicographical_compare(
-		lh.const_begin(), lh.const_end(), rh.const_begin(), rh.const_end());
+		lh.cbegin(), lh.cend(), rh.cbegin(), rh.cend());
 }
 template <typename T, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator >(const vector<T, Alloc>& lh, const vector<T, Alloc>& rh) {
