@@ -122,7 +122,7 @@ struct deque_iterator {
     MSTL_NODISCARD bool operator >=(const self& x) const noexcept { return !(*this < x); }
 };
 
-template<typename T, typename Alloc = default_standard_alloc<T>, size_t BufSize = 0>
+template<typename T, typename Alloc = standard_allocator<T>, size_t BufSize = 0>
 class deque {
 public:
     typedef T                           value_type;
@@ -138,7 +138,7 @@ public:
 private:
     typedef pointer* map_pointer;
     typedef Alloc    data_allocator;
-    typedef default_standard_alloc<pointer>  map_allocator;
+    typedef standard_allocator<pointer>  map_allocator;
 
     data_allocator data_alloc_;
     map_allocator map_alloc_;

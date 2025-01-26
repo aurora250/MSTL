@@ -1,6 +1,5 @@
 #ifndef MSTL_HEAP_HPP__
 #define MSTL_HEAP_HPP__
-#include "basiclib.h"
 #include "iterator.hpp"
 MSTL_BEGIN_NAMESPACE__
 MSTL_CONCEPTS__
@@ -82,22 +81,36 @@ void adjust_heap(Iterator first, Distance holeIndex, Distance len, T value, Comp
 	MSTL::push_heap_aux(first, holeIndex, topIndex, value, comp);
 }
 // pop heap
+template <typename Iterator, typename T>
+	requires(RandomAccessIterator<Iterator>)
+void pop_heap_aux(Iterator first, Iterator last, Iterator result, T value) {
+	using Distance = std::iterator_traits<Iterator>::difference_type;
+	*result = *first;
+	MSTL::adjust_heap(first, Distance(0), Distance(last - first), value);
+}
+
 template <typename Iterator>
 	requires(RandomAccessIterator<Iterator>)
-void pop_heap(Iterator first, Iterator last) {
+inline void pop_heap(Iterator first, Iterator last) {
 	using Distance = std::iterator_traits<Iterator>::difference_type;
 	--last;
-	*last = *first;
-	MSTL::adjust_heap(first, Distance(0), Distance(last - first), *last);
+	MSTL::pop_heap_aux(first, last, last, *last);
+}
+
+template <typename Iterator, typename T, typename Compare>
+	requires(RandomAccessIterator<Iterator>)
+void pop_heap_aux(Iterator first, Iterator last, Iterator result, T value, Compare comp) {
+	using Distance = std::iterator_traits<Iterator>::difference_type;
+	*result = *first;
+	MSTL::adjust_heap(first, Distance(0), Distance(last - first), value, comp);
 }
 
 template <typename Iterator, typename Compare>
 	requires(RandomAccessIterator<Iterator>)
-void pop_heap(Iterator first, Iterator last, Compare comp) {
+inline void pop_heap(Iterator first, Iterator last, Compare comp) {
 	using Distance = std::iterator_traits<Iterator>::difference_type;
 	--last;
-	*last = *first;
-	MSTL::adjust_heap(first, Distance(0), Distance(last - first), *last, comp);
+	MSTL::pop_heap_aux(first, last, last, *last, comp);
 }
 // sort heap
 template <typename Iterator>

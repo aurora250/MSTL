@@ -1,8 +1,6 @@
 #ifndef MSTL_ITERATOR_HPP__
 #define MSTL_ITERATOR_HPP__
-#include "basiclib.h"
 #include "concepts.hpp"
-#include "algobase.hpp"
 MSTL_BEGIN_NAMESPACE__
 MSTL_CONCEPTS__
 
@@ -168,17 +166,16 @@ inserter(Container& x, typename Container::iterator it) noexcept {
     return insert_iterator<Container>(x, it);
 }
 
-template <class Iterator, class T = typename Iterator::value_type,
-    class Dist = typename Iterator::difference_type>
+template <class Iterator>
     requires(RandomAccessIterator<Iterator>)
 class reverse_iterator {
 public:
     typedef std::random_access_iterator_tag iterator_category;
-    typedef T                               value_type;
-    typedef Dist                            difference_type;
-    typedef T*                              pointer;
-    typedef T&                              reference;
-    typedef reverse_iterator<Iterator, T, Dist> self;
+    typedef typename std::iterator_traits<Iterator>::value_type value_type;
+    typedef typename std::iterator_traits<Iterator>::difference_type difference_type;
+    typedef value_type* pointer;
+    typedef value_type& reference;
+    typedef reverse_iterator<Iterator> self;
 
     MSTL_CONSTEXPR reverse_iterator() = default;
     MSTL_CONSTEXPR explicit reverse_iterator(Iterator x)
@@ -322,10 +319,10 @@ MSTL_CONSTEXPR reverse_iterator<Iterator> operator +(
     noexcept(noexcept(x + n)) {
     return x + n;
 }
-template <typename Iterator, typename T, typename Dist>
+template <typename Iterator>
 MSTL_NODISCARD MSTL_CONSTEXPR reverse_iterator<Iterator> 
 make_reverse_iterator(Iterator it) noexcept(NothrowMoveConstructible<Iterator>) {
-    return reverse_iterator<Iterator, T, Dist>(std::move(it));
+    return reverse_iterator<Iterator>(std::move(it));
 }
 
 MSTL_END_NAMESPACE__

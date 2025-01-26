@@ -98,7 +98,7 @@ void __rotate_left_right(__avl_tree_node_base* parent, __avl_tree_node_base*& ro
 void __rotate_right_left(__avl_tree_node_base* parent, __avl_tree_node_base*& root);
 
 template <typename Key, typename Value, typename KeyOfValue, typename Compare,
-	typename Alloc = default_standard_alloc<__avl_tree_node<Value>>>
+	typename Alloc = standard_allocator<__avl_tree_node<Value>>>
 class avl_tree {
 public:
 	typedef Key                 key_type;
@@ -142,7 +142,7 @@ public:
 		header_ = new node_type();
 		header_->parent_ = header_;
 	}
-	avl_tree(Compare c) : key_compare_(c) {
+	avl_tree(Compare c) : header_(0), size_(0), key_compare_(c) {
 		header_ = new node_type();
 		header_->parent_ = header_;
 	}

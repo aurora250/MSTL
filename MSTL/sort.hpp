@@ -1,41 +1,65 @@
 #ifndef MSTL_SORT_HPP__
 #define MSTL_SORT_HPP__
-#include "algobase.hpp"
+#include "algo.hpp"
+#include "mathlib.h"
 #include "heap.hpp"
-#include "iterator.hpp"
-#include "concepts.hpp"
 #include "tempbuf.hpp"
+#include "vector.hpp"
 MSTL_BEGIN_NAMESPACE__
 MSTL_CONCEPTS__
 
-// bubble sort
-template <typename Iterator> 
-    requires(BidirectionalIterator<Iterator>)
-void bubble_sort(Iterator begin, Iterator end) {
-    auto reverse_end = std::make_reverse_iterator(begin);
-    auto reverse_start = std::make_reverse_iterator(--end);
-    for (auto iter = reverse_start; iter != reverse_end; ++iter) {
-        bool notfinished = false;
-        auto current_end = iter.base();
-        auto inner_start = begin;
-        for (auto it = inner_start; it != current_end; ++it) {
-            if (*it > *(it + 1)) {
-                MSTL::iter_swap(it, it + 1);
-                notfinished = true;
+// bubble sort : Ot(N)~(N^2) Om(1) stable
+template <typename Iterator>
+    requires(RandomAccessIterator<Iterator>)
+void bubble_sort(Iterator first, Iterator last) {
+    if (first == last) return;
+    auto revend = MSTL::make_reverse_iterator(first);
+    auto revstart = MSTL::make_reverse_iterator(--last);
+    for (auto iter = revstart; iter != revend; ++iter) {
+        bool not_finished = false;
+        Iterator curend = iter.base();
+        for (Iterator it = first; it != curend; ++it) {
+            Iterator next = it;
+            ++next;
+            if (*next < *it) {
+                MSTL::iter_swap(it, next);
+                not_finished = true;
             }
         }
-        if (!notfinished) break;
+        if (!not_finished) break;
     }
 }
 
-// select sort
+template <typename Iterator, typename Compare>
+    requires(RandomAccessIterator<Iterator>)
+void bubble_sort(Iterator first, Iterator last, Compare comp) {
+    if (first == last) return;
+    auto revend = MSTL::make_reverse_iterator(first);
+    auto revstart = MSTL::make_reverse_iterator(--last);
+    for (auto iter = revstart; iter != revend; ++iter) {
+        bool not_finished = false;
+        Iterator curend = iter.base();
+        for (Iterator it = first; it != curend; ++it) {
+            Iterator next = it;
+            ++next;
+            if (comp(*next, *it)) {
+                MSTL::iter_swap(it, next);
+                not_finished = true;
+            }
+        }
+        if (!not_finished) break;
+    }
+}
+
+// select sort : Ot(N^2) Om(1) unstable 
 template <typename Iterator> 
     requires(ForwardIterator<Iterator>)
-void select_sort(Iterator begin, Iterator end) {
+void select_sort(Iterator first, Iterator last) {
+    if (first == last) return;
     Iterator min;
-    for (Iterator i = begin; i != end; ++i) {
+    for (Iterator i = first; i != last; ++i) {
         min = i;
-        for (Iterator j = i + 1; j != end; ++j) {
+        for (Iterator j = i + 1; j != last; ++j) {
             if (*j < *min) {
                 min = j;
             }
@@ -44,58 +68,293 @@ void select_sort(Iterator begin, Iterator end) {
     }
 }
 
-// shell sort
-template <typename Iterator> 
-    requires(RandomAccessIterator<Iterator>)
-void shell_sort(Iterator start, Iterator end) {
-    auto dist = MSTL::distance(start, end);
-    for (auto gap = dist / 2; gap > 0; gap /= 2) {
-        for (auto i = start; i != start + gap; ++i) {
-            auto j = i + gap;
-            for (; j < end && *j < *i; j += gap) {
-                *(j - gap) = *j;
+template <typename Iterator, typename Compare>
+    requires(ForwardIterator<Iterator>)
+void select_sort(Iterator first, Iterator last, Compare comp) {
+    if (first == last) return;
+    Iterator min;
+    for (Iterator i = first; i != last; ++i) {
+        min = i;
+        for (Iterator j = i + 1; j != last; ++j) {
+            if (comp(*j, *min)) {
+                min = j;
             }
-            *(j - gap) = *i;
+        }
+        MSTL::iter_swap(i, min);
+    }
+}
+
+// shell sort : Ot(NlogN)~(N^2) Om(1) unstable
+template <typename Iterator>
+    requires(RandomAccessIterator<Iterator>)
+void shell_sort(Iterator first, Iterator last) {
+    if (first == last) return;
+    using Distance = typename std::iterator_traits<Iterator>::difference_type;
+    using T = typename std::iterator_traits<Iterator>::value_type;
+    Distance dist = MSTL::distance(first, last);
+    for (Distance gap = dist / 2; gap > 0; gap /= 2) {
+        for (Iterator i = first + gap; i < last; ++i) {
+            T temp = *i;
+            Iterator j;
+            for (j = i; j >= first + gap && temp < *(j - gap); j -= gap) {
+                *j = *(j - gap);
+            }
+            *j = temp;
         }
     }
 }
 
-// partial sort (heap sort)
-template <class RandomAccessIterator, class T>
-void __partial_sort(RandomAccessIterator first, RandomAccessIterator middle, RandomAccessIterator last, T*) {
+template <typename Iterator, typename Compare>
+    requires(RandomAccessIterator<Iterator>)
+void shell_sort(Iterator first, Iterator last, Compare comp) {
+    if (first == last) return;
+    using Distance = typename std::iterator_traits<Iterator>::difference_type;
+    using T = typename std::iterator_traits<Iterator>::value_type;
+    Distance dist = MSTL::distance(first, last);
+    for (Distance gap = dist / 2; gap > 0; gap /= 2) {
+        for (Iterator i = first + gap; i < last; ++i) {
+            T temp = *i;
+            Iterator j;
+            for (j = i; j >= first + gap && comp(temp, *(j - gap)); j -= gap)
+                *j = *(j - gap);
+            *j = temp;
+        }
+    }
+}
+
+// counting sort : Ot(N + k) Om(k) stable
+template <typename Iterator>
+    requires(RandomAccessIterator<Iterator>)
+void counting_sort(Iterator first, Iterator last) {
+    if (first == last) return;
+    using T = typename std::iterator_traits<Iterator>::value_type;
+    pair<Iterator, Iterator> min_max = MSTL::minmax_element(first, last);
+    T min_val = *min_max.first;
+    T max_val = *min_max.second;
+    size_t range = static_cast<size_t>(max_val - min_val + 1);
+    vector<int> count(range, 0);
+    for (Iterator it = first; it != last; ++it) {
+        T value = *it;
+        if (value < min_val || value > max_val) 
+            Exception(StopIterator("element out of range for counting sort."));
+        count[static_cast<size_t>(value - min_val)]++;
+    }
+    for (size_t i = 1; i < count.size(); ++i) {
+        count[i] += count[i - 1];
+    }
+    vector<T> sorted(MSTL::distance(first, last));
+    auto bound = MSTL::make_reverse_iterator(first);
+    for (auto rit = MSTL::make_reverse_iterator(last); rit != bound; ++rit) {
+        T value = *rit;
+        size_t index = static_cast<size_t>(value - min_val);
+        size_t position = --count[index];
+        sorted[position] = value;
+    }
+    MSTL::copy(sorted.begin(), sorted.end(), first);
+}
+
+template <typename Iterator, typename Compare, typename IndexMapper>
+    requires(RandomAccessIterator<Iterator>)
+void counting_sort(Iterator first, Iterator last, Compare comp, IndexMapper mapper) {
+    if (first == last) return;
+    using T = typename std::iterator_traits<Iterator>::value_type;
+    auto min_max = MSTL::minmax_element(first, last, comp);
+    auto min_val = mapper(*min_max.first);
+    auto max_val = mapper(*min_max.second);
+    auto range = static_cast<size_t>(max_val - min_val + 1);
+    vector<int> count(range, 0);
+    for (Iterator it = first; it != last; ++it) {
+        auto value = mapper(*it);
+        if (value < min_val || value > max_val) {
+            Exception(StopIterator("element out of range for counting sort."));
+        }
+        count[static_cast<size_t>(value - min_val)]++;
+    }
+    for (size_t i = 1; i < count.size(); ++i) 
+        count[i] += count[i - 1];
+    vector<T> sorted(MSTL::distance(first, last));
+    auto bound = MSTL::make_reverse_iterator(first);
+    for (auto rit = MSTL::make_reverse_iterator(last); rit != bound; ++rit) {
+        T value = mapper(*rit);
+        size_t index = static_cast<size_t>(value - min_val);
+        size_t position = --count[index];
+        sorted[position] = value;
+    }
+    MSTL::copy(sorted.begin(), sorted.end(), first);
+}
+
+template<typename Iterator>
+void bucket_sort_less(Iterator first, Iterator last) {
+    using T = typename std::iterator_traits<Iterator>::value_type;
+    pair<Iterator, Iterator> min_max = MSTL::minmax_element(first, last);
+    T min_val = *min_max.first;
+    T max_val = *min_max.second;
+    T range = max_val - min_val + 1;
+    vector<size_t> bucket(range, 0);
+    for (Iterator it = first; it != last; ++it) {
+        bucket[*it - min_val]++;
+    }
+    Iterator index = first;
+    for (size_t i = 0; i < bucket.size(); ++i) {
+        while (bucket[i] > 0) {
+            *index++ = static_cast<T>(i + min_val);
+            bucket[i]--;
+        }
+    }
+}
+
+template<typename Iterator>
+void bucket_sort_greater(Iterator first, Iterator last) {
+    using T = typename std::iterator_traits<Iterator>::value_type;
+    pair<Iterator, Iterator> min_max = MSTL::minmax_element(first, last);
+    T min_val = *min_max.first;
+    T max_val = *min_max.second;
+    T range = max_val - min_val + 1;
+    vector<size_t> bucket(range, 0);
+    for (Iterator it = first; it != last; ++it) {
+        bucket[*it - min_val]++;
+    }
+    Iterator index = first;
+    for (size_t i = bucket.size(); i-- > 0; ) {
+        while (bucket[i] > 0) {
+            *index++ = static_cast<T>(i + min_val);
+            bucket[i]--;
+        }
+    }
+}
+
+// bucket sort : Ot(N + k)~(N^2) Om(N + k) stable
+template<typename Iterator>
+inline void bucket_sort(Iterator first, Iterator last) {
+    MSTL::bucket_sort_less(first, last);
+}
+
+template <typename Iterator, typename Mapper>
+int max_bit_aux(Iterator first, Iterator last, Mapper mapper) {
+    auto max_num = mapper(*MSTL::max_element(first, last, 
+        [&](const auto& a, const auto& b) { return mapper(a) < mapper(b); }));
+    int p = 0;
+    while (max_num > 0) {
+        p++;
+        max_num /= 10;
+    }
+    return p;
+}
+template <typename T>
+    requires(Number<T>)
+int get_number_aux(T num, T d) {
+    int p = 1;
+    for (T i = 1; i < d; ++i) 
+        p *= 10;
+    return num / p % 10;
+}
+
+template <typename Iterator, typename Mapper>
+    requires(RandomAccessIterator<Iterator>)
+void radix_sort_less(Iterator first, Iterator last, Mapper mapper) {
+    if (first == last) return;
+    using Distance = typename std::iterator_traits<Iterator>::difference_type;
+    Distance length = MSTL::distance(first, last);
+    vector<int> mapped_values(length);
+    vector<typename std::iterator_traits<Iterator>::value_type> bucket(length);
+    vector<int> count(10);
+    Iterator it = first;
+    FOR_EACH(value, mapped_values) {
+        *value = mapper(*it++);
+    }
+    for (int d = 1; d <= MSTL::max_bit_aux(mapped_values.begin(), mapped_values.end(), mapper); ++d) {
+        MSTL::fill(count.begin(), count.end(), 0);
+        FOR_EACH(num, mapped_values) {
+            count[MSTL::get_number_aux(*num, d)]++;
+        }
+        for (size_t i = 1; i < count.size(); ++i) {
+            count[i] += count[i - 1];
+        }
+        FOR_EACH(it, mapped_values) {
+            int k = MSTL::get_number_aux(*it, d);
+            bucket[--count[k]] = *(first + MSTL::distance(mapped_values.begin(), it));
+        }
+        it = first;
+        FOR_EACH(value, bucket) {
+            *it++ = *value;
+        }
+        MSTL::transform(bucket.begin(), bucket.end(), mapped_values.begin(), mapper);
+    }
+}
+
+template <typename Iterator, typename Mapper>
+    requires(RandomAccessIterator<Iterator>)
+void radix_sort_greater(Iterator first, Iterator last, Mapper mapper) {
+    if (first == last) return;
+    using Distance = typename std::iterator_traits<Iterator>::difference_type;
+    using T = typename std::iterator_traits<Iterator>::value_type;
+    Distance length = MSTL::distance(first, last);
+    vector<int> mapped_values(length);
+    vector<T> bucket(length);
+    vector<int> count(10);
+    Iterator it = first;
+    FOR_EACH(value, mapped_values) {
+        *value = mapper(*it++);
+    }
+    for (int d = 1; d <= MSTL::max_bit_aux(mapped_values.begin(), mapped_values.end(), mapper); ++d) {
+        MSTL::fill(count.begin(), count.end(), 0);
+        FOR_EACH(num, mapped_values) {
+            count[MSTL::get_number_aux(*num, d)]++;
+        }
+        for (size_t i = count.size() - 2; i < count.size(); --i) {
+            count[i] += count[i + 1];
+        }
+        FOR_EACH(num_it, mapped_values) {
+            int k = MSTL::get_number_aux(*num_it, d);
+            bucket[--count[k]] = *(first + MSTL::distance(mapped_values.begin(), num_it));
+        }
+        it = first;
+        FOR_EACH(value, bucket) {
+            *it++ = *value;
+        }
+        MSTL::transform(bucket.begin(), bucket.end(), mapped_values.begin(), mapper);
+    }
+}
+
+// radix sort : Ot(d(n + k)) Om(N + k) stable
+template <typename Iterator,
+    typename Mapper = MSTL::identity<typename std::iterator_traits<Iterator>::value_type>>
+inline void radix_sort(Iterator first, Iterator last, Mapper mapper = Mapper()) {
+    using T = typename std::iterator_traits<Iterator>::value_type;
+    MSTL::radix_sort_less(first, last, mapper);
+}
+
+// partial sort / heap sort : Ot(NlogN) Om(1) unstable
+template <class Iterator>
+    requires(RandomAccessIterator<Iterator>)
+void partial_sort(Iterator first, Iterator middle, Iterator last) {
+    if (first == middle) return;
     MSTL::make_heap(first, middle);
-	for (RandomAccessIterator i = middle; i < last; ++i) {
+	for (Iterator i = middle; i < last; ++i) {
 		if (*i < *first)
-			__pop_heap(first, middle, i, T(*i), (distance_type)(first));
+			MSTL::pop_heap_aux(first, middle, i, *i);
 	}
 	MSTL::sort_heap(first, middle);
 }
-template <class RandomAccessIterator>
-inline void partial_sort(RandomAccessIterator first, RandomAccessIterator middle, RandomAccessIterator last) {
-	__partial_sort(first, middle, last, (value_type)(first));
-}
 
-template <class RandomAccessIterator, class T, class Compare>
-void __partial_sort(RandomAccessIterator first, RandomAccessIterator middle, RandomAccessIterator last,
-	T*, Compare comp) {
+template <class Iterator, class Compare>
+    requires(RandomAccessIterator<Iterator>)
+void partial_sort(Iterator first, Iterator middle, Iterator last, Compare comp) {
+    if (first == middle) return;
     MSTL::make_heap(first, middle, comp);
-	for (RandomAccessIterator i = middle; i < last; ++i) {
+	for (Iterator i = middle; i < last; ++i) {
 		if (comp(*i, *first))
-			__pop_heap(first, middle, i, T(*i), comp, (distance_type)(first));
+			MSTL::pop_heap_aux(first, middle, i, *i, comp);
 	}
     MSTL::sort_heap(first, middle, comp);
 }
-template <class RandomAccessIterator, class Compare>
-inline void partial_sort(RandomAccessIterator first, RandomAccessIterator middle, RandomAccessIterator last,
-	Compare comp) {
-	__partial_sort(first, middle, last, (value_type)(first), comp);
-}
 
-template <class InputIterator, class RandomAccessIterator, class Distance, class T>
-RandomAccessIterator __partial_sort_copy(InputIterator first, InputIterator last,
-	RandomAccessIterator result_first, RandomAccessIterator result_last, Distance*, T*) {
+template <class Iterator1, class Iterator2>
+    requires(InputIterator<Iterator1> && RandomAccessIterator<Iterator2>)
+Iterator2 partial_sort_copy(Iterator1 first, Iterator1 last, Iterator2 result_first, Iterator2 result_last) {
 	if (result_first == result_last) return result_last;
-	RandomAccessIterator result_real_last = result_first;
+    using Distance = typename std::iterator_traits<Iterator1>::difference_type;
+	Iterator2 result_real_last = result_first;
 	while (first != last && result_real_last != result_last) {
 		*result_real_last = *first;
 		++result_real_last;
@@ -104,25 +363,20 @@ RandomAccessIterator __partial_sort_copy(InputIterator first, InputIterator last
     MSTL::make_heap(result_first, result_real_last);
 	while (first != last) {
 		if (*first < *result_first)
-			__adjust_heap(result_first, Distance(0),
-				Distance(result_real_last - result_first), T(*first));
+			MSTL::adjust_heap(result_first, Distance(0), Distance(result_real_last - result_first), *first);
 		++first;
 	}
     MSTL::sort_heap(result_first, result_real_last);
 	return result_real_last;
 }
-template <class InputIterator, class RandomAccessIterator>
-inline RandomAccessIterator partial_sort_copy(InputIterator first, InputIterator last,
-	RandomAccessIterator result_first, RandomAccessIterator result_last) {
-	return __partial_sort_copy(first, last, result_first, result_last,
-		(distance_type)(result_first), (value_type)(first));
-}
 
-template <class InputIterator, class RandomAccessIterator, class Compare, class Distance, class T>
-RandomAccessIterator __partial_sort_copy(InputIterator first, InputIterator last,
-	RandomAccessIterator result_first, RandomAccessIterator result_last, Compare comp, Distance*, T*) {
+template <class Iterator1, class Iterator2, class Compare>
+    requires(InputIterator<Iterator1> && RandomAccessIterator<Iterator2>)
+Iterator2 partial_sort_copy(Iterator1 first, Iterator1 last,
+	Iterator2 result_first, Iterator2 result_last, Compare comp) {
 	if (result_first == result_last) return result_last;
-	RandomAccessIterator result_real_last = result_first;
+    using Distance = typename std::iterator_traits<Iterator1>::difference_type;
+	Iterator2 result_real_last = result_first;
 	while (first != last && result_real_last != result_last) {
 		*result_real_last = *first;
 		++result_real_last;
@@ -131,54 +385,19 @@ RandomAccessIterator __partial_sort_copy(InputIterator first, InputIterator last
     MSTL::make_heap(result_first, result_real_last, comp);
 	while (first != last) {
 		if (comp(*first, *result_first)) {
-			__adjust_heap(result_first, Distance(0), Distance(result_real_last - result_first),
-				T(*first), comp);
-		}
+            MSTL::adjust_heap(result_first, Distance(0),
+                Distance(result_real_last - result_first), *first, comp);
+        }
 		++first;
 	}
     MSTL::sort_heap(result_first, result_real_last, comp);
 	return result_real_last;
 }
-template <typename InputIterator, typename RandomAccessIterator, typename Compare>
-inline RandomAccessIterator partial_sort_copy(InputIterator first, InputIterator last,
-	RandomAccessIterator result_first, RandomAccessIterator result_last, Compare comp) {
-	return __partial_sort_copy(first, last, result_first, result_last, comp,
-		(distance_type)(result_first), (value_type)(first));
-}
 
-
-
-template <class RandomAccessIterator, class T>
-RandomAccessIterator __unguarded_partition(RandomAccessIterator first, 
-    RandomAccessIterator last, T pivot) {
-    while (true) {
-        while (*first < pivot) ++first;
-        --last;
-        while (pivot < *last) --last;
-        if (!(first < last)) return first;
-        MSTL::iter_swap(first, last);
-        ++first;
-    }
-}
-
-template <class RandomAccessIterator, class T, class Compare>
-RandomAccessIterator __unguarded_partition(RandomAccessIterator first,
-    RandomAccessIterator last, T pivot, Compare comp) {
-    while (1) {
-        while (comp(*first, pivot)) ++first;
-        --last;
-        while (comp(pivot, *last)) --last;
-        if (!(first < last)) return first;
-        MSTL::iter_swap(first, last);
-        ++first;
-    }
-}
-
-static const int threshold__ = 16;
-
-template <class RandomAccessIterator, class T>
-void __unguarded_linear_insert(RandomAccessIterator last, T value) {
-    RandomAccessIterator next = last;
+template <class Iterator, class T>
+    requires(RandomAccessIterator<Iterator>)
+void insertion_sort_aux(Iterator last, T value) {
+    Iterator next = last;
     --next;
     while (value < *next) {
         *last = *next;
@@ -188,9 +407,10 @@ void __unguarded_linear_insert(RandomAccessIterator last, T value) {
     *last = value;
 }
 
-template <class RandomAccessIterator, class T, class Compare>
-void __unguarded_linear_insert(RandomAccessIterator last, T value, Compare comp) {
-    RandomAccessIterator next = last;
+template <class Iterator, class T, class Compare>
+    requires(RandomAccessIterator<Iterator>)
+void insertion_sort_aux(Iterator last, T value, Compare comp) {
+    Iterator next = last;
     --next;
     while (comp(value, *next)) {
         *last = *next;
@@ -200,173 +420,183 @@ void __unguarded_linear_insert(RandomAccessIterator last, T value, Compare comp)
     *last = value;
 }
 
-template <class RandomAccessIterator, class T>
-inline void __linear_insert(RandomAccessIterator first, RandomAccessIterator last, T*) {
-    T value = *last;
-    if (value < *first) {
-        MSTL::copy_backward(first, last, last + 1);
-        *first = value;
-    }
-    else
-        __unguarded_linear_insert(last, value);
-}
-
-template <class RandomAccessIterator, class T, class Compare>
-inline void __linear_insert(RandomAccessIterator first, RandomAccessIterator last, T*, Compare comp) {
-    T value = *last;
-    if (comp(value, *first)) {
-        MSTL::copy_backward(first, last, last + 1);
-        *first = value;
-    }
-    else
-        __unguarded_linear_insert(last, value, comp);
-}
-
-template <class RandomAccessIterator>
-void insertion_sort(RandomAccessIterator first, RandomAccessIterator last) {
+// insertion sort : Ot(N)~(N^2) Om(1) stable
+template <class Iterator>
+    requires(RandomAccessIterator<Iterator>)
+void insertion_sort(Iterator first, Iterator last) {
     if (first == last) return;
-    for (RandomAccessIterator i = first + 1; i != last; ++i)
-        __linear_insert(first, i, (value_type)(first));
+    using T = typename std::iterator_traits<Iterator>::value_type;
+    for (Iterator i = first + 1; i != last; ++i) {
+        T value = *i;
+        if (value < *first) {
+            MSTL::copy_backward(first, i, i + 1);
+            *first = value;
+        }
+        else MSTL::insertion_sort_aux(i, value);
+    }
 }
 
-template <class RandomAccessIterator, class Compare>
-void insertion_sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
+template <class Iterator, class Compare>
+void insertion_sort(Iterator first, Iterator last, Compare comp) {
     if (first == last) return;
-    for (RandomAccessIterator i = first + 1; i != last; ++i)
-        __linear_insert(first, i, (value_type)(first), comp);
-}
-
-template <class RandomAccessIterator, class T>
-void __unguarded_insertion_sort_aux(RandomAccessIterator first, RandomAccessIterator last, T*) {
-    for (RandomAccessIterator i = first; i != last; ++i)
-        __unguarded_linear_insert(i, T(*i));
-}
-
-template <class RandomAccessIterator>
-inline void __unguarded_insertion_sort(RandomAccessIterator first, RandomAccessIterator last) {
-    __unguarded_insertion_sort_aux(first, last, (value_type)(first));
-}
-
-template <class RandomAccessIterator, class T, class Compare>
-void __unguarded_insertion_sort_aux(RandomAccessIterator first,
-    RandomAccessIterator last, T*, Compare comp) {
-    for (RandomAccessIterator i = first; i != last; ++i)
-        __unguarded_linear_insert(i, T(*i), comp);
-}
-
-template <class RandomAccessIterator, class Compare>
-inline void __unguarded_insertion_sort(RandomAccessIterator first,
-    RandomAccessIterator last, Compare comp) {
-    __unguarded_insertion_sort_aux(first, last, (value_type)(first), comp);
-}
-
-template <class RandomAccessIterator>
-void __final_insertion_sort(RandomAccessIterator first, RandomAccessIterator last) {
-    if (last - first > threshold__) {
-        MSTL::insertion_sort(first, first + threshold__);
-        __unguarded_insertion_sort(first + threshold__, last);
+    using T = typename std::iterator_traits<Iterator>::value_type;
+    for (Iterator i = first + 1; i != last; ++i) {
+        T value = *i;
+        if (comp(value, *first)) {
+            MSTL::copy_backward(first, i, i + 1);
+            *first = value;
+        }
+        else MSTL::insertion_sort_aux(i, value, comp);
     }
-    else
-        MSTL::insertion_sort(first, last);
 }
 
-template <class RandomAccessIterator, class Compare>
-void __final_insertion_sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
-    if (last - first > threshold__) {
-        MSTL::insertion_sort(first, first + threshold__, comp);
-        __unguarded_insertion_sort(first + threshold__, last, comp);
+MSTL_CONSTEXPR static size_t SORT_DISPATCH_THRESHOLD__ = 16;
+
+template <class Iterator, class T>
+    requires(RandomAccessIterator<Iterator>)
+Iterator lomuto_partition(Iterator first, Iterator last, const T& pivot) {
+    while (first < last) {
+        while (*first < pivot) ++first;
+        --last;
+        while (pivot < *last) --last;
+        if (!(first < last)) break;
+        MSTL::iter_swap(first, last);
+        ++first;
     }
-    else
-        MSTL::insertion_sort(first, last, comp);
+    return first;
 }
 
-inline size_t __lg(size_t n) {
-    size_t k;
-    for (k = 0; n > 1; n >>= 1) ++k;
-    return k;
-}
-template <class T>
-MSTL_CONSTEXPR inline const T& __median(const T& a, const T& b, const T& c) {
-    if (a < b)
-        if (b < c)
-            return b;
-        else if (a < c)
-            return c;
-        else
-            return a;
-    else if (a < c)
-        return a;
-    else if (b < c)
-        return c;
-    else
-        return b;
-}
-template <class T, class Compare>
-MSTL_CONSTEXPR inline const T& __median(const T& a, const T& b, const T& c, Compare comp) {
-    if (comp(a, b))
-        if (comp(b, c))
-            return b;
-        else if (comp(a, c))
-            return c;
-        else
-            return a;
-    else if (comp(a, c))
-        return a;
-    else if (comp(b, c))
-        return c;
-    else
-        return b;
+template <class Iterator, class T, class Compare>
+    requires(RandomAccessIterator<Iterator>)
+Iterator lomuto_partition(Iterator first, Iterator last, const T& pivot, Compare comp) {
+    while (first < last) {
+        while (comp(*first, pivot)) ++first;
+        --last;
+        while (comp(pivot, *last)) --last;
+        if (!(first < last)) break;
+        MSTL::iter_swap(first, last);
+        ++first;
+    }
+    return first;
 }
 
-template <class RandomAccessIterator, class T, class Size>
-void __introsort_loop(RandomAccessIterator first, RandomAccessIterator last, T*, Size depth_limit) {
-    while (last - first > threshold__) {
+// introspective sort : Ot(NlogN) Om(logN) unstable
+template <class Iterator>
+    requires(RandomAccessIterator<Iterator>)
+void introspective_sort(Iterator first, Iterator last, size_t depth_limit) {
+    while (first < last) {
         if (depth_limit == 0) {
             MSTL::partial_sort(first, last, last);
             return;
         }
         --depth_limit;
-        RandomAccessIterator cut = __unguarded_partition(
-            first, last, T(
-                __median(*first, *(first + (last - first) / 2), *(last - 1))
-            ));
-        __introsort_loop(cut, last, (value_type)(first), depth_limit);
+        Iterator cut = MSTL::lomuto_partition(
+            first, last, MSTL::median(*first, *(first + (last - first) / 2), *(last - 1)));
+        MSTL::introspective_sort(cut, last, depth_limit);
         last = cut;
     }
 }
 
-template <class RandomAccessIterator, class T, class Compare>
-void __introsort_loop(RandomAccessIterator first, RandomAccessIterator last,
-    T*, size_t depth_limit, Compare comp) {
-    while (last - first > threshold__) {
+template <class Iterator, class Compare>
+    requires(RandomAccessIterator<Iterator>)
+void introspective_sort(Iterator first, Iterator last, size_t depth_limit, Compare comp) {
+    while (first < last) {
         if (depth_limit == 0) {
             MSTL::partial_sort(first, last, last, comp);
             return;
         }
         --depth_limit;
-        RandomAccessIterator cut = __unguarded_partition(
-            first, last, T(
-                __median(*first, *(first + (last - first) / 2), *(last - 1), comp)
-            ), comp);
-        __introsort_loop(cut, last, (value_type)(first), depth_limit, comp);
+        Iterator cut = MSTL::lomuto_partition(
+            first, last, MSTL::median(*first, *(first + (last - first) / 2), *(last - 1), comp), comp);
+        MSTL::introspective_sort(cut, last, depth_limit, comp);
         last = cut;
     }
 }
 
-template <class RandomAccessIterator>
-inline void sort(RandomAccessIterator first, RandomAccessIterator last) {
-    if (first != last) {
-        __introsort_loop(first, last, (value_type)(first), (__lg)(last - first) * 2);
-        __final_insertion_sort(first, last);
+// quick sort : Ot(NlogN) Om(1) unstable 
+template <class Iterator>
+    requires(RandomAccessIterator<Iterator>)
+void quick_sort(Iterator first, Iterator last) {
+    if (first < last) {
+        Iterator pov = last - 1;
+        Iterator cut = MSTL::lomuto_partition(first, last, *pov);
+        MSTL::iter_swap(cut, pov);
+        MSTL::quick_sort(first, cut);
+        MSTL::quick_sort(cut + 1, last);
     }
 }
 
-template <class RandomAccessIterator, class Compare>
-inline void sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
-    if (first != last) {
-        __introsort_loop(first, last, (value_type)(first), (__lg)(last - first) * 2, comp);
-        __final_insertion_sort(first, last, comp);
+template <class Iterator, typename Compare>
+    requires(RandomAccessIterator<Iterator>)
+void quick_sort(Iterator first, Iterator last, Compare comp) {
+    if (first < last) {
+        Iterator pov = last - 1;
+        Iterator cut = MSTL::lomuto_partition(first, last, *pov, comp);
+        MSTL::iter_swap(cut, pov);
+        MSTL::quick_sort(first, cut, comp);
+        MSTL::quick_sort(cut + 1, last, comp);
     }
+}
+
+template <class Iterator>
+    requires(RandomAccessIterator<Iterator>)
+void introspective_sort_dispatch(Iterator first, Iterator last, size_t depth_limit) {
+    while (last - first > SORT_DISPATCH_THRESHOLD__) {
+        if (depth_limit == 0) {
+            MSTL::partial_sort(first, last, last);
+            return;
+        }
+        --depth_limit;
+        Iterator cut = MSTL::lomuto_partition(
+            first, last, MSTL::median(*first, *(first + (last - first) / 2), *(last - 1)));
+        MSTL::introspective_sort_dispatch(cut, last, depth_limit);
+        last = cut;
+    }
+}
+
+template <class Iterator, class Compare>
+    requires(RandomAccessIterator<Iterator>)
+void introspective_sort_dispatch(Iterator first, Iterator last, size_t depth_limit, Compare comp) {
+    while (last - first > SORT_DISPATCH_THRESHOLD__) {
+        if (depth_limit == 0) {
+            MSTL::partial_sort(first, last, last, comp);
+            return;
+        }
+        --depth_limit;
+        Iterator cut = MSTL::lomuto_partition(
+            first, last, MSTL::median(*first, *(first + (last - first) / 2), *(last - 1), comp), comp);
+        MSTL::introspective_sort_dispatch(cut, last, depth_limit, comp);
+        last = cut;
+    }
+}
+
+// standard sort : Ot(NlogN) Om(logN) unstable
+template <class Iterator>
+    requires(RandomAccessIterator<Iterator>)
+void sort(Iterator first, Iterator last) {
+    if (first == last) return;
+    MSTL::introspective_sort_dispatch(first, last, MSTL::cursory_lg2(last - first) * 2);
+    if (last - first > SORT_DISPATCH_THRESHOLD__) {
+        MSTL::insertion_sort(first, first + SORT_DISPATCH_THRESHOLD__);
+        for (Iterator i = first + SORT_DISPATCH_THRESHOLD__; i != last; ++i)
+            MSTL::insertion_sort_aux(i, *i);
+    }
+    else
+        MSTL::insertion_sort(first, last);
+}
+
+template <class Iterator, class Compare>
+    requires(RandomAccessIterator<Iterator>)
+void sort(Iterator first, Iterator last, Compare comp) {
+    if (first == last) return;
+    MSTL::introspective_sort_dispatch(first, last, MSTL::cursory_lg2(last - first) * 2, comp);
+    if (last - first > SORT_DISPATCH_THRESHOLD__) {
+        MSTL::insertion_sort(first, first + SORT_DISPATCH_THRESHOLD__, comp);
+        for (Iterator i = first + SORT_DISPATCH_THRESHOLD__; i != last; ++i)
+            MSTL::insertion_sort_aux(i, *i, comp);
+    }
+    else
+        MSTL::insertion_sort(first, last, comp);
 }
 
 MSTL_END_NAMESPACE__

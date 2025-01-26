@@ -192,9 +192,13 @@ void try_vec() {
         vector<int> v4 = { 3,2,1 };
         detailof(v4);
         out(*v4.data());
+        vector<int, ctype_allocator<int>> cvec;
+        cvec.emplace_back(3);
+        cvec.emplace_back(4);
+        detailof(cvec);
     }
     MSTL_CATCH_ERROR__{
-        __show_data_only(error, std::cout);
+        show_data_only(error, std::cout);
         std::cout << std::endl;
     }
 }
@@ -204,7 +208,7 @@ void try_pque() {
     std::cout << typeid(priority_queue<int*>).name() << std::endl;
     q.push(6); q.push(9); q.push(1); q.push(5);
     q.push(8); q.push(4); q.push(7);
-    detailof(q);
+    detailof(q); // 9 8 7 5 6 1 4
     q.pop();
     detailof(q);
 }
@@ -327,15 +331,34 @@ void try_log() {
     t2.join();
     TIMERLOG_END(task);
 }
+struct Person {
+    std::string name;
+    int age;
+};
 void try_sort() {
     MSTL_NAMESPACE__;
-    vector<int> vec = { 5, 3, 8, 4, 2 };
-    //bubble_sort(vec.begin(), vec.end());
-    //MSTL::partial_sort(vec.begin(), ------vec.end(), vec.end());
+    vector<int> vec{ 6,9,1,5,8,4,7 };
     //insertion_sort(vec.begin(), vec.end());
+    //bubble_sort(vec.begin(), vec.end());
     //select_sort(vec.begin(), vec.end());
-    shell_sort(vec.begin(), vec.end());
+    //shell_sort(vec.begin(), vec.end());
+    //partial_sort(vec.begin(), vec.end(), vec.end());
+    //counting_sort(vec.begin(), vec.end());
     //sort(vec.begin(), vec.end());
+    //introspective_sort(vec.begin(), vec.end(), (size_t)logarithm_2(vec.end() - vec.begin()) * 2);
+    quick_sort(vec.begin(), vec.end());
+    //bucket_sort(vec.begin(), vec.end());
+    //radix_sort_greater(vec.begin(), vec.end(), MSTL::identity<int>());
+    // 
+    //vector<Person> people = {
+    //{"Alice", 25},
+    //{"Bob", 20},
+    //{"Charlie", 30},
+    //{"David", 20}
+    //};
+    //counting_sort(people.begin(), people.end(),
+    //    [](const Person& a, const Person& b) -> bool { return a.age < b.age; },
+    //    [](const Person& p) -> int { return p.age; });
     for (const auto& num : vec) {
         std::cout << num << " ";
     }
@@ -373,5 +396,5 @@ void try_json() {
     
 }
 int main() {
-    try_pque();
+    try_sort();
 }

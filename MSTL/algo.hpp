@@ -1,8 +1,8 @@
 #ifndef MSTL_ALGO_HPP__
 #define MSTL_ALGO_HPP__
-#include "sort.hpp"
 #include "mathlib.h"
 #include "iterator.hpp"
+#include "algobase.hpp"
 MSTL_BEGIN_NAMESPACE__
 // union of set
 template <typename Iterator1, typename Iterator2, typename Iterator3>
@@ -343,46 +343,6 @@ bool includes(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 las
 		else
 			++first1, ++first2;
 	return first2 == last2;
-}
-// max element
-template <typename Iterator>
-	requires(ForwardIterator<Iterator>)
-Iterator max_element(Iterator first, Iterator last) {
-	if (first == last) return first;
-	Iterator result = first;
-	while (++first != last)
-		if (*result < *first) result = first;
-	return result;
-}
-
-template <typename Iterator, typename Compare>
-	requires(ForwardIterator<Iterator>)
-Iterator max_element(Iterator first, Iterator last, Compare comp) {
-	if (first == last) return first;
-	Iterator result = first;
-	while (++first != last)
-		if (comp(*result, *first)) result = first;
-	return result;
-}
-// min element
-template <typename Iterator>
-	requires(ForwardIterator<Iterator>)
-Iterator min_element(Iterator first, Iterator last) {
-	if (first == last) return first;
-	Iterator result = first;
-	while (++first != last)
-		if (*first < *result) result = first;
-	return result;
-}
-
-template <typename Iterator, typename Compare>
-	requires(ForwardIterator<Iterator>)
-Iterator min_element(Iterator first, Iterator last, Compare comp) {
-	if (first == last) return first;
-	Iterator result = first;
-	while (++first != last)
-		if (comp(*first, *result)) result = first;
-	return result;
 }
 // merge
 template <typename Iterator1, typename Iterator2, typename Iterator3>

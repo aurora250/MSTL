@@ -8,7 +8,7 @@ MSTL_BEGIN_NAMESPACE__
 MSTL_CONCEPTS__
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
-    class Alloc = default_standard_alloc<__hashtable_node<pair<const Key, T>>>>
+    class Alloc = standard_allocator<__hashtable_node<pair<const Key, T>>>>
     requires(HashFunction<HashFcn, Key> && BinaryFunction<EqualKey>)
 class hash_map {
 private:
@@ -158,13 +158,13 @@ void swap(const hash_map<Key, T, HashFcn, EqualKey, Alloc>& lh,
 }
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
-    class Alloc = default_standard_alloc<__hashtable_node<pair<const Key, T>>>>
+    class Alloc = standard_allocator<__hashtable_node<pair<const Key, T>>>>
     requires(HashFunction<HashFcn, Key>&& BinaryFunction<EqualKey>)
 using unordered_map = hash_map<Key, T, HashFcn, EqualKey, Alloc>;
 
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
-    class Alloc = default_standard_alloc<__hashtable_node<pair<const Key, T>>>>
+    class Alloc = standard_allocator<__hashtable_node<pair<const Key, T>>>>
     requires(HashFunction<HashFcn, Key>&& BinaryFunction<EqualKey>)
 class hash_multimap {
 private:
@@ -255,7 +255,7 @@ inline bool operator ==(const hash_multimap<Key, T, HF, EqKey, Alloc>& hm1,
 }
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
-    class Alloc = default_standard_alloc<__hashtable_node<pair<const Key, T>>>>
+    class Alloc = standard_allocator<__hashtable_node<pair<const Key, T>>>>
     requires(HashFunction<HashFcn, Key>&& BinaryFunction<EqualKey>)
 using unordered_multimap = hash_multimap<Key, T, HashFcn, EqualKey, Alloc>;
 

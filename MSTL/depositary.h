@@ -1,9 +1,8 @@
 #ifndef MSTL_DEPOSITARY_H__
 #define MSTL_DEPOSITARY_H__
 #include <functional>
-#include <string>
 #include <memory>
-#include <future>
+#include <string>
 #include "concepts.hpp"
 #include "hash_map.hpp"
 using namespace MSTL::concepts;
@@ -25,12 +24,12 @@ private:
 };
 
 class Depositary {
-	using __base_deposit_ptr = std::shared_ptr<__deposit_node_base>;
+	using deposit_ptr = std::shared_ptr<__deposit_node_base>;
 public:
 	template <typename Func>
 	void register_deposit(const std::string& register_name, Func&& func) {
 		//deposit_map_.insert(pair(_register_name, __base_deposit_ptr(new DeposT(_target))));
-		deposit_map_.emplace(register_name, __base_deposit_ptr(&std::forward<Func>(func)));
+		deposit_map_.emplace(register_name, deposit_ptr(&std::forward<Func>(func)));
 	};
 
 	template <NVoidT T, typename... Args>
@@ -48,7 +47,7 @@ public:
 		}
 	}
 private:
-	hash_map<std::string, __base_deposit_ptr> deposit_map_;
+	hash_map<std::string, deposit_ptr> deposit_map_;
 };
 
 MSTL_END_NAMESPACE__

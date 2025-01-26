@@ -76,7 +76,7 @@ MSTL_NODISCARD bool operator !=(const list_iterator<T, Ref, Ptr>& x,
     return x.node_ != y.node_;
 }
 
-template <typename T, typename Alloc = default_standard_alloc<__list_node<T>>>
+template <typename T, typename Alloc = standard_allocator<__list_node<T>>>
 class list {
 public:
     typedef T                       value_type;

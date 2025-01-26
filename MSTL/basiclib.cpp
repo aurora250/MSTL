@@ -2,9 +2,9 @@
 #include <assert.h>
 MSTL_BEGIN_NAMESPACE__
 
-void split_line(std::ostream& _out, size_t _size) {
-	while (_size) _out << '-', _size--;
-	_out << std::endl;
+void split_line(std::ostream& out, size_t size, char split_type) {
+	while (size--) out << split_type;
+	out << std::endl;
 }
 void* memcpy(void* _dest, void* _rsc, int _byte) {
 	assert(_dest && _rsc);

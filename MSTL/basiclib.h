@@ -67,6 +67,9 @@
 #if defined(_HAS_CXX17) || (__cplusplus >= 201703L)
 #define MSTL_SUPPORT_NORETURN__		1
 #endif
+#if defined(MSTL_COMPILE_MSVC__)
+#define MSTL_SUPPORT_DECLALLOC__		1
+#endif
 
 #define MSTL_DLL_LINK__				1
 
@@ -104,6 +107,12 @@
 #define MSTL_NORETURN 
 #endif
 
+#ifdef MSTL_SUPPORT_DECLALLOC__
+#define MSTL_DECLALLOC __declspec(allocator)
+#else
+#define MSTL_DECLALLOC 
+#endif
+
 #if defined(MSTL_PLATFORM_WINDOWS__) && defined(MSTL_COMPILE_MSVC__)
 #define MSTL_LONG_LONG_TYPE__ __int64
 #else
@@ -134,7 +143,7 @@ extern int strcmp(const char* _des, const char* _sou);
 extern const char* strstr(const char* _des, const char* _sou);
 extern char* memstr(char* _data, int _len, char* _sub);
 
-extern void split_line(std::ostream & _out = std::cout, size_t _size = MSTL_SPLIT_LENGTH);
+extern void split_line(std::ostream & out = std::cout, size_t size = MSTL_SPLIT_LENGTH, char split_type = '-');
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_BASICLIB_H__

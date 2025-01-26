@@ -2,7 +2,7 @@
 MSTL_BEGIN_NAMESPACE__
 
 void Exception(const Error& _err) {
-	__show_data_only(_err, std::cerr);
+	show_data_only(_err, std::cerr);
 	std::cerr << std::endl;
 	throw _err;
 }

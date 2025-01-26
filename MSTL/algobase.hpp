@@ -5,7 +5,7 @@
 #include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
 MSTL_CONCEPTS__
-
+// equal
 template <typename Iterator1, typename Iterator2>
 	requires(InputIterator<Iterator1> && InputIterator<Iterator2>)
 MSTL_NODISCARD MSTL_CONSTEXPR bool equal(Iterator1 first1, Iterator1 last1, Iterator2 first2) noexcept {
@@ -15,7 +15,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool equal(Iterator1 first1, Iterator1 last1, Iter
 	return true;
 }
 template <typename Iterator1, typename Iterator2, typename BinaryPredicate>
-	requires(InputIterator<Iterator1> && InputIterator<Iterator2> && BinaryFunction<BinaryPredicate>)
+	requires(InputIterator<Iterator1> && InputIterator<Iterator2>)
 MSTL_NODISCARD MSTL_CONSTEXPR bool equal(Iterator1 first1, Iterator1 last1,
 	Iterator2 first2, BinaryPredicate binary_pred) noexcept {
 	for (; first1 != last1; ++first1, ++first2) {
@@ -23,7 +23,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool equal(Iterator1 first1, Iterator1 last1,
 	}
 	return true;
 }
-
+// fill
 template <typename Iterator, typename T>
 	requires(ForwardIterator<Iterator>)
 MSTL_CONSTEXPR void fill(Iterator first, Iterator last, T&& value) {
@@ -35,43 +35,130 @@ MSTL_CONSTEXPR Iterator fill_n(Iterator first, size_t n, T&& value) {
 	for (; n > 0; --n, ++first) *first = std::forward<T>(value);
 	return first;
 }
-
+// swap
 template <typename T>
-MSTL_CONSTEXPR void swap(T& lh, T& rh) noexcept(
-	NothrowMoveConstructible<T>&& NothrowMoveAssignable<T>) {
+MSTL_CONSTEXPR void swap(T& lh, T& rh) 
+noexcept(NothrowMoveConstructible<T>&& NothrowMoveAssignable<T>) {
 	T tmp = std::move(lh);
 	lh = std::move(rh);
 	rh = std::move(tmp);
 }
 
 template <typename Iterator1, typename Iterator2>
-	requires(ForwardIterator<Iterator1>&& ForwardIterator<Iterator2>
-		&& SameTo<typename std::iterator_traits<Iterator1>::value_type,
-			typename std::iterator_traits<Iterator2>::value_type>)
+	requires(ForwardIterator<Iterator1> && ForwardIterator<Iterator2>)
 MSTL_CONSTEXPR void iter_swap(Iterator1& a, Iterator2& b)
-	noexcept(noexcept(MSTL::swap(*a, *b))) {
+noexcept(noexcept(MSTL::swap(*a, *b))) {
 	MSTL::swap(*a, *b);
 }
-
+// maximum
 template <typename T>
 MSTL_CONSTEXPR const T& maximum(const T& a, const T& b) {
 	return a < b ? b : a;
 }
 template <typename T, typename Compare>
-	requires(BinaryFunction<Compare>)
 MSTL_CONSTEXPR const T& maximum(const T& a, const T& b, Compare comp) {
 	return comp(a, b) ? b : a;
 }
+// minimum
 template <typename T>
 MSTL_CONSTEXPR const T& minimum(const T& a, const T& b) {
 	return b < a ? b : a;
 }
 template <typename T, typename Compare>
-	requires(BinaryFunction<Compare>)
 MSTL_CONSTEXPR const T& minimum(const T& a, const T& b, Compare comp) {
 	return comp(b, a) ? b : a;
 }
+// mediam
+template <class T>
+MSTL_CONSTEXPR const T& median(const T& a, const T& b, const T& c) {
+	if (a < b)
+		if (b < c)
+			return b;
+		else if (a < c)
+			return c;
+		else
+			return a;
+	else if (a < c)
+		return a;
+	else if (b < c)
+		return c;
+	else
+		return b;
+}
 
+template <class T, class Compare>
+MSTL_CONSTEXPR const T& median(const T& a, const T& b, const T& c, Compare comp) {
+	if (comp(a, b))
+		if (comp(b, c))
+			return b;
+		else if (comp(a, c))
+			return c;
+		else
+			return a;
+	else if (comp(a, c))
+		return a;
+	else if (comp(b, c))
+		return c;
+	else
+		return b;
+}
+// max element
+template <typename Iterator>
+	requires(ForwardIterator<Iterator>)
+MSTL_CONSTEXPR Iterator max_element(Iterator first, Iterator last) {
+	if (first == last) return first;
+	Iterator result = first;
+	while (++first != last)
+		if (*result < *first) result = first;
+	return result;
+}
+
+template <typename Iterator, typename Compare>
+	requires(ForwardIterator<Iterator>)
+MSTL_CONSTEXPR Iterator max_element(Iterator first, Iterator last, Compare comp) {
+	if (first == last) return first;
+	Iterator result = first;
+	while (++first != last)
+		if (comp(*result, *first)) result = first;
+	return result;
+}
+// min element
+template <typename Iterator>
+	requires(ForwardIterator<Iterator>)
+MSTL_CONSTEXPR Iterator min_element(Iterator first, Iterator last) {
+	if (first == last) return first;
+	Iterator result = first;
+	while (++first != last)
+		if (*first < *result) result = first;
+	return result;
+}
+
+template <typename Iterator, typename Compare>
+	requires(ForwardIterator<Iterator>)
+MSTL_CONSTEXPR Iterator min_element(Iterator first, Iterator last, Compare comp) {
+	if (first == last) return first;
+	Iterator result = first;
+	while (++first != last)
+		if (comp(*first, *result)) result = first;
+	return result;
+}
+// minmax element
+template <typename Iterator>
+	requires(ForwardIterator<Iterator>)
+MSTL_CONSTEXPR pair<Iterator, Iterator> minmax_element(Iterator first, Iterator last) {
+	Iterator min = MSTL::min_element(first, last);
+	Iterator max = MSTL::max_element(first, last);
+	return MSTL::make_pair<Iterator, Iterator>(min, max);
+}
+
+template <typename Iterator, typename Compare>
+	requires(ForwardIterator<Iterator>)
+MSTL_CONSTEXPR pair<Iterator, Iterator> minmax_element(Iterator first, Iterator last, Compare comp) {
+	Iterator min = MSTL::min_element(first, last, comp);
+	Iterator max = MSTL::max_element(first, last, comp);
+	return MSTL::make_pair<Iterator, Iterator>(min, max);
+}
+// lexicographical compare
 template <typename Iterator1, typename Iterator2>
 	requires(InputIterator<Iterator1> && InputIterator<Iterator2>)
 MSTL_NODISCARD MSTL_CONSTEXPR bool lexicographical_compare(Iterator1 first1, Iterator1 last1,
@@ -83,7 +170,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool lexicographical_compare(Iterator1 first1, Ite
 	return first1 == last1 && first2 != last2;
 }
 template <typename Iterator1, typename Iterator2, typename Compare>
-	requires(InputIterator<Iterator1> && InputIterator<Iterator2> && BinaryFunction<Compare>)
+	requires(InputIterator<Iterator1> && InputIterator<Iterator2>)
 MSTL_NODISCARD MSTL_CONSTEXPR bool lexicographical_compare(Iterator1 first1, Iterator1 last1,
 	Iterator2 first2, Iterator2 last2, Compare comp) noexcept {
 	for (; first1 != last1 && first2 != last2; ++first1, ++first2) {
@@ -99,7 +186,7 @@ inline MSTL_NODISCARD bool lexicographical_compare(const unsigned char* first1,
 	const int result = MSTL::memcmp(first1, first2, (int)MSTL::minimum(len1, len1));
 	return result != 0 ? result < 0 : len1 < len2;
 }
-
+// mismatch
 template <typename Iterator1, typename Iterator2>
 	requires(InputIterator<Iterator1> && InputIterator<Iterator2>)
 pair<Iterator1, Iterator2>
@@ -110,7 +197,7 @@ MSTL_CONSTEXPR mismatch(Iterator1 first1, Iterator1 last1, Iterator2 first2) {
 	return MSTL::make_pair<Iterator1, Iterator2>(first1, first2);
 }
 template <typename Iterator1, typename Iterator2, typename Compare>
-	requires(InputIterator<Iterator1> && InputIterator<Iterator2> && BinaryFunction<Compare>)
+	requires(InputIterator<Iterator1> && InputIterator<Iterator2>)
 pair<Iterator1, Iterator2>
 MSTL_CONSTEXPR mismatch(Iterator1 first1, Iterator1 last1,
 	Iterator2 first2, Compare comp) {
@@ -119,60 +206,59 @@ MSTL_CONSTEXPR mismatch(Iterator1 first1, Iterator1 last1,
 	}
 	return MSTL::make_pair<Iterator1, Iterator2>(first1, first2);
 }
-
-// copy: 
+// copy
 template <typename Iterator1, typename Iterator2, typename Distance>
 	requires(RandomAccessIterator<Iterator1> && RandomAccessIterator<Iterator2> && Number<Distance>)
-MSTL_CONSTEXPR Iterator2 __copy_d(Iterator1 first, Iterator1 last, Iterator2 result, Distance*) {
+MSTL_CONSTEXPR Iterator2 copy_distance_aux(Iterator1 first, Iterator1 last, Iterator2 result, Distance*) {
 	for (Distance n = last - first; n > 0; --n, ++result, ++first) 
 		*result = *first;
 	return result;
 }
 template <typename Iterator1, typename Iterator2>
 	requires(InputIterator<Iterator1> && InputIterator<Iterator2>)
-MSTL_CONSTEXPR Iterator2 __copy(Iterator1 first, Iterator1 last, Iterator2 result) {
+MSTL_CONSTEXPR Iterator2 copy_aux(Iterator1 first, Iterator1 last, Iterator2 result) {
 	for (; first != last; ++result, ++first) *result = *first;
 	return result;
 }
 template <typename Iterator1, typename Iterator2>
 	requires(RandomAccessIterator<Iterator1> && RandomAccessIterator<Iterator2>)
-MSTL_CONSTEXPR Iterator2 __copy(Iterator1 first, Iterator1 last, Iterator2 result) {
-	return MSTL::__copy_d(first, last, result, distance_type(first));
+MSTL_CONSTEXPR Iterator2 copy_aux(Iterator1 first, Iterator1 last, Iterator2 result) {
+	return MSTL::copy_distance_aux(first, last, result, distance_type(first));
 }
 template <typename T>
 	requires(TrivialCopyAssignable<T>)
-MSTL_CONSTEXPR T* __copy_t(const T* first, const T* last, T* result) {
+MSTL_CONSTEXPR T* copy_trivial_aux(const T* first, const T* last, T* result) {
 	MSTL::memmove(result, first, (int)(sizeof(T) * (last - first)));
 	return result + (last - first);
 }
 template <typename T>
 	requires(!TrivialCopyAssignable<T>)
-MSTL_CONSTEXPR T* __copy_t(const T* first, const T* last, T* result) {
-	return MSTL::__copy_d(first, last, result, (ptrdiff_t*)0);
+MSTL_CONSTEXPR T* copy_trivial_aux(const T* first, const T* last, T* result) {
+	return MSTL::copy_distance_aux(first, last, result, (ptrdiff_t*)0);
 }
 template <typename Iterator1, typename Iterator2>
 	requires(InputIterator<Iterator1> && InputIterator<Iterator2>)
-struct __copy_dispatch {
+struct copy_dispatch {
 	MSTL_CONSTEXPR Iterator2 operator ()(Iterator1 first, Iterator1 last, Iterator2 result) {
-		return MSTL::__copy(first, last, result);
+		return MSTL::copy_aux(first, last, result);
 	}
 };
 template <typename T>
-struct __copy_dispatch<T*, T*> {
+struct copy_dispatch<T*, T*> {
 	MSTL_CONSTEXPR T* operator ()(T* first, T* last, T* result) {
-		return MSTL::__copy_t(first, last, result);
+		return MSTL::copy_trivial_aux(first, last, result);
 	}
 };
 template <typename T>
-struct __copy_dispatch<const T*, T*> {
+struct copy_dispatch<const T*, T*> {
 	MSTL_CONSTEXPR T* operator ()(const T* first, const T* last, T* result) {
-		return MSTL::__copy_t(first, last, result);
+		return MSTL::copy_trivial_aux(first, last, result);
 	}
 };
 template <typename Iterator1, typename Iterator2>
 	requires(InputIterator<Iterator1> &&  InputIterator<Iterator2>)
 MSTL_CONSTEXPR Iterator2 copy(Iterator1 first, Iterator1 last, Iterator2 result) {
-	return __copy_dispatch<Iterator1, Iterator2>()(first, last, result);
+	return copy_dispatch<Iterator1, Iterator2>()(first, last, result);
 }
 inline char* copy(const char* first, const char* last, char* result) {
 	MSTL::memmove(result, first, (int)(last - first));
@@ -183,48 +269,48 @@ inline wchar_t* copy(const wchar_t* first, const wchar_t* last, wchar_t* result)
 	return result + (last - first);
 }
 
-// copy_backward:
-template <class Iterator1, class Iterator2>
+// copy_backward
+template <typename Iterator1, typename Iterator2>
 	requires(BidirectionalIterator<Iterator1> && BidirectionalIterator<Iterator2>)
-MSTL_CONSTEXPR Iterator2 __copy_backward(Iterator1 first, Iterator1 last, Iterator2 result) {
+MSTL_CONSTEXPR Iterator2 copy_backward_aux(Iterator1 first, Iterator1 last, Iterator2 result) {
 	while (first != last) *--result = *--last;
 	return result;
 }
-template <class T>
+template <typename T>
 	requires(TrivialCopyAssignable<T>)
-MSTL_CONSTEXPR T* __copy_backward_t(const T* first, const T* last, T* result) {
+MSTL_CONSTEXPR T* copy_backward_trivial_aux(const T* first, const T* last, T* result) {
 	const ptrdiff_t N = last - first;
 	MSTL::memmove(result - N, first, (int)(sizeof(T) * N));
 	return result - N;
 }
-template <class T>
+template <typename T>
 	requires(!TrivialCopyAssignable<T>)
-MSTL_CONSTEXPR T* __copy_backward_t(const T* first, const T* last, T* result) {
-	return MSTL::__copy_backward(first, last, result);
+MSTL_CONSTEXPR T* copy_backward_trivial_aux(const T* first, const T* last, T* result) {
+	return MSTL::copy_backward_aux(first, last, result);
 }
-template <class Iterator1, class Iterator2>
+template <typename Iterator1, typename Iterator2>
 	requires(BidirectionalIterator<Iterator1> && BidirectionalIterator<Iterator2>)
-struct __copy_backward_dispatch {
+struct copy_backward_dispatch {
 	MSTL_CONSTEXPR Iterator2 operator()(Iterator1 first, Iterator1 last, Iterator2 result) {
-		return MSTL::__copy_backward(first, last, result);
+		return MSTL::copy_backward_aux(first, last, result);
 	}
 };
-template <class T>
-struct __copy_backward_dispatch<T*, T*> {
+template <typename T>
+struct copy_backward_dispatch<T*, T*> {
 	MSTL_CONSTEXPR T* operator()(T* first, T* last, T* result) {
-		return MSTL::__copy_backward_t(first, last, result);
+		return MSTL::copy_backward_trivial_aux(first, last, result);
 	}
 };
-template <class T>
-struct __copy_backward_dispatch<const T*, T*> {
+template <typename T>
+struct copy_backward_dispatch<const T*, T*> {
 	MSTL_CONSTEXPR T* operator()(const T* first, const T* last, T* result) {
-		return MSTL::__copy_backward_t(first, last, result);
+		return MSTL::copy_backward_trivial_aux(first, last, result);
 	}
 };
-template <class Iterator1, class Iterator2>
+template <typename Iterator1, typename Iterator2>
 	requires(BidirectionalIterator<Iterator1> && BidirectionalIterator<Iterator2>)
 MSTL_CONSTEXPR Iterator2 copy_backward(Iterator1 first, Iterator1 last, Iterator2 result) {
-	return __copy_backward_dispatch<Iterator1, Iterator2>()(first, last, result);
+	return copy_backward_dispatch<Iterator1, Iterator2>()(first, last, result);
 }
 MSTL_END_NAMESPACE__
 

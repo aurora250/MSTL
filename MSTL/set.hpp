@@ -6,7 +6,7 @@
 
 MSTL_BEGIN_NAMESPACE__
 
-template <typename Key, typename Compare = less<Key>, typename Alloc = default_standard_alloc<Key>>
+template <typename Key, typename Compare = less<Key>, typename Alloc = standard_allocator<Key>>
 class set {
 public:
 	typedef Key			key_type;
@@ -92,7 +92,7 @@ inline void swap(set<Key, Compare, Alloc>& x, set<Key, Compare, Alloc>& y) {
 }
 
 
-template <class Key, class Compare = less<Key>, class Alloc = default_standard_alloc<Key>>
+template <class Key, class Compare = less<Key>, class Alloc = standard_allocator<Key>>
 class multiset {
 public:
 	typedef Key key_type;

@@ -1,6 +1,5 @@
 #ifndef MSTL_MATHLIB_H__
 #define MSTL_MATHLIB_H__
-#include "basiclib.h"
 #include "errorlib.h"
 #include "functor.hpp"
 #include "concepts.hpp"
@@ -92,6 +91,8 @@ MSTL_CONSTEXPR T lcm(T m, T n) noexcept { // least common multiple
 template <typename T>
 MSTL_CONSTEXPR T square(T x) noexcept { return x * x; }
 template <typename T>
+MSTL_CONSTEXPR T cube(T x) noexcept { return MSTL::square(x) * x; }
+template <typename T>
 	requires (Integral<T>)
 MSTL_CONSTEXPR mathl_t power(T x, mathui_t n) noexcept {
 	if (n == 0) return mathl_t(1);
@@ -146,6 +147,11 @@ MSTL_CONSTEXPR mathd_t logarithm_2(mathd_t x) noexcept {
 MSTL_CONSTEXPR mathd_t logarithm_10(mathd_t x) noexcept {
 	return logarithm(x, 10);
 }
+MSTL_CONSTEXPR mathul_t cursory_lg2(mathul_t x) noexcept {
+	mathul_t k = 0;
+	for (; x > 1; x >>= 1) ++k;
+	return k;
+}
 
 MSTL_CONSTEXPR mathd_t square_root(mathd_t x, mathd_t precise) noexcept {
 	mathd_t t = 0.0;
@@ -157,6 +163,16 @@ MSTL_CONSTEXPR mathd_t square_root(mathd_t x, mathd_t precise) noexcept {
 	return result;
 }
 
+MSTL_CONSTEXPR mathd_t cube_root(mathd_t x, mathd_t precise) noexcept {
+	mathd_t t = 0.0;
+	mathd_t result = x;
+	while (absolute(result - t) > precise) {
+		t = result;
+		result = (2 * t + x / (t * t)) / 3;
+	}
+	return result;
+}
+
 MSTL_CONSTEXPR mathul_t factorial(mathul_t n) noexcept {
 	mathul_t h = 1;
 	for (mathul_t i = 1; i <= n; i++)
@@ -164,7 +180,8 @@ MSTL_CONSTEXPR mathul_t factorial(mathul_t n) noexcept {
 	return h;
 }
 
-MSTL_CONSTEXPR mathd_t floor_bit(mathd_t x, mathui_t bit) noexcept { // bit 精确到第几位，>0 操作小数位，≤0 操作整数位
+// bit 精确到第几位，>0 操作小数位，≤0 操作整数位
+MSTL_CONSTEXPR mathd_t floor_bit(mathd_t x, mathui_t bit) noexcept {
 	mathd_t times = power(10.0, bit);
 	mathl_t int_part = (mathl_t)(x * times);
 	if (x < 0 && (mathl_t)(x * times * 10) / 10.0 != int_part) {
@@ -190,8 +207,7 @@ MSTL_CONSTEXPR mathd_t round_bit(mathd_t x, mathui_t bit) noexcept {
 		: floor_bit(x + 0.5 / power(10.0, bit), bit);
 }
 MSTL_CONSTEXPR mathd_t truncate_bit(mathd_t x, mathui_t bit) noexcept {
-	return x < 0 ? ceil_bit(x, bit) 
-		: floor_bit(x, bit);
+	return x < 0 ? ceil_bit(x, bit) : floor_bit(x, bit);
 }
 MSTL_CONSTEXPR mathd_t floor(mathd_t x, mathui_t bit) noexcept {
 	mathd_t times = power(10.0, bit);
@@ -211,16 +227,14 @@ MSTL_CONSTEXPR mathd_t ceil(mathd_t x, mathui_t bit) noexcept {
 }
 
 MSTL_CONSTEXPR mathd_t round(mathd_t x, mathui_t bit) noexcept {
-	return x < 0 ? ceil(x - 0.5 / power(10.0, bit), bit) 
+	return x < 0 ? ceil(x - 0.5 / power(10.0, bit), bit)
 		: floor(x + 0.5 / power(10.0, bit), bit);
 }
 MSTL_CONSTEXPR mathd_t truncate(mathd_t x, int bit) noexcept {
-	return x < 0 ? ceil(x, bit) 
-		: floor(x, bit);
+	return x < 0 ? ceil(x, bit) : floor(x, bit);
 }
 
-inline bool around_multiple(
-	mathd_t x, mathd_t axis, mathd_t toler = constants::PRECISE_TOLERANCE) {
+inline bool around_multiple(mathd_t x, mathd_t axis, mathd_t toler = constants::PRECISE_TOLERANCE) {
 	axis = absolute(axis);
 	if (axis < constants::PRECISE_TOLERANCE) Exception(ValueError("Axis Cannot be 0"));
 	x = absolute(x);
@@ -239,7 +253,7 @@ MSTL_CONSTEXPR mathd_t remainder(mathd_t x, mathd_t y) noexcept {
 	return (x - y * (x / y));
 }
 MSTL_CONSTEXPR mathd_t float_part(mathd_t x) noexcept {
-	return (x - (mathl_t)x);
+	return (x - mathl_t(x));
 }
 MSTL_CONSTEXPR mathd_t divided_float(mathd_t x, mathl_t* ptr) noexcept {
 	*ptr = mathl_t(x);

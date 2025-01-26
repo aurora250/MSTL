@@ -101,7 +101,7 @@ __rb_tree_node_base* __rb_tree_rebalance_for_erase(
 int __black_count(__rb_tree_node_base* node, __rb_tree_node_base* root) noexcept;
 
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, 
-    typename Alloc = default_standard_alloc<__rb_tree_node<Value>>>
+    typename Alloc = standard_allocator<__rb_tree_node<Value>>>
 class rb_tree {
 private:
     typedef __rb_tree_node_base*    base_ptr;

@@ -17,7 +17,7 @@ struct __hashtable_node {
 };
 
 template <class Value, class Key, class HashFcn, class ExtractKey, class EqualKey,
-    class Alloc = default_standard_alloc<__hashtable_node<Value>>>
+    class Alloc = standard_allocator<__hashtable_node<Value>>>
 class hashtable;
 
 template <class Value, class Key, class HashFcn,

@@ -6,7 +6,7 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <class Value, class HashFcn = hash<Value>,  class EqualKey = equal_to<Value>, 
-    class Alloc = default_standard_alloc<__hashtable_node<pair<const Value, Value>>>>
+    class Alloc = standard_allocator<__hashtable_node<pair<const Value, Value>>>>
     requires(HashFunction<HashFcn, Value>&& BinaryFunction<EqualKey>)
 class hash_set {
 private:
@@ -96,7 +96,7 @@ inline void swap(hash_set<Val, HashFcn, EqualKey, Alloc>& hs1, hash_set<Val, Has
 
 
 template <class Value, class HashFcn = hash<Value>, class EqualKey = equal_to<Value>,
-    class Alloc = default_standard_alloc<pair<const Value, Value>>>
+    class Alloc = standard_allocator<pair<const Value, Value>>>
     requires(HashFunction<HashFcn, Value>&& BinaryFunction<EqualKey>)
 class hash_multiset {
 private:

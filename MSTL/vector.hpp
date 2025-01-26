@@ -8,26 +8,27 @@
 MSTL_BEGIN_NAMESPACE__
 MSTL_CONCEPTS__
 
-template <typename T, typename Alloc = default_standard_alloc<T>>
+template <typename T, typename Alloc = standard_allocator<T>>
 class vector {
 public:
 	typedef T					value_type;
 	typedef T*					pointer;
 	typedef T*					iterator;
 	typedef const T*			const_iterator;
+	typedef MSTL::reverse_iterator<iterator> reverse_iterator;
+	typedef MSTL::reverse_iterator<const_iterator> const_reverse_iterator;
 	typedef T&					reference;
 	typedef const T&			const_reference;
 	typedef size_t				size_type;
 	typedef ptrdiff_t			difference_type;
 	typedef vector<T, Alloc>	self;
 private:
-	typedef Alloc data_allocator;
-	typedef std::_Rebind_alloc_t<Alloc, T> alloc_type;
+	typedef Alloc alloc_type;
 
 	iterator start_;
 	iterator finish_;
 	iterator end_of_storage_;
-	data_allocator alloc_;
+	alloc_type alloc_;
 
 	MSTL_CONSTEXPR void range_check(size_type _pos) const {
 		MSTL_DEBUG_VERIFY__(
@@ -35,16 +36,16 @@ private:
 		);
 	}
 	template <typename U = T>
-	MSTL_CONSTEXPR void fill_initialize(size_type n, U&& x) {
-		start_ = allocate_and_fill(n, std::forward<U>(x));
-		finish_ = start_ + n;
-		end_of_storage_ = finish_;
-	}
-	template <typename U = T>
 	MSTL_CONSTEXPR iterator allocate_and_fill(size_type n, U&& x) {
 		iterator result = alloc_.allocate(n);
 		MSTL::uninitialized_fill_n(result, n, std::forward<U>(x));
 		return result;
+	}
+	template <typename U = T>
+	MSTL_CONSTEXPR void fill_initialize(size_type n, U&& x) {
+		start_ = (allocate_and_fill)(n, std::forward<U>(x));
+		finish_ = start_ + n;
+		end_of_storage_ = finish_;
 	}
 	template <typename Iterator>
 		requires(ForwardIterator<Iterator>)
@@ -142,38 +143,38 @@ private:
 public:
 	MSTL_CONSTEXPR vector() noexcept(NothrowDefaultConstructible<T>)
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
-		fill_initialize(1, T());
+		(fill_initialize)(1, T());
 		finish_ = start_;
 		end_of_storage_ = finish_;
 	}
 
 	MSTL_CONSTEXPR explicit vector(size_type n) 
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
-		fill_initialize(n, T());
+		(fill_initialize)(n, T());
 	}
 	MSTL_CONSTEXPR explicit vector(size_type n, const T& value)
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
-		fill_initialize(n, value);
+		(fill_initialize)(n, value);
 	}
 	MSTL_CONSTEXPR explicit vector(int n, const T& value)
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
-		fill_initialize(n, value);
+		(fill_initialize)(n, value);
 	}
 	MSTL_CONSTEXPR explicit vector(long n, const T& value)
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
-		fill_initialize(n, value);
+		(fill_initialize)(n, value);
 	}
 	MSTL_CONSTEXPR explicit vector(size_type n, T&& value)
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
-		fill_initialize(n, std::forward<T>(value));
+		(fill_initialize)(n, std::forward<T>(value));
 	}
 	MSTL_CONSTEXPR explicit vector(int n, T&& value)
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
-		fill_initialize(n, std::forward<T>(value));
+		(fill_initialize)(n, std::forward<T>(value));
 	}
 	MSTL_CONSTEXPR explicit vector(long n, T&& value)
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
-		fill_initialize(n, std::forward<T>(value));
+		(fill_initialize)(n, std::forward<T>(value));
 	}
 
 	MSTL_CONSTEXPR vector(const self& x) 
@@ -233,9 +234,17 @@ public:
 	}
 
 	MSTL_NODISCARD MSTL_CONSTEXPR iterator begin() noexcept { return start_; }
-	MSTL_NODISCARD MSTL_CONSTEXPR const_iterator cbegin() const noexcept { return start_; }
 	MSTL_NODISCARD MSTL_CONSTEXPR iterator end() noexcept { return finish_; }
+	MSTL_NODISCARD MSTL_CONSTEXPR const_iterator cbegin() const noexcept { return start_; }
 	MSTL_NODISCARD MSTL_CONSTEXPR const_iterator cend() const noexcept { return finish_; }
+	MSTL_NODISCARD MSTL_CONSTEXPR reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+	MSTL_NODISCARD MSTL_CONSTEXPR reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+	MSTL_NODISCARD MSTL_CONSTEXPR const_reverse_iterator crbegin() const noexcept {
+		return const_reverse_iterator(cend());
+	}
+	MSTL_NODISCARD MSTL_CONSTEXPR const_reverse_iterator crend() const noexcept {
+		return const_reverse_iterator(cbegin());
+	}
 
 	MSTL_NODISCARD MSTL_CONSTEXPR size_type size() const noexcept { return size_type(finish_ - start_); }
 	MSTL_NODISCARD MSTL_CONSTEXPR size_type capacity() const noexcept { return size_type(end_of_storage_ - start_); }
@@ -243,6 +252,7 @@ public:
 
 	MSTL_NODISCARD MSTL_CONSTEXPR T* data() noexcept { return start_; }
 	MSTL_NODISCARD MSTL_CONSTEXPR const T* data() const noexcept { return start_; }
+	MSTL_NODISCARD MSTL_CONSTEXPR alloc_type get_allocator() const noexcept { return alloc_; }
 
 	MSTL_NODISCARD MSTL_CONSTEXPR reference front() noexcept { return *start_; }
 	MSTL_NODISCARD MSTL_CONSTEXPR const_reference front() const noexcept { return *start_; }
@@ -390,8 +400,7 @@ public:
 };
 template <typename T, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(const vector<T, Alloc>& lh, const vector<T, Alloc>& rh) {
-	return lh.size() == rh.size() && MSTL::equal(
-		lh.cbegin(), lh.cend(), rh.cbegin());
+	return lh.size() == rh.size() && MSTL::equal(lh.cbegin(), lh.cend(), rh.cbegin());
 }
 template <typename T, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(const vector<T, Alloc>& lh, const vector<T, Alloc>& rh) {
@@ -399,8 +408,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(const vector<T, Alloc>& lh, const
 }
 template <typename T, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator <(const vector<T, Alloc>& lh, const vector<T, Alloc>& rh) {
-	return MSTL::lexicographical_compare(
-		lh.cbegin(), lh.cend(), rh.cbegin(), rh.cend());
+	return MSTL::lexicographical_compare(lh.cbegin(), lh.cend(), rh.cbegin(), rh.cend());
 }
 template <typename T, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator >(const vector<T, Alloc>& lh, const vector<T, Alloc>& rh) {

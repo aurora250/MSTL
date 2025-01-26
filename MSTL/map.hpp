@@ -6,7 +6,7 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Key, typename T, typename Compare = less<Key>,
-	typename Alloc = default_standard_alloc<__rb_tree_node<pair<const Key, T>>>>
+	typename Alloc = standard_allocator<__rb_tree_node<pair<const Key, T>>>>
 class map {
 public:
 	typedef Key							key_type;
@@ -177,7 +177,7 @@ void swap(map<Key, T, Compare, Alloc>& x, map<Key, T, Compare, Alloc>& y)
 }
 
 template <class Key, class T, class Compare = less<Key>,
-	class Alloc = default_standard_alloc<__rb_tree_node<pair<const Key, T>>>>
+	class Alloc = standard_allocator<__rb_tree_node<pair<const Key, T>>>>
 class multimap {
 public:
 	typedef Key key_type;

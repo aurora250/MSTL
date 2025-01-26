@@ -5,7 +5,7 @@
 #include "functor.hpp"
 MSTL_BEGIN_NAMESPACE__
 
-template <typename Key, typename Compare = less<Key>, typename Alloc = default_standard_alloc<Key>>
+template <typename Key, typename Compare = less<Key>, typename Alloc = standard_allocator<Key>>
 class avl_set {
 public:
 	typedef Key			key_type;
