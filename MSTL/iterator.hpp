@@ -45,6 +45,21 @@ MSTL_CONSTEXPR void advance(Iterator& i, Distance n) {
 
 template <typename Iterator>
     requires(InputIterator<Iterator>)
+MSTL_CONSTEXPR Iterator prev(Iterator iter,
+    typename std::iterator_traits<Iterator>::difference_type n = -1) {
+    MSTL::advance(iter, n);
+    return iter;
+}
+template <typename Iterator>
+    requires(InputIterator<Iterator>)
+MSTL_CONSTEXPR Iterator next(Iterator iter,
+    typename std::iterator_traits<Iterator>::difference_type n = 1) {
+    MSTL::advance(iter, n);
+    return iter;
+}
+
+template <typename Iterator>
+    requires(InputIterator<Iterator>)
 MSTL_CONSTEXPR typename std::iterator_traits<Iterator>::difference_type
 distance(Iterator first, Iterator last) {
     typename std::iterator_traits<Iterator>::difference_type n = 0;

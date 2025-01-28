@@ -407,14 +407,14 @@ public:
 		header_->parent_ = header_;
 	}
 	link_type find(const Key& k) const {
-		link_type cur = header_->parent_;
+		link_type cur = link_type(header_->parent_);
 		while (cur) {
 			if (key_compare_(k, get_key(cur)))
-				cur = cur->left_;
+				cur = link_type(cur->left_);
 			else if (k == get_key(cur))
 				return cur;
 			else
-				cur = cur->right_;
+				cur = link_type(cur->right_);
 		}
 		return nullptr;
 	}
@@ -427,7 +427,7 @@ public:
 	}
 	size_type size() const { return size_; }
 	bool empty() const { return header_->parent_ == base_ptr(header_); }
-	bool is_balanced() { return balanced_aux(header_->parent_); }
+	bool is_balanced() { return balanced_aux(link_type(header_->parent_)); }
 	void in_order() const {
 		in_order_aux(header_->parent_);
 		std::cout << std::endl;

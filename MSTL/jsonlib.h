@@ -37,7 +37,7 @@ struct JSONObject {
 template <typename T>
 std::optional<T> try_parse_number(std::string_view str) {
 	T value;
-	auto res = std::from_chars(str.data(), str.data() + str.size(), value);
+	std::from_chars_result res = std::from_chars(str.data(), str.data() + str.size(), value);
 	if (res.ec == std::errc() && res.ptr == str.data() + str.size()) return value;
 	return std::nullopt;
 }

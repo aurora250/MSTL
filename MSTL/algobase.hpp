@@ -46,7 +46,7 @@ noexcept(NothrowMoveConstructible<T>&& NothrowMoveAssignable<T>) {
 
 template <typename Iterator1, typename Iterator2>
 	requires(ForwardIterator<Iterator1> && ForwardIterator<Iterator2>)
-MSTL_CONSTEXPR void iter_swap(Iterator1& a, Iterator2& b)
+MSTL_CONSTEXPR void iter_swap(Iterator1 a, Iterator2 b)
 noexcept(noexcept(MSTL::swap(*a, *b))) {
 	MSTL::swap(*a, *b);
 }
@@ -269,7 +269,23 @@ inline wchar_t* copy(const wchar_t* first, const wchar_t* last, wchar_t* result)
 	return result + (last - first);
 }
 
-// copy_backward
+// copy n
+template < typename Iterator1, typename Iterator2>
+	requires(InputIterator<Iterator1> && InputIterator<Iterator2>)
+pair<Iterator1, Iterator2> copy_n(Iterator1 first, size_t count, Iterator2 result) {
+	for (; count > 0; --count, ++first, ++result)
+		*result = *first;
+	return pair<Iterator1, Iterator2>(first, result);
+}
+
+template <typename Iterator1, typename Iterator2>
+	requires(RandomAccessIterator<Iterator1> && InputIterator<Iterator2>)
+pair<Iterator1, Iterator2> copy_n(Iterator1 first, size_t count, Iterator2 result) {
+	Iterator1 last = first + count;
+	return pair<Iterator1, Iterator2>(last, MSTL::copy(first, last, result));
+}
+
+// copy backward
 template <typename Iterator1, typename Iterator2>
 	requires(BidirectionalIterator<Iterator1> && BidirectionalIterator<Iterator2>)
 MSTL_CONSTEXPR Iterator2 copy_backward_aux(Iterator1 first, Iterator1 last, Iterator2 result) {
@@ -312,6 +328,6 @@ template <typename Iterator1, typename Iterator2>
 MSTL_CONSTEXPR Iterator2 copy_backward(Iterator1 first, Iterator1 last, Iterator2 result) {
 	return copy_backward_dispatch<Iterator1, Iterator2>()(first, last, result);
 }
-MSTL_END_NAMESPACE__
 
+MSTL_END_NAMESPACE__
 #endif // MSTL_ALGOBASE_HPP__

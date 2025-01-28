@@ -138,7 +138,6 @@
     <ClCompile Include="avl_tree.cpp" />
     <ClCompile Include="basiclib.cpp" />
     <ClCompile Include="check_type.cpp" />
-    <ClCompile Include="depositary.cpp" />
     <ClCompile Include="logging.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="errorlib.cpp" />
@@ -151,6 +150,7 @@
     <ClInclude Include="algo.hpp" />
     <ClInclude Include="algobase.hpp" />
     <ClInclude Include="algorithm.hpp" />
+    <ClInclude Include="allocator.hpp" />
     <ClInclude Include="avl_set.hpp" />
     <ClInclude Include="avl_tree.h" />
     <ClInclude Include="container.h" />
@@ -169,7 +169,6 @@
     <ClInclude Include="basemstlc++.hpp" />
     <ClInclude Include="basiclib.h" />
     <ClInclude Include="concepts.hpp" />
-    <ClInclude Include="depositary.h" />
     <ClInclude Include="check_type.h" />
     <ClInclude Include="deque.hpp" />
     <ClInclude Include="errorlib.h" />
@@ -185,10 +184,10 @@
     <ClInclude Include="set.hpp" />
     <ClInclude Include="sort.hpp" />
     <ClInclude Include="stack.hpp" />
-    <ClInclude Include="tempbuf.hpp" />
     <ClInclude Include="threadsafe_print.h" />
     <ClInclude Include="thread_pool.h" />
     <ClInclude Include="tuple.hpp" />
+    <ClInclude Include="type_traits.hpp" />
     <ClInclude Include="vector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

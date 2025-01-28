@@ -13,7 +13,7 @@ public:
 	virtual ~__deposit_node_base() = 0;
 };
 
-template <NVoidT T, typename... Args>
+template <typename T, typename... Args>
 class deposit : public __deposit_node_base {
 	using Func = std::function<T(Args...)>;
 public:
@@ -28,11 +28,10 @@ class Depositary {
 public:
 	template <typename Func>
 	void register_deposit(const std::string& register_name, Func&& func) {
-		//deposit_map_.insert(pair(_register_name, __base_deposit_ptr(new DeposT(_target))));
 		deposit_map_.emplace(register_name, deposit_ptr(&std::forward<Func>(func)));
 	};
 
-	template <NVoidT T, typename... Args>
+	template <typename T, typename... Args>
 	T excute(const std::string& _register_name, Args&&... _args) {
 		if (deposit_map_.count(_register_name)) {
 			auto depos_ptr = deposit_map_[_register_name];

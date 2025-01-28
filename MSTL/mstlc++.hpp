@@ -16,9 +16,8 @@
 #include "hash_set.hpp"
 #include "avl_set.hpp"
 
-#include "depositary.h"
 #include "jsonlib.h"
 #include "mysql_connect_pool.h"
-#include "thread_pool.h"  // threadsafe_print
+#include "thread_pool.h"
 
 #endif // MSTL_MSTLCPP_HPP__

@@ -199,6 +199,13 @@ public:
 		return *this;
 	}
 
+	template <typename Iterator>
+		requires(InputIterator<Iterator>)
+	MSTL_CONSTEXPR vector(Iterator first, Iterator last)
+		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
+		range_initialize(first, last);
+	}
+
 	MSTL_CONSTEXPR vector(const std::initializer_list<T>& x) 
 		: vector(x.begin(), x.end()) {}
 	MSTL_CONSTEXPR self& operator =(const std::initializer_list<T>& x) {
@@ -219,13 +226,6 @@ public:
 		}
 		finish_ = start_ + x.size();
 		return *this;
-	}
-
-	template <typename Iterator>
-		requires(InputIterator<Iterator>)
-	MSTL_CONSTEXPR vector(Iterator first, Iterator last) 
-		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
-		range_initialize(first, last);
 	}
 
 	~vector() {
@@ -260,14 +260,15 @@ public:
 	MSTL_NODISCARD MSTL_CONSTEXPR const_reference back() const noexcept { return *(finish_ - 1); }
 
 	MSTL_CONSTEXPR void reserve(size_type n) {
-		if (capacity() > n) return;
+		if (capacity() >= n) return;
+		size_type new_capacity = std::max(capacity() * 2, n);
 		size_type old_size = size();
-		iterator tmp = (allocate_and_copy)(n, start_, finish_);
+		iterator tmp = (allocate_and_copy)(new_capacity, start_, finish_);
 		MSTL::destroy(start_, finish_);
 		deallocate();
 		start_ = tmp;
 		finish_ = tmp + old_size;
-		end_of_storage_ = start_ + n;
+		end_of_storage_ = start_ + new_capacity;
 	}
 	MSTL_CONSTEXPR void resize(size_type new_size, const T& x) {
 		if (new_size < size()) erase(begin() + new_size, end());

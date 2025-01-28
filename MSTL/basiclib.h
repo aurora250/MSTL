@@ -62,13 +62,10 @@
 #define MSTL_SUPPORT_CONSTEXPR__	1
 #endif
 #if defined(_HAS_CXX17) || (__cplusplus >= 201703L)
-#define MSTL_SUPPORT_IFCONSTEXPR__	1
-#endif
-#if defined(_HAS_CXX17) || (__cplusplus >= 201703L)
 #define MSTL_SUPPORT_NORETURN__		1
 #endif
 #if defined(MSTL_COMPILE_MSVC__)
-#define MSTL_SUPPORT_DECLALLOC__		1
+#define MSTL_SUPPORT_DECLALLOC__	1
 #endif
 
 #define MSTL_DLL_LINK__				1
@@ -87,12 +84,6 @@
 #define MSTL_CONSTEXPR constexpr
 #else
 #define MSTL_CONSTEXPR
-#endif
-
-#ifdef MSTL_SUPPORT_IFCONSTEXPR__
-#define MSTL_IFCONSTEXPR(COND) if constexpr(COND)
-#else
-#define MSTL_IFCONSTEXPR(COND) if (COND)
 #endif
 
 #ifdef MSTL_SUPPORT_NODISCARD__

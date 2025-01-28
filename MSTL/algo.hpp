@@ -3,6 +3,7 @@
 #include "mathlib.h"
 #include "iterator.hpp"
 #include "algobase.hpp"
+#include "memory.hpp"
 MSTL_BEGIN_NAMESPACE__
 // union of set
 template <typename Iterator1, typename Iterator2, typename Iterator3>
@@ -332,6 +333,7 @@ bool includes(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 las
 			++first1, ++first2;
 	return first2 == last2;
 }
+
 template <typename Iterator1, typename Iterator2, typename Compare>
 	requires(InputIterator<Iterator1>&& InputIterator<Iterator2>)
 bool includes(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2, Compare comp) {
@@ -380,7 +382,7 @@ Iterator3 merge(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 l
 	}
 	return MSTL::copy(first2, last2, MSTL::copy(first1, last1, result));
 }
-// partition
+// unstable partition
 template <typename Iterator, typename Predicate>
 	requires(BidirectionalIterator<Iterator>)
 Iterator partition(Iterator first, Iterator last, Predicate pred) {
@@ -448,7 +450,7 @@ template <typename Iterator1, typename Iterator2, typename T>
 Iterator2 replace_copy(Iterator1 first, Iterator1 last, Iterator2 result,
 	const T& old_value, const T& new_value) {
 	for (; first != last; ++first, ++result)
-		*result = *first == old_value ? new_value : *first;
+		*result = (*first == old_value ? new_value : *first);
 	return result;
 }
 
@@ -480,13 +482,21 @@ template <typename Iterator>
 void reverse(Iterator first, Iterator last) {
 	while (true)
 		if (first == last || first == --last) return;
-		else MSTL::iter_swap(first++, last);
+		else {
+			--last;
+			MSTL::iter_swap(first, last);
+			++first;
+		}
 }
 
 template <typename Iterator>
 	requires(RandomAccessIterator<Iterator>)
 void reverse(Iterator first, Iterator last) {
-	while (first < last) MSTL::iter_swap(first++, --last);
+	while (first < last) {
+		--last;
+		MSTL::iter_swap(first, last);
+		++first;
+	}
 }
 // rotate
 template <typename Iterator>
@@ -572,7 +582,7 @@ Iterator3 transform(Iterator1 first1, Iterator1 last1, Iterator2 first2,
 		*result = binary_op(*first1, *first2);
 	return result;
 }
-// unique
+// unique always stable
 template <typename Iterator1, typename Iterator2>
 	requires(InputIterator<Iterator1> && ForwardIterator<Iterator2>)
 Iterator2 unique_copy(Iterator1 first, Iterator1 last, Iterator2 result) {
@@ -894,17 +904,20 @@ template <typename Iterator>
 	requires(RandomAccessIterator<Iterator>)
 void random_shuffle(Iterator first, Iterator last) {
 	if (first == last) return;
-	using Distance = typename std::iterator_traits<Iterator>::difference_type;
-	for (Iterator i = first + 1; i != last; ++i)
-		MSTL::iter_swap(i, first + Distance(std::rand() % ((i - first) + 1)));
+	for (Iterator i = MSTL::next(first); i != last; ++i) {
+		Iterator j = MSTL::next(first, std::rand() % ((i - first) + 1));
+		MSTL::iter_swap(i, j);
+	}
 }
 
 template <typename Iterator, typename Generator>
 	requires(RandomAccessIterator<Iterator>)
 void random_shuffle(Iterator first, Iterator last, Generator& rand) {
 	if (first == last) return;
-	for (Iterator i = first + 1; i != last; ++i)
-		MSTL::iter_swap(i, first + rand((i - first) + 1));
+	for (Iterator i = MSTL::next(first); i != last; ++i) {
+		Iterator j = MSTL::next(first, rand((i - first) + 1));
+		MSTL::iter_swap(i, j);
+	}
 }
 // equal range
 template <typename Iterator, typename T>
@@ -1012,6 +1025,254 @@ pair<Iterator, Iterator> equal_range(Iterator first, Iterator last, const T& val
 		}
 	}
 	return pair<Iterator, Iterator>(first, first);
+}
+// inplace merge always stable
+template <class Iterator, class Distance>
+	requires(BidirectionalIterator<Iterator>)
+void merge_without_buffer_aux(Iterator first, Iterator middle,
+	Iterator last, Distance len1, Distance len2) {
+	if (len1 == 0 || len2 == 0) return;
+	if (len1 + len2 == 2) {
+		if (*middle < *first) MSTL::iter_swap(first, middle);
+		return;
+	}
+	Iterator first_cut = first;
+	Iterator second_cut = middle;
+	Distance len11 = 0;
+	Distance len22 = 0;
+	if (len1 > len2) {
+		len11 = len1 / 2;
+		MSTL::advance(first_cut, len11);
+		second_cut = MSTL::lower_bound(middle, last, *first_cut);
+		len22 = MSTL::distance(middle, second_cut);
+	}
+	else {
+		len22 = len2 / 2;
+		MSTL::advance(second_cut, len22);
+		first_cut = MSTL::upper_bound(first, middle, *second_cut);
+		len11 = MSTL::distance(first, first_cut);
+	}
+	MSTL::rotate(first_cut, middle, second_cut);
+	Iterator new_middle = first_cut;
+	MSTL::advance(new_middle, len22);
+	MSTL::merge_without_buffer_aux(first, first_cut, new_middle, len11, len22);
+	MSTL::merge_without_buffer_aux(new_middle, second_cut, last, len1 - len11, len2 - len22);
+}
+
+template <class Iterator, class Distance, class Compare>
+	requires(BidirectionalIterator<Iterator>)
+void merge_without_buffer_aux(Iterator first, Iterator middle, Iterator last,
+	Distance len1, Distance len2, Compare comp) {
+	if (len1 == 0 || len2 == 0) return;
+	if (len1 + len2 == 2) {
+		if (comp(*middle, *first)) MSTL::iter_swap(first, middle);
+		return;
+	}
+	Iterator first_cut = first;
+	Iterator second_cut = middle;
+	Distance len11 = 0;
+	Distance len22 = 0;
+	if (len1 > len2) {
+		len11 = len1 / 2;
+		MSTL::advance(first_cut, len11);
+		second_cut = MSTL::lower_bound(middle, last, *first_cut, comp);
+		len22 = MSTL::distance(middle, second_cut);
+	}
+	else {
+		len22 = len2 / 2;
+		MSTL::advance(second_cut, len22);
+		first_cut = MSTL::upper_bound(first, middle, *second_cut, comp);
+		len11 = MSTL::distance(first, first_cut);
+	}
+	MSTL::rotate(first_cut, middle, second_cut);
+	Iterator new_middle = first_cut;
+	MSTL::advance(new_middle, len22);
+	MSTL::merge_without_buffer_aux(first, first_cut, new_middle, len11, len22, comp);
+	MSTL::merge_without_buffer_aux(new_middle, second_cut, last, len1 - len11, len2 - len22, comp);
+}
+
+template <class Iterator1, class Iterator2, class Distance>
+	requires(BidirectionalIterator<Iterator1> && BidirectionalIterator<Iterator2>)
+Iterator1 rotate_with_buffer_aux(Iterator1 first, Iterator1 middle, Iterator1 last,
+	Distance len1, Distance len2, Iterator2 buffer, Distance buffer_size) {
+	Iterator2 buffer_end;
+	if (len1 > len2 && len2 <= buffer_size) {
+		buffer_end = MSTL::copy(middle, last, buffer);
+		MSTL::copy_backward(first, middle, last);
+		return MSTL::copy(buffer, buffer_end, first);
+	}
+	else if (len1 <= buffer_size) {
+		buffer_end = MSTL::copy(first, middle, buffer);
+		MSTL::copy(middle, last, first);
+		return MSTL::copy_backward(buffer, buffer_end, last);
+	}
+	else {
+		MSTL::rotate(first, middle, last);
+		MSTL::advance(first, len2);
+		return first;
+	}
+}
+
+template <class Iterator, class Distance, class Pointer>
+	requires(BidirectionalIterator<Iterator>)
+void merge_with_buffer_aux(Iterator first, Iterator middle, Iterator last,
+	Distance len1, Distance len2, Pointer buffer, Distance buffer_size) {
+	if (len1 <= len2 && len1 <= buffer_size) {
+		Pointer end_buffer = MSTL::copy(first, middle, buffer);
+		MSTL::merge(buffer, end_buffer, middle, last, first);
+	}
+	else if (len2 <= buffer_size) {
+		Pointer end_buffer = MSTL::copy(middle, last, buffer);
+		if (first == middle) {
+			MSTL::copy_backward(buffer, end_buffer, last);
+			return;
+		}
+		if (buffer == end_buffer) {
+			MSTL::copy_backward(first, middle, last);
+			return;
+		}
+		--middle;
+		--end_buffer;
+		while (true) {
+			if (*end_buffer < *middle) {
+				*--last = *middle;
+				if (first == middle) {
+					MSTL::copy_backward(buffer, ++end_buffer, last);
+					return;
+				}
+				--middle;
+			}
+			else {
+				*--last = *end_buffer;
+				if (buffer == end_buffer) {
+					MSTL::copy_backward(first, ++middle, last);
+					return;
+				}
+				--end_buffer;
+			}
+		}
+	}
+	else {
+		Iterator first_cut = first;
+		Iterator second_cut = middle;
+		Distance len11 = 0;
+		Distance len22 = 0;
+		if (len1 > len2) {
+			len11 = len1 / 2;
+			MSTL::advance(first_cut, len11);
+			second_cut = MSTL::lower_bound(middle, last, *first_cut);
+			len22 = MSTL::distance(middle, second_cut);
+		}
+		else {
+			len22 = len2 / 2;
+			MSTL::advance(second_cut, len22);
+			first_cut = MSTL::upper_bound(first, middle, *second_cut);
+			len11 = MSTL::distance(first, first_cut);
+		}
+		Iterator new_middle = MSTL::rotate_with_buffer_aux(
+			first_cut, middle, second_cut, len1 - len11, len22, buffer, buffer_size);
+
+		MSTL::merge_with_buffer_aux(
+			first, first_cut, new_middle, len11, len22, buffer, buffer_size);
+		MSTL::merge_with_buffer_aux(
+			new_middle, second_cut, last, len1 - len11, len2 - len22, buffer, buffer_size);
+	}
+}
+
+template <class Iterator, class Distance, class Pointer, class Compare>
+	requires(BidirectionalIterator<Iterator>)
+void merge_with_buffer_aux(Iterator first, Iterator middle, Iterator last,
+	Distance len1, Distance len2, Pointer buffer, Distance buffer_size, Compare comp) {
+	if (len1 <= len2 && len1 <= buffer_size) {
+		Pointer end_buffer = MSTL::copy(first, middle, buffer);
+		MSTL::merge(buffer, end_buffer, middle, last, first, comp);
+	}
+	else if (len2 <= buffer_size) {
+		Pointer end_buffer = MSTL::copy(middle, last, buffer);
+		if (first == middle) {
+			MSTL::copy_backward(buffer, end_buffer, last);
+			return;
+		}
+		if (buffer == end_buffer) {
+			MSTL::copy_backward(first, middle, last);
+			return;
+		}
+		--middle;
+		--end_buffer;
+		while (true) {
+			if (comp(*end_buffer, *middle)) {
+				*--last = *middle;
+				if (first == middle) {
+					MSTL::copy_backward(buffer, ++end_buffer, last);
+					return;
+				}
+				--middle;
+			}
+			else {
+				*--last = *end_buffer;
+				if (buffer == end_buffer) {
+					MSTL::copy_backward(first, ++middle, last);
+					return;
+				}
+				--end_buffer;
+			}
+		}
+	}
+	else {
+		Iterator first_cut = first;
+		Iterator second_cut = middle;
+		Distance len11 = 0;
+		Distance len22 = 0;
+		if (len1 > len2) {
+			len11 = len1 / 2;
+			MSTL::advance(first_cut, len11);
+			second_cut = MSTL::lower_bound(middle, last, *first_cut, comp);
+			len22 = MSTL::distance(middle, second_cut);
+		}
+		else {
+			len22 = len2 / 2;
+			MSTL::advance(second_cut, len22);
+			first_cut = MSTL::upper_bound(first, middle, *second_cut, comp);
+			len11 = MSTL::distance(first, first_cut);
+		}
+		Iterator new_middle = MSTL::rotate_with_buffer_aux(
+			first_cut, middle, second_cut, len1 - len11, len22, buffer, buffer_size);
+
+		MSTL::merge_with_buffer_aux(
+			first, first_cut, new_middle, len11, len22, buffer, buffer_size, comp);
+		MSTL::merge_with_buffer_aux(
+			new_middle, second_cut, last, len1 - len11, len2 - len22, buffer, buffer_size, comp);
+	}
+}
+
+template <class Iterator>
+	requires(BidirectionalIterator<Iterator>)
+void inplace_merge(Iterator first, Iterator middle, Iterator last) {
+	if (first == middle || middle == last) return;
+	using Distance = typename std::iterator_traits<Iterator>::difference_type;
+	Distance len1 = MSTL::distance(first, middle);
+	Distance len2 = MSTL::distance(middle, last);
+	temporary_buffer<Iterator> buffer(first, last);
+	if (buffer.begin() == 0)
+		MSTL::merge_without_buffer_aux(first, middle, last, len1, len2);
+	else
+		MSTL::merge_with_buffer_aux(
+			first, middle, last, len1, len2, buffer.begin(), Distance(buffer.size()));
+}
+
+template <class Iterator, class Compare>
+	requires(BidirectionalIterator<Iterator>)
+void inplace_merge(Iterator first, Iterator middle, Iterator last, Compare comp) {
+	if (first == middle || middle == last) return;
+	using Distance = typename std::iterator_traits<Iterator>::difference_type;
+	Distance len1 = MSTL::distance(first, middle);
+	Distance len2 = MSTL::distance(middle, last);
+	temporary_buffer<Iterator> buffer(first, last);
+	if (buffer.begin() == 0)
+		MSTL::merge_without_buffer_aux(first, middle, last, len1, len2, comp);
+	else
+		MSTL::merge_with_buffer_aux(
+			first, middle, last, len1, len2, buffer.begin(), Distance(buffer.size()), comp);
 }
 
 MSTL_END_NAMESPACE__

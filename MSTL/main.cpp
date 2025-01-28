@@ -67,19 +67,6 @@ void try_check() {
     std::cout << check_type<decltype(sr)>() << std::endl;
     split_line();
 }
-void try_dep() {
-    using namespace MSTL;
-    Depositary manager;
-    auto add = [](int a, double b, double& c)->double {
-            c = a + b;
-            return a + b;
-        };
-    deposit<double, int, double, double&> add_service(add);
-    manager.register_deposit("add", add_service);
-    double test = 0;
-    std::cout << manager.excute<double>("add", 2, 1.08, test) << std::endl;
-    std::cout << check_type<deposit<double, int, double, double&>>() << std::endl;
-}
 
 void try_copy() {
     //int ia[] = { 0,1,2,3,4,5,6,7,8 };
@@ -291,6 +278,8 @@ void try_math() {
     int* p2 = &b;
     iter_swap(p1, p2);
     sout << *p1 << ' ' << *p2 << endl;
+    //int fib[fibonacci(4)];
+    //int len[leonardo(4)];
 }
 void try_sql() {
     MSTL_NAMESPACE__;
@@ -335,6 +324,10 @@ struct Person {
     std::string name;
     int age;
 };
+inline std::ostream& operator <<(std::ostream& out, const Person& p) {
+    out << p.name << " : " << p.age << " ";
+    return out;
+}
 void try_sort() {
     MSTL_NAMESPACE__;
     vector<int> vec{ 6,9,1,5,8,4,7 };
@@ -346,23 +339,25 @@ void try_sort() {
     //counting_sort(vec.begin(), vec.end());
     //sort(vec.begin(), vec.end());
     //introspective_sort(vec.begin(), vec.end(), (size_t)logarithm_2(vec.end() - vec.begin()) * 2);
-    quick_sort(vec.begin(), vec.end());
+    //quick_sort(vec.begin(), vec.end());
+    //merge_sort(vec.begin(), vec.end());
     //bucket_sort(vec.begin(), vec.end());
-    //radix_sort_greater(vec.begin(), vec.end(), MSTL::identity<int>());
-    // 
-    //vector<Person> people = {
-    //{"Alice", 25},
-    //{"Bob", 20},
-    //{"Charlie", 30},
-    //{"David", 20}
-    //};
-    //counting_sort(people.begin(), people.end(),
-    //    [](const Person& a, const Person& b) -> bool { return a.age < b.age; },
-    //    [](const Person& p) -> int { return p.age; });
-    for (const auto& num : vec) {
-        std::cout << num << " ";
-    }
-    std::cout << std::endl;
+    //radix_sort(vec.begin(), vec.end());
+    //tim_sort(vec.begin(), vec.end());
+    //monkey_sort(vec.begin(), vec.end());
+    smooth_sort(vec.begin(), vec.end());
+    detailof(vec);
+    /*vector<Person> people = {
+    {"Alice", 25},
+    {"Bob", 20},
+    {"Charlie", 30},
+    {"David", 20}
+    };
+    counting_sort(people.begin(), people.end(),
+        [](const Person& a, const Person& b) -> bool { return a.age < b.age; },
+        [](const Person& p) -> int { return p.age; });
+    radix_sort_greater(people.begin(), people.end(), [](const Person& x) -> int { return x.age; });
+    detailof(people);*/
 }
 void try_avl() {
     MSTL_NAMESPACE__;
@@ -391,10 +386,23 @@ void try_avl() {
         std::cout << *it << std::endl;
     }
 }
+void try_algo() {
+    MSTL_NAMESPACE__;
+    std::vector<int> v1 = { 1, 3, 5 };
+    std::vector<int> v2 = { 2, 4, 6 };
+    std::vector<int> result(v1.size() + v2.size());
+    merge(v1.begin(), v1.end(), v2.begin(), v2.end(), result.begin());
+    detailof(result);
+    std::vector<int> v3 = { 1, 3, 5, 2, 4, 6 };
+    auto middle = v3.begin() + 3;
+    inplace_merge(v3.begin(), middle, v3.end());
+    detailof(v3);
+}
 void try_json() {
     MSTL_NAMESPACE__;
     
 }
 int main() {
-    try_sort();
+    MSTL_NAMESPACE__;
+    try_hash();
 }
