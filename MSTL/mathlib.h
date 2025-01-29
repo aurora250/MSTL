@@ -284,9 +284,9 @@ MSTL_CONSTEXPR mathld_t remainder(mathld_t x, mathld_t y) noexcept {
 MSTL_CONSTEXPR mathld_t float_part(mathld_t x) noexcept {
 	return (x - mathl_t(x));
 }
-MSTL_CONSTEXPR mathld_t divided_float(mathld_t x, mathl_t* ptr) noexcept {
-	*ptr = mathl_t(x);
-	x -= (*ptr);
+MSTL_CONSTEXPR mathld_t divided_float(mathld_t x, mathl_t* int_ptr) noexcept {
+	*int_ptr = mathl_t(x);
+	x -= (*int_ptr);
 	return x;
 }
 

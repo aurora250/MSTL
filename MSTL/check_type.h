@@ -53,7 +53,7 @@ struct bracket {   // ()
         out_.compact()(")");
     }
 };
-MSTL_TEMPLATE_NULL__ struct bracket<false> {
+TEMNULL__ struct bracket<false> {
     bracket(output& out, const char* str = nullptr) { out(str); }
 };
 

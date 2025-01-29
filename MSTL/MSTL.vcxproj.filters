@@ -164,13 +164,13 @@
     <ClInclude Include="avl_set.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="matrix.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="type_traits.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="allocator.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="utility.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

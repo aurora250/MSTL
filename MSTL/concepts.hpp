@@ -2,49 +2,27 @@
 #define MSTL_CONCEPTS_HPP__
 #include "type_traits.hpp"
 #include <concepts>
-#include <type_traits>
 MSTL_BEGIN_NAMESPACE__
 MSTL_SET_CONCEPTS__
 
 template <typename B, typename D>
-concept Derived = std::is_base_of<B, D>::value;
+concept Derived = is_base_of_v<B, D>;
 
 template <typename T>
-concept Void = is_void<T>::value;
+concept Void = is_void_v<T>;
 template <typename T>
-concept Reference = std::is_reference<T>::value;
+concept Reference = is_reference_v<T>;
 template <typename T>
-concept Rightvalue = std::is_rvalue_reference<T>::value;
+concept Pointer = is_pointer_v<T>;
 template <typename T>
-concept Pointer = std::is_pointer<T>::value;
+concept Handler = Reference<T> || Pointer<T>;
 template <typename T>
-concept NPointer = (not std::is_pointer<T>::value);
+concept Const = is_const_v<T>;
 template <typename T>
-concept Handler = std::is_reference<T>::value ||
-std::is_rvalue_reference<T>::value || std::is_pointer<T>::value;
+concept Volatile = is_volatile_v<T>;
 template <typename T>
-concept NHandler = (not std::is_reference<T>::value) &&
-(not std::is_rvalue_reference<T>::value) && (not std::is_pointer<T>::value);
-template <typename T>
-concept Const = std::is_const<T>::value;
-template <typename T>
-concept Volatile = std::is_volatile<T>::value;
-template <typename T>
-concept Function = std::is_function<T>::value;
+concept Function = is_function_v<T>;
 
-template<typename T, typename U>
-concept Addable = requires(T a, U b) {
-	{ a + b } -> std::convertible_to<decltype(a + b)>;
-};
-
-template<size_t N>
-concept Even = requires {
-	requires (N % 2 == 0);
-};
-template<size_t N>
-concept Positive = requires {
-	requires (N > 0);
-};
 template <typename T>
 concept Integral = is_integral_v<T>;
 template <typename T>
@@ -52,114 +30,64 @@ concept Float = is_floating_point_v<T>;
 template <typename T>
 concept Number = is_arithmetic_v<T>;
 template <typename T>
-concept SignedNumber = Integral<T> || Float<T>;
+concept SignedNumber = is_signed_v<T>;
 
 template <typename From, typename To>
-concept Convertible = std::is_convertible_v<From, To>;
+concept Convertible = is_convertible_v<From, To>;
 template <typename T, typename U>
 concept SameTo = is_same_v<T, U>;
 
-template<typename... T>
-concept DefaultConstructible = (... && std::is_default_constructible_v<T>);
-#ifdef MSTL_COMPILE_MSVC__
-template<typename... T>
-concept DefaultImplicitConstructible = (... && std::_Is_implicitly_default_constructible<T>::value);
-#elif defined(MSTL_COMPILE_GNUC__)
-template <class T, class = void>
-struct _Is_implicitly_default_constructible : std::false_type {};
-template <class T>
-inline void _Implicitly_default_construct(const T&) {}
-template <class T>
-struct _Is_implicitly_default_constructible < T, std::void_t<decltype(_Implicitly_default_construct<T>({})) >> : std::true_type {};
+template<typename T>
+concept DefaultConstructible = is_default_constructible_v<T>;
+template<typename T>
+concept DefaultImplicitConstructible = is_implicitly_default_constructible_v<T>;
+template<typename T>
+concept CopyConstructible = is_copy_constructible_v<T>;
+template<typename T, typename... Args>
+concept ConstructibleFrom = is_constructible_v<T, Args...>;
+
+template<typename To, typename From>
+concept AssignableFrom = is_assignable_v<To, From>;
+template<typename T>
+concept CopyAssignable = is_copy_assignable_v<T>;
+template <typename T>
+concept TrivialCopyAssignable = is_trivially_copy_assignable_v<T>;
+template<typename T>
+concept MoveAssignable = is_move_assignable_v<T>;
+template <typename T>
+concept TrivialMoveAssignable = is_trivially_move_assignable_v<T>;
+template <typename T>
+concept TrivialAssignable = TrivialCopyAssignable<T> || TrivialMoveAssignable<T>;
 
 template<typename T>
-concept DefaultImplicitConstructible = _Is_implicitly_default_constructible<T>::value;
-#endif
-template<typename... T>
-concept CopyConstructible = (... && std::is_copy_constructible_v<T>);
+concept NothrowDefaultConstructible = is_nothrow_default_constructible_v<T>;
+template<typename T>
+concept NothrowCopyConstructible = is_nothrow_copy_constructible_v<T>;
+template<typename T>
+concept NothrowMoveConstructible = is_nothrow_move_constructible_v<T>;
 template<typename T, typename... Args>
-concept ConstructibleFrom = std::is_constructible_v<T, Args...>;
+concept NothrowConstructibleFrom = is_nothrow_constructible_v<T, Args...>;
 
 template<typename To, typename From>
-concept AssignableFrom = std::is_assignable_v<To, From>;
-template<typename... T>
-concept CopyAssignable = (... && std::is_copy_assignable_v<T>);
-template <typename... T>
-concept TrivialCopyAssignable = (... && std::is_trivially_copy_assignable_v<T>);
-template<typename... T>
-concept MoveAssignable = (... && std::is_move_assignable_v<T>);
-template <typename... T>
-concept TrivialMoveAssignable = (... && std::is_trivially_move_assignable_v<T>);
-template <typename... T>
-concept TrivialAssignable = TrivialCopyAssignable<T...> || TrivialMoveAssignable<T...>;
-
-template<typename... T>
-concept NothrowDefaultConstructible = (... && std::is_nothrow_default_constructible_v<T>);
-template<typename... T>
-concept NothrowCopyConstructible = (... && std::is_nothrow_copy_constructible_v<T>);
-template<typename... T>
-concept NothrowMoveConstructible = (... && std::is_nothrow_move_constructible_v<T>);
-template<typename T, typename... Args>
-concept NothrowConstructibleFrom = std::is_nothrow_constructible_v<T, Args...>;
-
-template<typename To, typename From>
-concept NothrowAssignableFrom = std::is_nothrow_assignable_v<To, From>;
-template<typename... T>
-concept NothrowCopyAssignable = (... && std::is_nothrow_copy_assignable_v<T>);
-template<typename... T>
-concept NothrowMoveAssignable = (... && std::is_nothrow_move_assignable_v<T>);
-
-template <typename... T>
-concept Swappable = (... && std::is_swappable_v<T>);
-#ifdef MSTL_COMPILE_MSVC__
-template <typename... T>
-concept NothrowSwappable = (... && std::_Is_nothrow_swappable<T>::value);
-#else
-template <class _Ty1, class _Ty2, class = void>
-struct _Swappable_with_helper : std::false_type {};
-template <class _Ty1, class _Ty2>
-struct _Swappable_with_helper<_Ty1, _Ty2, std::void_t<decltype(swap(std::declval<_Ty1>(),
-	std::declval<_Ty2>()))>> : std::true_type {};
-
-template <class _Ty1, class _Ty2>
-struct _Is_swappable_with
-	: std::bool_constant<std::conjunction_v<_Swappable_with_helper<_Ty1, _Ty2>,
-	_Swappable_with_helper<_Ty2, _Ty1>>> {
-};
-template <class _Ty>
-struct _Is_swappable
-	: _Is_swappable_with<std::add_lvalue_reference_t<_Ty>,
-	std::add_lvalue_reference_t<_Ty>>::type{
-};
-template <class _Ty1, class _Ty2>
-struct _Swap_cannot_throw
-	: std::bool_constant<noexcept(swap(std::declval<_Ty1>(), std::declval<_Ty2>()))
-	&& noexcept(swap(std::declval<_Ty2>(), std::declval<_Ty1>()))> {
-};
-
-template <class _Ty1, class _Ty2>
-struct _Is_nothrow_swappable_with
-	: std::bool_constant<std::conjunction_v<_Is_swappable_with<_Ty1, _Ty2>,
-	_Swap_cannot_throw<_Ty1, _Ty2>>> {
-};
-template <class _Ty>
-struct _Is_nothrow_swappable
-	: _Is_nothrow_swappable_with<std::add_lvalue_reference_t<_Ty>,
-	std::add_lvalue_reference_t<_Ty>>::type{
-};
+concept NothrowAssignableFrom = is_nothrow_assignable_v<To, From>;
+template<typename T>
+concept NothrowCopyAssignable = is_nothrow_copy_assignable_v<T>;
+template<typename T>
+concept NothrowMoveAssignable = is_nothrow_move_assignable_v<T>;
 
 template <typename T>
-concept NothrowSwappable = _Is_nothrow_swappable<T>::value;
-#endif
-
-template <typename... T>
-concept TrivialDestructible = (... && std::is_trivially_destructible_v<T>);
+concept Swappable = is_swappable_v<T>;
 template <typename T>
-concept NothrowDestructable = std::is_nothrow_destructible_v<T>;
+concept NothrowSwappable = is_nothrow_swappable_v<T>;
+
+template <typename T>
+concept TrivialDestructible = is_trivially_destructible_v<T>;
+template <typename T>
+concept NothrowDestructable = is_nothrow_destructible_v<T>;
 
 template<typename T>
 concept Printable = requires(const T & t) {
-	{ std::cout << t } -> std::convertible_to<std::ostream&>;
+	{ std::cout << t } -> convertible_to<std::ostream&>;
 };
 template <typename T>
 concept IteratorTypedef = requires() {
@@ -171,28 +99,28 @@ concept IteratorTypedef = requires() {
 };
 
 template <typename T>
-concept Detailable = NPointer<T> && requires(const T & c) {
-	{ c.cbegin() } -> std::convertible_to<typename T::const_iterator>;
-	{ c.cend() } -> std::convertible_to<typename T::const_iterator>;
-	{ c.size() } -> std::convertible_to<size_t>;
+concept Detailable = !Pointer<T> && requires(const T & c) {
+	{ c.cbegin() } -> convertible_to<typename T::const_iterator>;
+	{ c.cend() } -> convertible_to<typename T::const_iterator>;
+	{ c.size() } -> convertible_to<size_t>;
 		requires Printable<typename std::iterator_traits<typename T::const_iterator>::value_type>;
 };
 
 template<typename Iterator>
 concept InputIterator = IteratorTypedef<Iterator> && requires(Iterator it1, Iterator it2) {
-	{ *it1 } -> std::convertible_to<typename std::iterator_traits<Iterator>::value_type>;
+	{ *it1 } -> convertible_to<typename std::iterator_traits<Iterator>::value_type>;
 	{ ++it1 } -> std::same_as<Iterator&>;
 	{ it1++ } -> std::same_as<Iterator>;
-	{ it1 != it2 } -> std::convertible_to<bool>;
-	{ it1 == it2 } -> std::convertible_to<bool>;
+	{ it1 != it2 } -> convertible_to<bool>;
+	{ it1 == it2 } -> convertible_to<bool>;
 };
 template<typename Iterator>
 concept ForwardIterator = InputIterator<Iterator> && requires(Iterator it1, Iterator it2) {
-	{ it1 < it2 } -> std::convertible_to<bool>;
-	{ it1 <= it2 } -> std::convertible_to<bool>;
-	{ it1 > it2 } -> std::convertible_to<bool>;
-	{ it1 >= it2 } -> std::convertible_to<bool>;
-	{ (it1 - it2) } -> std::convertible_to<typename std::iterator_traits<Iterator>::difference_type>;
+	{ it1 < it2 } -> convertible_to<bool>;
+	{ it1 <= it2 } -> convertible_to<bool>;
+	{ it1 > it2 } -> convertible_to<bool>;
+	{ it1 >= it2 } -> convertible_to<bool>;
+	{ (it1 - it2) } -> convertible_to<typename std::iterator_traits<Iterator>::difference_type>;
 };
 template<typename Iterator>
 concept BidirectionalIterator = ForwardIterator<Iterator> && requires(Iterator it) {
@@ -203,13 +131,13 @@ template<typename Iterator>
 concept RandomAccessIterator = BidirectionalIterator<Iterator> &&
 	requires(Iterator it1, Iterator it2, typename std::iterator_traits<Iterator>::difference_type n)
 {
-	{ it1 + n } -> std::convertible_to<Iterator>;
-	{ n + it1 } -> std::convertible_to<Iterator>;
-	{ it1 - n } -> std::convertible_to<Iterator>;
-	{ it1 += n } -> std::convertible_to<Iterator>;
-	{ it1 -= n } -> std::convertible_to<Iterator>;
-	{ it2 - it1 } -> std::convertible_to<typename std::iterator_traits<Iterator>::difference_type>;
-	{ it1[n] } -> std::convertible_to<typename std::iterator_traits<Iterator>::value_type>;
+	{ it1 + n } -> convertible_to<Iterator>;
+	{ n + it1 } -> convertible_to<Iterator>;
+	{ it1 - n } -> convertible_to<Iterator>;
+	{ it1 += n } -> convertible_to<Iterator>;
+	{ it1 -= n } -> convertible_to<Iterator>;
+	{ it2 - it1 } -> convertible_to<typename std::iterator_traits<Iterator>::difference_type>;
+	{ it1[n] } -> convertible_to<typename std::iterator_traits<Iterator>::value_type>;
 };
 
 template <typename T>
@@ -230,15 +158,15 @@ concept UnaryFunction = requires(T f, typename T::argument_type a) {
 };
 template <typename Func, typename Arg>
 concept HashFunction = requires(Func f, Arg a) {
-	{ f(a) } -> std::convertible_to<size_t>;
+	{ f(a) } -> convertible_to<size_t>;
 };
 template <typename Func, typename Arg>
 concept SelectPairFirstFunction = PairLike<Arg> && requires(Func f, const Arg & a) {
-	{ f(a) } -> std::convertible_to<decltype(a.first)>;
+	{ f(a) } -> convertible_to<decltype(a.first)>;
 };
 template <typename Func, typename Arg>
 concept SelectPairSecondFunction = PairLike<Arg> && requires(Func f, const Arg & a) {
-	{ f(a) } -> std::convertible_to<decltype(a.second)>;
+	{ f(a) } -> convertible_to<decltype(a.second)>;
 };
 template <typename Func, typename Arg>
 concept SelectPairFunction = SelectPairFirstFunction<Func, Arg> || SelectPairSecondFunction<Func, Arg>;

@@ -2,6 +2,8 @@
 #define MSTL_ALGOBASE_HPP__
 #include "iterator.hpp"
 #include "pair.hpp"
+#include "algobase.hpp"
+#include "utility.hpp"
 #include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
 MSTL_CONCEPTS__
@@ -35,15 +37,7 @@ MSTL_CONSTEXPR Iterator fill_n(Iterator first, size_t n, T&& value) {
 	for (; n > 0; --n, ++first) *first = std::forward<T>(value);
 	return first;
 }
-// swap
-template <typename T>
-MSTL_CONSTEXPR void swap(T& lh, T& rh) 
-noexcept(NothrowMoveConstructible<T>&& NothrowMoveAssignable<T>) {
-	T tmp = std::move(lh);
-	lh = std::move(rh);
-	rh = std::move(tmp);
-}
-
+// iter swap
 template <typename Iterator1, typename Iterator2>
 	requires(ForwardIterator<Iterator1> && ForwardIterator<Iterator2>)
 MSTL_CONSTEXPR void iter_swap(Iterator1 a, Iterator2 b)

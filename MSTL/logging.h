@@ -46,7 +46,7 @@ void logw_tag(const char* format, ...);
 void loge_tag(const char* format, ...);
 
 
-#ifdef MSTL_PLATFORM_WINDOWS__
+#ifdef MSTL_PLATFORM_WIN64__
 #define __FILENAME__ (strrchr(__FILE__, '\\') + 1)
 #elif MSTL_PLATFORM_LINUX__
 #define __FILENAME__ (strrchr(__FILE__, '/') + 1)

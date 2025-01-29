@@ -2,15 +2,20 @@
 #define MSTL_BASICLIB_H__
 #include <iostream>
 
-#if defined(WIN32) || defined(_WIN32) || defined(_WIN32_) || defined(WIN64) || defined(_WIN64) || defined(_WIN64_)
-#define MSTL_PLATFORM_WINDOWS__ 1
-#elif defined(ANDROID) || defined(_ANDROID_)
-#define MSTL_PLATFORM_ANDROID__ 1
-#elif defined(__linux__)
+#if defined(WIN32) || defined(_WIN32) || defined(_WIN32_)
+#define MSTL_PLATFORM_WIN32__	1
+#if defined(WIN64) || defined(_WIN64) || defined(_WIN64_)
+#define MSTL_PLATFORM_WIN64__	1
+#endif // win64
+#define MSTL_PLATFORM_WINDOWS__	1
+#elif defined(__linux__) // not windows
 #define MSTL_PLATFORM_LINUX__	1
-#elif defined(__APPLE__) || defined(TARGET_OS_IPHONE) || defined(TARGET_IPHONE_SIMULATOR) || defined(TARGET_OS_MAC)
-#define MSTL_PLATFORM_IOS__     1
-#elif defined(_POSIX_)
+#if (__WORDSIZE == 64) || (__SIZEOF_POINTER__ == 8)
+#define MSTL_PLATFORM_LINUX64__ 1
+#elif (__WORDSIZE == 32) || (__SIZEOF_POINTER__ == 4)
+#define MSTL_PLATFORM_LINUX32__ 1
+#endif
+#elif defined(_POSIX_) // not linux
 #define MSTL_PLATFORM_POSIX__	1
 #else
 #define MSTL_PLATFORM_UNKNOWN__	1
@@ -29,40 +34,57 @@
 #define MSTL_COMPILE_UNKNOW__	1
 #endif
 
+#if defined(_M_CEE)
+#define MSTL_COMPILE_WITH_CRL__ 1
+#elif defined(__EDG__)
+#define MSTL_COMPILE_WITH_EDG__ 1
+#else
+#define MSTL_COMPILE_WITH_OS__  1
+#endif
+
 #if defined(DEBUG) || defined(_DEBUG) || defined(QT_QML_DEBUG)
 #define MSTL_STATE_DEBUG__		1
 #else
 #define MSTL_STATE_RELEASE__	1
 #endif
 
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL 0
-#else // not define __cplusplus
-#define NULL ((void *)0)
-#endif // __cplusplus
-#endif // NULL
-
 #define MSTL_NAMESPACE__ using namespace MSTL;
 #define MSTL_BEGIN_NAMESPACE__ namespace MSTL {
 #define MSTL_END_NAMESPACE__ }
 #define MSTL_ MSTL::
+
 #define MSTL_CONCEPTS__ using namespace MSTL::concepts;
 #define MSTL_SET_CONCEPTS__ namespace concepts {
 #define MSTL_END_CONCEPTS__ }
 #define CONCEPTS_ MSTL::concepts:: 
 
 #if defined(_HAS_CXX20) || (__cplusplus >= 202002L)
+#define MSTL_VERSION_20__	1
+#endif
+#if defined(_HAS_CXX17) || (__cplusplus >= 201703L) || defined(MSTL_VERSION_20__)
+#define MSTL_VERSION_17__	1
+#endif
+#if (__cplusplus >= 201402L) || defined(MSTL_VERSION_17__)
+#define MSTL_VERSION_14__	1
+#endif
+#if (__cplusplus >= 201103L) || defined(MSTL_VERSION_14__)
+#define MSTL_VERSION_11__	1
+#endif
+#if (__cplusplus >= 199711L) || defined(MSTL_VERSION_11__)
+#define MSTL_VERSION_98__	1
+#endif
+
+#if defined(MSTL_VERSION_20__)
 #define MSTL_SUPPORT_CONCEPTS__		1
 #endif
-#if defined(_HAS_CXX17) || (__cplusplus >= 201703L)
+#if defined(MSTL_VERSION_17__)
 #define MSTL_SUPPORT_NODISCARD__	1
 #endif
-#if defined(_HAS_CXX17) || (__cplusplus >= 201703L)
-#define MSTL_SUPPORT_CONSTEXPR__	1
-#endif
-#if defined(_HAS_CXX17) || (__cplusplus >= 201703L)
+#if defined(MSTL_VERSION_17__)
 #define MSTL_SUPPORT_NORETURN__		1
+#endif
+#if defined(MSTL_VERSION_11__)
+#define MSTL_SUPPORT_CONSTEXPR__	1
 #endif
 #if defined(MSTL_COMPILE_MSVC__)
 #define MSTL_SUPPORT_DECLALLOC__	1
@@ -104,16 +126,19 @@
 #define MSTL_DECLALLOC 
 #endif
 
-#if defined(MSTL_PLATFORM_WINDOWS__) && defined(MSTL_COMPILE_MSVC__)
+#if defined(MSTL_COMPILE_MSVC__)
 #define MSTL_LONG_LONG_TYPE__ __int64
 #else
 #define MSTL_LONG_LONG_TYPE__ long long
 #endif
 
-#define MSTL_TEMPLATE_NULL__ template<>
+#define TEMNULL__ template<>
+#define MSTL_NO_EVALUATION__ \
+	static_assert(false, "this function will only be used in no evaluation context.");
 
 MSTL_BEGIN_NAMESPACE__
 
+typedef unsigned char byte_t;
 typedef unsigned MSTL_LONG_LONG_TYPE__ size_t;
 typedef MSTL_LONG_LONG_TYPE__ ptrdiff_t;
 typedef MSTL_LONG_LONG_TYPE__ intptr_t;

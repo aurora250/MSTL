@@ -215,8 +215,8 @@ void try_tup() {
     auto a = MSTL::get<0>(t);
     std::cout << MSTL::get<1>(t) << std::endl;
     auto tup = make_tuple(1, 2, "e");
-    auto forw = forward_as_tuple(9, 0);
-    std::cout << hash<tuple<int&&, int&&>>()(forw);
+    auto forw = make_tuple(9.0, 0.0);
+    std::cout << hash<tuple<double, double>>()(forw);
 }
 void try_hash() {
     MSTL_NAMESPACE__;
@@ -345,7 +345,8 @@ void try_sort() {
     //radix_sort(vec.begin(), vec.end());
     //tim_sort(vec.begin(), vec.end());
     //monkey_sort(vec.begin(), vec.end());
-    smooth_sort(vec.begin(), vec.end());
+    //smooth_sort(vec.begin(), vec.end());
+    cocktail_sort(vec.begin(), vec.end());
     detailof(vec);
     /*vector<Person> people = {
     {"Alice", 25},
@@ -402,7 +403,9 @@ void try_json() {
     MSTL_NAMESPACE__;
     
 }
+
 int main() {
     MSTL_NAMESPACE__;
-    try_hash();
+    try_sort();
+    return 0;
 }

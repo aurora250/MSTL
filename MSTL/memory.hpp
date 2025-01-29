@@ -7,13 +7,6 @@
 MSTL_BEGIN_NAMESPACE__
 MSTL_CONCEPTS__
 
-template <class T>
-MSTL_NODISCARD T* address_of(T& x) noexcept {
-    return __builtin_addressof(x);
-}
-template <class T>
-const T* address_of(const T&&) = delete;
-
 template <typename T1, typename... T2>
     requires(ConstructibleFrom<T1, T2...>)
 MSTL_CONSTEXPR void construct(T1* p, T2&&... value) { // placement new

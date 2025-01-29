@@ -155,7 +155,6 @@
     <ClInclude Include="avl_tree.h" />
     <ClInclude Include="container.h" />
     <ClInclude Include="logging.h" />
-    <ClInclude Include="matrix.hpp" />
     <ClInclude Include="mysql_connect_pool.h" />
     <ClInclude Include="hashtable.hpp" />
     <ClInclude Include="hash_function.hpp" />
@@ -188,6 +187,7 @@
     <ClInclude Include="thread_pool.h" />
     <ClInclude Include="tuple.hpp" />
     <ClInclude Include="type_traits.hpp" />
+    <ClInclude Include="utility.hpp" />
     <ClInclude Include="vector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

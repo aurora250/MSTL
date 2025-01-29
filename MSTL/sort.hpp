@@ -77,6 +77,73 @@ void bubble_sort(Iterator first, Iterator last, Compare comp) {
     }
 }
 
+// cocktail sort : Ot(N)~(N^2) Om(1) stable
+template <typename Iterator>
+    requires(RandomAccessIterator<Iterator>)
+void cocktail_sort(Iterator first, Iterator last) {
+    if (first == last) return;
+    bool swapped = true;
+    Iterator left = first;
+    Iterator right = last;
+    --right;
+    while (swapped) {
+        swapped = false;
+        for (Iterator i = left; i != right; ++i) {
+            Iterator next = i;
+            ++next;
+            if (*next < *i) {
+                MSTL::iter_swap(i, next);
+                swapped = true;
+            }
+        }
+        if (!swapped) break;
+        --right;
+        swapped = false;
+        for (Iterator i = right; i != left; --i) {
+            Iterator prev = i;
+            --prev;
+            if (*i < *prev) {
+                MSTL::iter_swap(i, prev);
+                swapped = true;
+            }
+        }
+        ++left;
+    }
+}
+
+template <typename Iterator, typename Compare>
+    requires(RandomAccessIterator<Iterator>)
+void cocktail_sort(Iterator first, Iterator last, Compare comp) {
+    if (first == last) return;
+    bool swapped = true;
+    Iterator left = first;
+    Iterator right = last;
+    --right;
+    while (swapped) {
+        swapped = false;
+        for (Iterator i = left; i != right; ++i) {
+            Iterator next = i;
+            ++next;
+            if (comp(*next, *i)) {
+                MSTL::iter_swap(i, next);
+                swapped = true;
+            }
+        }
+        if (!swapped) break;
+        --right;
+        swapped = false;
+        for (Iterator i = right; i != left; --i) {
+            Iterator prev = i;
+            --prev;
+            if (comp(*i, *prev)) {
+                MSTL::iter_swap(i, prev);
+                swapped = true;
+            }
+        }
+        ++left;
+    }
+}
+
 // select sort : Ot(N^2) Om(1) unstable 
 template <typename Iterator> 
     requires(ForwardIterator<Iterator>)
