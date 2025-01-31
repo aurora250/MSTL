@@ -1,12 +1,11 @@
 #ifndef MSTL_ALGOBASE_HPP__
 #define MSTL_ALGOBASE_HPP__
 #include "iterator.hpp"
-#include "pair.hpp"
 #include "algobase.hpp"
 #include "utility.hpp"
 #include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
-MSTL_CONCEPTS__
+
 // equal
 template <typename Iterator1, typename Iterator2>
 	requires(InputIterator<Iterator1> && InputIterator<Iterator2>)

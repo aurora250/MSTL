@@ -3,9 +3,7 @@
 #include "hashtable.hpp"
 #include "functor.hpp"
 #include "concepts.hpp"
-
 MSTL_BEGIN_NAMESPACE__
-MSTL_CONCEPTS__
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
     class Alloc = standard_allocator<__hashtable_node<pair<const Key, T>>>>
@@ -97,11 +95,13 @@ public:
         return rep.insert_unique(obj);
     }
     pair<iterator, bool> insert(value_type&& obj) { 
-        return rep.insert_unique(std::forward<value_type>(obj));
+        return rep.insert_unique(MSTL::forward<value_type>(obj));
     }
-    template<typename... Args>
-    void emplace(Args&&... args) {
-        rep.emplace_unique_pair(std::forward<Args>(args)...);
+    template<typename Key, typename... Args>
+    void emplace(Key&& key, Args&&... args) {
+        data_type data(MSTL::forward<Args>(args)...);
+        value_type val(key, MSTL::move(data));
+        rep.insert_unique(MSTL::forward<value_type>(val));
     }
 
     template <class Iterator>
@@ -109,7 +109,7 @@ public:
     void insert(Iterator f, Iterator l) { rep.insert_unique(f, l); }
     template <typename T = value_type>
     pair<iterator, bool> insert_noresize(T&& x) { 
-        return rep.insert_unique_noresize(std::forward<T>(x));
+        return rep.insert_unique_noresize(MSTL::forward<T>(x));
     }
 
     MSTL_NODISCARD iterator find(const key_type& key) { return rep.find(key); }
@@ -221,9 +221,12 @@ public:
     const_iterator cend() const { return rep.cend(); }
     friend bool operator ==(const hash_multimap&, const hash_multimap&);
 
-    template<typename... Args>
-    void emplace(Args&&... args) {
-        rep.emplace_equal_pair(std::forward<Args>(args)...);
+
+    template<typename Key, typename... Args>
+    void emplace(Key&& key, Args&&... args) {
+        data_type data(MSTL::forward<Args>(args)...);
+        value_type val(key, MSTL::move(data));
+        rep.insert_equal(MSTL::forward<value_type>(val));
     }
     iterator insert(value_type&& obj) { return rep.insert_equal(std::move(obj)); }
     iterator insert(const value_type& obj) { return rep.insert_equal(obj); }

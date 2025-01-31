@@ -1,6 +1,6 @@
 #ifndef	MSTL_AVL_TREE_HPP__
 #define MSTL_AVL_TREE_HPP__
-#include "pair.hpp"
+#include "utility.hpp"
 #include "errorlib.h"
 #include "mathlib.h"
 #include "memory.hpp"

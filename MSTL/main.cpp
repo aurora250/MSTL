@@ -7,7 +7,6 @@ void try_exc() {
         MSTL_EXEC_MEMORY__;
     }
     catch (Error&) {
-        StopIterator it;
         Exit(true, try_lls);
         try_lls();
     }
@@ -211,12 +210,11 @@ void try_map() {
 }
 void try_tup() {
     MSTL_NAMESPACE__;
-    const tuple<int, char, const char*> t(1, 't', "MSTL");
-    auto a = MSTL::get<0>(t);
-    std::cout << MSTL::get<1>(t) << std::endl;
+    tuple<int, char, const char*> t(1, 't', "MSTL");
+    //auto a = MSTL::get<0>(t);
+    //std::cout << MSTL::get<1>(t) << std::endl;
     auto tup = make_tuple(1, 2, "e");
-    auto forw = make_tuple(9.0, 0.0);
-    std::cout << hash<tuple<double, double>>()(forw);
+    auto forw = make_tuple(9, 0);
 }
 void try_hash() {
     MSTL_NAMESPACE__;
@@ -406,6 +404,6 @@ void try_json() {
 
 int main() {
     MSTL_NAMESPACE__;
-    try_sort();
+    try_hash();
     return 0;
 }

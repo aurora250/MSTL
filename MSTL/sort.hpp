@@ -5,7 +5,6 @@
 #include "heap.hpp"
 #include "vector.hpp"
 MSTL_BEGIN_NAMESPACE__
-MSTL_CONCEPTS__
 
 // is sorted
 template <typename Iterator>

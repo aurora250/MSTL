@@ -12,7 +12,6 @@
 #include "queue.hpp"
 #include "hash_map.hpp"
 #include "threadsafe_print.h"
-
 MSTL_BEGIN_NAMESPACE__
 
 static const size_t MSTL_TASK_MAX_THRESHHOLD__ = INT32_MAX;

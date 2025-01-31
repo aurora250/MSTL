@@ -91,8 +91,9 @@ public:
 	iterator insert(iterator position, const value_type& x) {
 		return t.insert_unique(position, x);
 	}
-	template <class InputIterator>
-	void insert(InputIterator first, InputIterator last) {
+	template <class Iterator>
+		requires(InputIterator<Iterator>)
+	void insert(Iterator first, Iterator last) {
 		t.insert_unique(first, last);
 	}
 	void erase(iterator position) noexcept { t.erase(position); }
@@ -214,12 +215,12 @@ public:
 
 	multimap() : t(Compare()) { }
 	explicit multimap(const Compare& comp) : t(comp) { }
-	template <class InputIterator>
-	multimap(InputIterator first, InputIterator last) : t(Compare()) {
+	template <class Iterator>
+	multimap(Iterator first, Iterator last) : t(Compare()) {
 		t.insert_equal(first, last);
 	}
-	template <class InputIterator>
-	multimap(InputIterator first, InputIterator last, const Compare& comp) : t(comp) {
+	template <class Iterator>
+	multimap(Iterator first, Iterator last, const Compare& comp) : t(comp) {
 		t.insert_equal(first, last);
 	}
 	multimap(const multimap<Key, T, Compare, Alloc>& x) : t(x.t) {}
@@ -244,8 +245,8 @@ public:
 	void swap(multimap<Key, T, Compare, Alloc>& x) { t.swap(x.t); }
 	iterator insert(const value_type& x) { return t.insert_equal(x); }
 	iterator insert(iterator position, const value_type& x) { return t.insert_equal(position, x); }
-	template <class InputIterator>
-	void insert(InputIterator first, InputIterator last) { t.insert_equal(first, last); }
+	template <class Iterator>
+	void insert(Iterator first, Iterator last) { t.insert_equal(first, last); }
 	void erase(iterator position) { t.erase(position); }
 	size_type erase(const key_type& x) { return t.erase(x); }
 	void erase(iterator first, iterator last) { t.erase(first, last); }

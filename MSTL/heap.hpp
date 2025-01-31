@@ -3,7 +3,6 @@
 #include "iterator.hpp"
 #include "mathlib.h"
 MSTL_BEGIN_NAMESPACE__
-MSTL_CONCEPTS__
 
 // push heap
 template <typename Iterator, typename Distance, typename T>

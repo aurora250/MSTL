@@ -2,7 +2,6 @@
 #define MSTL_ITERATOR_HPP__
 #include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
-MSTL_CONCEPTS__
 
 template <typename Iterator>
     requires(IteratorTypedef<Iterator>)

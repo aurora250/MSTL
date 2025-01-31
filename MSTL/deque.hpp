@@ -6,7 +6,6 @@
 #include "mathlib.h"
 #include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
-MSTL_CONCEPTS__
 
 MSTL_CONSTEXPR size_t deque_buf_size(size_t n, size_t sz) noexcept {
     return n != 0 ? n : (sz < size_t(power(2, 9)) ? size_t(power(2, 9) / sz) : 1);
@@ -133,14 +132,14 @@ public:
     typedef size_t                      size_type;
     typedef ptrdiff_t                   difference_type;
     typedef deque<T, Alloc, BufSize>    self;
+    typedef Alloc                       allocator_type;
     typedef deque_iterator<T, T&, T*, BufSize>              iterator;
     typedef deque_iterator<T, const T&, const T*, BufSize>  const_iterator;
 private:
     typedef pointer* map_pointer;
-    typedef Alloc    data_allocator;
     typedef standard_allocator<pointer>  map_allocator;
 
-    data_allocator data_alloc_;
+    allocator_type data_alloc_;
     map_allocator map_alloc_;
     map_pointer map_;
     size_type map_size_;

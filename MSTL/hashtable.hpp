@@ -1,14 +1,13 @@
 #ifndef MSTL_HASHTABLE_HPP__
 #define MSTL_HASHTABLE_HPP__
-#include "basiclib.h"
 #include "algo.hpp"
 #include "memory.hpp"
 #include "vector.hpp"
 #include "concepts.hpp"
 #include "hash_function.hpp"
 #include "mathlib.h"
+#include "tuple.hpp"
 MSTL_BEGIN_NAMESPACE__
-MSTL_CONCEPTS__
 
 template <class T>
 struct __hashtable_node {
@@ -139,29 +138,26 @@ MSTL_NODISCARD inline size_t hashtable_next_prime(size_t n) noexcept {
 template <class Value, class Key, class HashFcn, class ExtractKey, class EqualKey, class Alloc>
 class hashtable {
 public:
-    typedef Key key_type;
-    typedef Value value_type;
-    typedef HashFcn hasher;
-    typedef EqualKey key_equal;
-    typedef size_t size_type;
-    typedef ptrdiff_t difference_type;
-    typedef value_type* pointer;
-    typedef const value_type* const_pointer;
-    typedef value_type& reference;
-    typedef const value_type& const_reference;
-    typedef __hashtable_node<value_type> node_type;
-    typedef node_type* link_type;
-    typedef hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc> iterator;
-    typedef hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc> const_iterator;
-    typedef hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc> self;
+    using key_type = Key;
+    using value_type = Value;
+    using hasher = HashFcn;
+    using key_equal = EqualKey;
+    using size_type = size_t;
+    using difference_type = ptrdiff_t;
+    using pointer = value_type*;
+    using const_pointer = const value_type*;
+    using reference = value_type&;
+    using const_reference = const value_type&;
+    using node_type = __hashtable_node<value_type>;
+    using link_type = node_type*;
+    using allocator_type = Alloc;
+    using iterator = hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+    using const_iterator = hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+    using self = hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
 
     friend struct hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
     friend struct hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
     friend bool operator ==(const hashtable&, const hashtable&);
-
-private:
-    typedef typename value_type::second_type value_of_key;
-    typedef Alloc alloc_type;
 
 private:
     hasher hasher_;
@@ -169,7 +165,7 @@ private:
     ExtractKey get_key_;
     vector<link_type> buckets_;
     size_type size_;
-    alloc_type alloc_;
+    allocator_type alloc_;
 
 public:
     explicit hashtable(size_type n) 
@@ -393,54 +389,6 @@ public:
     template <typename... Args>
     iterator emplace_equal(Args&&... args) {
         return insert_equal_noresize(std::move(value_type(args...)));
-    }
-    template <typename... Args>
-    pair<iterator, bool> emplace_unique_pair(Args&&... args) {
-        resize(size_ + 1);
-        // structured binding
-        auto [key, value_args] = MSTL::forward_as_tuple(std::forward<Args>(args)...);
-        const size_type n = bkt_num_key(key, buckets_.size());
-        node_type* first = buckets_[n];
-        for (node_type* cur = first; cur; cur = cur->next_) {
-            if (equals_(get_key_(cur->data_), key)) {
-                buckets_[n] = cur->next_;
-                delete_node(cur);
-                node_type* tmp = new_node(std::forward<decltype(key)>(key),
-                    std::forward<decltype(value_args)>(value_args));
-                tmp->next_ = buckets_[n];
-                buckets_[n] = tmp;
-                return pair<iterator, bool>(iterator(tmp, this), false);
-            }
-        }
-        node_type* tmp = new_node(std::forward<decltype(key)>(key),
-            std::forward<decltype(value_args)>(value_args));
-        tmp->next_ = first;
-        buckets_[n] = tmp;
-        ++size_;
-        return pair<iterator, bool>(iterator(tmp, this), true);
-    }
-    template <typename... Args>
-    iterator emplace_equal_pair(Args&&... args) {
-        resize(size_ + 1);
-        auto [key, value_args] = MSTL::forward_as_tuple(std::forward<Args>(args)...);
-        const size_type n = bkt_num_key(key, buckets_.size());
-        node_type* first = buckets_[n];
-        for (node_type* cur = first; cur; cur = cur->next_) {
-            if (equals_(get_key_(cur->data_), key)) {
-                node_type* tmp = new_node(std::forward<decltype(key)>(key),
-                    std::forward<decltype(value_args)>(value_args));
-                tmp->next_ = cur->next_;
-                cur->next_ = tmp;
-                ++size_;
-                return iterator(tmp, this);
-            }
-        }
-        node_type* tmp = new_node(std::forward<decltype(key)>(key),
-            std::forward<decltype(value_args)>(value_args));
-        tmp->next_ = first;
-        buckets_[n] = tmp;
-        ++size_;
-        return iterator(tmp, this);
     }
 
     pair<iterator, iterator> equal_range(const key_type& key) {

@@ -48,15 +48,12 @@
 #define MSTL_STATE_RELEASE__	1
 #endif
 
+
 #define MSTL_NAMESPACE__ using namespace MSTL;
 #define MSTL_BEGIN_NAMESPACE__ namespace MSTL {
 #define MSTL_END_NAMESPACE__ }
 #define MSTL_ MSTL::
 
-#define MSTL_CONCEPTS__ using namespace MSTL::concepts;
-#define MSTL_SET_CONCEPTS__ namespace concepts {
-#define MSTL_END_CONCEPTS__ }
-#define CONCEPTS_ MSTL::concepts:: 
 
 #if defined(_HAS_CXX20) || (__cplusplus >= 202002L)
 #define MSTL_VERSION_20__	1
@@ -75,22 +72,28 @@
 #endif
 
 #if defined(MSTL_VERSION_20__)
-#define MSTL_SUPPORT_CONCEPTS__		1
+#define MSTL_SUPPORT_CONCEPTS__			1
 #endif
 #if defined(MSTL_VERSION_17__)
-#define MSTL_SUPPORT_NODISCARD__	1
+#define MSTL_SUPPORT_NODISCARD__		1
 #endif
 #if defined(MSTL_VERSION_17__)
-#define MSTL_SUPPORT_NORETURN__		1
+#define MSTL_SUPPORT_NORETURN__			1
+#endif
+#if defined(MSTL_VERSION_17__)
+#define MSTL_SUPPORT_DEDUCTION_GUIDES__ 1
 #endif
 #if defined(MSTL_VERSION_11__)
-#define MSTL_SUPPORT_CONSTEXPR__	1
+#define MSTL_SUPPORT_CONSTEXPR__		1
 #endif
 #if defined(MSTL_COMPILE_MSVC__)
-#define MSTL_SUPPORT_DECLALLOC__	1
+#define MSTL_SUPPORT_DECLALLOC__		1
+#endif
+#if defined(MSTL_COMPILE_MSVC__)
+#define MSTL_SUPPORT_MAKE_INTEGER_SEQ	1
 #endif
 
-#define MSTL_DLL_LINK__				1
+#define MSTL_DLL_LINK__	1
 
 #define TO_STRING(VALUE) #VALUE
 #define FOR_EACH(VALUE, CONTAINER) for(auto VALUE = CONTAINER.begin(); VALUE != CONTAINER.end(); ++VALUE)

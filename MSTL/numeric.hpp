@@ -3,7 +3,6 @@
 #include "functor.hpp"
 #include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
-MSTL_CONCEPTS__
 
 template <typename Iterator, typename T>
 	requires(InputIterator<Iterator>)

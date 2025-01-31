@@ -5,7 +5,6 @@
 #include "algobase.hpp"
 #include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
-MSTL_CONCEPTS__
 
 template <typename T>
 struct __list_node {

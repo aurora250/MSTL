@@ -53,9 +53,6 @@
     <ClInclude Include="vector.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="pair.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="check_type.h">
       <Filter>头文件</Filter>
     </ClInclude>

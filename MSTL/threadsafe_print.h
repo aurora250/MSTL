@@ -11,7 +11,6 @@
 #include <atomic>
 #include <functional>
 #include <type_traits>
-
 MSTL_BEGIN_NAMESPACE__
 
 class Output;

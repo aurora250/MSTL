@@ -16,6 +16,7 @@
 #include "hash_set.hpp"
 #include "avl_set.hpp"
 
+#include "container.h"
 #include "jsonlib.h"
 #include "mysql_connect_pool.h"
 #include "thread_pool.h"

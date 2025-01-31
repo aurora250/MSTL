@@ -177,7 +177,6 @@
     <ClInclude Include="list.hpp" />
     <ClInclude Include="mstlc++.hpp" />
     <ClInclude Include="numeric.hpp" />
-    <ClInclude Include="pair.hpp" />
     <ClInclude Include="queue.hpp" />
     <ClInclude Include="rb_tree.h" />
     <ClInclude Include="set.hpp" />

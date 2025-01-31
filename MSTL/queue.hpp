@@ -7,7 +7,6 @@
 #include "heap.hpp"
 #include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
-MSTL_CONCEPTS__
 
 template<typename T, typename Sequence = deque<T>>
 class queue {
@@ -77,21 +76,9 @@ void swap(queue<T, Sequence>& lh, queue<T, Sequence>& rh) noexcept(noexcept(lh.s
     lh.swap(rh);
 }
 
-template <typename T, typename Sequence>
-void detailof(const queue<T, Sequence>& pq, std::ostream& _out = std::cout) {
-    split_line(_out);
-    _out << "type: " << check_type<queue<T, Sequence>>() << std::endl;
-    _out << "size: " << pq.size() << std::endl;
-    _out << "data: " << std::flush;
-    show_data_only(pq.seq_, _out);
-    _out << std::endl;
-    split_line(_out);
-}
-
 
 template<typename T, typename Sequence = vector<T>,
     typename Compare = less<typename Sequence::value_type>>
-    requires(concepts::BinaryFunction<Compare>)
 class priority_queue {
 public:
     typedef typename Sequence::value_type       value_type;
@@ -174,17 +161,5 @@ template <class T, class Sequence, class Compare> requires(Swappable<Sequence> &
     lh.swap(rh);
 }
 
-template <typename T, typename Sequence, typename Compare>
-void detailof(const priority_queue<T, Sequence, Compare>& pq, std::ostream& _out = std::cout) {
-    split_line(_out);
-    _out << "type: " << check_type<priority_queue<T, Sequence, Compare>>() << std::endl;
-    _out << "size: " << pq.size() << std::endl;
-    _out << "data: " << std::flush;
-    show_data_only(pq.seq_, _out);
-    _out << std::endl;
-    split_line(_out);
-}
-
 MSTL_END_NAMESPACE__
-
 #endif // MSTL_QUEUE_HPP__

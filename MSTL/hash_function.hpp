@@ -1,7 +1,6 @@
 #ifndef MSTL_HASH_FUNCTION_HPP__
 #define MSTL_HASH_FUNCTION_HPP__
-#include "pair.hpp"
-#include "tuple.hpp"
+#include "utility.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Key>
@@ -14,7 +13,7 @@ struct hash<T*> {
     }
 };
 
-inline size_t __hash_string(const char* s) noexcept {
+inline size_t string_hash(const char* s) noexcept {
     size_t h = 0;
     for (; *s; ++s)
         h = 5 * h + *s;
@@ -22,13 +21,13 @@ inline size_t __hash_string(const char* s) noexcept {
 }
 
 TEMNULL__ struct hash<char*> {
-    MSTL_NODISCARD size_t operator ()(const char* s) const noexcept { return __hash_string(s); }
+    MSTL_NODISCARD size_t operator ()(const char* s) const noexcept { return string_hash(s); }
 };
 TEMNULL__ struct hash<const char*> {
-    MSTL_NODISCARD size_t operator ()(const char* s) const noexcept { return __hash_string(s); }
+    MSTL_NODISCARD size_t operator ()(const char* s) const noexcept { return string_hash(s); }
 };
 TEMNULL__ struct hash<std::string> {
-    MSTL_NODISCARD size_t operator ()(const std::string& s) const noexcept { return __hash_string(s.c_str()); }
+    MSTL_NODISCARD size_t operator ()(const std::string& s) const noexcept { return string_hash(s.c_str()); }
 };
 #define INT_HASH_STRUCT__(OPT) \
     TEMNULL__ struct hash<OPT> { \
@@ -73,11 +72,6 @@ inline size_t FNV_hash(const unsigned char* first, size_t count) noexcept {
     return result;
 }
 
-template <typename... T, size_t... Index>
-inline size_t tuple_hash(const MSTL::tuple<T...>& tup, std::index_sequence<Index...>) noexcept {
-    return (hash<tuple_element_t<Index, T...>>()(MSTL::get<Index>(tup)) ^ ...);
-}
-
 #define FLOAT_HASH_STRUCT__(OPT) \
     TEMNULL__ struct hash<OPT> { \
         MSTL_NODISCARD size_t operator ()(const OPT & x) const noexcept { \
@@ -93,13 +87,6 @@ struct hash<MSTL::pair<T1, T2>> {
     MSTL_NODISCARD size_t operator() (const MSTL::pair<T1, T2>& pair) const noexcept {
 		return hash<T1>()(pair.first) ^ hash<T2>()(pair.second);
 	}
-};
-
-template <typename... T>
-struct hash<MSTL::tuple<T...>> {
-    MSTL_NODISCARD size_t operator() (const MSTL::tuple<T...>& tup) const noexcept {
-        return tuple_hash(tup, std::index_sequence_for<T...>{});
-    }
 };
 
 MSTL_END_NAMESPACE__

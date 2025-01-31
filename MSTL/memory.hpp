@@ -5,7 +5,6 @@
 #include "errorlib.h"
 #include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
-MSTL_CONCEPTS__
 
 template <typename T1, typename... T2>
     requires(ConstructibleFrom<T1, T2...>)

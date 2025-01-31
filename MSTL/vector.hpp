@@ -6,7 +6,6 @@
 #include "iterator.hpp"
 #include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
-MSTL_CONCEPTS__
 
 template <typename T, typename Alloc = standard_allocator<T>>
 class vector {

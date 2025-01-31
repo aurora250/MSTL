@@ -1,10 +1,7 @@
 #ifndef MSTL_FUNCTOR_HPP__
 #define MSTL_FUNCTOR_HPP__
-#include "basiclib.h"
 #include "concepts.hpp"
-
 MSTL_BEGIN_NAMESPACE__
-using namespace concepts;
 
 template <typename Arg, typename Result>
 struct unary_function {

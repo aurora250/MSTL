@@ -14,7 +14,6 @@
 
 MSTL_BEGIN_NAMESPACE__
 MSTL_BEGIN_JSON__
-MSTL_CONCEPTS__
 
 struct JSONObject {
 	typedef std::variant<

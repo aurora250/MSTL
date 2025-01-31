@@ -1,12 +1,14 @@
 #ifndef MSTL_CONCEPTS_HPP__
 #define MSTL_CONCEPTS_HPP__
 #include "type_traits.hpp"
-#include <concepts>
 MSTL_BEGIN_NAMESPACE__
-MSTL_SET_CONCEPTS__
 
-template <typename B, typename D>
-concept Derived = is_base_of_v<B, D>;
+template <class T1, class T2>
+concept same_as = is_same_v<T1, T2> && is_same_v<T2, T1>;
+
+template <class Derived, class Base>
+concept derived_from = is_base_of_v<Base, Derived>
+&& is_convertible_to_v<const volatile Derived*, const volatile Base*>;
 
 template <typename T>
 concept Void = is_void_v<T>;
@@ -86,7 +88,7 @@ template <typename T>
 concept NothrowDestructable = is_nothrow_destructible_v<T>;
 
 template<typename T>
-concept Printable = requires(const T & t) {
+concept Printable = requires(T t) {
 	{ std::cout << t } -> convertible_to<std::ostream&>;
 };
 template <typename T>
@@ -99,7 +101,7 @@ concept IteratorTypedef = requires() {
 };
 
 template <typename T>
-concept Detailable = !Pointer<T> && requires(const T & c) {
+concept Detailable = requires(const T & c) {
 	{ c.cbegin() } -> convertible_to<typename T::const_iterator>;
 	{ c.cend() } -> convertible_to<typename T::const_iterator>;
 	{ c.size() } -> convertible_to<size_t>;
@@ -109,8 +111,8 @@ concept Detailable = !Pointer<T> && requires(const T & c) {
 template<typename Iterator>
 concept InputIterator = IteratorTypedef<Iterator> && requires(Iterator it1, Iterator it2) {
 	{ *it1 } -> convertible_to<typename std::iterator_traits<Iterator>::value_type>;
-	{ ++it1 } -> std::same_as<Iterator&>;
-	{ it1++ } -> std::same_as<Iterator>;
+	{ ++it1 } -> same_as<Iterator&>;
+	{ it1++ } -> same_as<Iterator>;
 	{ it1 != it2 } -> convertible_to<bool>;
 	{ it1 == it2 } -> convertible_to<bool>;
 };
@@ -124,8 +126,8 @@ concept ForwardIterator = InputIterator<Iterator> && requires(Iterator it1, Iter
 };
 template<typename Iterator>
 concept BidirectionalIterator = ForwardIterator<Iterator> && requires(Iterator it) {
-	{ --it } -> std::same_as<Iterator&>;
-	{ it-- } -> std::same_as<Iterator>;
+	{ --it } -> same_as<Iterator&>;
+	{ it-- } -> same_as<Iterator>;
 };
 template<typename Iterator>
 concept RandomAccessIterator = BidirectionalIterator<Iterator> &&
@@ -171,7 +173,6 @@ concept SelectPairSecondFunction = PairLike<Arg> && requires(Func f, const Arg &
 template <typename Func, typename Arg>
 concept SelectPairFunction = SelectPairFirstFunction<Func, Arg> || SelectPairSecondFunction<Func, Arg>;
 
-MSTL_END_CONCEPTS__
 MSTL_END_NAMESPACE__
 
 #endif // MSTL_CONCEPTS_HPP__

@@ -2,11 +2,10 @@
 #define MSTL_ALLOCATOR_HPP__
 #include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
-MSTL_CONCEPTS__
 
 template <typename T>
-    requires(!Void<T> && !Reference<T> && !Function<T> && !Const<T>)
 class standard_allocator {
+    static_assert(is_allocable_v<T>, "allocator can`t alloc void, reference, function or const type.");
 private:
     typedef std::allocator<T> alloc_type;
     alloc_type alloc;
@@ -56,8 +55,8 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(
 }
 
 template <typename T>
-    requires(!Void<T> && !Reference<T> && !Function<T> && !Const<T>)
 class ctype_allocator {
+    static_assert(is_allocable_v<T>, "allocator can`t alloc void, reference, function or const type.");
 public:
     using value_type = T;
     using pointer = T*;
@@ -102,8 +101,8 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(const ctype_allocator<T>&, const 
 }
 
 template <typename T>
-    requires(!Void<T> && !Reference<T> && !Function<T> && !Const<T>)
 class new_allocator {
+    static_assert(is_allocable_v<T>, "allocator can`t alloc void, reference, function or const type.");
 public:
     using value_type = T;
     using pointer = T*;

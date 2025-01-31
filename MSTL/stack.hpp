@@ -1,7 +1,6 @@
 #ifndef MSTL_STACK_HPP__
 #define MSTL_STACK_HPP__
 #include "deque.hpp"
-
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T, typename Sequence = deque<T>>

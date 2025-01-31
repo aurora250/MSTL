@@ -3,9 +3,7 @@
 #include "errorlib.h"
 #include "functor.hpp"
 #include "concepts.hpp"
-
 MSTL_BEGIN_NAMESPACE__
-using namespace concepts;
 
 // 0 ~ 2^16-1
 typedef unsigned short mathus_t;

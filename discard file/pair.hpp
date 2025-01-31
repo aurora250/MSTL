@@ -131,13 +131,13 @@ MSTL_CONSTEXPR void swap(pair<T1, T2>& lh, pair<T1, T2>& rh) noexcept(noexcept(l
 }
 template <typename T1, typename T2>
 	requires(Printable<T1> && Printable<T2>)
-inline void __show_data_only(const pair<T1, T2>& p, std::ostream& _out) {
+inline void show_data_only(const pair<T1, T2>& p, std::ostream& _out) {
 	_out << "{ " << p.first << ", " << p.second << " }";
 }
 template <typename T1, typename T2>
 	requires(Printable<T1>&& Printable<T2>)
 std::ostream& operator <<(std::ostream& _out, const pair<T1, T2>& _p) {
-	__show_data_only(_p, _out);
+	show_data_only(_p, _out);
 	return _out;
 }
 
