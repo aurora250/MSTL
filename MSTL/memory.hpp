@@ -6,24 +6,27 @@
 #include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
 
+// placement new
 template <typename T1, typename... T2>
-    requires(ConstructibleFrom<T1, T2...>)
-MSTL_CONSTEXPR void construct(T1* p, T2&&... value) { // placement new
-    new (p) T1(std::forward<T2>(value)...);
+    requires(constructible_from<T1, T2...>)
+MSTL_CONSTEXPR void construct(T1* p, T2&&... value) 
+noexcept(noexcept(new (p) T1(MSTL::forward<T2>(value)...))) {
+    new (p) T1(MSTL::forward<T2>(value)...);
 }
+
 template <typename T>
-MSTL_CONSTEXPR void destroy(T* pointer) noexcept(NothrowDestructable<T>) {
+MSTL_CONSTEXPR void destroy(T* pointer) noexcept(is_nothrow_destructible_v<T>) {
     pointer->~T();
 }
 template <typename Iterator>
-    requires(ForwardIterator<Iterator> && (!TrivialDestructible<
+    requires(forward_iterator<Iterator> && (!trivially_destructible<
         typename std::iterator_traits<Iterator>::value_type>))
 MSTL_CONSTEXPR void destroy(Iterator first, Iterator last) 
-noexcept(NothrowDestructable<typename std::iterator_traits<Iterator>::value_type>) {
+noexcept(is_nothrow_destructible_v<typename std::iterator_traits<Iterator>::value_type>) {
     for (; first < last; ++first) MSTL::destroy(&*first);
 }
 template <typename Iterator>
-    requires(ForwardIterator<Iterator> && TrivialDestructible<
+    requires(forward_iterator<Iterator> && trivially_destructible<
         typename std::iterator_traits<Iterator>::value_type>)
 MSTL_CONSTEXPR void destroy(Iterator, Iterator) noexcept {}
 
@@ -31,13 +34,13 @@ inline void destroy(char*, char*) noexcept {}
 inline void destroy(wchar_t*, wchar_t*) noexcept {}
 
 template <typename Iterator1, typename Iterator2>
-    requires(InputIterator<Iterator1> && ForwardIterator<Iterator2> && TrivialCopyAssignable<
+    requires(input_iterator<Iterator1> && forward_iterator<Iterator2> && trivially_copy_assignable<
         typename std::iterator_traits<Iterator1>::value_type>)
 MSTL_CONSTEXPR Iterator2 uninitialized_copy(Iterator1 first, Iterator1 last, Iterator2 result) {
     return MSTL::copy(first, last, result);
 }
 template <typename Iterator1, typename Iterator2>
-    requires(InputIterator<Iterator1>&& ForwardIterator<Iterator2> && (!TrivialCopyAssignable<
+    requires(input_iterator<Iterator1>&& forward_iterator<Iterator2> && (!trivially_copy_assignable<
         typename std::iterator_traits<Iterator1>::value_type>))
 MSTL_CONSTEXPR Iterator2 uninitialized_copy(Iterator1 first, Iterator1 last, Iterator2 result) {
     Iterator2 cur = result;
@@ -55,7 +58,7 @@ inline wchar_t* uninitialized_copy(const wchar_t* first, const wchar_t* last, wc
 }
 
 template <typename Iterator1, typename Iterator2>
-    requires(InputIterator<Iterator1> && ForwardIterator<Iterator2>)
+    requires(input_iterator<Iterator1> && forward_iterator<Iterator2>)
 pair<Iterator1, Iterator2> 
 MSTL_CONSTEXPR uninitialized_copy_n(Iterator1 first, size_t count, Iterator2 result) {
     Iterator2 cur = result;
@@ -64,7 +67,7 @@ MSTL_CONSTEXPR uninitialized_copy_n(Iterator1 first, size_t count, Iterator2 res
     return pair<Iterator1, Iterator2>(first, cur);
 }
 template <typename Iterator1, typename Iterator2>
-    requires(RandomAccessIterator<Iterator1>&& ForwardIterator<Iterator2>)
+    requires(random_access_iterator<Iterator1>&& forward_iterator<Iterator2>)
 inline pair<Iterator1, Iterator2> 
 MSTL_CONSTEXPR uninitialized_copy_n(Iterator1 first, size_t count, Iterator2 result) {
     Iterator1 last = first + count;
@@ -72,12 +75,12 @@ MSTL_CONSTEXPR uninitialized_copy_n(Iterator1 first, size_t count, Iterator2 res
 }
 
 template <typename Iterator, typename T>
-    requires(ForwardIterator<Iterator> && TrivialAssignable<typename std::iterator_traits<Iterator>::value_type>)
+    requires(forward_iterator<Iterator> && TrivialAssignable<typename std::iterator_traits<Iterator>::value_type>)
 MSTL_CONSTEXPR void uninitialized_fill(Iterator first, Iterator last, T&& x) {
     MSTL::fill(first, last, std::forward<T>(x));
 }
 template <typename Iterator, typename T>
-    requires(ForwardIterator<Iterator> && (!TrivialAssignable<typename std::iterator_traits<Iterator>::value_type>))
+    requires(forward_iterator<Iterator> && (!TrivialAssignable<typename std::iterator_traits<Iterator>::value_type>))
 MSTL_CONSTEXPR void uninitialized_fill(Iterator first, Iterator last, T&& x) {
     Iterator cur = first;
     for (; cur != last; ++cur)
@@ -85,12 +88,12 @@ MSTL_CONSTEXPR void uninitialized_fill(Iterator first, Iterator last, T&& x) {
 }
 
 template <typename Iterator, typename T>
-    requires(ForwardIterator<Iterator> && TrivialAssignable<typename std::iterator_traits<Iterator>::value_type>)
+    requires(forward_iterator<Iterator> && TrivialAssignable<typename std::iterator_traits<Iterator>::value_type>)
 MSTL_CONSTEXPR Iterator uninitialized_fill_n(Iterator first, size_t n, T&& x) {
     return MSTL::fill_n(first, n, std::forward<T>(x));
 }
 template <typename Iterator, typename T>
-    requires(ForwardIterator<Iterator> && (!TrivialAssignable<typename std::iterator_traits<Iterator>::value_type>))
+    requires(forward_iterator<Iterator> && (!TrivialAssignable<typename std::iterator_traits<Iterator>::value_type>))
 MSTL_CONSTEXPR Iterator uninitialized_fill_n(Iterator first, size_t n, T&& x) {
     Iterator cur = first;
     for (; n > 0; --n, ++cur) 
@@ -100,7 +103,7 @@ MSTL_CONSTEXPR Iterator uninitialized_fill_n(Iterator first, size_t n, T&& x) {
 
 
 template <typename Iterator, typename T = typename std::iterator_traits<Iterator>::value_type>
-    requires(ForwardIterator<Iterator>)
+    requires(forward_iterator<Iterator>)
 class temporary_buffer {
 private:
     ptrdiff_t original_len_;
@@ -117,8 +120,8 @@ private:
             len_ /= 2;
         }
     }
-    void initialize_buffer(const T&) requires(TrivialCopyAssignable<T>) {}
-    void initialize_buffer(const T& val) requires(!TrivialCopyAssignable<T>) {
+    void initialize_buffer(const T&) requires(trivially_copy_assignable<T>) {}
+    void initialize_buffer(const T& val) requires(!trivially_copy_assignable<T>) {
         MSTL::uninitialized_fill_n(buffer_, len_, val);
     }
 

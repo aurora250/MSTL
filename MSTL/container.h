@@ -8,7 +8,7 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Container>
-	requires(Detailable<Container>)
+	requires(is_detailable<Container>)
 inline void show_data_only(const Container& c, std::ostream& _out) {
 	using const_iterator = typename Container::const_iterator;
 	size_t _band = c.size() - 1; size_t vl = 0;
@@ -20,7 +20,7 @@ inline void show_data_only(const Container& c, std::ostream& _out) {
 	_out << ']' << std::flush;
 }
 template <typename T1, typename T2>
-	requires(Printable<T1> && Printable<T2>)
+	requires(is_printable<T1> && is_printable<T2>)
 inline void show_data_only(const MSTL::pair<T1, T2>& p, std::ostream& _out) {
 	_out << "{ " << p.first << ", " << p.second << " }";
 }
@@ -31,7 +31,7 @@ inline std::ostream& operator <<(std::ostream& _out, const MSTL::pair<T1, T2>& _
 }
 
 template <typename Container>
-	requires(Detailable<Container>)
+	requires(is_detailable<Container>)
 void detailof(const Container& c, std::ostream& _out = std::cout) {
 	split_line(_out);
 	_out << "type: " << MSTL::check_type<Container>() << std::endl;

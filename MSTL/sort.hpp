@@ -8,7 +8,7 @@ MSTL_BEGIN_NAMESPACE__
 
 // is sorted
 template <typename Iterator>
-    requires(InputIterator<Iterator>)
+    requires(input_iterator<Iterator>)
 bool is_sorted(Iterator first, Iterator last) {
     if (first == last) return true;
     Iterator next = MSTL::next(first);
@@ -20,7 +20,7 @@ bool is_sorted(Iterator first, Iterator last) {
 }
 
 template<typename Iterator, typename Compare>
-    requires(InputIterator<Iterator>)
+    requires(input_iterator<Iterator>)
 bool is_sorted(Iterator first, Iterator last, Compare comp) {
     if (first == last) return true;
     Iterator next = MSTL::next(first);
@@ -35,7 +35,7 @@ bool is_sorted(Iterator first, Iterator last, Compare comp) {
 
 // bubble sort : Ot(N)~(N^2) Om(1) stable
 template <typename Iterator>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void bubble_sort(Iterator first, Iterator last) {
     if (first == last) return;
     auto revend = MSTL::make_reverse_iterator(first);
@@ -56,7 +56,7 @@ void bubble_sort(Iterator first, Iterator last) {
 }
 
 template <typename Iterator, typename Compare>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void bubble_sort(Iterator first, Iterator last, Compare comp) {
     if (first == last) return;
     auto revend = MSTL::make_reverse_iterator(first);
@@ -78,7 +78,7 @@ void bubble_sort(Iterator first, Iterator last, Compare comp) {
 
 // cocktail sort : Ot(N)~(N^2) Om(1) stable
 template <typename Iterator>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void cocktail_sort(Iterator first, Iterator last) {
     if (first == last) return;
     bool swapped = true;
@@ -111,7 +111,7 @@ void cocktail_sort(Iterator first, Iterator last) {
 }
 
 template <typename Iterator, typename Compare>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void cocktail_sort(Iterator first, Iterator last, Compare comp) {
     if (first == last) return;
     bool swapped = true;
@@ -145,7 +145,7 @@ void cocktail_sort(Iterator first, Iterator last, Compare comp) {
 
 // select sort : Ot(N^2) Om(1) unstable 
 template <typename Iterator> 
-    requires(ForwardIterator<Iterator>)
+    requires(forward_iterator<Iterator>)
 void select_sort(Iterator first, Iterator last) {
     if (first == last) return;
     Iterator min;
@@ -161,7 +161,7 @@ void select_sort(Iterator first, Iterator last) {
 }
 
 template <typename Iterator, typename Compare>
-    requires(ForwardIterator<Iterator>)
+    requires(forward_iterator<Iterator>)
 void select_sort(Iterator first, Iterator last, Compare comp) {
     if (first == last) return;
     Iterator min;
@@ -178,7 +178,7 @@ void select_sort(Iterator first, Iterator last, Compare comp) {
 
 // shell sort : Ot(NlogN)~(N^2) Om(1) unstable
 template <typename Iterator>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void shell_sort(Iterator first, Iterator last) {
     if (first == last) return;
     using Distance = typename std::iterator_traits<Iterator>::difference_type;
@@ -197,7 +197,7 @@ void shell_sort(Iterator first, Iterator last) {
 }
 
 template <typename Iterator, typename Compare>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void shell_sort(Iterator first, Iterator last, Compare comp) {
     if (first == last) return;
     using Distance = typename std::iterator_traits<Iterator>::difference_type;
@@ -216,7 +216,7 @@ void shell_sort(Iterator first, Iterator last, Compare comp) {
 
 // counting sort : Ot(N + k) Om(k) stable
 template <typename Iterator>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void counting_sort(Iterator first, Iterator last) {
     if (first == last) return;
     using T = typename std::iterator_traits<Iterator>::value_type;
@@ -246,7 +246,7 @@ void counting_sort(Iterator first, Iterator last) {
 }
 
 template <typename Iterator, typename Compare, typename IndexMapper>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void counting_sort(Iterator first, Iterator last, Compare comp, IndexMapper mapper) {
     if (first == last) return;
     using T = typename std::iterator_traits<Iterator>::value_type;
@@ -334,7 +334,6 @@ int max_bit_aux(Iterator first, Iterator last) {
 }
 
 template <typename T>
-    requires(Number<T>)
 int get_number_aux(T num, T d) {
     int p = 1;
     for (T i = 1; i < d; ++i)
@@ -343,7 +342,7 @@ int get_number_aux(T num, T d) {
 }
 
 template <typename Iterator, typename Mapper>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void radix_sort_less(Iterator first, Iterator last, Mapper mapper) {
     if (first == last) return;
     using Distance = typename std::iterator_traits<Iterator>::difference_type;
@@ -378,7 +377,7 @@ void radix_sort_less(Iterator first, Iterator last, Mapper mapper) {
 }
 
 template <typename Iterator, typename Mapper>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void radix_sort_greater(Iterator first, Iterator last, Mapper mapper) {
     if (first == last) return;
     using Distance = typename std::iterator_traits<Iterator>::difference_type;
@@ -421,7 +420,7 @@ inline void radix_sort(Iterator first, Iterator last, Mapper mapper = Mapper()) 
 
 // merge sort : Ot(NlogN) Om(logN) stable
 template <typename Iterator>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void merge_sort(Iterator first, Iterator last) {
     using Distance = typename std::iterator_traits<Iterator>::difference_type;
     Distance n = MSTL::distance(first, last);
@@ -433,7 +432,7 @@ void merge_sort(Iterator first, Iterator last) {
 }
 
 template <typename Iterator, typename Compare>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void merge_sort(Iterator first, Iterator last, Compare comp) {
     using Distance = typename std::iterator_traits<Iterator>::difference_type;
     Distance n = MSTL::distance(first, last);
@@ -446,7 +445,7 @@ void merge_sort(Iterator first, Iterator last, Compare comp) {
 
 // partial sort / heap sort : Ot(NlogN) Om(1) unstable
 template <class Iterator>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void partial_sort(Iterator first, Iterator middle, Iterator last) {
     if (first == middle) return;
     MSTL::make_heap(first, middle);
@@ -458,7 +457,7 @@ void partial_sort(Iterator first, Iterator middle, Iterator last) {
 }
 
 template <class Iterator, class Compare>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void partial_sort(Iterator first, Iterator middle, Iterator last, Compare comp) {
     if (first == middle) return;
     MSTL::make_heap(first, middle, comp);
@@ -470,7 +469,7 @@ void partial_sort(Iterator first, Iterator middle, Iterator last, Compare comp) 
 }
 
 template <class Iterator1, class Iterator2>
-    requires(InputIterator<Iterator1> && RandomAccessIterator<Iterator2>)
+    requires(input_iterator<Iterator1> && random_access_iterator<Iterator2>)
 Iterator2 partial_sort_copy(Iterator1 first, Iterator1 last, Iterator2 result_first, Iterator2 result_last) {
 	if (result_first == result_last) return result_last;
     using Distance = typename std::iterator_traits<Iterator1>::difference_type;
@@ -491,7 +490,7 @@ Iterator2 partial_sort_copy(Iterator1 first, Iterator1 last, Iterator2 result_fi
 }
 
 template <class Iterator1, class Iterator2, class Compare>
-    requires(InputIterator<Iterator1> && RandomAccessIterator<Iterator2>)
+    requires(input_iterator<Iterator1> && random_access_iterator<Iterator2>)
 Iterator2 partial_sort_copy(Iterator1 first, Iterator1 last,
 	Iterator2 result_first, Iterator2 result_last, Compare comp) {
 	if (result_first == result_last) return result_last;
@@ -522,7 +521,7 @@ void smooth_sort(Iterator first, Iterator last) {
 }
 
 template <class Iterator, class T>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void insertion_sort_aux(Iterator last, T value) {
     Iterator next = last;
     --next;
@@ -535,7 +534,7 @@ void insertion_sort_aux(Iterator last, T value) {
 }
 
 template <class Iterator, class T, class Compare>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void insertion_sort_aux(Iterator last, T value, Compare comp) {
     Iterator next = last;
     --next;
@@ -549,7 +548,7 @@ void insertion_sort_aux(Iterator last, T value, Compare comp) {
 
 // insertion sort : Ot(N)~(N^2) Om(1) stable
 template <class Iterator>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void insertion_sort(Iterator first, Iterator last) {
     if (first == last) return;
     using T = typename std::iterator_traits<Iterator>::value_type;
@@ -580,7 +579,7 @@ void insertion_sort(Iterator first, Iterator last, Compare comp) {
 MSTL_CONSTEXPR static size_t SORT_DISPATCH_THRESHOLD__ = 16;
 
 template <class Iterator, class T>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 Iterator lomuto_partition(Iterator first, Iterator last, const T& pivot) {
     while (first < last) {
         while (*first < pivot) ++first;
@@ -594,7 +593,7 @@ Iterator lomuto_partition(Iterator first, Iterator last, const T& pivot) {
 }
 
 template <class Iterator, class T, class Compare>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 Iterator lomuto_partition(Iterator first, Iterator last, const T& pivot, Compare comp) {
     while (first < last) {
         while (comp(*first, pivot)) ++first;
@@ -609,7 +608,7 @@ Iterator lomuto_partition(Iterator first, Iterator last, const T& pivot, Compare
 
 // introspective sort : Ot(NlogN) Om(logN) unstable
 template <class Iterator>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void introspective_sort(Iterator first, Iterator last, int depth_limit) {
     while (first < last) {
         if (depth_limit == 0) {
@@ -625,7 +624,7 @@ void introspective_sort(Iterator first, Iterator last, int depth_limit) {
 }
 
 template <class Iterator, class Compare>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void introspective_sort(Iterator first, Iterator last, int depth_limit, Compare comp) {
     while (first < last) {
         if (depth_limit == 0) {
@@ -642,7 +641,7 @@ void introspective_sort(Iterator first, Iterator last, int depth_limit, Compare 
 
 // quick sort : Ot(NlogN) Om(1) unstable 
 template <class Iterator>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void quick_sort(Iterator first, Iterator last) {
     if (first < last) {
         Iterator pov = last - 1;
@@ -654,7 +653,7 @@ void quick_sort(Iterator first, Iterator last) {
 }
 
 template <class Iterator, typename Compare>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void quick_sort(Iterator first, Iterator last, Compare comp) {
     if (first < last) {
         Iterator pov = last - 1;
@@ -666,7 +665,7 @@ void quick_sort(Iterator first, Iterator last, Compare comp) {
 }
 
 template <class Iterator>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void introspective_sort_dispatch(Iterator first, Iterator last, int depth_limit) {
     while (last - first > SORT_DISPATCH_THRESHOLD__) {
         if (depth_limit == 0) {
@@ -682,7 +681,7 @@ void introspective_sort_dispatch(Iterator first, Iterator last, int depth_limit)
 }
 
 template <class Iterator, class Compare>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void introspective_sort_dispatch(Iterator first, Iterator last, int depth_limit, Compare comp) {
     while (last - first > SORT_DISPATCH_THRESHOLD__) {
         if (depth_limit == 0) {
@@ -699,7 +698,7 @@ void introspective_sort_dispatch(Iterator first, Iterator last, int depth_limit,
 
 // standard sort : Ot(NlogN) Om(logN) unstable
 template <class Iterator>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void sort(Iterator first, Iterator last) {
     if (first == last) return;
     MSTL::introspective_sort_dispatch(first, last, (int)MSTL::cursory_lg2(last - first) * 2);
@@ -713,7 +712,7 @@ void sort(Iterator first, Iterator last) {
 }
 
 template <class Iterator, class Compare>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void sort(Iterator first, Iterator last, Compare comp) {
     if (first == last) return;
     MSTL::introspective_sort_dispatch(first, last, (int)MSTL::cursory_lg2(last - first) * 2, comp);
@@ -728,7 +727,7 @@ void sort(Iterator first, Iterator last, Compare comp) {
 
 // nth element : Ot(N)~(N^2) Om(1) unstable
 template <class Iterator>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void nth_element(Iterator first, Iterator nth, Iterator last) {
     while (last - first > 3) {
         Iterator cut = MSTL::lomuto_partition(
@@ -740,7 +739,7 @@ void nth_element(Iterator first, Iterator nth, Iterator last) {
 }
 
 template <class Iterator, class Compare>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void nth_element(Iterator first, Iterator nth, Iterator last, Compare comp) {
     while (last - first > 3) {
         Iterator cut = MSTL::lomuto_partition(
@@ -753,7 +752,7 @@ void nth_element(Iterator first, Iterator nth, Iterator last, Compare comp) {
 
 // tim sort : Ot(NlogN) Om(N) stable
 template<typename Iterator>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void tim_sort(Iterator first, Iterator last) {
     using Distance = typename std::iterator_traits<Iterator>::difference_type;
     static constexpr int MIN_MERGE = 32;
@@ -774,7 +773,7 @@ void tim_sort(Iterator first, Iterator last) {
 }
 
 template<typename Iterator, typename Compare>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void tim_sort(Iterator first, Iterator last, Compare comp) {
     using Distance = typename std::iterator_traits<Iterator>::difference_type;
     static constexpr int MIN_MERGE = 32;
@@ -796,7 +795,7 @@ void tim_sort(Iterator first, Iterator last, Compare comp) {
 
 // monkey sort : Ot-avg((N + 1)!) Om(1) unstable
 template<typename Iterator>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void monkey_sort(Iterator first, Iterator last) {
     while (!MSTL::is_sorted(first, last)) {
         MSTL::random_shuffle(first, last);
@@ -804,7 +803,7 @@ void monkey_sort(Iterator first, Iterator last) {
 }
 
 template<typename Iterator, typename Compare>
-    requires(RandomAccessIterator<Iterator>)
+    requires(random_access_iterator<Iterator>)
 void monkey_sort(Iterator first, Iterator last, Compare comp) {
     while (!MSTL::is_sorted(first, last, comp)) {
         MSTL::random_shuffle(first, last);

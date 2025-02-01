@@ -7,7 +7,7 @@ MSTL_BEGIN_NAMESPACE__
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
     class Alloc = standard_allocator<__hashtable_node<pair<const Key, T>>>>
-    requires(HashFunction<HashFcn, Key> && BinaryFunction<EqualKey>)
+    requires(is_hash_v<HashFcn, Key>)
 class hash_map {
 private:
     typedef hashtable<pair<const Key, T>, Key, HashFcn, 
@@ -51,22 +51,22 @@ public:
     }
 
     template <class Iterator>
-        requires(InputIterator<Iterator>)
+        requires(input_iterator<Iterator>)
     hash_map(Iterator f, Iterator l) : rep(10, hasher(), key_equal()) {
         rep.insert_unique(f, l);
     }
     template <class Iterator>
-        requires(InputIterator<Iterator>)
+        requires(input_iterator<Iterator>)
     hash_map(Iterator f, Iterator l, size_type n) : rep(n, hasher(), key_equal()) {
         rep.insert_unique(f, l);
     }
     template <class Iterator>
-        requires(InputIterator<Iterator>)
+        requires(input_iterator<Iterator>)
     hash_map(Iterator f, Iterator l, size_type n, const hasher& hf) : rep(n, hf, key_equal()) {
         rep.insert_unique(f, l);
     }
     template <class Iterator>
-        requires(InputIterator<Iterator>)
+        requires(input_iterator<Iterator>)
     hash_map(Iterator f, Iterator l, size_type n, const hasher& hf, const key_equal& eql) 
         : rep(n, hf, eql) {
         rep.insert_unique(f, l);
@@ -105,7 +105,7 @@ public:
     }
 
     template <class Iterator>
-        requires(InputIterator<Iterator>)
+        requires(input_iterator<Iterator>)
     void insert(Iterator f, Iterator l) { rep.insert_unique(f, l); }
     template <typename T = value_type>
     pair<iterator, bool> insert_noresize(T&& x) { 
@@ -159,13 +159,13 @@ void swap(const hash_map<Key, T, HashFcn, EqualKey, Alloc>& lh,
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
     class Alloc = standard_allocator<__hashtable_node<pair<const Key, T>>>>
-    requires(HashFunction<HashFcn, Key>&& BinaryFunction<EqualKey>)
+    requires(is_hash_v<HashFcn, Key>)
 using unordered_map = hash_map<Key, T, HashFcn, EqualKey, Alloc>;
 
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
     class Alloc = standard_allocator<__hashtable_node<pair<const Key, T>>>>
-    requires(HashFunction<HashFcn, Key>&& BinaryFunction<EqualKey>)
+    requires(is_hash_v<HashFcn, Key>)
 class hash_multimap {
 private:
     typedef hashtable<pair<const Key, T>, Key, HashFcn, select1st<pair<const Key, T>>, EqualKey, Alloc> ht;
@@ -259,7 +259,7 @@ inline bool operator ==(const hash_multimap<Key, T, HF, EqKey, Alloc>& hm1,
 
 template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
     class Alloc = standard_allocator<__hashtable_node<pair<const Key, T>>>>
-    requires(HashFunction<HashFcn, Key>&& BinaryFunction<EqualKey>)
+    requires(is_hash_v<HashFcn, Key>)
 using unordered_multimap = hash_multimap<Key, T, HashFcn, EqualKey, Alloc>;
 
 MSTL_END_NAMESPACE__

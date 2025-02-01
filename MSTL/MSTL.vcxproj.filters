@@ -170,5 +170,11 @@
     <ClInclude Include="utility.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="trace_memory.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="iterator_traits.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

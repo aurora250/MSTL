@@ -4,6 +4,7 @@
 #if MSTL_DLL_LINK__
 #include "errorlib.h"
 #include "threadsafe_print.h"
+#include <winsock.h>
 #include <mysql.h>
 #include <string>
 #include <mutex>

@@ -210,10 +210,10 @@ public:
     }
     ~hashtable() { clear(); }
 
-    MSTL_NODISCARD hasher hash_func() const noexcept(NothrowCopyConstructible<hasher>) {
+    MSTL_NODISCARD hasher hash_func() const noexcept(nothrow_copy_constructible<hasher>) {
         return hasher_;
     }
-    MSTL_NODISCARD key_equal key_eql() const noexcept(NothrowCopyConstructible<key_equal>) {
+    MSTL_NODISCARD key_equal key_eql() const noexcept(nothrow_copy_constructible<key_equal>) {
         return equals_;
     }
     MSTL_NODISCARD size_type size() const noexcept { return size_; }
@@ -325,17 +325,17 @@ public:
     }
 
     template <class Iterator>
-        requires(InputIterator<Iterator>)
+        requires(input_iterator<Iterator>)
     void insert_unique(Iterator f, Iterator l) {
         for (; f != l; ++f) insert_unique(*f);
     }
     template <class Iterator>
-        requires(InputIterator<Iterator>)
+        requires(input_iterator<Iterator>)
     void insert_equal(Iterator f, Iterator l) {
         for (; f != l; ++f) insert_equal(*f);
     }
     template <class Iterator>
-        requires(ForwardIterator<Iterator>)
+        requires(forward_iterator<Iterator>)
     void insert_unique(Iterator f, Iterator l) {
         size_type n = 0;
         MSTL::distance(f, l, n);
@@ -343,7 +343,7 @@ public:
         for (; n > 0; --n, ++f) insert_unique_noresize(*f);
     }
     template <class Iterator>
-        requires(ForwardIterator<Iterator>)
+        requires(forward_iterator<Iterator>)
     void insert_equal(Iterator f, Iterator l) {
         size_type n = 0;
         MSTL::distance(f, l, n);

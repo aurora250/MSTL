@@ -27,7 +27,7 @@ struct JSONObject {
 	value_type inner;
 
 	template <typename T>
-		requires(ConstructibleFrom<value_type, T>)
+		requires(constructible_from<value_type, T>)
 	JSONObject(T&& x) {
 		inner = std::forward<T>(x);
 	}

@@ -7,7 +7,7 @@ MSTL_BEGIN_NAMESPACE__
 
 template <class Value, class HashFcn = hash<Value>,  class EqualKey = equal_to<Value>, 
     class Alloc = standard_allocator<__hashtable_node<pair<const Value, Value>>>>
-    requires(HashFunction<HashFcn, Value>&& BinaryFunction<EqualKey>)
+    requires(is_hash_v<HashFcn, Value>)
 class hash_set {
 private:
     typedef hashtable<Value, Value, HashFcn, identity<Value>, EqualKey, Alloc> ht;
@@ -97,7 +97,7 @@ inline void swap(hash_set<Val, HashFcn, EqualKey, Alloc>& hs1, hash_set<Val, Has
 
 template <class Value, class HashFcn = hash<Value>, class EqualKey = equal_to<Value>,
     class Alloc = standard_allocator<pair<const Value, Value>>>
-    requires(HashFunction<HashFcn, Value>&& BinaryFunction<EqualKey>)
+    requires(is_hash_v<HashFcn, Value>)
 class hash_multiset {
 private:
     typedef hashtable<Value, Value, HashFcn, identity<Value>, EqualKey, Alloc> ht;

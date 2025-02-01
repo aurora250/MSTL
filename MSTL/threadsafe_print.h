@@ -110,7 +110,7 @@ static AuxEndl endl;
 void split_line(Output& _out, size_t _size = MSTL_SPLIT_LENGTH);
 
 template <typename Container>
-    requires(Detailable<Container>)
+    requires(is_detailable<Container>)
 inline void show_data_only(const Container& c, Output& _out) {
     using const_iterator = typename Container::const_iterator;
     size_t _band = c.size() - 1; size_t vl = 0;
@@ -122,12 +122,12 @@ inline void show_data_only(const Container& c, Output& _out) {
     _out << ']';
 }
 template <typename T1, typename T2> 
-    requires (Printable<T1> && Printable<T2>)
+    requires (is_printable<T1> && is_printable<T2>)
 inline void show_data_only(const std::pair<T1, T2>& p, Output& _out) {
     _out << "{ " << p.first << ", " << p.second << " }";
 }
 template <typename Container> 
-    requires(Detailable<Container>)
+    requires(is_detailable<Container>)
 void detailof_safe(const Container& c, ThreadsafeOutput& out = sout) {
     Output _out;
     split_line(_out);

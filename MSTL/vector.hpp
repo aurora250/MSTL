@@ -47,19 +47,19 @@ private:
 		end_of_storage_ = finish_;
 	}
 	template <typename Iterator>
-		requires(ForwardIterator<Iterator>)
+		requires(forward_iterator<Iterator>)
 	MSTL_CONSTEXPR iterator allocate_and_copy(size_type n, Iterator first, Iterator last) {
 		iterator result = alloc_.allocate(n);
 		MSTL::uninitialized_copy(first, last, result);
 		return result;
 	}
 	template <typename Iterator>
-		requires(InputIterator<Iterator>)
+		requires(input_iterator<Iterator>)
 	MSTL_CONSTEXPR void range_initialize(Iterator first, Iterator last) {
 		for (; first != last; ++first) push_back(*first);
 	}
 	template <typename Iterator>
-		requires(ForwardIterator<Iterator>)
+		requires(forward_iterator<Iterator>)
 	MSTL_CONSTEXPR void range_initialize(Iterator first, Iterator last) {
 		size_type n = MSTL::distance(first, last);
 		start_ = (allocate_and_copy)(n, first, last);
@@ -93,7 +93,7 @@ private:
 		end_of_storage_ = new_start + len;
 	}
 	template <typename Iterator>
-		requires(InputIterator<Iterator>)
+		requires(input_iterator<Iterator>)
 	MSTL_CONSTEXPR void range_insert(iterator position, Iterator first, Iterator last) {
 		for (; first != last; ++first) {
 			position = insert(position, *first);
@@ -101,7 +101,7 @@ private:
 		}
 	}
 	template <typename Iterator>
-		requires(ForwardIterator<Iterator>)
+		requires(forward_iterator<Iterator>)
 	MSTL_CONSTEXPR void range_insert(iterator position, Iterator first, Iterator last) {
 		if (first == last) return;
 		size_type n = MSTL::distance(first, last);
@@ -140,7 +140,7 @@ private:
 		}
 	}
 public:
-	MSTL_CONSTEXPR vector() noexcept(NothrowDefaultConstructible<T>)
+	MSTL_CONSTEXPR vector() noexcept(nothrow_default_constructible<T>)
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
 		(fill_initialize)(1, T());
 		finish_ = start_;
@@ -199,7 +199,7 @@ public:
 	}
 
 	template <typename Iterator>
-		requires(InputIterator<Iterator>)
+		requires(input_iterator<Iterator>)
 	MSTL_CONSTEXPR vector(Iterator first, Iterator last)
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
 		range_initialize(first, last);
@@ -260,7 +260,7 @@ public:
 
 	MSTL_CONSTEXPR void reserve(size_type n) {
 		if (capacity() >= n) return;
-		size_type new_capacity = std::max(capacity() * 2, n);
+		size_type new_capacity = maximum(capacity() * 2, n);
 		size_type old_size = size();
 		iterator tmp = (allocate_and_copy)(new_capacity, start_, finish_);
 		MSTL::destroy(start_, finish_);
@@ -335,7 +335,7 @@ public:
 		return insert(position, T());
 	}
 	template <typename Iterator>
-		requires(InputIterator<Iterator>)
+		requires(input_iterator<Iterator>)
 	MSTL_CONSTEXPR void insert(iterator position, Iterator first, Iterator last) {
 		range_insert(position, first, last);
 	}

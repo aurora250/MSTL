@@ -211,9 +211,8 @@ void try_map() {
 void try_tup() {
     MSTL_NAMESPACE__;
     tuple<int, char, const char*> t(1, 't', "MSTL");
-    //auto a = MSTL::get<0>(t);
-    //std::cout << MSTL::get<1>(t) << std::endl;
-    auto tup = make_tuple(1, 2, "e");
+    auto a = get<0>(t);
+    std::cout << get<1>(t) << std::endl;
     auto forw = make_tuple(9, 0);
 }
 void try_hash() {
@@ -404,6 +403,7 @@ void try_json() {
 
 int main() {
     MSTL_NAMESPACE__;
-    try_hash();
+    try_vec();
+
     return 0;
 }

@@ -41,6 +41,14 @@ template <typename T1, typename T2>
 struct is_same : bool_constant<is_same_v<T1, T2>> {};
 
 
+template <typename T>
+struct type_identity {
+    using type = T;
+};
+template <typename T>
+using type_identity_t = typename type_identity<T>::type;
+
+
 template <typename T, typename... Types>
 constexpr bool is_any_of_v = (is_same_v<T, Types> || ...);
 template <typename T, typename... Types>
@@ -149,52 +157,64 @@ template <typename T>
 struct remove_cv {
     using type = T;
 
-    template <template <typename> typename wrapper>
-    using apply_t = wrapper<T>;
+    template <typename wrapper>
+    using bind_cv_t = wrapper;
 };
 template <typename T>
 struct remove_cv<const T> {
     using type = T;
 
-    template <template <typename> typename wrapper>
-    using apply_t = const wrapper<T>;
+    template <typename wrapper>
+    using bind_cv_t = const wrapper;
 };
 template <typename T>
 struct remove_cv<volatile T> {
     using type = T;
 
-    template <template <typename> typename wrapper>
-    using apply_t = volatile wrapper<T>;
+    template <typename wrapper>
+    using bind_cv_t = volatile wrapper;
 };
 template <typename T>
 struct remove_cv<const volatile T> {
     using type = T;
 
-    template <template <typename> typename wrapper>
-    using apply_t = const volatile wrapper<T>;
+    template <typename wrapper>
+    using bind_cv_t = const volatile wrapper;
 };
 template <typename T>
-using remove_cv_t = typename MSTL::remove_cv<T>::type;
+using remove_cv_t = typename remove_cv<T>::type;
+template <typename From, typename To>
+using copy_cv_t = typename remove_cv<From>::template bind_cv_t<To>;
 
 
 template <typename T>
 struct remove_reference {
     using type = T;
-    using bind_const_ref_t = const T;
+
+    template <typename wrapper>
+    using bind_ref_t = wrapper;
 };
 template <typename T>
 struct remove_reference<T&> {
     using type = T;
-    using bind_const_ref_t = const T&;
+
+    template <typename wrapper>
+    using bind_ref_t = wrapper&;
 };
 template <typename T>
 struct remove_reference<T&&> {
     using type = T;
-    using bind_const_ref_t = const T&&;
-};
 
+    template <typename wrapper>
+    using bind_ref_t = wrapper&&;
+};
 template <typename T>
 using remove_reference_t = typename remove_reference<T>::type;
+template <typename From, typename To>
+using copy_ref_t = typename remove_reference<From>::template bind_ref_t<To>;
+
+template <typename From, typename To>
+using copy_cvref_t = copy_ref_t<From, copy_cv_t<From, To>>;
 
 
 template <typename T>
@@ -242,26 +262,42 @@ using remove_all_extents_t = typename remove_all_extents<T>::type;
 template <typename T>
 struct remove_pointer {
     using type = T;
+
+    template <typename wrapper>
+    using bind_pointer_t = wrapper;
 };
 template <typename T>
 struct remove_pointer<T*> {
     using type = T;
+
+    template <typename wrapper>
+    using bind_pointer_t = wrapper*;
 };
 template <typename T>
 struct remove_pointer<T* const> {
     using type = T;
+
+    template <typename wrapper>
+    using bind_pointer_t = const wrapper*;
 };
 template <typename T>
 struct remove_pointer<T* volatile> {
     using type = T;
+
+    template <typename wrapper>
+    using bind_pointer_t = volatile wrapper*;
 };
 template <typename T>
 struct remove_pointer<T* const volatile> {
     using type = T;
-};
 
+    template <typename wrapper>
+    using bind_pointer_t = volatile const wrapper*;
+};
 template <typename T>
 using remove_pointer_t = typename remove_pointer<T>::type;
+template <typename From, typename To>
+using copy_pointer_t = typename remove_pointer<From>::template bind_pointer_t<To>;
 
 
 template <typename T>
@@ -329,14 +365,6 @@ template <typename T>
 struct is_unsigned : bool_constant<sign_aux<T>::is_unsigned> {};
 template <typename T>
 constexpr bool is_unsigned_v = is_unsigned<T>::value;
-
-
-template <typename T>
-struct type_identity {
-    using type = T;
-};
-template <typename T>
-using identity_t = typename type_identity<T>::type;
 
 
 template <typename T>
@@ -877,7 +905,7 @@ MSTL_NODISCARD constexpr T&& forward(remove_reference_t<T>& x) noexcept {
 }
 template <typename T>
 MSTL_NODISCARD constexpr T&& forward(remove_reference_t<T>&& x) noexcept {
-    static_assert(negation_v<is_lvalue_reference_v<T>>, "forward failed.");
+    static_assert(!is_lvalue_reference_v<T>, "forward failed.");
     return static_cast<T&&>(x);
 }
 template <typename T>
@@ -1052,6 +1080,107 @@ template <typename T1, typename T2, typename... Rest>
 struct common_type<T1, T2, Rest...> : common_type<common_type_t<T1, T2>, Rest...> {};
 
 
+template <class, class, template <class> class, template <class> class>
+struct basic_common_reference {};
+template <class T1>
+struct add_qualifier_aux {
+    template <class T2>
+    using apply_t = copy_ref_t<T1, copy_cv_t<T1, T2>>;
+};
+
+template <class...>
+struct common_reference;
+template <class... Types>
+using common_reference_t = common_reference<Types...>::type;
+
+template <>
+struct common_reference<> {};
+template <class T>
+struct common_reference<T> {
+    using type = T;
+};
+
+template <class T1, class T2>
+struct common_reference_base_aux : common_type<T1, T2> {};
+
+template <class T1, class T2>
+    requires requires { typename common_ternary_operator_t<T1, T2>; }
+struct common_reference_base_aux<T1, T2> {
+    using type = common_ternary_operator_t<T1, T2>;
+};
+
+template <class T1, class T2>
+using qualifier_extract = basic_common_reference<remove_cvref_t<T1>, remove_cvref_t<T2>,
+    add_qualifier_aux<T1>::template apply_t, add_qualifier_aux<T2>::template apply_t>::type;
+
+template <class T1, class T2>
+struct common_ref_qualify_aux : common_reference_base_aux<T1, T2> {};
+
+template <class T1, class T2>
+    requires requires { typename qualifier_extract<T1, T2>; }
+struct common_ref_qualify_aux<T1, T2> {
+    using type = qualifier_extract<T1, T2>;
+};
+
+template <class T1, class T2>
+struct common_reference_ptr_aux : common_ref_qualify_aux<T1, T2> {};
+
+template <class T1, class T2>
+    requires is_lvalue_reference_v<common_ternary_operator_t<copy_cv_t<T1, T2>&, copy_cv_t<T2, T1>&>>
+using common_lvalue_aux = common_ternary_operator_t<copy_cv_t<T1, T2>&, copy_cv_t<T2, T1>&>;
+
+template <class, class>
+struct common_reference_aux {};
+
+template <class T1, class T2>
+    requires requires { typename common_lvalue_aux<T1, T2>; }
+struct common_reference_aux<T1&, T2&> {
+    using type = common_lvalue_aux<T1, T2>;
+};
+
+template <class T1, class T2>
+    requires is_convertible_v<T1&&, common_lvalue_aux<const T1, T2>>
+struct common_reference_aux<T1&&, T2&> {
+    using type = common_lvalue_aux<const T1, T2>;
+};
+
+template <class T1, class T2>
+    requires is_convertible_v<T2&&, common_lvalue_aux<const T2, T1>>
+struct common_reference_aux<T1&, T2&&> {
+    using type = common_lvalue_aux<const T2, T1>;
+};
+
+template <class T1, class T2>
+using common_rvalue_aux = remove_reference_t<common_lvalue_aux<T1, T2>>&&;
+
+template <class T1, class T2>
+    requires is_convertible_v<T1&&, common_rvalue_aux<T1, T2>>
+&& is_convertible_v<T2&&, common_rvalue_aux<T1, T2>>
+struct common_reference_aux<T1&&, T2&&> {
+    using type = common_rvalue_aux<T1, T2>;
+};
+
+template <class T1, class T2>
+using common_reference_aux_t = common_reference_aux<T1, T2>::type;
+
+template <class T1, class T2>
+    requires is_convertible_v<add_pointer_t<T1>, add_pointer_t<common_reference_aux_t<T1, T2>>>
+&& is_convertible_v<add_pointer_t<T2>, add_pointer_t<common_reference_aux_t<T1, T2>>>
+struct common_reference_ptr_aux<T1, T2> {
+    using type = common_reference_aux_t<T1, T2>;
+};
+
+template <class T1, class T2>
+struct common_reference<T1, T2> : common_reference_ptr_aux<T1, T2> {};
+
+template <class T1, class T2, class T3, class... Rest>
+struct common_reference<T1, T2, T3, Rest...> {};
+
+template <class T1, class T2, class T3, class... Rest>
+    requires requires { typename common_reference_t<T1, T2>; }
+struct common_reference<T1, T2, T3, Rest...> : common_reference<common_reference_t<T1, T2>, T3, Rest...> {};
+
+
 template <typename T, template <typename...> typename Template>
 constexpr bool is_specialization_v = false;
 template <template <typename...> typename Template, typename... Args>
@@ -1095,15 +1224,17 @@ MSTL_NODISCARD constexpr bool is_corresponding_member(Member1 Class1::* p1, Memb
 
 
 template <typename T>
-void ref_wrapper_construct_aux(identity_t<T&>) noexcept { MSTL_NO_EVALUATION__ }
+void ref_wrapper_construct_aux(type_identity_t<T&>) noexcept { MSTL_NO_EVALUATION__ }
 template <typename T>
-void ref_wrapper_construct_aux(identity_t<T&&>) = delete;
+void ref_wrapper_construct_aux(type_identity_t<T&&>) = delete;
 
 template <typename, typename, typename = void>
 struct ref_wrapper_constructable_from : false_type {};
 template <typename T, typename U>
 struct ref_wrapper_constructable_from<T, U, 
     void_t<decltype(MSTL::ref_wrapper_construct_aux<T>(MSTL::declval<U>()))>> : true_type {};
+template <typename T, typename U>
+constexpr bool ref_wrapper_constructable_from_v = ref_wrapper_constructable_from<T, U>::value;
 
 template <typename T>
 class reference_wrapper {
@@ -1180,6 +1311,55 @@ template <typename T>
 struct unwrap_ref_decay {
     using type = unwrap_ref_decay_t<T>;
 };
+
+
+template <typename>
+struct get_first_parameter;
+template <template <typename, typename...> typename T, typename First, typename... Rest>
+struct get_first_parameter<T<First, Rest...>> {
+    using type = First;
+};
+
+
+template <typename, typename = void>
+struct get_ptr_difference_type {
+    using type = ptrdiff_t;
+};
+template <typename T>
+struct get_ptr_difference_type<T, void_t<typename T::difference_type>> {
+    using type = typename T::difference_type;
+};
+template <typename T>
+using get_ptr_difference_type_t = typename get_ptr_difference_type<T>::type;
+
+
+template <typename, typename>
+struct replace_first_parameter;
+template <typename NewFirst, template <typename, typename...> typename T, typename First, typename... Rest>
+struct replace_first_parameter<NewFirst, T<First, Rest...>> {
+    using type = T<NewFirst, Rest...>;
+};
+
+
+template <class T, class U, class = void>
+struct get_rebind_type {
+    using type = typename replace_first_parameter<U, T>::type;
+};
+template <class T, class U>
+struct get_rebind_type<T, U, void_t<typename T::template rebind<U>>> {
+    using type = typename T::template rebind<U>;
+};
+template <class T, class U>
+using get_rebind_type_t = typename get_rebind_type<T, U>::type;
+
+
+template <class T>
+concept is_allocator_v = requires(T& alloc) {
+    typename T::value_type;
+    alloc.deallocate(alloc.allocate(size_t{ 1 }), size_t{ 1 });
+};
+template <class T>
+struct is_allocator : bool_constant<is_allocator_v<T>> {};
 
 
 template <typename>
@@ -1282,6 +1462,13 @@ template <typename From, typename To>
 struct is_convertible_to : bool_constant<convertible_to<From, To>> {};
 template <typename From, typename To>
 constexpr bool is_convertible_to_v = is_convertible_to<From, To>::value;
+
+
+template <typename Iterator, typename Ptr, bool = is_pointer_v<remove_cvref_t<Iterator>>>
+constexpr bool is_nothrow_arrow = is_nothrow_convertible_v<Iterator, Ptr>;
+template <typename Iterator, typename Ptr>
+constexpr bool is_nothrow_arrow<Iterator, Ptr, false> =
+noexcept(MSTL::declcopy<Ptr>(MSTL::declval<Iterator>().operator->()));
 
 
 template <typename Key>

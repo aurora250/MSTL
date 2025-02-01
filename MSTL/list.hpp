@@ -156,7 +156,7 @@ public:
     };
 
     template <typename Iterator> 
-        requires(InputIterator<Iterator>)
+        requires(input_iterator<Iterator>)
     list(Iterator first, Iterator last) {
         empty_initialize();
         while (first != last) {

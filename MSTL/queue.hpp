@@ -26,7 +26,7 @@ public:
     queue() = default;
     explicit queue(const Sequence& x) : seq_(x) {}
     explicit queue(Sequence&& x) 
-        noexcept(NothrowMoveConstructible<Sequence>) : seq_(std::move(x)) {}
+        noexcept(nothrow_move_constructible<Sequence>) : seq_(std::move(x)) {}
     ~queue() = default;
     template <typename U = value_type>
     void push(U&& x) { seq_.push_back(std::forward<U>(x)); }
@@ -71,7 +71,7 @@ template <typename T, typename Sequence>
 MSTL_NODISCARD bool operator >=(const queue<T, Sequence>& x, const queue<T, Sequence>& y) {
     return x.get_container() >= y.get_container();
 }
-template <class T, class Sequence> requires(Swappable<Sequence>)
+template <class T, class Sequence> requires(swappable<Sequence>)
 void swap(queue<T, Sequence>& lh, queue<T, Sequence>& rh) noexcept(noexcept(lh.swap(rh))) {
     lh.swap(rh);
 }
@@ -96,35 +96,35 @@ private:
 public:
     priority_queue() = default;
     explicit priority_queue(const Compare& x) 
-        noexcept(NothrowDefaultConstructible<Sequence> && NothrowCopyConstructible<Compare>) 
+        noexcept(nothrow_default_constructible<Sequence> && nothrow_copy_constructible<Compare>) 
         : seq_(), comp_(x) {}
     priority_queue(const Sequence& s, const Compare& c)
-        noexcept(NothrowCopyConstructible<Sequence> && NothrowCopyConstructible<Compare>)
+        noexcept(nothrow_copy_constructible<Sequence> && nothrow_copy_constructible<Compare>)
         : seq_(s), comp_(c) {}
     priority_queue(Sequence&& s, const Compare& c)
-        noexcept(NothrowMoveConstructible<Sequence> && NothrowCopyConstructible<Compare>)
+        noexcept(nothrow_move_constructible<Sequence> && nothrow_copy_constructible<Compare>)
         : seq_(std::move(s)), comp_(c) {}
 
     template <typename Iterator>
-        requires(InputIterator<Iterator>)
+        requires(input_iterator<Iterator>)
     priority_queue(Iterator first, Iterator last) : seq_(first, last) {
         MSTL::make_heap(seq_.begin(), seq_.end(), comp_);
     }
     template <typename Iterator>
-        requires(InputIterator<Iterator>)
+        requires(input_iterator<Iterator>)
     priority_queue(Iterator first, Iterator last, const Compare& x) :
         seq_(first, last), comp_(x) {
         MSTL::make_heap(seq_.begin(), seq_.end(), comp_);
     }
     template <typename Iterator>
-        requires(InputIterator<Iterator>)
+        requires(input_iterator<Iterator>)
     priority_queue(Iterator first, Iterator last, const Compare& c, const Sequence& s) :
         seq_(s), comp_(c) {
         seq_.insert(seq_.end(), first, last);
         MSTL::make_heap(seq_.begin(), seq_.end(), comp_);
     }
     template <typename Iterator>
-        requires(InputIterator<Iterator>)
+        requires(input_iterator<Iterator>)
     priority_queue(Iterator first, Iterator last, const Compare& c, Sequence&& s) :
         seq_(std::move(s)), comp_(c) {
         seq_.insert(seq_.end(), first, last);
@@ -150,12 +150,12 @@ public:
         MSTL_CATCH_UNWIND_THROW_M__(seq_.clear());
     }
 
-    void swap(self&& x) noexcept(NothrowSwappable<Sequence> && NothrowSwappable<Compare>) {
+    void swap(self&& x) noexcept(nothrow_swappable<Sequence> && nothrow_swappable<Compare>) {
         std::swap(seq_, x.seq_);
         std::swap(comp_, x.comp_);
     }
 };
-template <class T, class Sequence, class Compare> requires(Swappable<Sequence> && Swappable<Compare>)
+template <class T, class Sequence, class Compare> requires(swappable<Sequence> && swappable<Compare>)
     void swap(priority_queue<T, Sequence, Compare>& lh, priority_queue<T, Sequence, Compare>& rh)
     noexcept(noexcept(lh.swap(rh))) {
     lh.swap(rh);

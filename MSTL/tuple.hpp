@@ -142,7 +142,7 @@ struct tuple<> {
 };
 
 template <typename This, typename... Rest>
-struct tuple<This, Rest...> : public tuple<Rest...> {
+struct tuple<This, Rest...> : private tuple<Rest...> {
 public:
 	using this_type = This;
 	using base_type = tuple<Rest...>;
@@ -215,7 +215,7 @@ public:
 
 	template <typename Self = tuple, typename T = This>
 		requires(conjunction_v<is_copy_assignable<T>, is_copy_assignable<Rest>...>)
-	MSTL_CONSTEXPR tuple& operator =(identity_t<const tuple&> tup) noexcept(conjunction_v<
+	MSTL_CONSTEXPR tuple& operator =(type_identity_t<const tuple&> tup) noexcept(conjunction_v<
 		is_nothrow_copy_assignable<T>, is_nothrow_copy_assignable<Rest>...>) {
 		data_ = tup.data_;
 		get_rest() = tup.get_rest();
@@ -224,7 +224,7 @@ public:
 
 	template <typename Self = tuple, typename T = This>
 		requires(conjunction_v<is_move_assignable<T>, is_move_assignable<Rest>...>)
-	MSTL_CONSTEXPR tuple& operator =(identity_t<tuple&&> tup) noexcept(conjunction_v<
+	MSTL_CONSTEXPR tuple& operator =(type_identity_t<tuple&&> tup) noexcept(conjunction_v<
 		is_nothrow_move_assignable<T>, is_nothrow_move_assignable<Rest>...>) {
 		data_ = MSTL::forward<T>(tup.data_);
 		get_rest() = MSTL::forward<base_type>(tup.get_rest());
@@ -298,15 +298,6 @@ public:
 	template <size_t Index, typename... Types>
 	friend MSTL_CONSTEXPR tuple_element_t<Index, Types...>&& pair_get_from_tuple(tuple<Types...>&&) noexcept;
 
-	template <typename T, typename... Types>
-	friend MSTL_CONSTEXPR T& get(tuple<Types...>&) noexcept;
-	template <typename T, typename... Types>
-	friend MSTL_CONSTEXPR const T& get(const tuple<Types...>&) noexcept;
-	template <typename T, typename... Types>
-	friend MSTL_CONSTEXPR T&& get(tuple<Types...>&&) noexcept;
-	template <typename T, typename... Types>
-	friend MSTL_CONSTEXPR const T&& get(const tuple<Types...>&&) noexcept;
-
 private:
 	this_type data_;
 };
@@ -345,31 +336,33 @@ MSTL_CONSTEXPR void swap(tuple<T...>& lh, tuple<T...>& rh) noexcept(noexcept(lh.
 
 template <size_t Index, typename... Types>
 MSTL_NODISCARD MSTL_CONSTEXPR tuple_element_t<Index, Types...>& get(tuple<Types...>& tup) noexcept {
-	using tuple_type = typename tuple_element<Index, tuple<Types...>>::tuple_type;
-	return static_cast<tuple_type&>(tup).data_;
+	using T = tuple_element_t<Index, tuple<Types...>>;
+	using tuple_type = tuple_extract_base_t<Index, tuple<Types...>>;
+	return static_cast<T&>(static_cast<tuple_type&>(tup).data_);
 }
 template <size_t Index, typename... Types>
 MSTL_NODISCARD MSTL_CONSTEXPR const tuple_element_t<Index, Types...>& get(const tuple<Types...>& tup) noexcept {
-	using tuple_type = typename tuple_element<Index, tuple<Types...>>::tuple_type;
-	return static_cast<const tuple_type&>(tup).data_;
+	using T = tuple_element_t<Index, tuple<Types...>>;
+	using tuple_type = tuple_extract_base_t<Index, tuple<Types...>>;
+	return static_cast<const T&>(static_cast<const tuple_type&>(tup).data_);
 }
 template <size_t Index, typename... Types>
 MSTL_NODISCARD MSTL_CONSTEXPR tuple_element_t<Index, Types...>&& get(tuple<Types...>&& tup) noexcept {
 	using T = tuple_element_t<Index, tuple<Types...>>;
-	using tuple_type = typename tuple_element<Index, tuple<Types...>>::tuple_type;
-	return static_cast<T&&>(static_cast<tuple_type&>(tup).data_);
+	using tuple_type = tuple_extract_base_t<Index, tuple<Types...>>;
+	return static_cast<T&&>(static_cast<tuple_type&&>(tup).data_);
 }
 template <size_t Index, typename... Types>
 MSTL_NODISCARD MSTL_CONSTEXPR const tuple_element_t<Index, Types...>&& get(const tuple<Types...>&& tup) noexcept {
 	using T = tuple_element_t<Index, tuple<Types...>>;
-	using tuple_type = typename tuple_element<Index, tuple<Types...>>::tuple_type;
-	return static_cast<const T&&>(static_cast<const tuple_type&>(tup).data_);
+	using tuple_type = tuple_extract_base_t<Index, tuple<Types...>>;
+	return static_cast<const T&&>(static_cast<const tuple_type&&>(tup).data_);
 }
 
 template <size_t Index, class... Types>
 MSTL_NODISCARD MSTL_CONSTEXPR tuple_element_t<Index, Types...>&& pair_get_from_tuple(tuple<Types...>&& tup) noexcept {
 	using T = tuple_element_t<Index, tuple<Types...>>;
-	using tuple_type = typename tuple_element<Index, tuple<Types...>>::tuple_type;
+	using tuple_type = tuple_extract_base_t<Index, tuple<Types...>>;
 	return static_cast<T&&>(static_cast<tuple_type&>(tup).data_);
 }
 
@@ -382,8 +375,8 @@ MSTL_CONSTEXPR tuple<This, Rest...>::tuple(Tag, Tuple&& tup, index_sequence<Inde
 
 
 template <typename... Types>
-MSTL_NODISCARD MSTL_CONSTEXPR tuple<unwrap_reference_t<Types>...> make_tuple(Types&&... args) {
-	using tuple_type = tuple<unwrap_reference_t<Types>...>;
+MSTL_NODISCARD MSTL_CONSTEXPR tuple<unwrap_ref_decay_t<Types>...> make_tuple(Types&&... args) {
+	using tuple_type = tuple<unwrap_ref_decay_t<Types>...>;
 	return tuple_type(MSTL::forward<Types>(args)...);
 }
 template <typename... Types>

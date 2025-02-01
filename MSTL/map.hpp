@@ -50,12 +50,12 @@ public:
 		return *this;
 	}
 	template <typename Iterator>
-		requires(InputIterator<Iterator>)
+		requires(input_iterator<Iterator>)
 	map(Iterator first, Iterator last) : t(Compare()) {
 		t.insert_unique(first, last);
 	}
 	template <typename Iterator>
-		requires(InputIterator<Iterator>)
+		requires(input_iterator<Iterator>)
 	map(Iterator first, Iterator last, const Compare& comp) : t(comp) {
 		t.insert_unique(first, last);
 	}
@@ -92,7 +92,7 @@ public:
 		return t.insert_unique(position, x);
 	}
 	template <class Iterator>
-		requires(InputIterator<Iterator>)
+		requires(input_iterator<Iterator>)
 	void insert(Iterator first, Iterator last) {
 		t.insert_unique(first, last);
 	}

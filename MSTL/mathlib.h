@@ -80,7 +80,7 @@ MSTL_CONSTEXPR mathld_t radian2angular(mathld_t radians) noexcept {
 }
 
 template <typename T> 
-	requires(SignedNumber<T>)
+	requires(signed_number<T>)
 MSTL_CONSTEXPR T opposite(T x) noexcept {
 	return -x;
 }
@@ -94,13 +94,13 @@ MSTL_CONSTEXPR decltype(auto) sum_n(T first, Args... args) noexcept {
 	return first + sum_n(args...);
 }
 template <typename T> 
-	requires(SignedNumber<T>)
+	requires(signed_number<T>)
 MSTL_CONSTEXPR T absolute(T x) noexcept {
 	return (x > 0) ? x : (-x);
 }
 
 template <typename T>
-	requires(Integral<T>)
+	requires(integral<T>)
 MSTL_CONSTEXPR T gcd(T m, T n) noexcept { // greatest common divisor
 	while (n != 0) {
 		T t = m % n;
@@ -110,7 +110,7 @@ MSTL_CONSTEXPR T gcd(T m, T n) noexcept { // greatest common divisor
 	return m;
 }
 template <typename T>
-	requires(Integral<T>)
+	requires(integral<T>)
 MSTL_CONSTEXPR T lcm(T m, T n) noexcept { // least common multiple
 	return MSTL::absolute(m * n) / MSTL::gcd(m, n);
 }
@@ -120,7 +120,7 @@ MSTL_CONSTEXPR T square(T x) noexcept { return x * x; }
 template <typename T>
 MSTL_CONSTEXPR T cube(T x) noexcept { return MSTL::square(x) * x; }
 template <typename T>
-	requires (Integral<T>)
+	requires (integral<T>)
 MSTL_CONSTEXPR mathl_t power(T x, mathui_t n) noexcept {
 	if (n == 0) return mathl_t(1);
 	mathl_t result = 1;
@@ -135,7 +135,7 @@ MSTL_CONSTEXPR mathl_t power(T x, mathui_t n) noexcept {
 	return result;
 }
 template <typename T>
-	requires (Float<T>)
+	requires (floating_point<T>)
 MSTL_CONSTEXPR mathld_t power(T x, mathui_t n) noexcept {
 	if (n == 0) return mathld_t(1);
 	mathld_t result = 1.0;

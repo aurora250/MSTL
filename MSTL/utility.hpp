@@ -75,6 +75,8 @@ template <size_t, typename...>
 struct tuple_element;
 template <size_t Index, typename... Types>
 using tuple_element_t = typename tuple_element<Index, Types...>::type;
+template <size_t Index, typename... Types>
+using tuple_extract_base_t = typename tuple_element<Index, Types...>::tuple_type;
 
 template <size_t Index, typename... Types>
 MSTL_NODISCARD MSTL_CONSTEXPR tuple_element_t<Index, Types...>& get(tuple<Types...>& t) noexcept;
@@ -155,7 +157,7 @@ struct pair {
 	template <typename self = pair>
 		requires(conjunction_v<
 			is_copy_assignable<typename self::first_type>, is_copy_assignable<typename self::second_type>>)
-	MSTL_CONSTEXPR pair& operator =(identity_t<const self&> p) noexcept(conjunction_v<
+	MSTL_CONSTEXPR pair& operator =(type_identity_t<const self&> p) noexcept(conjunction_v<
 		is_nothrow_copy_assignable<T1>, is_nothrow_copy_assignable<T2>>) {
 		first = p.first;
 		second = p.second;
@@ -166,7 +168,7 @@ struct pair {
 	template <typename self = pair>
 		requires(conjunction_v<
 			is_move_assignable<typename self::first_type>, is_move_assignable<typename self::second_type>>)
-	MSTL_CONSTEXPR pair& operator =(identity_t<self&&> p) noexcept(conjunction_v<
+	MSTL_CONSTEXPR pair& operator =(type_identity_t<self&&> p) noexcept(conjunction_v<
 		is_nothrow_move_assignable<T1>, is_nothrow_move_assignable<T2>>) {
 		first = MSTL::forward<T1>(p.first);
 		second = MSTL::forward<T2>(p.second);
@@ -232,31 +234,18 @@ MSTL_CONSTEXPR void swap(pair<T1, T2>& lh, pair<T1, T2>& rh) noexcept(noexcept(l
 }
 
 template <typename T1, typename T2>
-MSTL_CONSTEXPR pair<unwrap_reference_t<T1>, unwrap_reference_t<T2>> make_pair(T1&& x, T2&& y) 
-noexcept(conjunction_v<is_nothrow_constructible<unwrap_reference_t<T1>, T1>, 
-	is_nothrow_constructible<unwrap_reference_t<T2>, T2>>) {
-	using unwrap_pair = pair<unwrap_reference_t<T1>, unwrap_reference_t<T2>>;
+MSTL_CONSTEXPR pair<unwrap_ref_decay_t<T1>, unwrap_ref_decay_t<T2>> make_pair(T1&& x, T2&& y)
+noexcept(conjunction_v<is_nothrow_constructible<unwrap_ref_decay_t<T1>, T1>,
+	is_nothrow_constructible<unwrap_ref_decay_t<T2>, T2>>) {
+	using unwrap_pair = pair<unwrap_ref_decay_t<T1>, unwrap_ref_decay_t<T2>>;
 	return unwrap_pair(MSTL::forward<T1>(x), MSTL::forward<T2>(y));
 }
 
 
-template <typename, typename = void>
-struct tuple_size_aux {};
-template <typename Tuple>
-struct tuple_size_aux<Tuple, void_t<decltype(tuple_size<Tuple>::value)>>
-	: integral_constant<size_t, tuple_size<Tuple>::value> {};
-
-template <typename Tuple>
-struct tuple_size<const Tuple> : tuple_size_aux<Tuple> {};
 template <typename... Types>
 struct tuple_size<tuple<Types...>> : integral_constant<size_t, sizeof...(Types)> {};
 
 
-template <size_t Index, typename Tuple>
-struct tuple_element<Index, const Tuple> : tuple_element<Index, Tuple> {
-	using base_type = tuple_element<Index, Tuple>;
-	using type = add_const_t<typename base_type::type>;
-};
 template <size_t Index>
 struct tuple_element<Index, tuple<>> {
 	static_assert(false, "tuple element index out of range.");
@@ -269,6 +258,9 @@ struct tuple_element<0, tuple<This, Rest...>> {
 template <size_t Index, typename This, typename... Rest>
 struct tuple_element<Index, tuple<This, Rest...>>
 	: tuple_element<Index - 1, tuple<Rest...>> {};
+
+template <size_t Index, typename... Types>
+struct tuple_element : tuple_element<Index, tuple<Types...>> {};
 
 
 template <typename T1, typename T2>

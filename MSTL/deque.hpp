@@ -253,7 +253,7 @@ private:
         return pos;
     }
     template <typename Iterator>
-        requires(InputIterator<Iterator>)
+        requires(input_iterator<Iterator>)
     iterator insert_aux(iterator pos, Iterator first, Iterator last) {
         difference_type n = last - first;
         difference_type index = pos - start_;
@@ -384,7 +384,7 @@ public:
     }
 
     template <typename Iterator>
-        requires(InputIterator<Iterator>)
+        requires(input_iterator<Iterator>)
     deque(Iterator first, Iterator last) :
         data_alloc_(), map_alloc_(), map_(0), map_size_(0), start_(), finish_() {
         difference_type n = last - first;
@@ -578,7 +578,7 @@ public:
         return start_ + n;
     }
     template <typename Iterator>
-        requires(InputIterator<Iterator>)
+        requires(input_iterator<Iterator>)
     iterator insert(iterator position, Iterator first, Iterator last) {
         if (position == start_) {
             for (--last; first != last; --last) {

@@ -5,21 +5,21 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator, typename T>
-	requires(InputIterator<Iterator>)
+	requires(input_iterator<Iterator>)
 MSTL_CONSTEXPR T accumulate(Iterator first, Iterator second, T init)
 noexcept(noexcept(first != second) && noexcept(++first) && noexcept(init = init + *first)) {
 	for (; first != second; ++first) init = init + *first;
 	return init;
 }
 template <typename Iterator, typename T, class BinaryOperation>
-	requires(InputIterator<Iterator> && BinaryFunction<BinaryOperation>)
+	requires(input_iterator<Iterator>)
 MSTL_CONSTEXPR T accumulate(Iterator first, Iterator second, T init, BinaryOperation binary_op) {
 	for (; first != second; ++first) init = binary_op(init, *first);
 	return init;
 }
 
 template <typename Iterator1, typename Iterator2>
-	requires(InputIterator<Iterator1> && InputIterator<Iterator2>)
+	requires(input_iterator<Iterator1> && input_iterator<Iterator2>)
 MSTL_CONSTEXPR Iterator2 adjacent_difference(Iterator1 first, Iterator1 last, Iterator2 result) {
 	using T = typename std::iterator_traits<Iterator1>::value_type;
 	if (first == last) return result;
@@ -33,7 +33,7 @@ MSTL_CONSTEXPR Iterator2 adjacent_difference(Iterator1 first, Iterator1 last, It
 	return ++result;
 }
 template <typename Iterator1, typename Iterator2, typename BinaryOperation>
-	requires(InputIterator<Iterator1> && InputIterator<Iterator2> && BinaryFunction<BinaryOperation>)
+	requires(input_iterator<Iterator1> && input_iterator<Iterator2>)
 MSTL_CONSTEXPR Iterator2 adjacent_difference(Iterator1 first, Iterator1 last,
 	Iterator2 result, BinaryOperation binary_op) {
 	if (first == last) return result;
@@ -49,7 +49,7 @@ MSTL_CONSTEXPR Iterator2 adjacent_difference(Iterator1 first, Iterator1 last,
 }
 
 template <typename Iterator1, typename Iterator2, typename T>
-	requires(InputIterator<Iterator1> && InputIterator<Iterator2>)
+	requires(input_iterator<Iterator1> && input_iterator<Iterator2>)
 MSTL_CONSTEXPR T inner_product(Iterator1 first1, Iterator1 last1, Iterator2 first2, T init) {
 	for (; first1 != last1; ++first1, ++first2) 
 		init = init + ((*first1) * (*first2));
@@ -57,8 +57,7 @@ MSTL_CONSTEXPR T inner_product(Iterator1 first1, Iterator1 last1, Iterator2 firs
 }
 template <typename Iterator1, typename Iterator2, typename T,
 	typename BinaryOperation1, typename BinaryOperation2> 
-	requires(InputIterator<Iterator1> && InputIterator<Iterator2>
-		&& BinaryFunction<BinaryOperation1> && BinaryFunction<BinaryOperation2>)
+	requires(input_iterator<Iterator1> && input_iterator<Iterator2>)
 MSTL_CONSTEXPR T inner_product(Iterator1 first1, Iterator1 last1, Iterator2 first2, T init,
 	BinaryOperation1 binary_op1, BinaryOperation2 binary_op2) {
 	for (; first1 != last1; ++first1, ++first2) 
@@ -67,7 +66,7 @@ MSTL_CONSTEXPR T inner_product(Iterator1 first1, Iterator1 last1, Iterator2 firs
 }
 
 template <typename Iterator1, typename Iterator2>
-	requires(InputIterator<Iterator1> && InputIterator<Iterator2>)
+	requires(input_iterator<Iterator1> && input_iterator<Iterator2>)
 MSTL_CONSTEXPR Iterator2 partial_sum(Iterator1 first, Iterator1  last, Iterator2 result) {
 	if (first == last) return result;
 	using T = typename std::iterator_traits<Iterator1>::value_type;
@@ -80,7 +79,7 @@ MSTL_CONSTEXPR Iterator2 partial_sum(Iterator1 first, Iterator1  last, Iterator2
 	return ++result;
 }
 template <typename Iterator1, typename Iterator2, typename BinaryOperation>
-	requires(InputIterator<Iterator1> && InputIterator<Iterator2> && BinaryFunction<BinaryOperation>)
+	requires(input_iterator<Iterator1> && input_iterator<Iterator2>)
 MSTL_CONSTEXPR Iterator2 partial_sum(
 	Iterator1 first, Iterator1 last, Iterator2 result, BinaryOperation binary_op) {
 	if (first == last) return result;

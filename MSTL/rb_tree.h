@@ -390,7 +390,7 @@ public:
         }
     }
     template <typename Iterator> 
-        requires(InputIterator<Iterator>)
+        requires(input_iterator<Iterator>)
     void insert_unique(Iterator first, Iterator last) {
         for (; first != last; ++first) insert_unique(*first);
     }
