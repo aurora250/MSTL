@@ -45,6 +45,12 @@
     <ClCompile Include="avl_tree.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="hash_function.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="mathlib.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="errorlib.h">
@@ -140,7 +146,7 @@
     <ClInclude Include="sort.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="hash_function.hpp">
+    <ClInclude Include="hash_function.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="thread_pool.h">
@@ -174,6 +180,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="iterator_traits.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="macro_ranges.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

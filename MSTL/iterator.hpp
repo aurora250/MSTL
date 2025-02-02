@@ -29,10 +29,8 @@ MSTL_CONSTEXPR void advance(Iterator& i, Distance n) {
         else
             while (n++) --i;
     }
-    else {
-        while (n--) 
-            ++i;
-    }
+    else 
+        while (n--) ++i;
 }
 
 template <typename Iterator>

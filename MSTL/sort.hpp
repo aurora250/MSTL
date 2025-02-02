@@ -13,7 +13,7 @@ bool is_sorted(Iterator first, Iterator last) {
     if (first == last) return true;
     Iterator next = MSTL::next(first);
     for (; next != last; ++first, ++next) {
-        if (*next < *first) 
+        if (*next < *first)
             return false;
     }
     return true;
@@ -33,9 +33,34 @@ bool is_sorted(Iterator first, Iterator last, Compare comp) {
     return true;
 }
 
+// is sorted until
+template <typename Iterator>
+    requires(input_iterator<Iterator>)
+Iterator is_sorted_until(Iterator first, Iterator last) {
+    if (first == last) return last;
+    Iterator next = MSTL::next(first);
+    for (; next != last; ++first, ++next) {
+        if (*next < *first) 
+            return next;
+    }
+    return last;
+}
+
+template <typename Iterator, typename Compare>
+    requires(input_iterator<Iterator>)
+Iterator is_sorted_until(Iterator first, Iterator last, Compare comp) {
+    if (first == last) return last;
+    Iterator next = MSTL::next(first);
+    for (; next != last; ++first, ++next) {
+        if (comp(*next, *first))
+            return next;
+    }
+    return last;
+}
+
 // bubble sort : Ot(N)~(N^2) Om(1) stable
 template <typename Iterator>
-    requires(random_access_iterator<Iterator>)
+    requires(bidirectional_iterator<Iterator>)
 void bubble_sort(Iterator first, Iterator last) {
     if (first == last) return;
     auto revend = MSTL::make_reverse_iterator(first);
@@ -56,7 +81,7 @@ void bubble_sort(Iterator first, Iterator last) {
 }
 
 template <typename Iterator, typename Compare>
-    requires(random_access_iterator<Iterator>)
+    requires(bidirectional_iterator<Iterator>)
 void bubble_sort(Iterator first, Iterator last, Compare comp) {
     if (first == last) return;
     auto revend = MSTL::make_reverse_iterator(first);
@@ -78,7 +103,7 @@ void bubble_sort(Iterator first, Iterator last, Compare comp) {
 
 // cocktail sort : Ot(N)~(N^2) Om(1) stable
 template <typename Iterator>
-    requires(random_access_iterator<Iterator>)
+    requires(bidirectional_iterator<Iterator>)
 void cocktail_sort(Iterator first, Iterator last) {
     if (first == last) return;
     bool swapped = true;
@@ -111,7 +136,7 @@ void cocktail_sort(Iterator first, Iterator last) {
 }
 
 template <typename Iterator, typename Compare>
-    requires(random_access_iterator<Iterator>)
+    requires(bidirectional_iterator<Iterator>)
 void cocktail_sort(Iterator first, Iterator last, Compare comp) {
     if (first == last) return;
     bool swapped = true;
@@ -181,8 +206,8 @@ template <typename Iterator>
     requires(random_access_iterator<Iterator>)
 void shell_sort(Iterator first, Iterator last) {
     if (first == last) return;
-    using Distance = typename std::iterator_traits<Iterator>::difference_type;
-    using T = typename std::iterator_traits<Iterator>::value_type;
+    using Distance = typename iterator_traits<Iterator>::difference_type;
+    using T = typename iterator_traits<Iterator>::value_type;
     Distance dist = MSTL::distance(first, last);
     for (Distance gap = dist / 2; gap > 0; gap /= 2) {
         for (Iterator i = first + gap; i < last; ++i) {
@@ -200,8 +225,8 @@ template <typename Iterator, typename Compare>
     requires(random_access_iterator<Iterator>)
 void shell_sort(Iterator first, Iterator last, Compare comp) {
     if (first == last) return;
-    using Distance = typename std::iterator_traits<Iterator>::difference_type;
-    using T = typename std::iterator_traits<Iterator>::value_type;
+    using Distance = typename iterator_traits<Iterator>::difference_type;
+    using T = typename iterator_traits<Iterator>::value_type;
     Distance dist = MSTL::distance(first, last);
     for (Distance gap = dist / 2; gap > 0; gap /= 2) {
         for (Iterator i = first + gap; i < last; ++i) {
@@ -219,7 +244,7 @@ template <typename Iterator>
     requires(random_access_iterator<Iterator>)
 void counting_sort(Iterator first, Iterator last) {
     if (first == last) return;
-    using T = typename std::iterator_traits<Iterator>::value_type;
+    using T = typename iterator_traits<Iterator>::value_type;
     pair<Iterator, Iterator> min_max = MSTL::minmax_element(first, last);
     T min_val = *min_max.first;
     T max_val = *min_max.second;
@@ -249,7 +274,7 @@ template <typename Iterator, typename Compare, typename IndexMapper>
     requires(random_access_iterator<Iterator>)
 void counting_sort(Iterator first, Iterator last, Compare comp, IndexMapper mapper) {
     if (first == last) return;
-    using T = typename std::iterator_traits<Iterator>::value_type;
+    using T = typename iterator_traits<Iterator>::value_type;
     auto min_max = MSTL::minmax_element(first, last, comp);
     auto min_val = mapper(*min_max.first);
     auto max_val = mapper(*min_max.second);
@@ -277,7 +302,7 @@ void counting_sort(Iterator first, Iterator last, Compare comp, IndexMapper mapp
 
 template<typename Iterator>
 void bucket_sort_less(Iterator first, Iterator last) {
-    using T = typename std::iterator_traits<Iterator>::value_type;
+    using T = typename iterator_traits<Iterator>::value_type;
     pair<Iterator, Iterator> min_max = MSTL::minmax_element(first, last);
     T min_val = *min_max.first;
     T max_val = *min_max.second;
@@ -297,7 +322,7 @@ void bucket_sort_less(Iterator first, Iterator last) {
 
 template<typename Iterator>
 void bucket_sort_greater(Iterator first, Iterator last) {
-    using T = typename std::iterator_traits<Iterator>::value_type;
+    using T = typename iterator_traits<Iterator>::value_type;
     pair<Iterator, Iterator> min_max = MSTL::minmax_element(first, last);
     T min_val = *min_max.first;
     T max_val = *min_max.second;
@@ -345,9 +370,9 @@ template <typename Iterator, typename Mapper>
     requires(random_access_iterator<Iterator>)
 void radix_sort_less(Iterator first, Iterator last, Mapper mapper) {
     if (first == last) return;
-    using Distance = typename std::iterator_traits<Iterator>::difference_type;
-    using T = typename std::iterator_traits<Iterator>::value_type;
-    using Mapped = std::remove_reference_t<decltype(mapper(*first))>;
+    using Distance = typename iterator_traits<Iterator>::difference_type;
+    using T = typename iterator_traits<Iterator>::value_type;
+    using Mapped = decltype(mapper(*first));
     Distance length = MSTL::distance(first, last);
     vector<Mapped> mapped_values(length);
     vector<T> bucket(length);
@@ -380,9 +405,9 @@ template <typename Iterator, typename Mapper>
     requires(random_access_iterator<Iterator>)
 void radix_sort_greater(Iterator first, Iterator last, Mapper mapper) {
     if (first == last) return;
-    using Distance = typename std::iterator_traits<Iterator>::difference_type;
-    using T = typename std::iterator_traits<Iterator>::value_type;
-    using Mapped = std::remove_reference_t<decltype(mapper(*first))>;
+    using Distance = typename iterator_traits<Iterator>::difference_type;
+    using T = typename iterator_traits<Iterator>::value_type;
+    using Mapped = decltype(mapper(*first));
     Distance length = MSTL::distance(first, last);
     vector<Mapped> mapped_values(length);
     vector<T> bucket(length);
@@ -413,7 +438,7 @@ void radix_sort_greater(Iterator first, Iterator last, Mapper mapper) {
 
 // radix sort : Ot(d(n + k)) Om(N + k) stable
 template <typename Iterator, 
-    typename Mapper = MSTL::identity<typename std::iterator_traits<Iterator>::value_type>>
+    typename Mapper = MSTL::identity<typename iterator_traits<Iterator>::value_type>>
 inline void radix_sort(Iterator first, Iterator last, Mapper mapper = Mapper()) {
     MSTL::radix_sort_less(first, last, mapper);
 }
@@ -422,7 +447,7 @@ inline void radix_sort(Iterator first, Iterator last, Mapper mapper = Mapper()) 
 template <typename Iterator>
     requires(random_access_iterator<Iterator>)
 void merge_sort(Iterator first, Iterator last) {
-    using Distance = typename std::iterator_traits<Iterator>::difference_type;
+    using Distance = typename iterator_traits<Iterator>::difference_type;
     Distance n = MSTL::distance(first, last);
     if (n < 2) return;
     Iterator mid = first + n / 2;
@@ -434,7 +459,7 @@ void merge_sort(Iterator first, Iterator last) {
 template <typename Iterator, typename Compare>
     requires(random_access_iterator<Iterator>)
 void merge_sort(Iterator first, Iterator last, Compare comp) {
-    using Distance = typename std::iterator_traits<Iterator>::difference_type;
+    using Distance = typename iterator_traits<Iterator>::difference_type;
     Distance n = MSTL::distance(first, last);
     if (n < 2) return;
     Iterator mid = first + n / 2;
@@ -494,7 +519,7 @@ template <class Iterator1, class Iterator2, class Compare>
 Iterator2 partial_sort_copy(Iterator1 first, Iterator1 last,
 	Iterator2 result_first, Iterator2 result_last, Compare comp) {
 	if (result_first == result_last) return result_last;
-    using Distance = typename std::iterator_traits<Iterator1>::difference_type;
+    using Distance = typename iterator_traits<Iterator1>::difference_type;
 	Iterator2 result_real_last = result_first;
 	while (first != last && result_real_last != result_last) {
 		*result_real_last = *first;
@@ -551,7 +576,7 @@ template <class Iterator>
     requires(random_access_iterator<Iterator>)
 void insertion_sort(Iterator first, Iterator last) {
     if (first == last) return;
-    using T = typename std::iterator_traits<Iterator>::value_type;
+    using T = typename iterator_traits<Iterator>::value_type;
     for (Iterator i = first + 1; i != last; ++i) {
         T value = *i;
         if (value < *first) {
@@ -565,7 +590,7 @@ void insertion_sort(Iterator first, Iterator last) {
 template <class Iterator, class Compare>
 void insertion_sort(Iterator first, Iterator last, Compare comp) {
     if (first == last) return;
-    using T = typename std::iterator_traits<Iterator>::value_type;
+    using T = typename iterator_traits<Iterator>::value_type;
     for (Iterator i = first + 1; i != last; ++i) {
         T value = *i;
         if (comp(value, *first)) {
@@ -754,7 +779,7 @@ void nth_element(Iterator first, Iterator nth, Iterator last, Compare comp) {
 template<typename Iterator>
     requires(random_access_iterator<Iterator>)
 void tim_sort(Iterator first, Iterator last) {
-    using Distance = typename std::iterator_traits<Iterator>::difference_type;
+    using Distance = typename iterator_traits<Iterator>::difference_type;
     static constexpr int MIN_MERGE = 32;
     Distance n = MSTL::distance(first, last);
     for (Iterator i = first; i < last; i += MIN_MERGE) {
@@ -775,7 +800,7 @@ void tim_sort(Iterator first, Iterator last) {
 template<typename Iterator, typename Compare>
     requires(random_access_iterator<Iterator>)
 void tim_sort(Iterator first, Iterator last, Compare comp) {
-    using Distance = typename std::iterator_traits<Iterator>::difference_type;
+    using Distance = typename iterator_traits<Iterator>::difference_type;
     static constexpr int MIN_MERGE = 32;
     Distance n = MSTL::distance(first, last);
     for (Iterator i = first; i < last; i += MIN_MERGE) {
@@ -798,7 +823,7 @@ template<typename Iterator>
     requires(random_access_iterator<Iterator>)
 void monkey_sort(Iterator first, Iterator last) {
     while (!MSTL::is_sorted(first, last)) {
-        MSTL::random_shuffle(first, last);
+        MSTL::shuffle(first, last);
     }
 }
 
@@ -806,7 +831,7 @@ template<typename Iterator, typename Compare>
     requires(random_access_iterator<Iterator>)
 void monkey_sort(Iterator first, Iterator last, Compare comp) {
     while (!MSTL::is_sorted(first, last, comp)) {
-        MSTL::random_shuffle(first, last);
+        MSTL::shuffle(first, last);
     }
 }
 

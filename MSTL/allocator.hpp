@@ -30,10 +30,10 @@ public:
     MSTL_CONSTEXPR ~standard_allocator() noexcept = default;
     MSTL_CONSTEXPR self& operator =(const self&) noexcept = default;
 
-    MSTL_NODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(const size_type n) {
+    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(const size_type n) {
         return 0 == n ? 0 : alloc.allocate(n * sizeof(value_type));
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(void) {
+    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(void) {
         return alloc.allocate(sizeof(value_type));
     }
     MSTL_CONSTEXPR void deallocate(pointer p) noexcept {
@@ -78,10 +78,10 @@ public:
     MSTL_CONSTEXPR ~ctype_allocator() noexcept = default;
     MSTL_CONSTEXPR self& operator =(const self&) noexcept = default;
 
-    MSTL_NODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(const size_type n) {
+    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(const size_type n) {
         return 0 == n ? 0 : static_cast<pointer>(std::malloc(n * sizeof(T)));
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(void) {
+    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(void) {
         return static_cast<pointer>(std::malloc(sizeof(T)));
     }
     MSTL_CONSTEXPR void deallocate(pointer p) noexcept {
@@ -124,10 +124,10 @@ public:
     MSTL_CONSTEXPR ~new_allocator() noexcept = default;
     MSTL_CONSTEXPR self& operator =(const self&) noexcept = default;
 
-    MSTL_NODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(size_type n) {
+    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(size_type n) {
         return 0 == n ? 0 : static_cast<pointer>(::operator new(n * sizeof(T)));
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(void) {
+    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(void) {
         return static_cast<pointer>(::operator new(sizeof(T)));
     }
     MSTL_CONSTEXPR void deallocate(pointer p) noexcept {

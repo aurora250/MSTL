@@ -6,6 +6,7 @@ void split_line(std::ostream& out, size_t size, char split_type) {
 	while (size--) out << split_type;
 	out << std::endl;
 }
+
 void* memcpy(void* _dest, void* _rsc, int _byte) {
 	assert(_dest && _rsc);
 	void* _ret = _dest;
@@ -16,15 +17,38 @@ void* memcpy(void* _dest, void* _rsc, int _byte) {
 	}
 	return _ret;
 }
+
+wchar_t* wmemcpy(wchar_t* _dest, const wchar_t* _rsc, int _byte) {
+	assert(_dest && _rsc);
+	wchar_t* _ret = _dest;
+	while (_byte--) {
+		*_dest = *_rsc;
+		++_dest;
+		++_rsc;
+	}
+	return _ret;
+}
+
 int memcmp(const void* _dest, const void* _rsc, int _byte) {
 	assert(_dest && _rsc);
 	while (_byte--) {
-		if (*(char*)_dest != *(char*)_rsc) return *(char*)_dest - *(char*)_rsc;
+		if (*(char*)_dest != *(char*)_rsc) return (int)(*(char*)_dest - *(char*)_rsc);
 		_dest = (char*)_dest + 1;
 		_rsc = (char*)_rsc + 1;
 	}
 	return 0;
 }
+
+int wmemcmp(const wchar_t* _dest, const wchar_t* _rsc, int _byte) {
+	assert(_dest && _rsc);
+	while (_byte--) {
+		if (*_dest != *_rsc) return (int)(*_dest - *_rsc);
+		++_dest;
+		++_rsc;
+	}
+	return 0;
+}
+
 void* memmove(void* _dest, const void* _rsc, int _byte) {
 	assert(_dest && _rsc);
 	void* _ret = _dest;
@@ -42,6 +66,7 @@ void* memmove(void* _dest, const void* _rsc, int _byte) {
 	}
 	return _ret;
 }
+
 void* memset(void* _dest, int _val, int _size) {
 	assert(_dest);
 	void* ret = (char*)_dest;
@@ -53,10 +78,12 @@ void* memset(void* _dest, int _val, int _size) {
 	return ret;
 }
 
+
 int strlen(const char* _str) {
 	if (*_str != '\0') return strlen(_str + 1) + 1;
 	else return 0;
 }
+
 char* strcpy(char* _dest, const char* _sou) {
 	char* _ret = _dest;
 	while (*_sou != '\0') {
@@ -67,6 +94,7 @@ char* strcpy(char* _dest, const char* _sou) {
 	*_dest = *_sou;
 	return _ret;
 }
+
 int strcmp(const char* _des, const char* _sou) {
 	while (*_des == *_sou) {
 		if (*_des == '\0') return 0;
@@ -76,6 +104,7 @@ int strcmp(const char* _des, const char* _sou) {
 	if (*_des > *_sou) return 1;
 	else return -1;
 }
+
 const char* strstr(const char* _dest, const char* _sou) {
 	assert(_dest && _sou);
 	const char* _s1 = _dest;
@@ -93,6 +122,7 @@ const char* strstr(const char* _dest, const char* _sou) {
 	}
 	return NULL;
 }
+
 char* memstr(char* _data, int _len, char* _sub) {
 	if (_data == NULL || _len <= 0 || _sub == NULL) return NULL;
 	if (*_sub == '\0') return NULL;

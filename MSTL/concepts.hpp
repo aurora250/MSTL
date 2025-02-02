@@ -1,6 +1,6 @@
 #ifndef MSTL_CONCEPTS_HPP__
 #define MSTL_CONCEPTS_HPP__
-#include "type_traits.hpp"
+#include "iterator_traits.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <class T1, class T2>
@@ -184,22 +184,22 @@ concept is_detailable = requires(const T & c) {
 	{ c.cbegin() } -> convertible_to<typename T::const_iterator>;
 	{ c.cend() } -> convertible_to<typename T::const_iterator>;
 	{ c.size() } -> convertible_to<size_t>;
-		requires is_printable<typename std::iterator_traits<typename T::const_iterator>::value_type>;
+		requires is_printable<typename iterator_traits<typename T::const_iterator>::value_type>;
 };
 
 
 template <typename T>
 concept iterator_typedef = requires() {
-	typename std::iterator_traits<T>::iterator_category;
-	typename std::iterator_traits<T>::value_type;
-	typename std::iterator_traits<T>::difference_type;
-	typename std::iterator_traits<T>::pointer;
-	typename std::iterator_traits<T>::reference;
+	typename iterator_traits<T>::iterator_category;
+	typename iterator_traits<T>::value_type;
+	typename iterator_traits<T>::difference_type;
+	typename iterator_traits<T>::pointer;
+	typename iterator_traits<T>::reference;
 };
 
 template<typename Iterator>
 concept input_iterator = iterator_typedef<Iterator> && requires(Iterator it1, Iterator it2) {
-	{ *it1 } -> convertible_to<typename std::iterator_traits<Iterator>::value_type>;
+	{ *it1 } -> convertible_to<typename iterator_traits<Iterator>::value_type>;
 	{ ++it1 } -> same_as<Iterator&>;
 	{ it1++ } -> same_as<Iterator>;
 	{ it1 != it2 } -> convertible_to<bool>;
@@ -211,7 +211,7 @@ concept forward_iterator = input_iterator<Iterator> && requires(Iterator it1, It
 	{ it1 <= it2 } -> convertible_to<bool>;
 	{ it1 > it2 } -> convertible_to<bool>;
 	{ it1 >= it2 } -> convertible_to<bool>;
-	{ (it1 - it2) } -> convertible_to<typename std::iterator_traits<Iterator>::difference_type>;
+	{ (it1 - it2) } -> convertible_to<typename iterator_traits<Iterator>::difference_type>;
 };
 template<typename Iterator>
 concept bidirectional_iterator = forward_iterator<Iterator> && requires(Iterator it) {
@@ -220,15 +220,15 @@ concept bidirectional_iterator = forward_iterator<Iterator> && requires(Iterator
 };
 template<typename Iterator>
 concept random_access_iterator = bidirectional_iterator<Iterator> &&
-	requires(Iterator it1, Iterator it2, typename std::iterator_traits<Iterator>::difference_type n)
+	requires(Iterator it1, Iterator it2, typename iterator_traits<Iterator>::difference_type n)
 {
 	{ it1 + n } -> convertible_to<Iterator>;
 	{ n + it1 } -> convertible_to<Iterator>;
 	{ it1 - n } -> convertible_to<Iterator>;
 	{ it1 += n } -> convertible_to<Iterator>;
 	{ it1 -= n } -> convertible_to<Iterator>;
-	{ it2 - it1 } -> convertible_to<typename std::iterator_traits<Iterator>::difference_type>;
-	{ it1[n] } -> convertible_to<typename std::iterator_traits<Iterator>::value_type>;
+	{ it2 - it1 } -> convertible_to<typename iterator_traits<Iterator>::difference_type>;
+	{ it1[n] } -> convertible_to<typename iterator_traits<Iterator>::value_type>;
 };
 
 

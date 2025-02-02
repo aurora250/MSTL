@@ -16,7 +16,7 @@ MSTL_BEGIN_NAMESPACE__
 
 static const size_t MSTL_TASK_MAX_THRESHHOLD__ = INT32_MAX;
 static const size_t MSTL_THREAD_MAX_THRESHHOLD__ = std::thread::hardware_concurrency();
-static const MSTL_LONG_LONG_TYPE__ MSTL_THREAD_MAX_IDLE_SECONDS__ = 60;
+static const MSTL_LONG_LONG_TYPE MSTL_THREAD_MAX_IDLE_SECONDS__ = 60;
 
 enum class POOL_MODE {
 	MODE_FIXED,  // static number

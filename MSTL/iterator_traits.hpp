@@ -72,6 +72,45 @@ MSTL_NODISCARD constexpr decltype(auto) to_address(const Ptr& x) noexcept {
 }
 
 
+template <class Ptr>
+MSTL_NODISCARD constexpr auto unfancy(Ptr p) noexcept {
+    return MSTL::addressof(*p);
+}
+template <class T>
+MSTL_NODISCARD constexpr T* unfancy(T* p) noexcept {
+    return p;
+}
+template <class Ptr>
+constexpr auto unfancy_maybe_null(Ptr p) noexcept {
+    return p ? MSTL::addressof(*p) : nullptr;
+}
+template <class T>
+constexpr T* unfancy_maybe_null(T* p) noexcept {
+    return p;
+}
+
+
+template <class Ptr, class T>
+using rebind_pointer_t = typename pointer_traits<Ptr>::template rebind<T>;
+
+template <class Ptr, enable_if_t<!is_pointer_v<Ptr>, int> = 0>
+MSTL_CONSTEXPR Ptr refancy(typename pointer_traits<Ptr>::element_type* _Ptr) noexcept {
+    return pointer_traits<Ptr>::pointer_to(*_Ptr);
+}
+template <class Ptr, enable_if_t<is_pointer_v<Ptr>, int> = 0>
+MSTL_CONSTEXPR Ptr refancy(Ptr _Ptr) noexcept {
+    return _Ptr;
+}
+template <class Ptr, enable_if_t<!is_pointer_v<Ptr>, int> = 0>
+MSTL_CONSTEXPR Ptr refancy_maybe_null(typename pointer_traits<Ptr>::element_type* _Ptr) noexcept {
+    return _Ptr == nullptr ? Ptr() : pointer_traits<Ptr>::pointer_to(*_Ptr);
+}
+template <class Ptr, enable_if_t<is_pointer_v<Ptr>, int> = 0>
+MSTL_CONSTEXPR Ptr refancy_maybe_null(Ptr p) noexcept {
+    return p;
+}
+
+
 template <typename, typename = void>
 struct iterator_traits_base {};
 
@@ -110,7 +149,6 @@ template <typename Iterator>
 using iterator_traits_ptr_t = typename iterator_traits<Iterator>::pointer;
 template <typename Iterator>
 using iterator_traits_ref_t = typename iterator_traits<Iterator>::reference;
-
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_ITERATOR_TRAITS_HPP__

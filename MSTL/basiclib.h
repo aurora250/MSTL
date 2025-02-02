@@ -1,51 +1,62 @@
 #ifndef MSTL_BASICLIB_H__
 #define MSTL_BASICLIB_H__
 #include <iostream>
+#include <assert.h>
 
 #if defined(WIN32) || defined(_WIN32) || defined(_WIN32_)
-#define MSTL_PLATFORM_WIN32__	1
-#if defined(WIN64) || defined(_WIN64) || defined(_WIN64_)
-#define MSTL_PLATFORM_WIN64__	1
-#endif // win64
-#define MSTL_PLATFORM_WINDOWS__	1
+	#define MSTL_PLATFORM_WINDOWS__		1
+	#define MSTL_PLATFORM_WIN32__		1
+	#if defined(WIN64) || defined(_WIN64) || defined(_WIN64_)
+		#define MSTL_PLATFORM_WIN64__	1
+	#endif // win64
 #elif defined(__linux__) // not windows
-#define MSTL_PLATFORM_LINUX__	1
-#if (__WORDSIZE == 64) || (__SIZEOF_POINTER__ == 8)
-#define MSTL_PLATFORM_LINUX64__ 1
-#elif (__WORDSIZE == 32) || (__SIZEOF_POINTER__ == 4)
-#define MSTL_PLATFORM_LINUX32__ 1
-#endif
-#elif defined(_POSIX_) // not linux
-#define MSTL_PLATFORM_POSIX__	1
+	#define MSTL_PLATFORM_LINUX__		1
+	#if (__WORDSIZE == 64) || (__SIZEOF_POINTER__ == 8)
+		#define MSTL_PLATFORM_LINUX64__ 1
+	#elif (__WORDSIZE == 32) || (__SIZEOF_POINTER__ == 4)
+		#define MSTL_PLATFORM_LINUX32__ 1
+	#endif
+#elif defined(__APPLE__) || defined(TARGET_OS_IPHONE) || defined(TARGET_IPHONE_SIMULATOR) || defined(TARGET_OS_MAC)
+	#define MSTL_PLATFORM_IOS__			1
 #else
-#define MSTL_PLATFORM_UNKNOWN__	1
+	#define MSTL_PLATFORM_UNSUPPORT__	1
 #endif
 
 #if defined(__GNUC__)
-#define MSTL_COMPILE_GNUC__		1
-#if defined(__clang__)
-#define MSTL_COMPILE_CLANG__	1
-#else
-#define MSTL_COMPILE_GCC__		1
-#endif
+	#define MSTL_COMPILE_GNUC__			1
+	#if defined(__clang__)
+		#define MSTL_COMPILE_CLANG__	1
+	#else
+		#define MSTL_COMPILE_GCC__		1
+	#endif
 #elif defined(_MSC_VER)
-#define MSTL_COMPILE_MSVC__		1
+	#define MSTL_COMPILE_MSVC__			1
 #else
-#define MSTL_COMPILE_UNKNOW__	1
+	#define MSTL_COMPILE_UNSUPPORT__	1
 #endif
+
 
 #if defined(_M_CEE)
-#define MSTL_COMPILE_WITH_CRL__ 1
+	#define MSTL_COMPILE_WITH_CRL__		1
 #elif defined(__EDG__)
-#define MSTL_COMPILE_WITH_EDG__ 1
+	#define MSTL_COMPILE_WITH_EDG__		1
 #else
-#define MSTL_COMPILE_WITH_OS__  1
+	#define MSTL_COMPILE_WITH_OS__		1
 #endif
 
+
 #if defined(DEBUG) || defined(_DEBUG) || defined(QT_QML_DEBUG)
-#define MSTL_STATE_DEBUG__		1
+	#define MSTL_STATE_DEBUG__			1
 #else
-#define MSTL_STATE_RELEASE__	1
+	#define MSTL_STATE_RELEASE__		1
+#endif
+
+
+#if defined(MSTL_PLATFORM_WIN64__) || defined(MSTL_PLATFORM_LINUX64__)
+	#define MSTL_DATA_BUS_WIDTH_64__	1
+#endif
+#if defined(MSTL_PLATFORM_WIN32__) || defined(MSTL_PLATFORM_LINUX32__)
+	#define MSTL_DATA_BUS_WIDTH_32__	1
 #endif
 
 
@@ -56,47 +67,56 @@
 
 
 #if defined(_HAS_CXX20) || (__cplusplus >= 202002L)
-#define MSTL_VERSION_20__	1
+	#define MSTL_VERSION_20__	1
 #endif
 #if defined(_HAS_CXX17) || (__cplusplus >= 201703L) || defined(MSTL_VERSION_20__)
-#define MSTL_VERSION_17__	1
+	#define MSTL_VERSION_17__	1
 #endif
 #if (__cplusplus >= 201402L) || defined(MSTL_VERSION_17__)
-#define MSTL_VERSION_14__	1
+	#define MSTL_VERSION_14__	1
 #endif
 #if (__cplusplus >= 201103L) || defined(MSTL_VERSION_14__)
-#define MSTL_VERSION_11__	1
+	#define MSTL_VERSION_11__	1
 #endif
 #if (__cplusplus >= 199711L) || defined(MSTL_VERSION_11__)
-#define MSTL_VERSION_98__	1
+	#define MSTL_VERSION_98__	1
 #endif
 
+
 #if defined(MSTL_VERSION_20__)
-#define MSTL_SUPPORT_CONCEPTS__			1
+	#define MSTL_SUPPORT_CONCEPTS__			1
 #endif
 #if defined(MSTL_VERSION_17__)
-#define MSTL_SUPPORT_NODISCARD__		1
+	#define MSTL_SUPPORT_NODISCARD__		1
 #endif
 #if defined(MSTL_VERSION_17__)
-#define MSTL_SUPPORT_NORETURN__			1
+	#define MSTL_SUPPORT_NORETURN__			1
 #endif
 #if defined(MSTL_VERSION_17__)
-#define MSTL_SUPPORT_DEDUCTION_GUIDES__ 1
+	#define MSTL_SUPPORT_DEDUCTION_GUIDES__ 1
 #endif
 #if defined(MSTL_VERSION_11__)
-#define MSTL_SUPPORT_CONSTEXPR__		1
+	#define MSTL_SUPPORT_CONSTEXPR__		1
+#endif
+#if defined(MSTL_VERSION_11__)
+	#define MSTL_SUPPORT_STATIC_ASSERT__	1
 #endif
 #if defined(MSTL_COMPILE_MSVC__)
-#define MSTL_SUPPORT_DECLALLOC__		1
+	#define MSTL_SUPPORT_DECLALLOC__		1
 #endif
 #if defined(MSTL_COMPILE_MSVC__)
-#define MSTL_SUPPORT_MAKE_INTEGER_SEQ	1
+	#define MSTL_SUPPORT_MAKE_INTEGER_SEQ	1
 #endif
+
 
 #define MSTL_DLL_LINK__	1
 
+
 #define TO_STRING(VALUE) #VALUE
+
 #define FOR_EACH(VALUE, CONTAINER) for(auto VALUE = CONTAINER.begin(); VALUE != CONTAINER.end(); ++VALUE)
+
+#define TEMNULL__ template<>
 
 #ifdef MSTL_STATE_DEBUG__
 #define SIMPLE_LOG(MESG) \
@@ -104,6 +124,7 @@
 #else
 #define SIMPLE_LOG(MESG) 
 #endif
+
 
 #ifdef MSTL_SUPPORT_CONSTEXPR__
 #define MSTL_CONSTEXPR constexpr
@@ -113,8 +134,10 @@
 
 #ifdef MSTL_SUPPORT_NODISCARD__
 #define MSTL_NODISCARD [[nodiscard]]
+#define MSTL_ALLOCNODISCARD [[nodiscard("discard the return of allocators will cause memory leaks.")]]
 #else
-#define MSTL_NODISCARD__
+#define MSTL_NODISCARD
+#define MSTL_ALLOCNODISCARD
 #endif
 
 #ifdef MSTL_SUPPORT_NORETURN__
@@ -130,39 +153,56 @@
 #endif
 
 #if defined(MSTL_COMPILE_MSVC__)
-#define MSTL_LONG_LONG_TYPE__ __int64
+#define MSTL_LONG_LONG_TYPE __int64
 #else
 #define MSTL_LONG_LONG_TYPE__ long long
 #endif
 
-#define TEMNULL__ template<>
+#if defined(MSTL_SUPPORT_STATIC_ASSERT__)
 #define MSTL_NO_EVALUATION__ \
 	static_assert(false, "this function will only be used in no evaluation context.");
+#else
+#define MSTL_NO_EVALUATION__ assert(false)
+#endif
+
 
 MSTL_BEGIN_NAMESPACE__
 
-typedef unsigned char byte_t;
-typedef unsigned MSTL_LONG_LONG_TYPE__ size_t;
-typedef MSTL_LONG_LONG_TYPE__ ptrdiff_t;
-typedef MSTL_LONG_LONG_TYPE__ intptr_t;
+using byte_t	= unsigned char;
+using size_t	= unsigned MSTL_LONG_LONG_TYPE;
+using ptrdiff_t = MSTL_LONG_LONG_TYPE;
+using intptr_t	= MSTL_LONG_LONG_TYPE;
 
-typedef const char* cstring_t;
-typedef const char* const ccstring_t;
+using int8_t	= signed char;
+using int16_t	= short;
+using int32_t	= int;
+using int64_t	= MSTL_LONG_LONG_TYPE;
+using uint8_t	= unsigned char;
+using uint16_t	= unsigned short;
+using uint32_t	= unsigned int;
+using uint64_t	= unsigned MSTL_LONG_LONG_TYPE;
+
+using cstring_t = const char*;
+using ccstring_t = const char* const;
 
 MSTL_CONSTEXPR size_t MSTL_SPLIT_LENGTH = 15;
 
-extern void* memcpy(void* _dest, void* _rsc, int _byte);
-extern int memcmp(const void* _dest, const void* _rsc, int _byte);
-extern void* memmove(void* _dest, const void* _rsc, int _byte);
-extern void* memset(void* _dest, int _val, int _byte);
+wchar_t* wmemcpy(wchar_t* _dest, const wchar_t* _rsc, int _byte);
+void* memcpy(void* _dest, void* _rsc, int _byte);
 
-extern int strlen(const char* _str);
-extern char* strcpy(char* _dest, const char* _sou);
-extern int strcmp(const char* _des, const char* _sou);
-extern const char* strstr(const char* _des, const char* _sou);
-extern char* memstr(char* _data, int _len, char* _sub);
+int memcmp(const void* _dest, const void* _rsc, int _byte);
+int wmemcmp(const wchar_t* _dest, const wchar_t* _rsc, int _byte);
 
-extern void split_line(std::ostream & out = std::cout, size_t size = MSTL_SPLIT_LENGTH, char split_type = '-');
+void* memmove(void* _dest, const void* _rsc, int _byte);
+void* memset(void* _dest, int _val, int _byte);
+
+int strlen(const char* _str);
+char* strcpy(char* _dest, const char* _sou);
+int strcmp(const char* _des, const char* _sou);
+const char* strstr(const char* _des, const char* _sou);
+char* memstr(char* _data, int _len, char* _sub);
+
+void split_line(std::ostream & out = std::cout, size_t size = MSTL_SPLIT_LENGTH, char split_type = '-');
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_BASICLIB_H__

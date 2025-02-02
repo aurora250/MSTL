@@ -5,6 +5,37 @@
 #include "algobase.hpp"
 #include "memory.hpp"
 MSTL_BEGIN_NAMESPACE__
+
+template <typename Iterator, typename Predicate>
+	requires(input_iterator<Iterator>)
+bool all_of(Iterator first, Iterator last, Predicate pred) {
+	for (; first != last; ++first) {
+		if (!pred(*first))
+			return false;
+	}
+	return true;
+}
+
+template <typename Iterator, typename Predicate>
+	requires(input_iterator<Iterator>)
+bool any_of(Iterator first, Iterator last, Predicate pred) {
+	for (; first != last; ++first) {
+		if (pred(*first))
+			return true;
+	}
+	return false;
+}
+
+template <typename Iterator, typename Predicate>
+	requires(input_iterator<Iterator>)
+bool none_of(Iterator first, Iterator last, Predicate pred) {
+	for (; first != last; ++first) {
+		if (pred(*first))
+			return false;
+	}
+	return true;
+}
+
 // union of set
 template <typename Iterator1, typename Iterator2, typename Iterator3>
 	requires(forward_iterator<Iterator1> && forward_iterator<Iterator2> && forward_iterator<Iterator3>)
@@ -26,6 +57,7 @@ Iterator3 set_union(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterato
 	}
 	return MSTL::copy(first2, last2, MSTL::copy(first1, last1, result));
 }
+
 // intersection of set
 template <typename Iterator1, typename Iterator2, typename Iterator3>
 	requires(forward_iterator<Iterator1> && forward_iterator<Iterator2> && forward_iterator<Iterator3>)
@@ -42,6 +74,7 @@ Iterator3 set_intersection(Iterator1 first1, Iterator1 last1,
 	}
 	return result;
 }
+
 // difference of set
 template <typename Iterator1, typename Iterator2, typename Iterator3>
 	requires(forward_iterator<Iterator1> && forward_iterator<Iterator2> && forward_iterator<Iterator3>)
@@ -60,6 +93,7 @@ Iterator3 set_difference(Iterator1 first1, Iterator1 last1,
 	}
 	return MSTL::copy(first1, last1, result);
 }
+
 // symmetric difference of set
 template <typename Iterator1, typename Iterator2, typename Iterator3>
 	requires(forward_iterator<Iterator1> && forward_iterator<Iterator2> && forward_iterator<Iterator3>)
@@ -82,6 +116,7 @@ Iterator3 set_symmetric_difference(Iterator1 first1, Iterator1 last1,
 	}
 	return MSTL::copy(first2, last2, MSTL::copy(first1, last1, result));
 }
+
 // adjacent_find
 template <typename Iterator>
 	requires(input_iterator<Iterator>)
@@ -105,6 +140,7 @@ Iterator adjacent_find(Iterator first, Iterator last, BinaryPredicate binary_pre
 	}
 	return last;
 }
+
 // count
 template <typename Iterator, typename T>
 	requires(input_iterator<Iterator>)
@@ -127,6 +163,7 @@ count_if(Iterator first, Iterator last, const T& value, BinaryPredicate pred) {
 	}
 	return n;
 }
+
 // find
 template <typename Iterator, typename T>
 	requires(input_iterator<Iterator>)
@@ -148,6 +185,15 @@ Iterator find_if(Iterator first, Iterator last, Predicate pred) {
 	while (first != last && !pred(*first)) ++first;
 	return first;
 }
+
+template <typename Iterator, typename Predicate>
+	requires(input_iterator<Iterator>)
+Iterator find_if_not(Iterator first, Iterator last, Predicate pred) {
+	while (first != last && pred(*first))
+		++first;
+	return first;
+}
+
 // search
 template <typename Iterator1, typename Iterator2>
 	requires(forward_iterator<Iterator1> && forward_iterator<Iterator2>)
@@ -251,6 +297,7 @@ Iterator search_n(Iterator first, Iterator last, size_t count,
 	}
 	return last;
 }
+
 // find place
 template <typename Iterator1, typename Iterator2>
 	requires(forward_iterator<Iterator1>&& forward_iterator<Iterator2>)
@@ -298,6 +345,7 @@ Iterator1 find_first_of(Iterator1 first1, Iterator1 last1,
 			if (comp(*first1, *iter)) return first1;
 	return last1;
 }
+
 // for each
 template <typename Iterator, typename Function>
 	requires(input_iterator<Iterator>)
@@ -305,6 +353,17 @@ Function for_each(Iterator first, Iterator last, Function f) {
 	for (; first != last; ++first) f(*first);
 	return f;
 }
+
+template<typename Iterator, typename Function>
+	requires(input_iterator<Iterator>)
+Iterator for_each_n(Iterator first, size_t n, Function f) {
+	for (size_t i = 0; i < n; i++) {
+		f(*first);
+		++first;
+	}
+	return first;
+}
+
 // generate
 template <typename Iterator, typename Generator>
 	requires(input_iterator<Iterator>)
@@ -320,6 +379,7 @@ Iterator generate_n(Iterator first, size_t n, Generator gen) {
 		*first = gen();
 	return first;
 }
+
 // includes
 template <typename Iterator1, typename Iterator2>
 	requires(input_iterator<Iterator1> && input_iterator<Iterator2>)
@@ -346,6 +406,7 @@ bool includes(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 las
 			++first1, ++first2;
 	return first2 == last2;
 }
+
 // merge
 template <typename Iterator1, typename Iterator2, typename Iterator3>
 	requires(input_iterator<Iterator1> && input_iterator<Iterator2> && input_iterator<Iterator3>)
@@ -382,6 +443,7 @@ Iterator3 merge(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 l
 	}
 	return MSTL::copy(first2, last2, MSTL::copy(first1, last1, result));
 }
+
 // unstable partition
 template <typename Iterator, typename Predicate>
 	requires(bidirectional_iterator<Iterator>)
@@ -406,6 +468,7 @@ Iterator partition(Iterator first, Iterator last, Predicate pred) {
 		++first;
 	}
 }
+
 // remove
 template <typename Iterator1, typename Iterator2, typename T>
 	requires(input_iterator<Iterator1> && input_iterator<Iterator2>)
@@ -444,6 +507,7 @@ Iterator remove_if(Iterator first, Iterator last, Predicate pred) {
 	Iterator next = first;
 	return first == last ? first : MSTL::remove_copy_if(++next, last, first, pred);
 }
+
 // replace
 template <typename Iterator1, typename Iterator2, typename T>
 	requires(input_iterator<Iterator1>&& input_iterator<Iterator2>)
@@ -476,6 +540,7 @@ void replace_if(Iterator first, Iterator last, Predicate pred, const T& new_valu
 	for (; first != last; ++first)
 		if (pred(*first)) *first = new_value;
 }
+
 // reserve
 template <typename Iterator>
 	requires(bidirectional_iterator<Iterator>)
@@ -498,6 +563,7 @@ void reverse(Iterator first, Iterator last) {
 		++first;
 	}
 }
+
 // rotate
 template <typename Iterator>
 	requires(forward_iterator<Iterator>)
@@ -542,6 +608,7 @@ void rotate_cycle_aux(Iterator first, Iterator last, Iterator initial, Distance 
 	}
 	*ptr1 = value;
 }
+
 template <typename Iterator, typename Distance>
 	requires(random_access_iterator<Iterator>)
 void rotate(Iterator first, Iterator middle, Iterator last) {
@@ -557,6 +624,7 @@ template <typename Iterator1, typename Iterator2>
 Iterator2 rotate_copy(Iterator1 first, Iterator1 middle, Iterator1 last, Iterator2 result) {
 	return MSTL::copy(first, middle, MSTL::copy(middle, last, result));
 }
+
 // swap ranges
 template <typename Iterator1, typename Iterator2>
 	requires(forward_iterator<Iterator1>&& forward_iterator<Iterator2>)
@@ -565,6 +633,7 @@ Iterator2 swap_ranges(Iterator1 first1, Iterator1 last1, Iterator2 first2) {
 		MSTL::iter_swap(first1, first2);
 	return first2;
 }
+
 // transform
 template <typename Iterator1, typename Iterator2, typename UnaryOperation>
 	requires(input_iterator<Iterator1> && input_iterator<Iterator2>)
@@ -582,6 +651,7 @@ Iterator3 transform(Iterator1 first1, Iterator1 last1, Iterator2 first2,
 		*result = binary_op(*first1, *first2);
 	return result;
 }
+
 // unique always stable
 template <typename Iterator1, typename Iterator2>
 	requires(input_iterator<Iterator1> && forward_iterator<Iterator2>)
@@ -617,6 +687,7 @@ Iterator unique(Iterator first, Iterator last, BinaryPredicate binary_pred) {
 	first = MSTL::adjacent_find(first, last, binary_pred);
 	return MSTL::unique_copy(first, last, first, binary_pred);
 }
+
 // lower bound
 template <typename Iterator, typename T>
 	requires(forward_iterator<Iterator>)
@@ -697,6 +768,7 @@ Iterator lower_bound(Iterator first, Iterator last, const T& value, Compare comp
 	}
 	return first;
 }
+
 // upper bound
 template <typename Iterator, typename T>
 	requires(forward_iterator<Iterator>)
@@ -781,6 +853,7 @@ Iterator upper_bound(Iterator first, Iterator last, const T& value, Compare comp
 	}
 	return first;
 }
+
 // binary search
 template <typename Iterator, typename T>
 	requires(forward_iterator<Iterator>)
@@ -795,6 +868,94 @@ bool binary_search(Iterator first, Iterator last, const T& value, Compare comp) 
 	Iterator i = MSTL::lower_bound(first, last, value, comp);
 	return i != last && !comp(value, *i);
 }
+
+// is permutation
+template <class Iterator1, class Iterator2, class BinaryPred>
+	requires(bidirectional_iterator<Iterator1>&& bidirectional_iterator<Iterator2>)
+bool is_permutation(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2) {
+	using Distance1 = MSTL::iterator_traits_diff_t<Iterator1>;
+	using Distance2 = MSTL::iterator_traits_diff_t<Iterator2>;
+	Distance1 len1 = MSTL::distance(first1, last1);
+	Distance2 len2 = MSTL::distance(first2, last2);
+	if (len1 != len2) return false;
+
+	for (; first1 != last1 && first2 != last2; ++first1, ++first2) {
+		if (!(*first1 == *first2)) break;
+	}
+	if (first1 == last1) return true;
+
+	for (Iterator1 i = first1; i != last1; ++i) {
+		bool is_repeate = false;
+		for (Iterator1 j = first1; j != i; ++j) {
+			if (*i == *j) {
+				is_repeate = true;
+				break;
+			}
+		}
+
+		if (!is_repeate) {
+			uint32_t c2 = 0;
+			for (Iterator2 j = first2; j != last2; ++j) {
+				if (*i == *j)
+					++c2;
+			}
+			if (c2 == 0) return false;
+
+			uint32_t c1 = 1;
+			Iterator1 j = i;
+			for (++j; j != last1; ++j) {
+				if (*i == *j)
+					++c1;
+			}
+			if (c1 != c2) return false;
+		}
+	}
+	return true;
+}
+
+template <class Iterator1, class Iterator2, class BinaryPred>
+	requires(bidirectional_iterator<Iterator1> && bidirectional_iterator<Iterator2>)
+bool is_permutation(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2, BinaryPred pred) {
+	auto len1 = MSTL::distance(first1, last1);
+	auto len2 = MSTL::distance(first2, last2);
+	if (len1 != len2)
+		return false;
+	for (; first1 != last1 && first2 != last2; ++first1, (void) ++first2) {
+		if (!pred(*first1, *first2))
+			break;
+	}
+	if (first1 == last1)
+		return true;
+	for (auto i = first1; i != last1; ++i) {
+		bool is_repeated = false;
+		for (auto j = first1; j != i; ++j) {
+			if (pred(*j, *i)) {
+				is_repeated = true;
+				break;
+			}
+		}
+
+		if (!is_repeated) {
+			auto c2 = 0;
+			for (auto j = first2; j != last2; ++j) {
+				if (pred(*i, *j))
+					++c2;
+			}
+			if (c2 == 0)
+				return false;
+			auto c1 = 1;
+			auto j = i;
+			for (++j; j != last1; ++j) {
+				if (pred(*i, *j))
+					++c1;
+			}
+			if (c1 != c2)
+				return false;
+		}
+	}
+	return true;
+}
+
 // next permutation
 template <typename Iterator>
 	requires(bidirectional_iterator<Iterator>)
@@ -847,6 +1008,7 @@ bool next_permutation(Iterator first, Iterator last, Compare comp) {
 		}
 	}
 }
+
 // prev permutation
 template <typename Iterator>
 	requires(bidirectional_iterator<Iterator>)
@@ -899,10 +1061,11 @@ bool prev_permutation(Iterator first, Iterator last, Compare comp) {
 		}
 	}
 }
+
 // random shuffle
 template <typename Iterator>
 	requires(random_access_iterator<Iterator>)
-void random_shuffle(Iterator first, Iterator last) {
+void shuffle(Iterator first, Iterator last) {
 	if (first == last) return;
 	for (Iterator i = MSTL::next(first); i != last; ++i) {
 		Iterator j = MSTL::next(first, std::rand() % ((i - first) + 1));
@@ -912,13 +1075,14 @@ void random_shuffle(Iterator first, Iterator last) {
 
 template <typename Iterator, typename Generator>
 	requires(random_access_iterator<Iterator>)
-void random_shuffle(Iterator first, Iterator last, Generator& rand) {
+void shuffle(Iterator first, Iterator last, Generator& rand) {
 	if (first == last) return;
 	for (Iterator i = MSTL::next(first); i != last; ++i) {
 		Iterator j = MSTL::next(first, rand((i - first) + 1));
 		MSTL::iter_swap(i, j);
 	}
 }
+
 // equal range
 template <typename Iterator, typename T>
 	requires(forward_iterator<Iterator>)
@@ -1026,6 +1190,7 @@ pair<Iterator, Iterator> equal_range(Iterator first, Iterator last, const T& val
 	}
 	return pair<Iterator, Iterator>(first, first);
 }
+
 // inplace merge always stable
 template <class Iterator, class Distance>
 	requires(bidirectional_iterator<Iterator>)

@@ -138,9 +138,11 @@
     <ClCompile Include="avl_tree.cpp" />
     <ClCompile Include="basiclib.cpp" />
     <ClCompile Include="check_type.cpp" />
+    <ClCompile Include="hash_function.cpp" />
     <ClCompile Include="logging.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="errorlib.cpp" />
+    <ClCompile Include="mathlib.cpp" />
     <ClCompile Include="mysql_connect_pool.cpp" />
     <ClCompile Include="rb_tree.cpp" />
     <ClCompile Include="threadsafe_print.cpp" />
@@ -156,9 +158,10 @@
     <ClInclude Include="container.h" />
     <ClInclude Include="iterator_traits.hpp" />
     <ClInclude Include="logging.h" />
+    <ClInclude Include="macro_ranges.h" />
     <ClInclude Include="mysql_connect_pool.h" />
     <ClInclude Include="hashtable.hpp" />
-    <ClInclude Include="hash_function.hpp" />
+    <ClInclude Include="hash_function.h" />
     <ClInclude Include="hash_map.hpp" />
     <ClInclude Include="hash_set.hpp" />
     <ClInclude Include="heap.hpp" />

@@ -12,9 +12,9 @@ typedef int mathi_t;
 // 0 ~ 2^32-1
 typedef unsigned int mathui_t;
 // -2^32 ~ 2^32-1
-typedef MSTL_LONG_LONG_TYPE__ mathl_t;
+typedef MSTL_LONG_LONG_TYPE mathl_t;
 // 0 ~ 2^64-1
-typedef unsigned MSTL_LONG_LONG_TYPE__ mathul_t;
+typedef unsigned MSTL_LONG_LONG_TYPE mathul_t;
 // 2.3E-308 ~ 1.7E+308
 typedef double mathd_t;
 // 3.4E-4932 ~ 1.1E+4932
@@ -261,17 +261,12 @@ MSTL_CONSTEXPR mathld_t truncate(mathld_t x, int bit) noexcept {
 	return x < 0 ? ceil(x, bit) : floor(x, bit);
 }
 
-inline bool around_multiple(mathld_t x, mathld_t axis, mathld_t toler = constants::PRECISE_TOLERANCE) {
-	axis = absolute(axis);
-	if (axis < constants::PRECISE_TOLERANCE) Exception(ValueError("Axis Cannot be 0"));
-	x = absolute(x);
-	mathld_t multi = MSTL::round(x / axis, 0) * axis;
-	return absolute(x - multi) < toler;
-}
+bool around_multiple(mathld_t x, mathld_t axis, mathld_t toler = constants::PRECISE_TOLERANCE);
 
 inline bool around_pi(mathld_t x, mathld_t toler = constants::LOW_PRECISE_TOLERANCE) {
 	return around_multiple(x, constants::PI, toler);
 }
+
 inline bool around_zero(mathld_t x, mathld_t toler = constants::PRECISE_TOLERANCE) {
 	return around_multiple(x, 0.0L, toler);
 }
@@ -317,22 +312,13 @@ inline mathld_t cotangent(mathld_t x) {
 	return 1.0 / tangent(x);
 }
 
-inline mathld_t arcsine(mathld_t x) {
-	if (x > 1 || x < -1) Exception(ValueError("Arcsine Range Exceeded"));
-	mathld_t y = x;
-	mathld_t tmp = x;
-	mathul_t N = 0;
-	while (++N < constants::TAYLOR_CONVERGENCE) {
-		tmp *= (x * x * (2 * N - 1) * (2 * N - 1)) / ((2 * N + 1) * (2 * N));
-		y += tmp;
-	}
-	return y;
-}
+mathld_t arcsine(mathld_t x);
 
 inline mathld_t arccosine(mathld_t x) {
 	if (x > 1 || x < -1) Exception(ValueError("Arccosine Range Exceeded"));
 	return constants::PI / 2.0 - arcsine(x);
 }
+
 MSTL_CONSTEXPR mathld_t arctangent_taylor(mathld_t x) noexcept {
 	mathld_t y = 0.0;
 	mathld_t tmp = x;
