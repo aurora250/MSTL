@@ -5,17 +5,17 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator>
-MSTL_NODISCARD MSTL_CONSTEXPR iterator_traits_cate_t<Iterator> iterator_category(const Iterator&) {
-    using category = iterator_traits_cate_t<Iterator>;
+MSTL_NODISCARD MSTL_CONSTEXPR iter_cat_t<Iterator> iterator_category(const Iterator&) {
+    using category = iter_cat_t<Iterator>;
     return category();
 }
 template <typename Iterator>
-MSTL_NODISCARD MSTL_CONSTEXPR iterator_traits_diff_t<Iterator>* distance_type(const Iterator&) {
-    return static_cast<iterator_traits_diff_t<Iterator>*>(0);
+MSTL_NODISCARD MSTL_CONSTEXPR iter_dif_t<Iterator>* distance_type(const Iterator&) {
+    return static_cast<iter_dif_t<Iterator>*>(0);
 }
 template <typename Iterator>
-MSTL_NODISCARD MSTL_CONSTEXPR iterator_traits_val_t<Iterator>* value_type(const Iterator&) {
-    return static_cast<iterator_traits_val_t<Iterator>*>(0);
+MSTL_NODISCARD MSTL_CONSTEXPR iter_val_t<Iterator>* value_type(const Iterator&) {
+    return static_cast<iter_val_t<Iterator>*>(0);
 }
 
 template <typename Iterator, typename Distance>
@@ -35,24 +35,24 @@ MSTL_CONSTEXPR void advance(Iterator& i, Distance n) {
 
 template <typename Iterator>
     requires(input_iterator<Iterator>)
-MSTL_CONSTEXPR Iterator prev(Iterator iter, iterator_traits_diff_t<Iterator> n = -1) {
+MSTL_CONSTEXPR Iterator prev(Iterator iter, iter_dif_t<Iterator> n = -1) {
     MSTL::advance(iter, n);
     return iter;
 }
 template <typename Iterator>
     requires(input_iterator<Iterator>)
-MSTL_CONSTEXPR Iterator next(Iterator iter, iterator_traits_diff_t<Iterator> n = 1) {
+MSTL_CONSTEXPR Iterator next(Iterator iter, iter_dif_t<Iterator> n = 1) {
     MSTL::advance(iter, n);
     return iter;
 }
 
 template <typename Iterator>
     requires(random_access_iterator<Iterator>)
-MSTL_CONSTEXPR iterator_traits_diff_t<Iterator> distance(Iterator first, Iterator last) {
+MSTL_CONSTEXPR iter_dif_t<Iterator> distance(Iterator first, Iterator last) {
     if constexpr (random_access_iterator<Iterator>)
         return last - first;
     else {
-        iterator_traits_diff_t<Iterator> n = 0;
+        iter_dif_t<Iterator> n = 0;
         while (first != last) { ++first; ++n; }
         return n;
     }
@@ -163,11 +163,11 @@ template <class Iterator>
     requires(bidirectional_iterator<Iterator>)
 class reverse_iterator {
 public:
-    using iterator_category = iterator_traits_cate_t<Iterator>;
-    using value_type        = iterator_traits_val_t<Iterator>;
-    using difference_type   = iterator_traits_diff_t<Iterator>;
-    using pointer           = iterator_traits_ptr_t<Iterator>;
-    using reference         = iterator_traits_ref_t<Iterator>;
+    using iterator_category = iter_cat_t<Iterator>;
+    using value_type        = iter_val_t<Iterator>;
+    using difference_type   = iter_dif_t<Iterator>;
+    using pointer           = iter_ptr_t<Iterator>;
+    using reference         = iter_ref_t<Iterator>;
     using self              = reverse_iterator<Iterator>;
 
     MSTL_CONSTEXPR reverse_iterator() = default;
@@ -319,7 +319,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator -(
 }
 template <class Iterator>
 MSTL_CONSTEXPR reverse_iterator<Iterator> operator +(
-    iterator_traits_diff_t<Iterator> n, const reverse_iterator<Iterator>& x)
+    iter_dif_t<Iterator> n, const reverse_iterator<Iterator>& x)
     noexcept(noexcept(x + n)) {
     return x + n;
 }

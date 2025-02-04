@@ -89,13 +89,13 @@ MSTL_CONSTEXPR uninitialized_copy_n(Iterator1 first, size_t count, Iterator2 res
 
 
 template <typename Iterator, typename T>
-    requires(forward_iterator<Iterator> && TrivialAssignable<typename iterator_traits<Iterator>::value_type>)
+    requires(forward_iterator<Iterator> && trivially_assignable<typename iterator_traits<Iterator>::value_type>)
 MSTL_CONSTEXPR void uninitialized_fill(Iterator first, Iterator last, const T& x) {
     MSTL::fill(first, last, x);
 }
 
 template <typename Iterator, typename T>
-    requires(forward_iterator<Iterator> && (!TrivialAssignable<typename iterator_traits<Iterator>::value_type>))
+    requires(forward_iterator<Iterator> && (!trivially_assignable<typename iterator_traits<Iterator>::value_type>))
 MSTL_CONSTEXPR void uninitialized_fill(Iterator first, Iterator last, const T& x) {
     Iterator cur = first;
     for (; cur != last; ++cur)
@@ -104,13 +104,13 @@ MSTL_CONSTEXPR void uninitialized_fill(Iterator first, Iterator last, const T& x
 
 
 template <typename Iterator, typename T>
-    requires(forward_iterator<Iterator> && TrivialAssignable<typename iterator_traits<Iterator>::value_type>)
+    requires(forward_iterator<Iterator> && trivially_assignable<typename iterator_traits<Iterator>::value_type>)
 MSTL_CONSTEXPR Iterator uninitialized_fill_n(Iterator first, size_t n, const T& x) {
     return MSTL::fill_n(first, n, x);
 }
 
 template <typename Iterator, typename T>
-    requires(forward_iterator<Iterator> && (!TrivialAssignable<typename iterator_traits<Iterator>::value_type>))
+    requires(forward_iterator<Iterator> && (!trivially_assignable<typename iterator_traits<Iterator>::value_type>))
 MSTL_CONSTEXPR Iterator uninitialized_fill_n(Iterator first, size_t n, const T& x) {
     Iterator cur = first;
     for (; n > 0; --n, ++cur) 

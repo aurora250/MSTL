@@ -6,19 +6,20 @@ MSTL_BEGIN_NAMESPACE__
 template <typename T>
 class standard_allocator {
     static_assert(is_allocable_v<T>, "allocator can`t alloc void, reference, function or const type.");
-private:
-    typedef std::allocator<T> alloc_type;
-    alloc_type alloc;
 public:
-    using value_type = T;
-    using pointer = T*;
-    using const_pointer = const T*;
-    using reference = T&;
-    using const_reference = const T&;
-    using size_type = size_t;
-    using difference_type = ptrdiff_t;
-    using self = standard_allocator<T>;
+    using value_type        = T;
+    using pointer           = T*;
+    using const_pointer     = const T*;
+    using reference         = T&;
+    using const_reference   = const T&;
+    using size_type         = size_t;
+    using difference_type   = ptrdiff_t;
+    using self              = standard_allocator<T>;
 
+private:
+    std::allocator<T> alloc;
+
+public:
     template <typename U>
     struct rebind {
         using other = standard_allocator<U>;
@@ -58,14 +59,14 @@ template <typename T>
 class ctype_allocator {
     static_assert(is_allocable_v<T>, "allocator can`t alloc void, reference, function or const type.");
 public:
-    using value_type = T;
-    using pointer = T*;
-    using const_pointer = const T*;
-    using reference = T&;
-    using const_reference = const T&;
-    using size_type = size_t;
-    using difference_type = ptrdiff_t;
-    using self = ctype_allocator<T>;
+    using value_type        = T;
+    using pointer           = T*;
+    using const_pointer     = const T*;
+    using reference         = T&;
+    using const_reference   = const T&;
+    using size_type         = size_t;
+    using difference_type   = ptrdiff_t;
+    using self              = ctype_allocator<T>;
 
     template <typename U>
     struct rebind {
@@ -104,14 +105,14 @@ template <typename T>
 class new_allocator {
     static_assert(is_allocable_v<T>, "allocator can`t alloc void, reference, function or const type.");
 public:
-    using value_type = T;
-    using pointer = T*;
-    using const_pointer = const T*;
-    using reference = T&;
-    using const_reference = const T&;
-    using size_type = size_t;
-    using difference_type = ptrdiff_t;
-    using self = new_allocator<T>;
+    using value_type        = T;
+    using pointer           = T*;
+    using const_pointer     = const T*;
+    using reference         = T&;
+    using const_reference   = const T&;
+    using size_type         = size_t;
+    using difference_type   = ptrdiff_t;
+    using self              = new_allocator<T>;
 
     template <typename U>
     struct rebind {

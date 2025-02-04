@@ -52,23 +52,23 @@ noexcept(noexcept(MSTL::swap(*a, *b))) {
 
 // maximum
 template <typename T>
-MSTL_CONSTEXPR const T& maximum(const T& a, const T& b) {
+MSTL_CONSTEXPR const T& max(const T& a, const T& b) {
 	return a < b ? b : a;
 }
 
 template <typename T, typename Compare>
-MSTL_CONSTEXPR const T& maximum(const T& a, const T& b, Compare comp) {
+MSTL_CONSTEXPR const T& max(const T& a, const T& b, Compare comp) {
 	return comp(a, b) ? b : a;
 }
 
 // minimum
 template <typename T>
-MSTL_CONSTEXPR const T& minimum(const T& a, const T& b) {
+MSTL_CONSTEXPR const T& min(const T& a, const T& b) {
 	return b < a ? b : a;
 }
 
 template <typename T, typename Compare>
-MSTL_CONSTEXPR const T& minimum(const T& a, const T& b, Compare comp) {
+MSTL_CONSTEXPR const T& min(const T& a, const T& b, Compare comp) {
 	return comp(b, a) ? b : a;
 }
 
@@ -202,7 +202,7 @@ template <typename Iterator>
 MSTL_CONSTEXPR pair<Iterator, Iterator> minmax_element(Iterator first, Iterator last) {
 	Iterator min = MSTL::min_element(first, last);
 	Iterator max = MSTL::max_element(first, last);
-	return MSTL::make_pair<Iterator, Iterator>(min, max);
+	return MSTL::make_pair(min, max);
 }
 
 template <typename Iterator, typename Compare>
@@ -210,7 +210,7 @@ template <typename Iterator, typename Compare>
 MSTL_CONSTEXPR pair<Iterator, Iterator> minmax_element(Iterator first, Iterator last, Compare comp) {
 	Iterator min = MSTL::min_element(first, last, comp);
 	Iterator max = MSTL::max_element(first, last, comp);
-	return MSTL::make_pair<Iterator, Iterator>(min, max);
+	return MSTL::make_pair(min, max);
 }
 
 // lexicographical compare
@@ -240,7 +240,7 @@ inline MSTL_NODISCARD bool lexicographical_compare(const unsigned char* first1,
 	const unsigned char* last1, const unsigned char* first2, const unsigned char* last2) noexcept {
 	const size_t len1 = last1 - first1;
 	const size_t len2 = last2 - first2;
-	const int result = MSTL::memcmp(first1, first2, (int)MSTL::minimum(len1, len1));
+	const int result = MSTL::memcmp(first1, first2, (int)MSTL::min(len1, len1));
 	return result != 0 ? result < 0 : len1 < len2;
 }
 

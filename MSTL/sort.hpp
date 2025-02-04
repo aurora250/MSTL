@@ -372,7 +372,7 @@ void radix_sort_less(Iterator first, Iterator last, Mapper mapper) {
     if (first == last) return;
     using Distance = typename iterator_traits<Iterator>::difference_type;
     using T = typename iterator_traits<Iterator>::value_type;
-    using Mapped = decltype(mapper(*first));
+    using Mapped = remove_reference_t<decltype(mapper(*first))>;
     Distance length = MSTL::distance(first, last);
     vector<Mapped> mapped_values(length);
     vector<T> bucket(length);
@@ -407,7 +407,7 @@ void radix_sort_greater(Iterator first, Iterator last, Mapper mapper) {
     if (first == last) return;
     using Distance = typename iterator_traits<Iterator>::difference_type;
     using T = typename iterator_traits<Iterator>::value_type;
-    using Mapped = decltype(mapper(*first));
+    using Mapped = remove_reference_t<decltype(mapper(*first))>;
     Distance length = MSTL::distance(first, last);
     vector<Mapped> mapped_values(length);
     vector<T> bucket(length);
@@ -783,13 +783,13 @@ void tim_sort(Iterator first, Iterator last) {
     static constexpr int MIN_MERGE = 32;
     Distance n = MSTL::distance(first, last);
     for (Iterator i = first; i < last; i += MIN_MERGE) {
-        Iterator end = MSTL::minimum(i + MIN_MERGE, last);
+        Iterator end = MSTL::min(i + MIN_MERGE, last);
         MSTL::insertion_sort(i, end);
     }
     for (int size = MIN_MERGE; size < n; size *= 2) {
         for (Iterator left = first; left < last; left += 2 * size) {
             Iterator mid = left + size;
-            Iterator right = MSTL::minimum(left + 2 * size, last);
+            Iterator right = MSTL::min(left + 2 * size, last);
             if (mid < right) {
                 MSTL::inplace_merge(left, mid, right);
             }
@@ -804,13 +804,13 @@ void tim_sort(Iterator first, Iterator last, Compare comp) {
     static constexpr int MIN_MERGE = 32;
     Distance n = MSTL::distance(first, last);
     for (Iterator i = first; i < last; i += MIN_MERGE) {
-        Iterator end = MSTL::minimum(i + MIN_MERGE, last);
+        Iterator end = MSTL::min(i + MIN_MERGE, last);
         MSTL::insertion_sort(i, end, comp);
     }
     for (int size = MIN_MERGE; size < n; size *= 2) {
         for (Iterator left = first; left < last; left += 2 * size) {
             Iterator mid = left + size;
-            Iterator right = MSTL::minimum(left + 2 * size, last);
+            Iterator right = MSTL::min(left + 2 * size, last);
             if (mid < right) {
                 MSTL::inplace_merge(left, mid, right, comp);
             }

@@ -439,13 +439,13 @@ using add_pointer_t = typename add_pointer<T>::type;
 
 // declval will only work in no evaluation context (decltype or sizeof) to quickly get rvalue types. 
 template <typename T>
-add_rvalue_reference_t<T> declval() noexcept { MSTL_NO_EVALUATION__ }
+add_rvalue_reference_t<T> declval() noexcept { MSTL_NO_EVALUATION }
 // try to copy type T
 template <typename T>
-T declcopy(T) noexcept { MSTL_NO_EVALUATION__ }
+T declcopy(T) noexcept { MSTL_NO_EVALUATION }
 // work with is_void_t
 template <typename T>
-void declvoid(T) noexcept { MSTL_NO_EVALUATION__ }
+void declvoid(T) noexcept { MSTL_NO_EVALUATION }
 
 
 template <typename>
@@ -755,7 +755,7 @@ constexpr bool is_default_constructible_v = is_default_constructible<T>::value;
 
 
 template <typename T>
-void implicitly_default_construct_aux(const T&) { MSTL_NO_EVALUATION__ }
+void implicitly_default_construct_aux(const T&) { MSTL_NO_EVALUATION }
 
 template <typename, typename = void>
 struct is_implicitly_default_constructible : false_type {};
@@ -1224,7 +1224,7 @@ MSTL_NODISCARD constexpr bool is_corresponding_member(Member1 Class1::* p1, Memb
 
 
 template <typename T>
-void ref_wrapper_construct_aux(type_identity_t<T&>) noexcept { MSTL_NO_EVALUATION__ }
+void ref_wrapper_construct_aux(type_identity_t<T&>) noexcept { MSTL_NO_EVALUATION }
 template <typename T>
 void ref_wrapper_construct_aux(type_identity_t<T&&>) = delete;
 
@@ -1360,6 +1360,14 @@ concept is_allocator_v = requires(T& alloc) {
 };
 template <class T>
 struct is_allocator : bool_constant<is_allocator_v<T>> {};
+
+
+template <typename Alloc1, typename Alloc2>
+constexpr bool allocable_from_v = is_same_v<
+    decltype(MSTL::declval<Alloc1>().allocate(1)), decltype(MSTL::declval<Alloc1>().allocate(1))>;
+
+template <typename Alloc1, typename Alloc2>
+constexpr bool allocable_with = allocable_from_v<Alloc1, Alloc2>&& allocable_from_v<Alloc2, Alloc1>;
 
 
 template <typename>

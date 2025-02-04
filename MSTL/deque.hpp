@@ -151,7 +151,7 @@ private:
     }
     void create_map_and_nodes(size_type n) {
         size_type node_nums = n / buff_size() + 1;
-        map_size_ = maximum(size_type(8), node_nums + 2);
+        map_size_ = max(size_type(8), node_nums + 2);
         map_ = map_alloc_.allocate(map_size_);
         map_pointer nstart = map_ + (map_size_ - node_nums) / 2;
         map_pointer nfinish = nstart + node_nums - 1;
@@ -185,7 +185,7 @@ private:
             else MSTL::copy_backward(start_.node_, finish_.node_ + 1, new_start + old_num_nodes);
         }
         else {
-            size_type new_map_size = map_size_ + maximum(map_size_, nodes_to_add) + 2;
+            size_type new_map_size = map_size_ + max(map_size_, nodes_to_add) + 2;
             map_pointer new_map = map_alloc_.allocate(new_map_size);
             new_start = new_map + (new_map_size - new_num_nodes) / 2
                 + (add_at_front ? nodes_to_add : 0);
@@ -227,7 +227,7 @@ private:
     }
     template <typename U = T>
     iterator insert_aux(iterator pos, U&& x) 
-        requires(NothrowMoveAssignable<value_type> && NothrowAssignableFrom<T, U>) {
+        requires(is_nothrow_move_assignable_v<value_type> && is_nothrow_assignable_v<T, U>) {
         difference_type index = pos - start_;
         if (size_t(index < size() / 2)) {
             push_front(front());
@@ -623,11 +623,11 @@ public:
     }
     iterator insert(iterator position, size_t n, T&& x) {
         if (position == start_) {
-            for (size_t i = 0; i < n; i++) push_front(std::forward<T>(x));
+            for (size_t i = 0; i < n; i++) push_front(x);
             return start_;
         }
         else if (position == finish_) {
-            for (size_t i = 0; i < n; i++) push_back(std::forward<T>(x));
+            for (size_t i = 0; i < n; i++) push_back(x);
             return finish_ - 1;
         }
         else 

@@ -8,6 +8,10 @@
 #include <cxxabi.h>
 #endif
 
+// use unnamed object
+#pragma warning(push)
+#pragma warning(disable: 26444)
+
 MSTL_BEGIN_NAMESPACE__
 
 class output {
@@ -232,12 +236,11 @@ CHECK_TYPE_MEM_FUNC__(const volatile)
 
 template <typename T>
 MSTL_CONSTEXPR std::string check_type() {
-    // check_type<decltype(object)>()
     std::string str;
-    check<T> c(str);
+    check<T> { str };
     return str;
 }
 
+#pragma warning(pop)
 MSTL_END_NAMESPACE__
-
 #endif // MSTL_CHECK_TYPE_H__

@@ -42,9 +42,6 @@
     <ClCompile Include="logging.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="avl_tree.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="hash_function.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -152,9 +149,6 @@
     <ClInclude Include="thread_pool.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="avl_tree.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="container.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -162,9 +156,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="logging.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="avl_set.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="type_traits.hpp">

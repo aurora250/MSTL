@@ -363,7 +363,7 @@ public:
             else --j;
         }
         if (key_compare_(KeyOfValue()(
-            value(link_type(j.node_))), KeyOfValue()(std::forward<value_type>(v))))
+            value(link_type(j.node_))), KeyOfValue()(v)))
             return pair<iterator, bool>(insert_aux(x, y, std::forward<value_type>(v)), true);
         return pair<iterator, bool>(iterator(j), false);
     }

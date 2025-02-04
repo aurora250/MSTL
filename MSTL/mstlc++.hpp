@@ -14,7 +14,6 @@
 #include "set.hpp"
 #include "hash_map.hpp"
 #include "hash_set.hpp"
-#include "avl_set.hpp"
 
 #include "container.h"
 #include "trace_memory.hpp"

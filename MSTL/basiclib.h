@@ -89,8 +89,11 @@
 #if defined(MSTL_VERSION_17__)
 	#define MSTL_SUPPORT_NODISCARD__		1
 #endif
-#if defined(MSTL_VERSION_17__)
+#if defined(MSTL_VERSION_11__)
 	#define MSTL_SUPPORT_NORETURN__			1
+#endif
+#if defined(MSTL_VERSION_14__)
+	#define MSTL_SUPPORT_DEPRECATED__		1
 #endif
 #if defined(MSTL_VERSION_17__)
 	#define MSTL_SUPPORT_DEDUCTION_GUIDES__ 1
@@ -114,55 +117,67 @@
 
 #define TO_STRING(VALUE) #VALUE
 
-#define FOR_EACH(VALUE, CONTAINER) for(auto VALUE = CONTAINER.begin(); VALUE != CONTAINER.end(); ++VALUE)
+#define FOR_EACH(VALUE, CONTAINER) \
+	for(auto VALUE = CONTAINER.begin(); VALUE != CONTAINER.end(); ++VALUE)
 
 #define TEMNULL__ template<>
 
 #ifdef MSTL_STATE_DEBUG__
-#define SIMPLE_LOG(MESG) \
-	std::cout << __FILE__ << ":" << __LINE__ << " " << __TIMESTAMP__ << " : " << MESG << std::endl;
+	#define SIMPLE_LOG(MESG) \
+		std::cout << __FILE__ << ":" << __LINE__ << " " << __TIMESTAMP__ << " : " << MESG << std::endl;
 #else
-#define SIMPLE_LOG(MESG) 
+	#define SIMPLE_LOG(MESG) 
 #endif
 
 
 #ifdef MSTL_SUPPORT_CONSTEXPR__
-#define MSTL_CONSTEXPR constexpr
+	#define MSTL_CONSTEXPR constexpr
 #else
-#define MSTL_CONSTEXPR
+	#define MSTL_CONSTEXPR
 #endif
 
 #ifdef MSTL_SUPPORT_NODISCARD__
-#define MSTL_NODISCARD [[nodiscard]]
-#define MSTL_ALLOCNODISCARD [[nodiscard("discard the return of allocators will cause memory leaks.")]]
+	#define MSTL_NODISCARD [[nodiscard]]
+	#define MSTL_ALLOCNODISCARD \
+		[[nodiscard("discard the return of allocators will cause memory leaks.")]]
 #else
-#define MSTL_NODISCARD
-#define MSTL_ALLOCNODISCARD
+	#define MSTL_NODISCARD
+	#define MSTL_ALLOCNODISCARD
 #endif
 
 #ifdef MSTL_SUPPORT_NORETURN__
-#define MSTL_NORETURN [[noreturn]]
+	#define MSTL_NORETURN [[noreturn]]
 #else 
-#define MSTL_NORETURN 
+	#define MSTL_NORETURN 
+#endif
+
+#ifdef MSTL_SUPPORT_DEPRECATED__
+	#define MSTL_DEPRECATED [[deprecated]]
+	// after C++ 11, we can use lambda expressions to quickly build closures 
+	// instead of using functor adapters.
+	#define MSTL_FADEPRECATED [[deprecated("C++ 11 and later versions no longer use functor adapters.")]]
+#else 
+	#define MSTL_DEPRECATED
+	#define MSTL_FADEPRECATED
 #endif
 
 #ifdef MSTL_SUPPORT_DECLALLOC__
-#define MSTL_DECLALLOC __declspec(allocator)
+	#define MSTL_DECLALLOC __declspec(allocator)
 #else
-#define MSTL_DECLALLOC 
+	#define MSTL_DECLALLOC 
 #endif
 
 #if defined(MSTL_COMPILE_MSVC__)
-#define MSTL_LONG_LONG_TYPE __int64
+	#define MSTL_LONG_LONG_TYPE __int64
 #else
-#define MSTL_LONG_LONG_TYPE__ long long
+	#define MSTL_LONG_LONG_TYPE long long
 #endif
 
 #if defined(MSTL_SUPPORT_STATIC_ASSERT__)
-#define MSTL_NO_EVALUATION__ \
-	static_assert(false, "this function will only be used in no evaluation context.");
+	#define MSTL_NO_EVALUATION \
+		static_assert(false, "this function will only be used in no evaluation context.");
 #else
-#define MSTL_NO_EVALUATION__ assert(false)
+	#define MSTL_NO_EVALUATION assert(false)
 #endif
 
 

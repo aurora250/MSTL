@@ -87,14 +87,14 @@ MSTL_NORETURN void Exit(bool _abort = false, void(*_func)(void) = nullptr);
 #define MSTL_CATCH_ERROR_UNUSE__ catch(const Error&)
 
 
-#define MSTL_REPORT_ERROR__(mesg) \
-    { LOG_ERROR(mesg); } assert(false);
+#define MSTL_REPORT_ERROR__(MESG) \
+    { LOG_ERROR(MESG); } assert(false);
 
 #ifdef MSTL_STATE_DEBUG__
 #define MSTL_DEBUG_VERIFY__(CON, MESG) \
     { if (CON) {} else { MSTL_REPORT_ERROR__(MESG); } }
 #else
-#define MSTL_DEBUG_VERIFY__(con, mesg) 
+#define MSTL_DEBUG_VERIFY__(CON, MESG) 
 #endif
 
 MSTL_END_NAMESPACE__

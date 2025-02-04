@@ -81,7 +81,7 @@ MSTL_NODISCARD constexpr T* unfancy(T* p) noexcept {
     return p;
 }
 template <class Ptr>
-constexpr auto unfancy_maybe_null(Ptr p) noexcept {
+constexpr decltype(auto) unfancy_maybe_null(Ptr p) noexcept {
     return p ? MSTL::addressof(*p) : nullptr;
 }
 template <class T>
@@ -140,15 +140,15 @@ struct iterator_traits<T*> {
 };
 
 template <typename Iterator>
-using iterator_traits_cate_t = typename iterator_traits<Iterator>::iterator_category;
+using iter_cat_t = typename iterator_traits<Iterator>::iterator_category;
 template <typename Iterator>
-using iterator_traits_val_t = typename iterator_traits<Iterator>::value_type;
+using iter_val_t = typename iterator_traits<Iterator>::value_type;
 template <typename Iterator>
-using iterator_traits_diff_t = typename iterator_traits<Iterator>::difference_type;
+using iter_dif_t = typename iterator_traits<Iterator>::difference_type;
 template <typename Iterator>
-using iterator_traits_ptr_t = typename iterator_traits<Iterator>::pointer;
+using iter_ptr_t = typename iterator_traits<Iterator>::pointer;
 template <typename Iterator>
-using iterator_traits_ref_t = typename iterator_traits<Iterator>::reference;
+using iter_ref_t = typename iterator_traits<Iterator>::reference;
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_ITERATOR_TRAITS_HPP__

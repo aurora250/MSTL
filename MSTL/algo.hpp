@@ -873,8 +873,8 @@ bool binary_search(Iterator first, Iterator last, const T& value, Compare comp) 
 template <class Iterator1, class Iterator2, class BinaryPred>
 	requires(bidirectional_iterator<Iterator1>&& bidirectional_iterator<Iterator2>)
 bool is_permutation(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2) {
-	using Distance1 = MSTL::iterator_traits_diff_t<Iterator1>;
-	using Distance2 = MSTL::iterator_traits_diff_t<Iterator2>;
+	using Distance1 = MSTL::iter_dif_t<Iterator1>;
+	using Distance2 = MSTL::iter_dif_t<Iterator2>;
 	Distance1 len1 = MSTL::distance(first1, last1);
 	Distance2 len2 = MSTL::distance(first2, last2);
 	if (len1 != len2) return false;

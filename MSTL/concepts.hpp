@@ -90,16 +90,12 @@ concept assignable_from = is_lvalue_reference_v<To>
 && requires(To x, From&& y) {
 	{ x = static_cast<From&&>(y) } -> same_as<To>;
 };
-template<typename T>
-concept copy_assignable = is_copy_assignable_v<T>;
 template <typename T>
 concept trivially_copy_assignable = is_trivially_copy_assignable_v<T>;
-template<typename T>
-concept move_assignable = is_move_assignable_v<T>;
 template <typename T>
 concept trivial_move_assignable = is_trivially_move_assignable_v<T>;
 template <typename T>
-concept TrivialAssignable = trivially_copy_assignable<T> || trivial_move_assignable<T>;
+concept trivially_assignable = trivially_copy_assignable<T> || trivial_move_assignable<T>;
 
 
 template <class T>
@@ -114,15 +110,6 @@ concept copyable = copy_constructible<T>
 && assignable_from<T&, T&>
 && assignable_from<T&, const T&>
 && assignable_from<T&, const T>;
-
-
-
-template<typename To, typename From>
-concept NothrowAssignableFrom = is_nothrow_assignable_v<To, From>;
-template<typename T>
-concept NothrowCopyAssignable = is_nothrow_copy_assignable_v<T>;
-template<typename T>
-concept NothrowMoveAssignable = is_nothrow_move_assignable_v<T>;
 
 
 template <class T1, class T2>
@@ -188,6 +175,7 @@ concept is_detailable = requires(const T & c) {
 };
 
 
+#ifdef MSTL_VERSION_20__
 template <typename T>
 concept iterator_typedef = requires() {
 	typename iterator_traits<T>::iterator_category;
@@ -230,6 +218,57 @@ concept random_access_iterator = bidirectional_iterator<Iterator> &&
 	{ it2 - it1 } -> convertible_to<typename iterator_traits<Iterator>::difference_type>;
 	{ it1[n] } -> convertible_to<typename iterator_traits<Iterator>::value_type>;
 };
+#endif
+template <class T, class = void>
+constexpr bool is_iterator_v = false;
+template <class T>
+constexpr bool is_iterator_v<T, void_t<iter_cat_t<T>>> = true;
+template <class T>
+struct is_iterator : bool_constant<is_iterator_v<T>> {};
+
+
+template <class Iterator>
+constexpr bool is_input_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::input_iterator_tag>;
+
+template <class Iterator>
+constexpr bool is_ranges_input_iter_v =
+#ifdef MSTL_VERSION_20__
+input_iterator<Iterator> ||
+#endif
+is_input_iter_v<Iterator>;
+
+
+template <class Iterator>
+constexpr bool is_fwd_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::forward_iterator_tag>;
+
+template <class Iterator>
+constexpr bool is_ranges_fwd_iter_v =
+#ifdef MSTL_VERSION_20__
+forward_iterator<Iterator> ||
+#endif
+is_fwd_iter_v<Iterator>;
+
+
+template <class Iterator>
+constexpr bool is_bid_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::bidirectional_iterator_tag>;
+
+template <class Iterator>
+constexpr bool is_ranges_bid_iter_v =
+#ifdef MSTL_VERSION_20__
+bidirectional_iterator<Iterator> ||
+#endif
+is_bid_iter_v<Iterator>;
+
+
+template <class Iterator>
+constexpr bool is_rnd_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::random_access_iterator_tag>;
+
+template <class Iterator>
+constexpr bool is_ranges_rnd_iter_v =
+#ifdef MSTL_VERSION_20__
+random_access_iterator<Iterator> ||
+#endif
+is_rnd_iter_v<Iterator>;
 
 
 template <typename T>

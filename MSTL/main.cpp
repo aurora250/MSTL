@@ -153,7 +153,6 @@ void try_vec() {
         v.push_back(4);
         detailof(v);
         vector<int> v2(v);
-        back_insert_iterator it(v2);
         display out("\n");
         out(v.front());
         MSTL_TRY__{
@@ -172,16 +171,26 @@ void try_vec() {
         FOR_EACH(it, v2) {
             std::cout << *it << std::endl;
         }
-        auto v3 = std::move(v2);
+        auto v3 = MSTL::move(v2);
         detailof(v3);
-        //detailof(v2);
         vector<int> v4 = { 3,2,1 };
+        v4.emplace(v4.begin() + 1, 5);
+        v4.erase(--v4.end());
         detailof(v4);
         out(*v4.data());
         vector<int, ctype_allocator<int>> cvec;
         cvec.emplace_back(3);
         cvec.emplace_back(4);
         detailof(cvec);
+
+        vector<int> vec;
+        vec.assign(5, 10);
+        detailof(vec);
+        vec.assign({ 1, 2, 3, 4, 5 });
+        detailof(vec);
+        vector<int> anotherVec = { 6, 7, 8 };
+        vec.assign(anotherVec.begin(), anotherVec.end());
+        detailof(vec);
     }
     MSTL_CATCH_ERROR__{
         show_data_only(error, std::cout);
@@ -339,11 +348,11 @@ void try_sort() {
     //quick_sort(vec.begin(), vec.end());
     //merge_sort(vec.begin(), vec.end());
     //bucket_sort(vec.begin(), vec.end());
-    //radix_sort(vec.begin(), vec.end());
+    radix_sort(vec.begin(), vec.end());
     //tim_sort(vec.begin(), vec.end());
     //monkey_sort(vec.begin(), vec.end());
     //smooth_sort(vec.begin(), vec.end());
-    cocktail_sort(vec.begin(), vec.end());
+    //cocktail_sort(vec.begin(), vec.end());
     detailof(vec);
     /*vector<Person> people = {
     {"Alice", 25},
@@ -357,33 +366,7 @@ void try_sort() {
     radix_sort_greater(people.begin(), people.end(), [](const Person& x) -> int { return x.age; });
     detailof(people);*/
 }
-void try_avl() {
-    MSTL_NAMESPACE__;
-    avl_set<int> tree;
-    tree.insert(100);
-    tree.insert(80);
-    tree.insert(110);
-    tree.insert(70);
-    tree.insert(95);
-    tree.insert(105);
-    tree.insert(120);
-    tree.insert(60);
-    tree.insert(125);
-    tree.insert(90);
-    tree.insert(92);
-    tree.insert(115);
-    tree.insert(85);
-    tree.insert(98);
-    //std::cout << *tree.begin() << std::endl;
-    for (auto it = tree.begin(); it != tree.end(); ++it) {
-        std::cout << *it << std::endl;
-    }
-    //tree.clear();
-    std::cout << tree.empty() << std::endl;
-    for (auto it = tree.rbegin(); it != tree.rend(); --it) {
-        std::cout << *it << std::endl;
-    }
-}
+
 void try_algo() {
     MSTL_NAMESPACE__;
     std::vector<int> v1 = { 1, 3, 5 };
@@ -400,9 +383,19 @@ void try_json() {
     MSTL_NAMESPACE__;
     
 }
+template <typename T>
+struct Allocator1 {
+    T* allocate(std::size_t n) { return static_cast<T*>(::operator new(n * sizeof(T))); }
+    void deallocate(T* p, std::size_t n) { ::operator delete(p); }
+};
+
+template <typename T>
+struct Allocator2 {
+    T* allocate(std::size_t n) { return static_cast<T*>(::operator new(n * sizeof(T))); }
+    void deallocate(T* p, std::size_t n) { ::operator delete(p); }
+};
 
 int main() {
-    MSTL_NAMESPACE__;
-    //try_vec();
+    try_vec();
     return 0;
 }
