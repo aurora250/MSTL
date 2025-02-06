@@ -31,7 +31,7 @@ struct deque_iterator {
         return deque_buf_size(BufSize, sizeof(T));
     }
 
-    void set_node(map_pointer new_node) {
+    void change_buff(map_pointer new_node) {
         node_ = new_node;
         first_ = *new_node;
         last_ = first_ + difference_type(buff_size());
@@ -44,28 +44,30 @@ struct deque_iterator {
     deque_iterator(const iterator& x) noexcept :
         cur_(x.cur_), first_(x.first_), last_(x.last_), node_(x.node_) {}
 
-    self& operator =(const self& rh) noexcept {
-		if(*this == rh) return *this;
-		this->cur_ = rh.cur_;
-		this->first_ = rh.first_;
-		this->last_ = rh.last_;
-		this->node_ = rh.node_;
+    self& operator =(const self& x) noexcept {
+		if(*this == x) return *this;
+		this->cur_ = x.cur_;
+		this->first_ = x.first_;
+		this->last_ = x.last_;
+		this->node_ = x.node_;
 		return *this;
 	}
+
+    deque_iterator(iterator&& x) noexcept :
+        cur_(x.cur_), first_(x.first_), last_(x.last_), node_(x.node_) {
+        x.cur_ = nullptr; x.first_ = nullptr; 
+        x.last_ = nullptr; x.node_ = nullptr;
+    }
 
     ~deque_iterator() noexcept = default;
 
     MSTL_NODISCARD reference operator *() const noexcept { return *cur_; }
     MSTL_NODISCARD pointer operator ->() const noexcept { return &(operator*()); }
 
-    difference_type operator -(const self& x) const noexcept {
-        return (node_ - x.node_ - 1) * buff_size() + (cur_ - first_) + (x.last_ - x.cur_);
-    }
-
     self& operator ++() noexcept {
         ++cur_;
         if (cur_ == last_) {
-            set_node(node_ + 1);
+            change_buff(node_ + 1);
             cur_ = first_;
         }
         return *this;
@@ -78,7 +80,7 @@ struct deque_iterator {
 
     self& operator --() noexcept {
         if (cur_ == first_) {
-            set_node(node_ - 1);
+            change_buff(node_ - 1);
             cur_ = last_;
         }
         --cur_;
@@ -98,7 +100,7 @@ struct deque_iterator {
             difference_type node_offset = offset > 0 ? 
                 offset / difference_type(buff_size())
                 : -difference_type((-offset - 1) / buff_size()) - 1;
-            set_node(node_ + node_offset);
+            change_buff(node_ + node_offset);
             cur_ = first_ + (offset - node_offset * difference_type(buff_size()));
         }
         return *this;
@@ -115,6 +117,9 @@ struct deque_iterator {
     MSTL_NODISCARD self operator -(difference_type n) const noexcept {
         self temp = *this;
         return temp -= n;
+    }
+    difference_type operator -(const self& x) const noexcept {
+        return (node_ - x.node_ - 1) * buff_size() + (cur_ - first_) + (x.last_ - x.cur_);
     }
 
     MSTL_NODISCARD reference operator [](difference_type n) noexcept { return *(*this + n); }
@@ -149,6 +154,8 @@ public:
     using allocator_type    = Alloc;
     using iterator          = deque_iterator<T, T&, T*, BufSize>;
     using const_iterator    = deque_iterator<T, const T&, const T*, BufSize>;
+    using reverse_iterator  = MSTL::reverse_iterator<iterator>;
+    using const_reverse_iterator = MSTL::reverse_iterator<const_iterator>;
 
 private:
     using map_pointer       = pointer*;
@@ -160,6 +167,14 @@ private:
     size_type map_size_;
     iterator start_;
     iterator finish_;
+
+    inline void range_check(size_type position) const {
+        Exception(position < static_cast<size_type>(MSTL::distance(start_, finish_)), 
+            StopIterator("deque index out of ranges."));
+    }
+    inline void range_check(iterator position) const {
+        Exception(position >= start_ && position <= finish_, StopIterator("deque index out of ranges."));
+    }
 
     MSTL_CONSTEXPR static size_t buff_size() noexcept {
         return deque_buf_size(BufSize, sizeof(T));
@@ -176,21 +191,22 @@ private:
             for (cur = nstart; cur <= nfinish; ++cur) *cur = data_alloc_.allocate(buff_size());
         }
         MSTL_CATCH_UNWIND_THROW_M__(
-            for (cur = nstart; cur <= nfinish; ++cur) data_alloc_.deallocate(*cur, buff_size()););
-        start_.set_node(nstart);
-        finish_.set_node(nfinish);
+            for (cur = nstart; cur <= nfinish; ++cur) data_alloc_.deallocate(*cur, buff_size());
+        );
+        start_.change_buff(nstart);
+        finish_.change_buff(nfinish);
         start_.cur_ = start_.first_;
         finish_.cur_ = finish_.first_ + n % buff_size();
     }
 
-    template <typename U = T>
-    void fill_initialize(size_type n, U&& x) {
+    void fill_initialize(size_type n, const T& x) {
         create_map_and_nodes(n);
         map_pointer cur;
         for (cur = start_.node_; cur < finish_.node_; ++cur)
-            MSTL::uninitialized_fill(*cur, *cur + buff_size(), std::forward<U>(x));
-        MSTL::uninitialized_fill(finish_.first_, finish_.cur_, std::forward<U>(x));
+            MSTL::uninitialized_fill(*cur, *cur + buff_size(), x);
+        MSTL::uninitialized_fill(finish_.first_, finish_.cur_, x);
     }
+
     void reallocate_map(size_type nodes_to_add, bool add_at_front) {
         size_type old_num_nodes = finish_.node_ - start_.node_ + 1;
         size_type new_num_nodes = old_num_nodes + nodes_to_add;
@@ -211,49 +227,131 @@ private:
             map_ = new_map;
             map_size_ = new_map_size;
         };
-        start_.set_node(new_start);
-        finish_.set_node(new_start + old_num_nodes - 1);
+        start_.change_buff(new_start);
+        finish_.change_buff(new_start + old_num_nodes - 1);
     }
-    template <typename... U>
-    void emplace_back_aux(U&&... args) {
-        reserve_map_at_back();
-        *(finish_.node_ + 1) = data_alloc_.allocate(buff_size());
-        MSTL::construct(finish_.cur_, std::forward<U>(args)...);
-        finish_.set_node(finish_.node_ + 1);
-        finish_.cur_ = finish_.first_;
+
+    template <typename Iterator>
+        requires(input_iterator<Iterator>)
+    iterator range_insert(iterator position, Iterator first, Iterator last) {
+        difference_type n = last - first;
+        difference_type index = position - start_;
+        if (index < size() / 2) {
+            if (n <= start_.cur_ - start_.first_) {
+                iterator new_start = start_ - n;
+                MSTL::copy(start_, position, new_start);
+                position = new_start + index;
+                MSTL::copy(first, last, position);
+                start_ = new_start;
+            }
+            else {
+                size_type needs =
+                    difference_type(n - (start_.cur_ - start_.first_) - 1) / buff_size() + 1;
+                reserve_front(needs);
+                map_pointer cur = start_.node_ - 1;
+                for (; needs > 0; --cur, --needs) {
+                    *cur = data_alloc_.allocate(buff_size());
+                    MSTL::uninitialized_fill_n(*cur, buff_size(), *start_);
+                }
+                iterator new_start = start_ - n;
+                MSTL::copy(start_, position, new_start);
+                position = new_start + index;
+                MSTL::copy(first, last, position);
+                start_ = new_start;
+            }
+        }
+        else {
+            if (finish_.last_ - finish_.cur_ - 1 >= n) {
+                iterator new_finish = finish_ + n;
+                MSTL::copy_backward(position, finish_, new_finish);
+                MSTL::copy(first, last, position);
+                finish_ = new_finish;
+                position = start_ + index;
+            }
+            else {
+                difference_type left = finish_.last_ - finish_.cur_ - 1;
+                size_type needs = difference_type(n - left - 1) / buff_size() + 1;
+                reserve_back(needs);
+                map_pointer cur = finish_.node_ + 1;
+                for (; needs > 0; ++cur, --needs) {
+                    *cur = data_alloc_.allocate(buff_size());
+                    MSTL::uninitialized_fill_n(*cur, buff_size(), *start_);
+                }
+                iterator new_finish = finish_ + n;
+                MSTL::copy_backward(position, finish_, new_finish);
+                MSTL::copy(first, last, position);
+                finish_ = new_finish;
+                position = start_ + index;
+            }
+        }
+        return position;
     }
-    template <typename... U>
-    void emplace_front_aux(U&&... args) {
-        reserve_map_at_front();
-        *(start_.node_ - 1) = data_alloc_.allocate(buff_size());
-        start_.set_node(start_.node_ - 1);
-        start_.cur_ = start_.last_ - 1;
-        MSTL::construct(start_.cur_, std::forward<U>(args)...);
+
+    iterator range_insert(iterator position, size_type n, const T& x) {
+        difference_type index = position - start_;
+        if (index < difference_type(size() / 2)) {
+            if (n <= size_type(start_.cur_ - start_.first_)) {
+                iterator new_start = start_ - n;
+                MSTL::copy(start_, position, new_start);
+                position = new_start + index;
+                MSTL::fill_n(position, n, x);
+                start_ = new_start;
+            }
+            else {
+                size_type needs =
+                    difference_type(n - (start_.cur_ - start_.first_) - 1) / buff_size() + 1;
+                reserve_front(needs);
+                map_pointer cur = start_.node_ - 1;
+                for (; needs > 0; --cur, --needs) {
+                    *cur = data_alloc_.allocate(buff_size());
+                    MSTL::uninitialized_fill_n(*cur, buff_size(), x);
+                }
+                iterator new_start = start_ - n;
+                MSTL::copy(start_, position, new_start);
+                position = new_start + index;
+                MSTL::fill_n(position, n, x);
+                start_ = new_start;
+            }
+        }
+        else {
+            if (n <= size_type(finish_.last_ - finish_.cur_ - 1)) {
+                iterator new_finish = finish_ + n;
+                MSTL::copy_backward(position, finish_, new_finish);
+                MSTL::fill_n(position, n, x);
+                finish_ = new_finish;
+                position = start_ + index;
+            }
+            else {
+                difference_type left = finish_.last_ - finish_.cur_ - 1;
+                size_type needs = difference_type(n - left - 1) / buff_size() + 1;
+                reserve_back(needs);
+                map_pointer cur = finish_.node_ + 1;
+                for (; needs > 0; ++cur, --needs) {
+                    *cur = data_alloc_.allocate(buff_size());
+                    MSTL::uninitialized_fill_n(*cur, buff_size(), *start_);
+                }
+                iterator new_finish = finish_ + n;
+                MSTL::copy_backward(position, finish_, new_finish);
+                MSTL::fill_n(position, n, x);
+                finish_ = new_finish;
+                position = start_ + index;
+            }
+        }
+        return position;
     }
-    void pop_back_aux() noexcept {
-        data_alloc_.deallocate(finish_.first_, buff_size());
-        finish_.set_node(finish_.node_ - 1);
-        finish_.cur_ = finish_.last_ - 1;
-        MSTL::destroy(finish_.cur_);
-    }
-    void pop_front_aux() noexcept {
-        MSTL::destroy(start_.cur_);
-        data_alloc_.deallocate(start_.first_, buff_size());
-        start_.set_node(start_.node_ + 1);
-        start_.cur_ = start_.first_;
-    }
-    template <typename U = T>
-    iterator insert_aux(iterator pos, U&& x) 
-        requires(is_nothrow_move_assignable_v<value_type> && is_nothrow_assignable_v<T, U>) {
-        difference_type index = pos - start_;
-        if (size_t(index < size() / 2)) {
-            push_front(front());
+
+    template <typename... Args>
+    iterator emplace_aux(iterator position, Args&&... args)
+        noexcept(is_nothrow_move_assignable_v<value_type>) {
+        size_type index = MSTL::distance(start_, position);
+        if (index < size() / 2) {
+            (emplace_front)(front());
             iterator front1 = start_;
             ++front1;
             iterator front2 = front1;
             ++front2;
-            pos = start_ + index;
-            iterator pos1 = pos;
+            position = start_ + index;
+            iterator pos1 = position;
             ++pos1;
             MSTL::copy(front2, pos1, front1);
         }
@@ -263,147 +361,45 @@ private:
             --back1;
             iterator back2 = back1;
             --back2;
-            pos = start_ + index;
-            MSTL::copy_backward(pos, back2, back1);
+            position = start_ + index;
+            MSTL::copy_backward(position, back2, back1);
         }
-        *pos = std::forward<U>(x);
-        return pos;
+        value_type val(MSTL::forward<Args>(args)...);
+        *position = MSTL::move(val);
+        return position;
     }
-    template <typename Iterator>
-        requires(input_iterator<Iterator>)
-    iterator insert_aux(iterator pos, Iterator first, Iterator last) {
-        difference_type n = last - first;
-        difference_type index = pos - start_;
-        if (index < size() / 2) {
-            if (n <= start_.cur_ - start_.first_) {
-                iterator new_start = start_ - n;
-                MSTL::copy(start_, pos, new_start);
-                pos = new_start + index;
-                MSTL::copy(first, last, pos);
-                start_ = new_start;
-            }
-            else {
-                size_type needs =
-                    difference_type(n - (start_.cur_ - start_.first_) - 1) / buff_size() + 1;
-                reserve_map_at_front(needs);
-                map_pointer cur = start_.node_ - 1;
-                for (; needs > 0; --cur, --needs) {
-                    *cur = data_alloc_.allocate(buff_size());
-                    MSTL::uninitialized_fill_n(*cur, buff_size(), *start_);
-                }
-                iterator new_start = start_ - n;
-                MSTL::copy(start_, pos, new_start);
-                pos = new_start + index;
-                MSTL::copy(first, last, pos);
-                start_ = new_start;
-            }
-        }
-        else {
-            if (finish_.last_ - finish_.cur_ - 1 >= n) {
-                iterator new_finish = finish_ + n;
-                MSTL::copy_backward(pos, finish_, new_finish);
-                MSTL::copy(first, last, pos);
-                finish_ = new_finish;
-                pos = start_ + index;
-            }
-            else {
-                difference_type left = finish_.last_ - finish_.cur_ - 1;
-                size_type needs = difference_type(n - left - 1) / buff_size() + 1;
-                reserve_map_at_back(needs);
-                map_pointer cur = finish_.node_ + 1;
-                for (; needs > 0; ++cur, --needs) {
-                    *cur = data_alloc_.allocate(buff_size());
-                    MSTL::uninitialized_fill_n(*cur, buff_size(), *start_);
-                }
-                iterator new_finish = finish_ + n;
-                MSTL::copy_backward(pos, finish_, new_finish);
-                MSTL::copy(first, last, pos);
-                finish_ = new_finish;
-                pos = start_ + index;
-            }
-        }
-        return pos;
-    }
-    template <typename U = T>
-    iterator insert_aux(iterator pos, size_type n, U&& x) {
-        difference_type index = pos - start_;
-        if (index < difference_type(size() / 2)) {
-            if (n <= size_type(start_.cur_ - start_.first_)) {
-                iterator new_start = start_ - n;
-                MSTL::copy(start_, pos, new_start);
-                pos = new_start + index;
-                MSTL::fill_n(pos, n, std::forward<U>(x));
-                start_ = new_start;
-            }
-            else {
-                size_type needs =
-                    difference_type(n - (start_.cur_ - start_.first_) - 1) / buff_size() + 1;
-                reserve_map_at_front(needs);
-                map_pointer cur = start_.node_ - 1;
-                for (; needs > 0; --cur, --needs) {
-                    *cur = data_alloc_.allocate(buff_size());
-                    MSTL::uninitialized_fill_n(*cur, buff_size(), x);
-                }
-                iterator new_start = start_ - n;
-                MSTL::copy(start_, pos, new_start);
-                pos = new_start + index;
-                MSTL::fill_n(pos, n, std::forward<U>(x));
-                start_ = new_start;
-            }
-        }
-        else {
-            if (n <= size_type(finish_.last_ - finish_.cur_ - 1)) {
-                iterator new_finish = finish_ + n;
-                MSTL::copy_backward(pos, finish_, new_finish);
-                MSTL::fill_n(pos, n, std::forward<U>(x));
-                finish_ = new_finish;
-                pos = start_ + index;
-            }
-            else {
-                difference_type left = finish_.last_ - finish_.cur_ - 1;
-                size_type needs = difference_type(n - left - 1) / buff_size() + 1;
-                reserve_map_at_back(needs);
-                map_pointer cur = finish_.node_ + 1;
-                for (; needs > 0; ++cur, --needs) {
-                    *cur = data_alloc_.allocate(buff_size());
-                    MSTL::uninitialized_fill_n(*cur, buff_size(), *start_);
-                }
-                iterator new_finish = finish_ + n;
-                MSTL::copy_backward(pos, finish_, new_finish);
-                MSTL::fill_n(pos, n, std::forward<U>(x));
-                finish_ = new_finish;
-                pos = start_ + index;
-            }
-        }
-        return pos;
-    }
+
 public:
     deque() : data_alloc_(), map_alloc_(), map_(0),
         map_size_(1), start_(0), finish_(0) {
         map_ = map_alloc_.allocate(1);
         *map_ = data_alloc_.allocate(buff_size());
-        start_.set_node(map_);
-        finish_.set_node(map_);
+        start_.change_buff(map_);
+        finish_.change_buff(map_);
         start_.cur_ = start_.first_;
         finish_.cur_ = finish_.first_;
     }
+
     explicit deque(size_type n) :
         data_alloc_(), map_alloc_(), map_(0), map_size_(0), start_(), finish_() {
-        fill_initialize(n, T());
+        (fill_initialize)(n, T());
     }
-    explicit deque(size_type n, const T& x) :
+
+    deque(size_type n, const T& x) :
         data_alloc_(), map_alloc_(), map_(0), map_size_(0), start_(), finish_() {
-        fill_initialize(n, x);
+        (fill_initialize)(n, x);
     }
-    explicit deque(size_type n, T&& x) :
+    deque(size_type n, T&& x) :
         data_alloc_(), map_alloc_(), map_(0), map_size_(0), start_(), finish_() {
-        fill_initialize(n, std::forward<T>(x));
+        (fill_initialize)(n, MSTL::forward<T>(x));
     }
 
     template <typename Iterator>
         requires(input_iterator<Iterator>)
     deque(Iterator first, Iterator last) :
         data_alloc_(), map_alloc_(), map_(0), map_size_(0), start_(), finish_() {
+        Exception(MSTL::distance(first, last) >= 0,
+            StopIterator("deque iterator-constructor out of ranges."));
         difference_type n = last - first;
         create_map_and_nodes(n);
         for (map_pointer cur = start_.node_; cur < finish_.node_; ++cur) {
@@ -412,117 +408,146 @@ public:
         }
         MSTL::uninitialized_copy(first, last, finish_.first_);
     }
-    deque(const std::initializer_list<T>& _lls)
-        : deque(_lls.begin(), _lls.end()) {}
-    self& operator =(const std::initializer_list<T>& x) {
-        if (*this == x) return *this;
+
+    deque(std::initializer_list<T> l)
+        : deque(l.begin(), l.end()) {}
+
+    self& operator =(std::initializer_list<T> l) {
         clear();
-        insert(end(), x.begin(), x.end());
+        insert(end(), l.begin(), l.end());
         return *this;
     }
 
-    explicit deque(const self& x) 
-        : deque(x.cbegin(), x.cend()) {}
+    deque(const self& x) : deque(x.cbegin(), x.cend()) {}
+
     self& operator =(const self& x) {
-        if (*this == x) return *this;
+        if (MSTL::addressof(x) == this) return *this;
         clear();
         insert(end(), x.cbegin(), x.cend());
         return *this;
     }
 
-    explicit deque(self&& x) noexcept : data_alloc_(), map_alloc_(),
+    deque(self&& x) noexcept : data_alloc_(), map_alloc_(),
         map_(0), map_size_(0), start_(0), finish_(0) {
-        swap(std::forward<self>(x));
+        swap(x);
     }
     self& operator =(self&& x) noexcept {
-        if (*this == x) {
+        if (MSTL::addressof(x) == this) {
             x.clear();
             return *this;
         }
         clear();
-        swap(std::forward<self>(x));
+        swap(x);
         return *this;
     }
 
     ~deque() {
         clear();
-        MSTL::destroy(map_);
+        if(map_) MSTL::destroy(map_);
     }
 
     MSTL_NODISCARD iterator begin() noexcept { return iterator(start_); }
-    MSTL_NODISCARD const_iterator cbegin() const noexcept { return const_iterator(start_); }
     MSTL_NODISCARD iterator end() noexcept { return iterator(finish_); }
+    MSTL_NODISCARD const_iterator cbegin() const noexcept { return const_iterator(start_); }
     MSTL_NODISCARD const_iterator cend() const noexcept { return const_iterator(finish_); }
-
-    MSTL_NODISCARD reference front() noexcept { return *start_; }
-    MSTL_NODISCARD const_reference front() const noexcept { return *start_; }
-    MSTL_NODISCARD reference back() noexcept { return *(finish_ - 1); }
-    MSTL_NODISCARD const_reference back() const noexcept { return *(finish_ - 1); }
+    MSTL_NODISCARD reverse_iterator rbegin() noexcept { return reverse_iterator(begin()); }
+    MSTL_NODISCARD reverse_iterator rend() noexcept { return reverse_iterator(end()); }
+    MSTL_NODISCARD const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cbegin()); }
+    MSTL_NODISCARD const_reverse_iterator crend() const noexcept { return const_reverse_iterator(cend()); }
 
     MSTL_NODISCARD size_type size() const noexcept { return finish_ - start_; }
+    MSTL_NODISCARD size_type max_size() const noexcept { return static_cast<size_type>(-1); }
     MSTL_NODISCARD bool empty() const noexcept { return finish_ == start_; }
 
-    template <typename U = T>
-    void resize(size_type new_size, U&& x) {
-        if (new_size < size()) 
-            erase(start_ + new_size, finish_);
-        else 
-            insert(finish_, new_size - size(), std::forward<U>(x));
-    }
-    void resize(size_type new_size) { resize(new_size, value_type()); }
+    MSTL_NODISCARD allocator_type get_allocator() const noexcept { return allocator_type(); }
 
-    void reserve_map_at_back(size_type nodes_to_add = 1) {
-        if (map_size_ - (finish_.node_ - map_) - 1 < nodes_to_add) 
+    MSTL_NODISCARD reference front() noexcept {
+        MSTL_DEBUG_VERIFY__(!empty(), "front called on empty deque");
+        return *start_;
+    }
+    MSTL_NODISCARD const_reference front() const noexcept {
+        MSTL_DEBUG_VERIFY__(!empty(), "front called on empty deque");
+        return *start_;
+    }
+    MSTL_NODISCARD reference back() noexcept {
+        MSTL_DEBUG_VERIFY__(!empty(), "back called on empty deque");
+        return *(finish_ - 1);
+    }
+    MSTL_NODISCARD const_reference back() const noexcept {
+        MSTL_DEBUG_VERIFY__(!empty(), "back called on empty deque");
+        return *(finish_ - 1);
+    }
+
+    void reserve_back(size_type nodes_to_add = 1) {
+        if (map_size_ - (finish_.node_ - map_) - 1 < nodes_to_add)
             reallocate_map(nodes_to_add, false);
     }
-    void reserve_map_at_front(size_type nodes_to_add = 1) {
-        if (size_type(start_.node_ - map_) < nodes_to_add) 
+    void reserve_front(size_type nodes_to_add = 1) {
+        if (size_type(start_.node_ - map_) < nodes_to_add)
             reallocate_map(nodes_to_add, true);
     }
 
-    void push_back(const T& x) {
-        if (finish_.cur_ != finish_.last_ - 1) {
-            MSTL::construct(finish_.cur_, x);
-            ++finish_.cur_;
-        }
-        else (emplace_back_aux)(x);
+    void resize(size_type new_size, const T& x) {
+        if (new_size < size()) erase(start_ + new_size, finish_);
+        else insert(finish_, new_size - size(), x);
     }
-    void push_front(const T& x) {
-        if (start_.cur_ != start_.first_) {
-            MSTL::construct(start_.cur_ - 1, x);
-            --start_.cur_;
+    void resize(size_type new_size) { resize(new_size, T()); }
+
+    template <typename ...Args>
+    typename iterator emplace(iterator position, Args&& ...args) {
+        range_check(position);
+        if (position.cur_ == start_.cur_) {
+            (emplace_front)(MSTL::forward<Args>(args)...);
+            return start_;
         }
-        else (emplace_front_aux)(x);
-    }
-    void push_back(T&& x) {
-        if (finish_.cur_ != finish_.last_ - 1) {
-            MSTL::construct(finish_.cur_, std::forward<T>(x));
-            ++finish_.cur_;
+        else if (position.cur_ == finish_.cur_) {
+            (emplace_back)(MSTL::forward<Args>(args)...);
+            return finish_ - 1;
         }
-        else (emplace_back_aux)(std::forward<T>(x));
+        else
+            return (emplace_aux)(position, MSTL::forward<Args>(args)...);
     }
-    void push_front(T&& x) {
-        if (start_.cur_ != start_.first_) {
-            MSTL::construct(start_.cur_ - 1, std::forward<T>(x));
-            --start_.cur_;
-        }
-        else (emplace_front_aux)(std::forward<T>(x));
-    }
+
     template <typename... U>
     void emplace_back(U&&... args) {
         if (finish_.cur_ != finish_.last_ - 1) {
-            MSTL::construct(finish_.cur_, std::forward<U>(args)...);
+            MSTL::construct(finish_.cur_, MSTL::forward<U>(args)...);
             ++finish_.cur_;
         }
-        else (emplace_back_aux)(std::forward<U>(args)...);
+        else {
+            reserve_back();
+            *(finish_.node_ + 1) = data_alloc_.allocate(buff_size());
+            MSTL::construct(finish_.cur_, MSTL::forward<U>(args)...);
+            finish_.change_buff(finish_.node_ + 1);
+            finish_.cur_ = finish_.first_;
+        }
     }
     template <typename... U>
     void emplace_front(U&&... args) {
         if (start_.cur_ != start_.first_) {
-            MSTL::construct(start_.cur_ - 1, std::forward<U>(args)...);
+            MSTL::construct(start_.cur_ - 1, MSTL::forward<U>(args)...);
             --start_.cur_;
         }
-        else (emplace_front_aux)(std::forward<U>(args)...);
+        else {
+            reserve_front();
+            *(start_.node_ - 1) = data_alloc_.allocate(buff_size());
+            start_.change_buff(start_.node_ - 1);
+            start_.cur_ = start_.last_ - 1;
+            MSTL::construct(start_.cur_, MSTL::forward<U>(args)...);
+        }
+    }
+
+    void push_back(const T& x) {
+        (emplace_back)(x);
+    }
+    void push_front(const T& x) {
+        (emplace_front)(x);
+    }
+    void push_back(T&& x) {
+        (emplace_back)(MSTL::forward<T>(x));
+    }
+    void push_front(T&& x) {
+        (emplace_front)(MSTL::forward<T>(x));
     }
 
     void pop_back() noexcept {
@@ -530,46 +555,59 @@ public:
             --finish_.cur_;
             MSTL::destroy(finish_.cur_);
         }
-        else pop_back_aux();
+        else {
+            data_alloc_.deallocate(finish_.first_, buff_size());
+            finish_.change_buff(finish_.node_ - 1);
+            finish_.cur_ = finish_.last_ - 1;
+            MSTL::destroy(finish_.cur_);
+        }
     }
     void pop_front() noexcept {
         if (start_.cur_ != start_.last_ - 1) {
             MSTL::destroy(start_.cur_);
             ++start_.cur_;
         }
-        else pop_front_aux();
-    }
-
-    void clear() noexcept {
-        map_pointer cur = start_.node_;
-        for (++cur; cur < finish_.node_; ++cur) {
-            MSTL::destroy(*cur, *cur + buff_size());
-            data_alloc_.deallocate(*cur, buff_size());
-        }
-        if (start_.node_ == finish_.node_) MSTL::destroy(start_.cur_, finish_.cur_);
         else {
-            MSTL::destroy(finish_.first_, finish_.cur_);
-            data_alloc_.deallocate(finish_.first_, buff_size());
-            MSTL::destroy(start_.cur_, start_.last_);
+            MSTL::destroy(start_.cur_);
+            data_alloc_.deallocate(start_.first_, buff_size());
+            start_.change_buff(start_.node_ + 1);
+            start_.cur_ = start_.first_;
         }
-        finish_ = start_;
     }
 
-    iterator erase(iterator pos) noexcept {
-        iterator next = pos;
+    void assign(size_type count, const T& value) {
+        clear();
+        insert(begin(), count, value);
+    }
+
+    template <typename Iterator>
+        requires(input_iterator<Iterator>)
+    void assign(Iterator first, Iterator last) {
+        clear();
+        insert(begin(), first, last);
+    }
+
+    void assign(std::initializer_list<T> ilist) {
+        assign(ilist.begin(), ilist.end());
+    }
+
+    iterator erase(iterator position) noexcept {
+        range_check(position);
+        iterator next = position;
         ++next;
-        difference_type n = pos - start_;
+        difference_type n = position - start_;
         if (n < size() / 2) {
-            MSTL::copy_backward(start_, pos, next);
+            MSTL::copy_backward(start_, position, next);
             pop_front();
         }
         else {
-            MSTL::copy(next, finish_, pos);
+            MSTL::copy(next, finish_, position);
             pop_back();
         }
         return start_ + n;
     }
     iterator erase(iterator first, iterator last) noexcept {
+        Exception(MSTL::distance(first, last) >= 0, StopIterator("deque erase out of ranges."));
         if (first == start_ && last == finish_) {
             clear();
             return finish_;
@@ -594,125 +632,127 @@ public:
         }
         return start_ + n;
     }
+
+    void clear() noexcept {
+        map_pointer cur = start_.node_;
+        for (++cur; cur < finish_.node_; ++cur) {
+            MSTL::destroy(*cur, *cur + buff_size());
+            data_alloc_.deallocate(*cur, buff_size());
+        }
+        if (start_.node_ == finish_.node_) MSTL::destroy(start_.cur_, finish_.cur_);
+        else {
+            MSTL::destroy(finish_.first_, finish_.cur_);
+            data_alloc_.deallocate(finish_.first_, buff_size());
+            MSTL::destroy(start_.cur_, start_.last_);
+        }
+        finish_ = start_;
+    }
+
+    iterator insert(iterator position, const T& x) {
+        return (emplace)(position, x);
+    }
+    iterator insert(iterator position, T&& x) {
+        return (emplace)(position, MSTL::forward<T>(x));
+    }
+    iterator insert(iterator position) {
+        return (emplace)(position, T());
+    }
+
     template <typename Iterator>
         requires(input_iterator<Iterator>)
     iterator insert(iterator position, Iterator first, Iterator last) {
+        range_check(position);
+        Exception(MSTL::distance(first, last) >= 0, StopIterator("deque insert out of ranges."));
         if (position == start_) {
-            for (--last; first != last; --last) {
-                push_front(*last);
-            }
-            push_front(*first);
+            for (--last; first != last; --last) 
+                (emplace_front)(*last);
+            (emplace_front)(*first);
             return start_;
         }
         else if (position == finish_) {
-            for (; first != last; ++first) push_back(*first);
+            for (; first != last; ++first) 
+                (emplace_back)(*first);
             return finish_ - 1;
         }
-        else return insert_aux(position, first, last);
+        else 
+            return range_insert(position, first, last);
     }
-    iterator insert(iterator position, const std::initializer_list<T>& l) {
+    iterator insert(iterator position, std::initializer_list<T> l) {
         insert(position, l.begin(), l.end());
     }
     iterator insert(iterator position, size_t n, const T& x) {
+        range_check(position);
         if (position == start_) {
-            for (size_t i = 0; i < n; i++) push_front(x);
+            for (size_t i = 0; i < n; i++)
+                (emplace_front)(x);
             return start_;
         }
         else if (position == finish_) {
-            for (size_t i = 0; i < n; i++) push_back(x);
+            for (size_t i = 0; i < n; i++)
+                (emplace_back)(x);
             return finish_ - 1;
         }
         else
-            return insert_aux(position, size_type(n), x);
+            return range_insert(position, size_type(n), x);
 
     }
-    iterator insert(iterator position, const T& x) {
-        if (position.cur_ == start_.cur_) {
-            push_front(x);
-            return start_;
-        }
-        else if (position.cur_ == finish_.cur_) {
-            push_back(x);
-            return finish_ - 1;
-        }
-        else
-            return insert_aux(position, x);
-    }
-    iterator insert(iterator position, size_t n, T&& x) {
-        if (position == start_) {
-            for (size_t i = 0; i < n; i++) push_front(x);
-            return start_;
-        }
-        else if (position == finish_) {
-            for (size_t i = 0; i < n; i++) push_back(x);
-            return finish_ - 1;
-        }
-        else 
-            return insert_aux(position, size_type(n), std::forward<T>(x));
 
+    void swap(self& x) noexcept {
+        MSTL::swap(start_, x.start_);
+        MSTL::swap(finish_, x.finish_);
+        MSTL::swap(map_, x.map_);
+        MSTL::swap(map_size_, x.map_size_);
     }
-    iterator insert(iterator position, T&& x) {
-        if (position.cur_ == start_.cur_) {
-            push_front(std::forward<T>(x));
-            return start_;
-        }
-        else if (position.cur_ == finish_.cur_) {
-            push_back(std::forward<T>(x));
-            return finish_ - 1;
-        }
-        else 
-            return insert_aux(position, std::forward<T>(x));
+
+    MSTL_NODISCARD const_reference at(size_type position) const {
+        range_check(position);
+        return const_iterator(start_)[position];
     }
-    void swap(self&& x) noexcept {
-        std::swap(start_, x.start_);
-        std::swap(finish_, x.finish_);
-        std::swap(map_, x.map_);
-        std::swap(map_size_, x.map_size_);
-    }
-    MSTL_NODISCARD const_reference at(size_type _pos) const noexcept {
-        return const_iterator(start_)[_pos];
-    }
-    MSTL_NODISCARD reference at(size_type _pos) noexcept {
+    MSTL_NODISCARD reference at(size_type position) {
         return const_cast<reference>(
-            static_cast<const self*>(this)->at(_pos)
+            static_cast<const self*>(this)->at(position)
             );
     }
-    MSTL_NODISCARD const_reference operator [](size_type _pos) const noexcept {
-        return this->at(_pos);
+    MSTL_NODISCARD const_reference operator [](size_type position) const {
+        return this->at(position);
     }
-    MSTL_NODISCARD reference operator [](size_type _pos) noexcept {
-        return this->at(_pos);
+    MSTL_NODISCARD reference operator [](size_type position) {
+        return this->at(position);
     }
 };
-template <class T, class Alloc>
-MSTL_NODISCARD inline bool operator ==(const deque<T, Alloc>& lh, const deque<T, Alloc>& rh) {
+#if MSTL_SUPPORT_DEDUCTION_GUIDES__
+template <typename Iterator, typename Alloc>
+deque(Iterator, Iterator, Alloc = Alloc()) -> deque<iter_val_t<Iterator>, Alloc>;
+#endif
+
+template <typename T, typename Alloc>
+MSTL_NODISCARD bool operator ==(const deque<T, Alloc>& lh, const deque<T, Alloc>& rh) {
     return lh.size() == rh.size() && MSTL::equal(lh.begin(), lh.end(), rh.begin());
 }
-template <class T, class Alloc>
-MSTL_NODISCARD inline bool operator !=(const deque<T, Alloc>& lh, const deque<T, Alloc>& rh) {
+template <typename T, typename Alloc>
+MSTL_NODISCARD bool operator !=(const deque<T, Alloc>& lh, const deque<T, Alloc>& rh) {
     return !(lh == rh);
 }
-template <class T, class Alloc>
-MSTL_NODISCARD inline bool operator <(const deque<T, Alloc>& lh, const deque<T, Alloc>& rh) {
+template <typename T, typename Alloc>
+MSTL_NODISCARD bool operator <(const deque<T, Alloc>& lh, const deque<T, Alloc>& rh) {
     return MSTL::lexicographical_compare(lh.begin(), lh.end(), rh.begin(), rh.end());
 }
-template <class T, class Alloc>
-MSTL_NODISCARD inline bool operator >(const deque<T, Alloc>& lh, const deque<T, Alloc>& rh) {
+template <typename T, typename Alloc>
+MSTL_NODISCARD bool operator >(const deque<T, Alloc>& lh, const deque<T, Alloc>& rh) {
     return rh < lh;
 }
-template <class T, class Alloc>
-MSTL_NODISCARD inline bool operator <=(const deque<T, Alloc>& lh, const deque<T, Alloc>& rh) {
+template <typename T, typename Alloc>
+MSTL_NODISCARD bool operator <=(const deque<T, Alloc>& lh, const deque<T, Alloc>& rh) {
     return !(lh > rh);
 }
-template <class T, class Alloc>
-MSTL_NODISCARD inline bool operator >=(const deque<T, Alloc>& lh, const deque<T, Alloc>& rh) {
+template <typename T, typename Alloc>
+MSTL_NODISCARD bool operator >=(const deque<T, Alloc>& lh, const deque<T, Alloc>& rh) {
     return !(lh < rh);
 }
-template <class T, class Alloc>
-void swap(deque<T, Alloc>& lh, deque<T, Alloc>& rh) noexcept(noexcept(lh.swap(rh))) {
+template <typename T, typename Alloc>
+void swap(deque<T, Alloc>& lh, deque<T, Alloc>& rh) noexcept {
     lh.swap(rh);
 }
 
 MSTL_END_NAMESPACE__
-
 #endif // MSTL_DEQUE_HPP__

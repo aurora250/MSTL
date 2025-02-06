@@ -45,9 +45,9 @@ template <typename T>
     requires(conjunction_v<is_move_constructible<T>, is_move_assignable<T>>)
 MSTL_CONSTEXPR void swap(T& lh, T& rh)
 noexcept(is_nothrow_move_constructible_v<T> && is_nothrow_move_assignable_v<T>) {
-    T tmp = std::move(lh);
-    lh = std::move(rh);
-    rh = std::move(tmp);
+    T tmp = MSTL::move(lh);
+    lh = MSTL::move(rh);
+    rh = MSTL::move(tmp);
 }
 
 template <typename T, typename U>
@@ -87,11 +87,11 @@ TEMNULL__ MSTL_CONSTEXPR char16_t initialize<char16_t>() noexcept { return u'\0'
 TEMNULL__ MSTL_CONSTEXPR char32_t initialize<char32_t>() noexcept { return U'\0'; }
 
 
-struct pair_piecewise_construct_tag {
-	constexpr explicit pair_piecewise_construct_tag() = default;
-	~pair_piecewise_construct_tag() = default;
+struct piecewise_construct_tag {
+	constexpr explicit piecewise_construct_tag() = default;
+	~piecewise_construct_tag() = default;
 };
-inline constexpr pair_piecewise_construct_tag pair_piecewise_construct_t;
+inline constexpr piecewise_construct_tag pair_piecewise_construct_t;
 
 template <typename...>
 class tuple;
@@ -179,7 +179,7 @@ struct pair {
 
 	// use pair_piecewise_construct_t to construct from tuple
 	template <typename... Types1, typename... Types2>
-	MSTL_CONSTEXPR pair(pair_piecewise_construct_tag, tuple<Types1...> t1, tuple<Types2...> t2)
+	MSTL_CONSTEXPR pair(piecewise_construct_tag, tuple<Types1...> t1, tuple<Types2...> t2)
 		: pair(t1, t2, index_sequence_for<Types1...>{}, index_sequence_for<Types2...>{}) {}
 
 

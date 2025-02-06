@@ -4,6 +4,7 @@
 #include "concepts.hpp"
 #include "errorlib.h"
 #include "queue.hpp"
+#include "stack.hpp"
 #include "utility.hpp"
 MSTL_BEGIN_NAMESPACE__
 
@@ -38,6 +39,17 @@ void detailof(const Container& c, std::ostream& _out = std::cout) {
 	_out << "size: " << c.size() << std::endl;
 	_out << "data: " << std::flush;
 	show_data_only(c, _out);
+	_out << std::endl;
+	split_line(_out);
+}
+
+template <typename T, typename Sequence>
+void detailof(const stack<T, Sequence>& stk, std::ostream& _out = std::cout) {
+	split_line(_out);
+	_out << "type: " << check_type<stack<T, Sequence>>() << std::endl;
+	_out << "size: " << stk.size() << std::endl;
+	_out << "data: " << std::flush;
+	show_data_only(stk.seq_, _out);
 	_out << std::endl;
 	split_line(_out);
 }

@@ -131,12 +131,12 @@ private:
 
 	MSTL_CONSTEXPR inline void range_check(size_type position) const noexcept {
 		MSTL_DEBUG_VERIFY__(
-			position < static_cast<size_type>(finish_ - start_), "vector index out of range"
+			position < static_cast<size_type>(finish_ - start_), "vector index out of ranges."
 		);
 	}
 	MSTL_CONSTEXPR inline void range_check(iterator position) const noexcept {
 		MSTL_DEBUG_VERIFY__(
-			&*position >= start_ && &*position <= finish_, "vector insert out of ranges."
+			&*position >= start_ && &*position <= finish_, "vector index out of ranges."
 		);
 	}
 
@@ -163,7 +163,8 @@ private:
 	template <typename Iterator>
 		requires(input_iterator<Iterator>)
 	MSTL_CONSTEXPR void range_initialize(Iterator first, Iterator last) {
-		for (; first != last; ++first) push_back(*first);
+		for (; first != last; ++first)
+			push_back(*first);
 	}
 
 	template <typename Iterator>
@@ -272,13 +273,16 @@ public:
 
 	MSTL_CONSTEXPR vector(self&& x) noexcept
 		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
-		(swap)(x);
+		swap(x);
 	}
 
 	MSTL_CONSTEXPR self& operator =(self&& x) noexcept {
-		if (MSTL::addressof(x) == this) return *this;
+		if (MSTL::addressof(x) == this) {
+			x.clear();
+			return *this;
+		}
 		clear();
-		(swap)(x);
+		swap(x);
 		return *this;
 	}
 
@@ -379,10 +383,6 @@ public:
 		if (new_size < size()) erase(begin() + new_size, end());
 		else insert(end(), new_size - size(), x);
 	}
-	MSTL_CONSTEXPR void resize(size_type new_size, T&& x) {
-		if (new_size < size()) erase(begin() + new_size, end());
-		else insert(end(), new_size - size(), MSTL::forward<T>(x));
-	}
 	MSTL_CONSTEXPR void resize(size_type new_size) {
 		resize(new_size, T());
 	}
@@ -451,7 +451,7 @@ public:
 	template <class Iterator>
 		requires(input_iterator<Iterator>)
 	void assign(Iterator first, Iterator last) {
-		MSTL_DEBUG_VERIFY__(first <= last, "vector assign out of ranges.");
+		MSTL_DEBUG_VERIFY__(MSTL::distance(first, last) >= 0, "vector assign out of ranges.");
 		pointer cur = start_;
 		for ( ; first != last && cur != finish_; ++first, ++cur)
 			*cur = *first;
@@ -465,8 +465,8 @@ public:
 	template <typename Iterator>
 		requires(forward_iterator<Iterator>)
 	MSTL_CONSTEXPR void assign(Iterator first, Iterator last) {
-		MSTL_DEBUG_VERIFY__(first <= last, "vector assign out of ranges.");
 		size_t n = MSTL::distance(first, last);
+		MSTL_DEBUG_VERIFY__(n >= 0, "vector assign out of ranges.");
 		if (n > capacity()) {
 			clear();
 			range_insert(begin(), first, last);
@@ -483,13 +483,13 @@ public:
 		}
 	}
 
-	MSTL_CONSTEXPR void assign(const std::initializer_list<T>& il) {
-		assign(il.begin(), il.end());
+	MSTL_CONSTEXPR void assign(std::initializer_list<T> l) {
+		assign(l.begin(), l.end());
 	}
 
 	MSTL_CONSTEXPR iterator erase(iterator first, iterator last) 
 		noexcept(is_nothrow_move_assignable_v<value_type>) {
-		MSTL_DEBUG_VERIFY__(first <= last, "vector erase out of ranges.");
+		MSTL_DEBUG_VERIFY__(0 <= MSTL::distance(first, last), "vector erase out of ranges.");
 		pointer i = MSTL::copy(&*last, finish_, &*first);
 		MSTL::destroy(i, finish_);
 		finish_ = finish_ - (last - first);
@@ -508,23 +508,24 @@ public:
 
 	MSTL_CONSTEXPR void clear() noexcept { erase(begin(), end()); }
 
-	template <typename U = T>
-	MSTL_CONSTEXPR iterator insert(iterator position, U&& x) {
-		range_check(position);
+	MSTL_CONSTEXPR iterator insert(iterator position, const T& x) {
 		size_type n = position - begin();
-		(emplace)(position, MSTL::forward<U>(x));
+		(emplace)(position, x);
+		return begin() + n;
+	}
+	MSTL_CONSTEXPR iterator insert(iterator position, T&& x) {
+		size_type n = position - begin();
+		(emplace)(position, MSTL::forward<T>(x));
 		return begin() + n;
 	}
 
 	MSTL_CONSTEXPR iterator insert(iterator position) {
-		range_check(position);
 		return insert(position, T());
 	}
 
 	template <typename Iterator>
 		requires(input_iterator<Iterator>)
 	MSTL_CONSTEXPR void insert(iterator position, Iterator first, Iterator last) {
-		range_check(position);
 		MSTL_DEBUG_VERIFY__(
 			first <= last, "vector insert resource iterator out of ranges."
 		);
@@ -532,12 +533,9 @@ public:
 	}
 
 	MSTL_CONSTEXPR void insert(iterator position, std::initializer_list<T> l) {
-		range_check(position);
 		range_insert(position, l.begin(), l.end());
 	}
-
-	template <typename U = T>
-	MSTL_CONSTEXPR void insert(iterator position, size_type n, U&& x) {
+	MSTL_CONSTEXPR void insert(iterator position, size_type n, const T& x) {
 		range_check(position);
 		if (n == 0) return;
 		if (size_type(end_of_storage_ - finish_) >= n) {
@@ -596,6 +594,11 @@ public:
 		return this->at(_pos);
 	}
 };
+#if MSTL_SUPPORT_DEDUCTION_GUIDES__
+template <typename Iterator, typename Alloc>
+vector(Iterator, Iterator, Alloc = Alloc()) -> vector<iter_val_t<Iterator>, Alloc>;
+#endif
+
 template <typename T, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(const vector<T, Alloc>& lh, const vector<T, Alloc>& rh) {
 	return lh.size() == rh.size() && MSTL::equal(lh.cbegin(), lh.cend(), rh.cbegin());
@@ -626,5 +629,4 @@ MSTL_CONSTEXPR void swap(vector<T, Alloc>& x, vector<T, Alloc>& y) noexcept {
 }
 
 MSTL_END_NAMESPACE__
-
 #endif // MSTL_VECTOR_HPP__

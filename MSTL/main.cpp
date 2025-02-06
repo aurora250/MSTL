@@ -121,9 +121,14 @@ void try_deq() {
     a.push_back(3);
     a.push_back(7);
     a.push_back(6);
+    a.insert(a.end(), 100);
+    a.emplace(a.begin(), 0);
     detailof_safe(a);
     a.pop_back();
     a.pop_front();
+    detailof(a);
+    a.assign(10, 5);
+    detailof(a);
     deque<int> b{ 1,2,3,4,5 };
     sout << b.front() << endl;
     detailof_safe(b);
@@ -131,8 +136,7 @@ void try_deq() {
     c.resize(10, 6);
     detailof_safe(c);
     std::cout << c.at(5) << std::endl;
-    deque<char> d = { 'a', 'b' };
-    //sout << b.empty() <<endl;
+    deque<char> d{ 'a', 'b' };
 }
 void try_stack() {
     using namespace MSTL;
@@ -141,9 +145,9 @@ void try_stack() {
     s.push(3);
     s.push(5);
     s.push(4);
+    detailof(s);
     s.pop();
-    queue<int> q;
-    q.push(2);
+    detailof(s);
 }
 void try_vec() {
     MSTL_NAMESPACE__;
@@ -382,7 +386,6 @@ void try_algo() {
 
 int main() {
     MSTL_NAMESPACE__;
-    static_assert(random_access_iterator<deque_iterator<int>>);
-    try_deq();
+    try_pque();
     return 0;
 }
