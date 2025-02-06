@@ -379,23 +379,10 @@ void try_algo() {
     inplace_merge(v3.begin(), middle, v3.end());
     detailof(v3);
 }
-void try_json() {
-    MSTL_NAMESPACE__;
-    
-}
-template <typename T>
-struct Allocator1 {
-    T* allocate(std::size_t n) { return static_cast<T*>(::operator new(n * sizeof(T))); }
-    void deallocate(T* p, std::size_t n) { ::operator delete(p); }
-};
-
-template <typename T>
-struct Allocator2 {
-    T* allocate(std::size_t n) { return static_cast<T*>(::operator new(n * sizeof(T))); }
-    void deallocate(T* p, std::size_t n) { ::operator delete(p); }
-};
 
 int main() {
-    try_vec();
+    MSTL_NAMESPACE__;
+    static_assert(random_access_iterator<deque_iterator<int>>);
+    try_deq();
     return 0;
 }

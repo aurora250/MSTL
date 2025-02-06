@@ -925,6 +925,10 @@ MSTL_NODISCARD constexpr T* addressof(T& x) noexcept {
 template <typename T>
 const T* addressof(const T&&) = delete;
 
+MSTL_NODISCARD constexpr bool is_constant_evaluated() noexcept {
+    return __builtin_is_constant_evaluated();
+}
+
 
 template <size_t>
 struct sign_byte_aux;
@@ -1268,6 +1272,11 @@ public:
         return (*ptr_)(MSTL::forward<Args>(args)...);
     }
 };
+#if MSTL_SUPPORT_DEDUCTION_GUIDES__
+template <typename T>
+reference_wrapper(T&) -> reference_wrapper<T>;
+#endif
+
 template <typename T>
 MSTL_NODISCARD MSTL_CONSTEXPR reference_wrapper<T> ref(T& val) noexcept {
     return reference_wrapper<T>(val);
@@ -1489,6 +1498,46 @@ struct is_nothrow_hashable<Key, void_t<decltype(MSTL::hash<Key>{}(MSTL::declval<
     : bool_constant<noexcept(MSTL::hash<Key>{}(MSTL::declval<const Key&>()))> {};
 template <typename Key>
 constexpr bool is_nothrow_hashable_v = is_nothrow_hashable<Key>::value;
+
+
+template <typename, typename = void>
+struct iterator_traits_base {};
+
+template <typename Iterator>
+struct iterator_traits_base<Iterator,
+    void_t<typename Iterator::iterator_category, typename Iterator::value_type,
+    typename Iterator::difference_type, typename Iterator::pointer, typename Iterator::reference>>
+{
+    using iterator_category = typename Iterator::iterator_category;
+    using value_type = typename Iterator::value_type;
+    using difference_type = typename Iterator::difference_type;
+    using pointer = typename Iterator::pointer;
+    using reference = typename Iterator::reference;
+};
+
+template <typename Iterator>
+struct iterator_traits : public iterator_traits_base<Iterator> {};
+
+template <typename T>
+    requires(is_object_v<T>)
+struct iterator_traits<T*> {
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type = remove_cv_t<T>;
+    using difference_type = ptrdiff_t;
+    using pointer = T*;
+    using reference = T&;
+};
+
+template <typename Iterator>
+using iter_cat_t = typename iterator_traits<Iterator>::iterator_category;
+template <typename Iterator>
+using iter_val_t = typename iterator_traits<Iterator>::value_type;
+template <typename Iterator>
+using iter_dif_t = typename iterator_traits<Iterator>::difference_type;
+template <typename Iterator>
+using iter_ptr_t = typename iterator_traits<Iterator>::pointer;
+template <typename Iterator>
+using iter_ref_t = typename iterator_traits<Iterator>::reference;
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_TYPE_TRAITS_HPP__

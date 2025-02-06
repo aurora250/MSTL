@@ -1,12 +1,10 @@
-// STL六大组件： 
-// 容器Container / 算法Algorithm / 仿函数Functor / 迭代器Iterator / 适配器Adaptor / 分配器Allocator
+// Container / Algorithm / Functor / Iterator / Adaptor / Allocator
 
 #ifndef MSTL_MSTLCPP_HPP__
 #define MSTL_MSTLCPP_HPP__
 #include "basemstlc++.hpp"
 
 #include "list.hpp"
-#include "vector.hpp"
 #include "deque.hpp"
 #include "stack.hpp"
 #include "queue.hpp"

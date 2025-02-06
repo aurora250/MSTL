@@ -1,6 +1,6 @@
 #ifndef MSTL_CONCEPTS_HPP__
 #define MSTL_CONCEPTS_HPP__
-#include "iterator_traits.hpp"
+#include "type_traits.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <class T1, class T2>

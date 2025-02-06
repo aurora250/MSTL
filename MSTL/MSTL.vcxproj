@@ -151,9 +151,7 @@
     <ClInclude Include="algo.hpp" />
     <ClInclude Include="algobase.hpp" />
     <ClInclude Include="algorithm.hpp" />
-    <ClInclude Include="allocator.hpp" />
     <ClInclude Include="container.h" />
-    <ClInclude Include="iterator_traits.hpp" />
     <ClInclude Include="logging.h" />
     <ClInclude Include="macro_ranges.h" />
     <ClInclude Include="mysql_connect_pool.h" />

@@ -2,30 +2,26 @@
 #define MSTL_DEQUE_HPP__
 #include "iterator.hpp"
 #include "memory.hpp"
-#include "algobase.hpp"
-#include "mathlib.h"
-#include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 MSTL_CONSTEXPR size_t deque_buf_size(size_t n, size_t sz) noexcept {
-    return n != 0 ? n : (sz < size_t(power(2, 9)) ? size_t(power(2, 9) / sz) : 1);
+    return n != 0 ? n : (sz < size_t(256) ? size_t(256 / sz) : 1);
 }
 
 template <typename T, typename Ref = T&, typename Ptr = T*, size_t BufSize = 0>
 struct deque_iterator {
-    // iterator_traits:
-    typedef std::random_access_iterator_tag iterator_category;
-    typedef T                               value_type;
-    typedef Ptr                             pointer;
-    typedef Ref                             reference;
-    typedef ptrdiff_t                       difference_type;
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type        = T;
+    using pointer           = Ptr;
+    using reference         = Ref;
+    using difference_type   = ptrdiff_t;
 
-    typedef size_t                          size_type;
-    typedef T*                              link_type;
-    typedef link_type*                      map_pointer;
-    typedef deque_iterator<T, Ref, Ptr, BufSize>            self;
-    typedef deque_iterator<T, T&, T*, BufSize>              iterator;
-    typedef deque_iterator<T, const T&, const T*, BufSize>  const_iterator;
+    using size_type         = size_t;
+    using link_type         = T*;
+    using map_pointer       = link_type*;
+    using self              = deque_iterator<T, Ref, Ptr, BufSize>;
+    using iterator          = deque_iterator<T, T&, T*, BufSize>;
+    using const_iterator    = deque_iterator<T, const T&, const T*, BufSize>;
 
     link_type cur_;
     link_type first_;
@@ -35,6 +31,7 @@ struct deque_iterator {
     MSTL_CONSTEXPR static size_t buff_size() noexcept {
         return deque_buf_size(BufSize, sizeof(T));
     }
+
     void set_node(map_pointer new_node) {
         node_ = new_node;
         first_ = *new_node;
@@ -44,8 +41,10 @@ struct deque_iterator {
     deque_iterator(link_type cur = nullptr, link_type first = nullptr,
         link_type last = nullptr, map_pointer node = nullptr) noexcept :
         cur_(cur), first_(first), last_(last), node_(node) {}
+
     deque_iterator(const iterator& x) noexcept :
         cur_(x.cur_), first_(x.first_), last_(x.last_), node_(x.node_) {}
+
     self& operator =(const self& rh) noexcept {
 		if(*this == rh) return *this;
 		this->cur_ = rh.cur_;
@@ -54,13 +53,16 @@ struct deque_iterator {
 		this->node_ = rh.node_;
 		return *this;
 	}
+
     ~deque_iterator() noexcept = default;
 
     MSTL_NODISCARD reference operator *() const noexcept { return *cur_; }
     MSTL_NODISCARD pointer operator ->() const noexcept { return &(operator*()); }
+
     difference_type operator -(const self& x) const noexcept {
         return (node_ - x.node_ - 1) * buff_size() + (cur_ - first_) + (x.last_ - x.cur_);
     }
+
     self& operator ++() noexcept {
         ++cur_;
         if (cur_ == last_) {
@@ -74,6 +76,7 @@ struct deque_iterator {
         ++*this;
         return temp;
     }
+
     self& operator --() noexcept {
         if (cur_ == first_) {
             set_node(node_ - 1);
@@ -87,6 +90,7 @@ struct deque_iterator {
         --*this;
         return temp;
     }
+
     self& operator +=(difference_type n) noexcept {
         difference_type offset = n + (cur_ - first_);
         if (offset >= 0 && offset < difference_type(buff_size()))
@@ -100,15 +104,20 @@ struct deque_iterator {
         }
         return *this;
     }
-    self& operator -=(difference_type n) noexcept { return *this += -n; }
     MSTL_NODISCARD self operator +(difference_type n) const noexcept {
         self temp = *this;
         return temp += n;
     }
+    MSTL_NODISCARD friend MSTL_CONSTEXPR self operator +(difference_type n, const self& it) {
+        return it + n;
+    }
+
+    self& operator -=(difference_type n) noexcept { return *this += -n; }
     MSTL_NODISCARD self operator -(difference_type n) const noexcept {
         self temp = *this;
         return temp -= n;
     }
+
     MSTL_NODISCARD reference operator [](difference_type n) noexcept { return *(*this + n); }
 
     MSTL_NODISCARD bool operator ==(const self& x) const noexcept { return cur_ == x.cur_; }
@@ -123,21 +132,28 @@ struct deque_iterator {
 
 template<typename T, typename Alloc = standard_allocator<T>, size_t BufSize = 0>
 class deque {
+#ifdef MSTL_VERSION_20__	
+    static_assert(is_allocator_v<Alloc>, "Alloc type is not a standard allocator type.");
+#endif
+    static_assert(is_same_v<T, typename Alloc::value_type>, "allocator type mismatch.");
+    static_assert(is_object_v<T>, "deque only contains object types.");
+
 public:
-    typedef T                           value_type;
-    typedef value_type*                 pointer;
-    typedef const value_type*           const_pointer;
-    typedef value_type&                 reference;
-    typedef const value_type&           const_reference;
-    typedef size_t                      size_type;
-    typedef ptrdiff_t                   difference_type;
-    typedef deque<T, Alloc, BufSize>    self;
-    typedef Alloc                       allocator_type;
-    typedef deque_iterator<T, T&, T*, BufSize>              iterator;
-    typedef deque_iterator<T, const T&, const T*, BufSize>  const_iterator;
+    using value_type        = T;
+    using pointer           = value_type*;
+    using const_pointer     = const value_type*;
+    using reference         = value_type&;
+    using const_reference   = const value_type&;
+    using size_type         = size_t;
+    using difference_type   = ptrdiff_t;
+    using self              = deque<T, Alloc, BufSize>;
+    using allocator_type    = Alloc;
+    using iterator          = deque_iterator<T, T&, T*, BufSize>;
+    using const_iterator    = deque_iterator<T, const T&, const T*, BufSize>;
+
 private:
-    typedef pointer* map_pointer;
-    typedef standard_allocator<pointer>  map_allocator;
+    using map_pointer       = pointer*;
+    using map_allocator     = standard_allocator<pointer>;
 
     allocator_type data_alloc_;
     map_allocator map_alloc_;
@@ -149,6 +165,7 @@ private:
     MSTL_CONSTEXPR static size_t buff_size() noexcept {
         return deque_buf_size(BufSize, sizeof(T));
     }
+
     void create_map_and_nodes(size_type n) {
         size_type node_nums = n / buff_size() + 1;
         map_size_ = max(size_type(8), node_nums + 2);
@@ -166,6 +183,7 @@ private:
         start_.cur_ = start_.first_;
         finish_.cur_ = finish_.first_ + n % buff_size();
     }
+
     template <typename U = T>
     void fill_initialize(size_type n, U&& x) {
         create_map_and_nodes(n);

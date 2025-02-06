@@ -2,9 +2,7 @@
 #define MSTL_VECTOR_HPP__
 #include <initializer_list>
 #include "memory.hpp"
-#include "algobase.hpp"
 #include "iterator.hpp"
-#include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T, typename Ref = T&, typename Ptr = T*>
@@ -24,6 +22,7 @@ private:
 
 public:
 	MSTL_CONSTEXPR vector_iterator() : ptr_(nullptr) {}
+
 	explicit MSTL_CONSTEXPR vector_iterator(pointer ptr) : ptr_(ptr) {}
 	MSTL_CONSTEXPR vector_iterator(const iterator& x) noexcept : ptr_(x.ptr_) {}
 
@@ -62,7 +61,7 @@ public:
 		return *this;
 	}
 	MSTL_NODISCARD MSTL_CONSTEXPR self operator +(difference_type n) const noexcept {
-		return vector_iterator(ptr_ + n);
+		return self(ptr_ + n);
 	}
 	MSTL_NODISCARD friend MSTL_CONSTEXPR self operator +(difference_type n, const self& it) {
 		return it + n;
@@ -73,7 +72,7 @@ public:
 		return *this;
 	}
 	MSTL_NODISCARD MSTL_CONSTEXPR self operator -(difference_type n) const noexcept {
-		return vector_iterator(ptr_ - n);
+		return self(ptr_ - n);
 	}
 	MSTL_NODISCARD MSTL_CONSTEXPR difference_type operator -(const self& other) const noexcept {
 		return ptr_ - other.ptr_;
@@ -100,13 +99,6 @@ public:
 	}
 	MSTL_NODISCARD MSTL_CONSTEXPR bool operator >=(const self& x) const noexcept {
 		return !(ptr_ < x.ptr_);
-	}
-
-	MSTL_NODISCARD MSTL_CONSTEXPR const value_type* unwrapped() const noexcept {
-		return unfancy_maybe_null(ptr_);
-	}
-	MSTL_CONSTEXPR void seek_to(const value_type* iter) noexcept {
-		ptr_ = refancy_maybe_null<pointer>(const_cast<value_type*>(iter));
 	}
 };
 
@@ -145,7 +137,7 @@ private:
 	}
 	MSTL_CONSTEXPR inline void range_check(iterator position) const noexcept {
 		MSTL_DEBUG_VERIFY__(
-			(&*position) >= start_ && (&*position) <= finish_, "vector insert out of ranges."
+			position.unwrapped() >= start_ && position.unwrapped() <= finish_, "vector insert out of ranges."
 		);
 	}
 

@@ -1,11 +1,9 @@
 #ifndef MSTL_ALGOBASE_HPP__
 #define MSTL_ALGOBASE_HPP__
 #include "iterator.hpp"
-#include "algobase.hpp"
 #include "utility.hpp"
 #include "errorlib.h"
 #include "concepts.hpp"
-#include "macro_ranges.h"
 MSTL_BEGIN_NAMESPACE__
 
 // equal
@@ -211,6 +209,25 @@ MSTL_CONSTEXPR pair<Iterator, Iterator> minmax_element(Iterator first, Iterator 
 	Iterator min = MSTL::min_element(first, last, comp);
 	Iterator max = MSTL::max_element(first, last, comp);
 	return MSTL::make_pair(min, max);
+}
+
+// clamp
+template <typename T>
+const T& clamp(const T& value, const T& lower, const T& upper) {
+	if (value < lower) 
+		return lower;
+	else if (upper < value) 
+		return upper;
+	return value;
+}
+
+template <typename T, typename Compare>
+const T& clamp(const T& value, const T& lower, const T& upper, Compare comp) {
+	if (comp(value, lower))
+		return lower;
+	else if (comp(upper, value))
+		return upper;
+	return value;
 }
 
 // lexicographical compare

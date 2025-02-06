@@ -301,6 +301,14 @@ public:
 private:
 	this_type data_;
 };
+#ifdef MSTL_SUPPORT_DEDUCTION_GUIDES__
+template <typename... Types>
+tuple(Types...) -> tuple<Types...>;
+
+template <typename T1, typename T2>
+tuple(pair<T1, T2>) -> tuple<T1, T2>;
+#endif
+
 template <typename... T1, typename... T2>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(const tuple<T1...>& lh, const tuple<T2...>& rh) {
 	static_assert(sizeof...(T1) == sizeof...(T2), "cannot compare tuples of different sizes");

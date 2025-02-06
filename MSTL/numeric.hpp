@@ -1,8 +1,8 @@
 #ifndef MSTL_NUMERIC_HPP__
 #define MSTL_NUMERIC_HPP__
+#include <thread>
 #include "functor.hpp"
 #include "concepts.hpp"
-#include "iterator_traits.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 // accumulate
@@ -18,6 +18,43 @@ template <typename Iterator, typename T, class BinaryOperation>
 MSTL_CONSTEXPR T accumulate(Iterator first, Iterator second, T init, BinaryOperation binary_op) {
 	for (; first != second; ++first) init = binary_op(init, *first);
 	return init;
+}
+
+// reduce
+template <typename Iterator, typename BinaryOp, typename Result, size_t Threshhold = 10>
+void reduce(Iterator first, Iterator last, BinaryOp op, Result& res) {
+	size_t dist = distance(first, last);
+	if (dist <= Threshhold) {
+		for (Iterator it = first; it != last; ++it) 
+			res = op(res, *it);
+	}
+	else {
+		Iterator mid = next(first, dist / 2);
+		Result l_res = res, r_res = res;
+		std::thread r_thd(reduce<Iterator, BinaryOp, Result, Threshhold>, mid, last, op, MSTL::ref(r_res));
+		reduce(first, mid, op, l_res);
+		r_thd.join();
+		res = op(l_res, r_res);
+	}
+}
+
+// transform reduce
+template <typename Iterator, typename UnaryOp, typename BinaryOp, typename Result, size_t Threshhold = 10>
+void transform_reduce(Iterator first, Iterator last, UnaryOp transform, BinaryOp reduce, Result& res) {
+	size_t dist = MSTL::distance(first, last);
+	if (dist <= Threshhold) {
+		for (Iterator it = first; it != last; ++it)
+			res = reduce(res, transform(*it));
+	}
+	else {
+		Iterator mid = MSTL::next(first, dist / 2);
+		Result l_res = (initialize<Result>)(), r_res = (initialize<Result>)();
+		std::thread r_thd(transform_reduce<Iterator, UnaryOp, BinaryOp, Result, Threshhold>,
+			mid, last, transform, reduce, MSTL::ref(r_res));
+		(transform_reduce)(first, mid, transform, reduce, l_res);
+		r_thd.join();
+		res = reduce(res, reduce(l_res, r_res));
+	}
 }
 
 // adjacent difference

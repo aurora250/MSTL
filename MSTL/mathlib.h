@@ -88,9 +88,9 @@ template <typename T>
 MSTL_CONSTEXPR decltype(auto) sum_n(T x) noexcept {
 	return x;
 }
-template <typename T, typename... Args>
-	requires(sizeof...(Args) > 0)
-MSTL_CONSTEXPR decltype(auto) sum_n(T first, Args... args) noexcept {
+template <typename First, typename... Rests>
+	requires(sizeof...(Rests) > 0)
+MSTL_CONSTEXPR decltype(auto) sum_n(First first, Rests... args) noexcept {
 	return first + sum_n(args...);
 }
 template <typename T> 

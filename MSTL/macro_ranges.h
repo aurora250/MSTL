@@ -7,23 +7,23 @@ MSTL_BEGIN_NAMESPACE__
 	MAC(char) \
 	MAC(signed char) \
 	MAC(unsigned char) \
-	MAC(wchar_t)
+
 
 #ifdef MSTL_VERSION_20__
-#define MSTL_MACRO_RANGE_CHARS(MAC) \
-	MSTL_MACRO_RANGE_BASIC_CHARS(MAC) \
+#define MSTL_MACRO_RANGES_UNICODE_CHARS(MAC) \
 	MAC(char8_t) \
 	MAC(char16_t) \
 	MAC(char32_t) 
 #else
-#define MSTL_MACRO_RANGE_CHARS(MAC) \
-	MAC(char) \
-    MAC(signed char) \
-    MAC(unsigned char) \
-	MAC(wchar_t) \
+#define MSTL_MACRO_RANGES_UNICODE_CHARS(MAC) \
 	MAC(char16_t) \
 	MAC(char32_t) 
 #endif
+
+#define MSTL_MACRO_RANGE_CHARS(MAC) \
+	MSTL_MACRO_RANGE_BASIC_CHARS(MAC) \
+	MAC(wchar_t) \
+	MSTL_MACRO_RANGES_UNICODE_CHARS(MAC)
 
 #define MSTL_MACRO_RANGE_INTEGRAL(MAC) \
 	MAC(short) \

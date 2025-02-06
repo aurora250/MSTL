@@ -1,6 +1,7 @@
 #ifndef MSTL_UTILITY_HPP__
 #define MSTL_UTILITY_HPP__
 #include "type_traits.hpp"
+#include "macro_ranges.h"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T, T... Values>
@@ -56,6 +57,35 @@ MSTL_CONSTEXPR T exchange(T& val, U&& new_val) noexcept(conjunction_v<
 	val = static_cast<U&&>(new_val);
 	return old_val;
 }
+
+// have the compile perform NRVO(Named Return Value Optimization) instead of moving it.
+// after C++ 11, compilers do NRVO when the following conditions are met:
+//   the function returns a class-type object and the object is a local object of the function.
+//   the function's return statement returns the local object directly.
+template <typename T>
+MSTL_CONSTEXPR T initialize() noexcept(
+	is_nothrow_default_constructible_v<T> && is_nothrow_move_constructible_v<T>) {
+	return T();
+}
+#define INITIALIZE_INT_FUNCTION__(OPT) \
+	TEMNULL__ MSTL_CONSTEXPR OPT initialize<OPT>() noexcept { return 0; }
+MSTL_MACRO_RANGE_INTEGRAL(INITIALIZE_INT_FUNCTION__)
+
+#define INITIALIZE_FLOAT_FUNCTION__(OPT) \
+	TEMNULL__ MSTL_CONSTEXPR OPT initialize<OPT>() noexcept { return 0.0; }
+MSTL_MACRO_RANGE_FLOAT(INITIALIZE_FLOAT_FUNCTION__)
+
+#define INITIALIZE_BASIC_CHAR_FUNCTION__(OPT) \
+	TEMNULL__ MSTL_CONSTEXPR OPT initialize<OPT>() noexcept { return '\0'; }
+MSTL_MACRO_RANGE_BASIC_CHARS(INITIALIZE_BASIC_CHAR_FUNCTION__)
+
+TEMNULL__ MSTL_CONSTEXPR wchar_t initialize<wchar_t>() noexcept { return L'\0'; }
+#ifdef MSTL_VERSION_20__
+TEMNULL__ MSTL_CONSTEXPR char8_t initialize<char8_t>() noexcept { return u8'\0'; }
+#endif
+TEMNULL__ MSTL_CONSTEXPR char16_t initialize<char16_t>() noexcept { return u'\0'; }
+TEMNULL__ MSTL_CONSTEXPR char32_t initialize<char32_t>() noexcept { return U'\0'; }
+
 
 struct pair_piecewise_construct_tag {
 	constexpr explicit pair_piecewise_construct_tag() = default;
@@ -203,6 +233,10 @@ struct pair {
 		MSTL::swap(second, p.second);
 	}
 };
+#if MSTL_SUPPORT_DEDUCTION_GUIDES__
+template <typename T1, typename T2>
+pair(T1, T2) -> pair<T1, T2>;
+#endif
 template <typename T1, typename T2, typename U1, typename U2>
 MSTL_CONSTEXPR bool operator ==(const pair<T1, T2>& x, const pair<U1, U2>& y) {
 	return x.first == y.first && x.second == y.second;
@@ -345,6 +379,33 @@ MSTL_NODISCARD MSTL_CONSTEXPR const T2&& get(const pair<T1, T2>&& pir) noexcept 
 	return MSTL::forward<const T2>(pir.second);
 }
 
+
+template <typename T, typename... Args, enable_if_t<is_constructible_v<T, Args...>, int> = 0>
+MSTL_CONSTEXPR void construct(T* const ptr, Args&&... args)
+noexcept(is_nothrow_constructible_v<T, Args...>) {
+	::new (static_cast<void*>(ptr)) T(MSTL::forward<Args>(args)...);
+}
+
+
+template <typename T>
+MSTL_CONSTEXPR void destroy(T* pointer) noexcept(is_nothrow_destructible_v<T>) {
+	pointer->~T();
+}
+
+template <typename Iterator>
+	requires(forward_iterator<Iterator> && (!trivially_destructible<typename iterator_traits<Iterator>::value_type>))
+MSTL_CONSTEXPR void destroy(Iterator first, Iterator last)
+noexcept(is_nothrow_destructible_v<typename iterator_traits<Iterator>::value_type>) {
+	for (; first < last; ++first) MSTL::destroy(&*first);
+}
+
+template <typename Iterator>
+	requires(forward_iterator<Iterator>&& trivially_destructible<typename iterator_traits<Iterator>::value_type>)
+MSTL_CONSTEXPR void destroy(Iterator, Iterator) noexcept {}
+
+#define DESTORY_CHAR_FUNCTION__(OPT) \
+    inline void destroy(OPT*, OPT*) noexcept {}
+MSTL_MACRO_RANGE_CHARS(DESTORY_CHAR_FUNCTION__)
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_UTILITY_HPP__

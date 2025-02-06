@@ -1,7 +1,6 @@
 #ifndef MSTL_ITERATOR_HPP__
 #define MSTL_ITERATOR_HPP__
 #include "concepts.hpp"
-#include "iterator_traits.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator>
