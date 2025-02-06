@@ -1,7 +1,6 @@
 #ifndef MSTL_SORT_HPP__
 #define MSTL_SORT_HPP__
 #include "algo.hpp"
-#include "mathlib.h"
 #include "heap.hpp"
 #include "vector.hpp"
 MSTL_BEGIN_NAMESPACE__

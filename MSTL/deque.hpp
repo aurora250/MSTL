@@ -1,6 +1,5 @@
 #ifndef MSTL_DEQUE_HPP__
 #define MSTL_DEQUE_HPP__
-#include "iterator.hpp"
 #include "memory.hpp"
 MSTL_BEGIN_NAMESPACE__
 

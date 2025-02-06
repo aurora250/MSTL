@@ -2,10 +2,8 @@
 #define MSTL_QUEUE_HPP__
 #include "deque.hpp"
 #include "functor.hpp"
-#include "vector.hpp"
 #include "check_type.h"
 #include "heap.hpp"
-#include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template<typename T, typename Sequence = deque<T>>

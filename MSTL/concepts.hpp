@@ -28,17 +28,6 @@ template <class Derived, class Base>
 concept derived_from = is_base_of_v<Base, Derived>
 && is_convertible_to_v<const volatile Derived*, const volatile Base*>;
 
-template <class _Ty>
-concept integral = is_integral_v<_Ty>;
-template <class _Ty>
-concept signed_integral = integral<_Ty> && static_cast<_Ty>(-1) < static_cast<_Ty>(0);
-template <typename T>
-concept signed_number = is_signed_v<T>;
-template <class _Ty>
-concept unsigned_integral = integral<_Ty> && !signed_integral<_Ty>;
-template <class _Ty>
-concept floating_point = is_floating_point_v<_Ty>;
-
 
 template <typename T>
 concept trivially_destructible = is_trivially_destructible_v<T>;

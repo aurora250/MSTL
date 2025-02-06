@@ -1,11 +1,9 @@
 #ifndef MSTL_HASHTABLE_HPP__
 #define MSTL_HASHTABLE_HPP__
 #include "algo.hpp"
-#include "memory.hpp"
 #include "vector.hpp"
 #include "concepts.hpp"
 #include "hash_function.h"
-#include "mathlib.h"
 #include "tuple.hpp"
 MSTL_BEGIN_NAMESPACE__
 

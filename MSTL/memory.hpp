@@ -1,7 +1,6 @@
 #ifndef MSTL_MEMORY_HPP__
 #define MSTL_MEMORY_HPP__
 #include "algobase.hpp"
-#include "utility.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator1, typename Iterator2>

@@ -2,7 +2,6 @@
 #define MSTL_VECTOR_HPP__
 #include <initializer_list>
 #include "memory.hpp"
-#include "iterator.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T, typename Ref = T&, typename Ptr = T*>
@@ -137,7 +136,7 @@ private:
 	}
 	MSTL_CONSTEXPR inline void range_check(iterator position) const noexcept {
 		MSTL_DEBUG_VERIFY__(
-			position.unwrapped() >= start_ && position.unwrapped() <= finish_, "vector insert out of ranges."
+			&*position >= start_ && &*position <= finish_, "vector insert out of ranges."
 		);
 	}
 

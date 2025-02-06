@@ -1,8 +1,6 @@
 #ifndef MSTL_SET_HPP__
 #define MSTL_SET_HPP__
 #include "rb_tree.h"
-#include "memory.hpp"
-#include "functor.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Key, typename Compare = less<Key>, typename Alloc = standard_allocator<Key>>

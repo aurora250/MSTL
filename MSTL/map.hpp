@@ -1,8 +1,6 @@
 #ifndef MSTL_MAP_HPP__
 #define MSTL_MAP_HPP__
 #include "rb_tree.h"
-#include "functor.hpp"
-
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Key, typename T, typename Compare = less<Key>,

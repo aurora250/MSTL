@@ -89,7 +89,7 @@ TEMNULL__ struct hash<std::string> {
 
 #define INT_HASH_STRUCT__(OPT) \
     TEMNULL__ struct hash<OPT> { \
-        MSTL_NODISCARD size_t operator ()(OPT x) const noexcept { return size_t(x); } \
+        MSTL_NODISCARD size_t operator ()(OPT x) const noexcept { return static_cast<size_t>(x); } \
     };
 MSTL_MACRO_RANGE_CHARS(INT_HASH_STRUCT__)
 MSTL_MACRO_RANGE_INTEGRAL(INT_HASH_STRUCT__)

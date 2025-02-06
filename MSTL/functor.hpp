@@ -1,6 +1,6 @@
 #ifndef MSTL_FUNCTOR_HPP__
 #define MSTL_FUNCTOR_HPP__
-#include "concepts.hpp"
+#include "type_traits.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Arg, typename Result>
@@ -197,18 +197,18 @@ struct display {
 	typedef display self;
 
 	display(const char* finish = "", const char* split = "")
-		noexcept(nothrow_constructible_from<std::string, const char*>)
+		noexcept(is_nothrow_constructible_v<std::string, const char*>)
 		: split_(split), finish_(finish) {}
 	explicit display(const std::string& split, const std::string& finish) 
-		noexcept(nothrow_copy_constructible<std::string>)
+		noexcept(is_nothrow_copy_constructible_v<std::string>)
 		: split_(split), finish_(finish) {}
 	explicit display(std::string&& split, std::string&& finish)
-		noexcept(nothrow_move_constructible<std::string>)
-		: split_(std::forward<std::string>(split)), finish_(std::forward<std::string>(finish)) {}
+		noexcept(is_nothrow_move_constructible_v<std::string>)
+		: split_(MSTL::forward<std::string>(split)), finish_(MSTL::forward<std::string>(finish)) {}
 
 	template <typename... T>
 	self& operator ()(T&&... value) {
-		((std::cout << std::forward<T>(value) << split_), ...);
+		((std::cout << MSTL::forward<T>(value) << split_), ...);
 		std::cout << finish_ << std::flush;
 		return *this;
 	}

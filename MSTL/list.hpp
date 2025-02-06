@@ -2,8 +2,6 @@
 #define MSTL_LIST_HPP__
 #include "memory.hpp"
 #include "functor.hpp"
-#include "algobase.hpp"
-#include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T>

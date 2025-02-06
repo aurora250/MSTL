@@ -1,8 +1,6 @@
 #ifndef MSTL_ALGO_HPP__
 #define MSTL_ALGO_HPP__
 #include "mathlib.h"
-#include "iterator.hpp"
-#include "algobase.hpp"
 #include "memory.hpp"
 MSTL_BEGIN_NAMESPACE__
 

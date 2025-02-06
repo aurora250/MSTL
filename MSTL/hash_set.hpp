@@ -1,6 +1,5 @@
 #ifndef MSTL_HASH_SET_HPP__
 #define MSTL_HASH_SET_HPP__
-#include "basiclib.h"
 #include "hashtable.hpp"
 #include "functor.hpp"
 MSTL_BEGIN_NAMESPACE__
