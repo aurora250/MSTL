@@ -134,7 +134,7 @@ public:
 
     size_type erase(const key_type& key) noexcept { return ht_.erase(key); }
     void erase(iterator it) noexcept { ht_.erase(it); }
-    void erase(iterator f, iterator l) noexcept { ht_.erase(f, l); }
+    void erase(iterator first, iterator last) noexcept { ht_.erase(first, last); }
     void clear() noexcept { ht_.clear(); }
 
     void swap(self& x) noexcept(noexcept(ht_.swap(x.ht_))) { ht_.swap(x.ht_); }
@@ -258,17 +258,13 @@ public:
     }
 
     unordered_multimap(std::initializer_list<value_type> l)
-        : unordered_multimap(l.begin(), l.end()) {
-    }
+        : unordered_multimap(l.begin(), l.end()) {}
     unordered_multimap(std::initializer_list<value_type> l, size_type n)
-        : unordered_multimap(l.begin(), l.end(), n) {
-    }
+        : unordered_multimap(l.begin(), l.end(), n) {}
     unordered_multimap(std::initializer_list<value_type> l, size_type n, const hasher& hf)
-        : unordered_multimap(l.begin(), l.end(), n, hf) {
-    }
+        : unordered_multimap(l.begin(), l.end(), n, hf) {}
     unordered_multimap(std::initializer_list<value_type> l, size_type n, const hasher& hf, const key_equal& eql)
-        : unordered_multimap(l.begin(), l.end(), n, hf, eql) {
-    }
+        : unordered_multimap(l.begin(), l.end(), n, hf, eql) {}
 
     MSTL_NODISCARD iterator begin() noexcept { return ht_.begin(); }
     MSTL_NODISCARD iterator end() noexcept { return ht_.end(); }
@@ -315,7 +311,7 @@ public:
 
     size_type erase(const key_type& key) noexcept { return ht_.erase(key); }
     void erase(iterator it) noexcept { ht_.erase(it); }
-    void erase(iterator f, iterator l) noexcept { ht_.erase(f, l); }
+    void erase(iterator first, iterator last) noexcept { ht_.erase(first, last); }
     void clear() noexcept { ht_.clear(); }
 
     void swap(self& x) noexcept(noexcept(ht_.swap(x.ht_))) { ht_.swap(x.ht_); }
@@ -329,14 +325,14 @@ public:
     }
 };
 template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
-inline MSTL_NODISCARD bool operator ==(const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& hm1,
-    const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& hm2) noexcept {
-    return hm1.ht_ == hm2.ht_;
+inline MSTL_NODISCARD bool operator ==(const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& lh,
+    const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& rh) noexcept {
+    return lh.ht_ == rh.ht_;
 }
 template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
-inline MSTL_NODISCARD bool operator !=(const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& hm1,
-    const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& hm2) noexcept {
-    return !(hm1.ht_ == hm2.ht_);
+inline MSTL_NODISCARD bool operator !=(const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& lh,
+    const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& rh) noexcept {
+    return !(lh.ht_ == rh.ht_);
 }
 template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
 void swap(const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& lh,

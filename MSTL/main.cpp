@@ -250,6 +250,13 @@ void try_hash() {
     us.erase(pair(4, 'r'));
     us.erase(us.begin());
     detailof(us);
+
+    unordered_multiset<pair<int, const char*>> ms;
+    ms.emplace(1, "234");
+    ms.insert(make_pair(2, "345"));
+    detailof(ms);
+    ms.erase(ms.begin());
+    detailof(ms);
 }
 
 void try_pool() {

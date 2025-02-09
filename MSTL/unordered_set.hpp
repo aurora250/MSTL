@@ -80,17 +80,13 @@ public:
     }
 
     unordered_set(std::initializer_list<value_type> l)
-        : unordered_set(l.begin(), l.end()) {
-    }
+        : unordered_set(l.begin(), l.end()) {}
     unordered_set(std::initializer_list<value_type> l, size_type n)
-        : unordered_set(l.begin(), l.end(), n) {
-    }
+        : unordered_set(l.begin(), l.end(), n) {}
     unordered_set(std::initializer_list<value_type> l, size_type n, const hasher& hf)
-        : unordered_set(l.begin(), l.end(), n, hf) {
-    }
+        : unordered_set(l.begin(), l.end(), n, hf) {}
     unordered_set(std::initializer_list<value_type> l, size_type n, const hasher& hf, const key_equal& eql)
-        : unordered_set(l.begin(), l.end(), n, hf, eql) {
-    }
+        : unordered_set(l.begin(), l.end(), n, hf, eql) {}
 
     MSTL_NODISCARD iterator begin() noexcept { return ht_.begin(); }
     MSTL_NODISCARD iterator end() noexcept { return ht_.end(); }
@@ -137,7 +133,7 @@ public:
 
     size_type erase(const key_type& key) noexcept { return ht_.erase(key); }
     void erase(iterator it) noexcept { ht_.erase(it); }
-    void erase(iterator f, iterator l) noexcept { ht_.erase(f, l); }
+    void erase(iterator first, iterator last) noexcept { ht_.erase(first, last); }
     void clear() noexcept { ht_.clear(); }
 
     void swap(self& x) noexcept(noexcept(ht_.swap(x.ht_))) { ht_.swap(x.ht_); }
@@ -152,97 +148,182 @@ public:
 };
 template <class Value, class HashFcn, class EqualKey, class Alloc>
 inline MSTL_NODISCARD bool operator ==(
-    const unordered_set<Value, HashFcn, EqualKey, Alloc>& hs1,
-    const unordered_set<Value, HashFcn, EqualKey, Alloc>& hs2) noexcept {
-    return hs1.ht_ == hs2.ht_;
+    const unordered_set<Value, HashFcn, EqualKey, Alloc>& lh,
+    const unordered_set<Value, HashFcn, EqualKey, Alloc>& rh) noexcept {
+    return lh.ht_ == rh.ht_;
 }
 template <class Value, class HashFcn, class EqualKey, class Alloc>
-inline MSTL_NODISCARD void swap(
-    unordered_set<Value, HashFcn, EqualKey, Alloc>& hs1,
-    unordered_set<Value, HashFcn, EqualKey, Alloc>& hs2) {
-    hs1.swap(hs2);
+inline MSTL_NODISCARD bool operator !=(
+    const unordered_set<Value, HashFcn, EqualKey, Alloc>& lh,
+    const unordered_set<Value, HashFcn, EqualKey, Alloc>& rh) noexcept {
+    return !(lh.ht_ == rh.ht_);
+}
+template <class Value, class HashFcn, class EqualKey, class Alloc>
+void swap(unordered_set<Value, HashFcn, EqualKey, Alloc>& lh,
+    unordered_set<Value, HashFcn, EqualKey, Alloc>& rh) noexcept(noexcept(lh.swap(rh))) {
+    lh.swap(rh);
 }
 
 
 template <class Value, class HashFcn = hash<Value>, class EqualKey = equal_to<Value>,
-    class Alloc = standard_allocator<pair<const Value, Value>>>
+    class Alloc = standard_allocator<__hashtable_node<Value>>>
     requires(is_hash_v<HashFcn, Value>)
 class unordered_multiset {
+#ifdef MSTL_VERSION_20__
+    static_assert(is_hash_v<HashFcn, Value>, "unordered multiset requires valid hash function.");
+    static_assert(is_allocator_v<Alloc>, "Alloc type is not a standard allocator type.");
+#endif
+    static_assert(is_same_v<__hashtable_node<Value>, typename Alloc::value_type>,
+        "allocator type mismatch.");
+    static_assert(is_object_v<Value>, "unordered multiset only contains object types.");
+
 private:
-    typedef hashtable<Value, Value, HashFcn, identity<Value>, EqualKey, Alloc> ht;
-    ht rep;
+    using base_type         = hashtable<Value, Value, HashFcn, identity<Value>, EqualKey, Alloc>;
 public:
-    typedef typename ht::key_type key_type;
-    typedef typename ht::value_type value_type;
-    typedef typename ht::hasher hasher;
-    typedef typename ht::key_equal key_equal;
-    typedef typename ht::size_type size_type;
-    typedef typename ht::difference_type difference_type;
-    typedef typename ht::const_pointer pointer;
-    typedef typename ht::const_pointer const_pointer;
-    typedef typename ht::const_reference reference;
-    typedef typename ht::const_reference const_reference;
-    typedef typename ht::const_iterator iterator;
-    typedef typename ht::const_iterator const_iterator;
+    using key_type          = typename base_type::key_type;
+    using value_type        = typename base_type::value_type;
+    using hasher            = typename base_type::hasher;
+    using key_equal         = typename base_type::key_equal;
+    using size_type         = typename base_type::size_type;
+    using difference_type   = typename base_type::difference_type;
+    using pointer           = typename base_type::const_pointer;
+    using const_pointer     = typename base_type::const_pointer;
+    using reference         = typename base_type::const_reference;
+    using const_reference   = typename base_type::const_reference;
+    using iterator          = typename base_type::const_iterator;
+    using const_iterator    = typename base_type::const_iterator;
+    using allocator_type    = typename base_type::allocator_type;
+    using self              = unordered_multiset<Value, HashFcn, EqualKey, Alloc>;
 
-    hasher hash_funct() const { return rep.hash_func(); }
-    key_equal key_eq() const { return rep.key_eql(); }
+private:
+    base_type ht_;
 
-    unordered_multiset() : rep(100, hasher(), key_equal()) {}
-    explicit unordered_multiset(size_type n) : rep(n, hasher(), key_equal()) {}
-    explicit unordered_multiset(size_type n, const hasher& hf) : rep(n, hf, key_equal()) {}
-    explicit unordered_multiset(size_type n, const hasher& hf, const key_equal& eql) : rep(n, hf, eql) {}
-    template <class InputIterator>
-    unordered_multiset(InputIterator f, InputIterator l) : rep(100, hasher(), key_equal()) {
-        rep.insert_equal(f, l);
-    }
-    template <class InputIterator>
-    unordered_multiset(InputIterator f, InputIterator l, size_type n) : rep(n, hasher(), key_equal()) {
-        rep.insert_equal(f, l);
-    }
-    template <class InputIterator>
-    unordered_multiset(InputIterator f, InputIterator l, size_type n, const hasher& hf) : rep(n, hf, key_equal()) {
-        rep.insert_equal(f, l);
-    }
-    template <class InputIterator>
-    unordered_multiset(InputIterator f, InputIterator l, size_type n, const hasher& hf,
-        const key_equal& eql) : rep(n, hf, eql) {
-        rep.insert_equal(f, l);
+    friend bool operator ==(const unordered_multiset&, const unordered_multiset&) noexcept;
+
+public:
+    unordered_multiset() : ht_(100, hasher(), key_equal()) {}
+    explicit unordered_multiset(size_type n) : ht_(n) {}
+
+    unordered_multiset(size_type n, const hasher& hf) : ht_(n, hf, key_equal()) {}
+    unordered_multiset(size_type n, const hasher& hf, const key_equal& eql) : ht_(n, hf, eql) {}
+
+    unordered_multiset(const self& ht) : ht_(ht.ht_) {}
+    self& operator =(const self& x) {
+        ht_ = x.ht_;
+        return *this;
     }
 
-    size_type size() const { return rep.size(); }
-    size_type max_size() const { return rep.max_size(); }
-    bool empty() const { return rep.empty(); }
-    void swap(unordered_multiset& hs) { rep.swap(hs.rep); }
-    iterator begin() const { return rep.begin(); }
-    iterator end() const { return rep.end(); }
-    friend bool operator ==(const unordered_multiset&, const unordered_multiset&);
+    unordered_multiset(self&& x) noexcept(noexcept(ht_.swap(x.ht_))) : ht_(MSTL::forward<base_type>(x.ht_)) {}
+    self& operator =(self&& x) noexcept(noexcept(ht_.swap(x.ht_))) {
+        ht_ = MSTL::forward<self>(x.ht_);
+        return *this;
+    }
 
-    iterator insert(const value_type& obj) { return rep.insert_equal(obj); }
-    template <class InputIterator>
-    void insert(InputIterator f, InputIterator l) { rep.insert_equal(f, l); }
-    iterator insert_noresize(const value_type& obj) { return rep.insert_equal_noresize(obj); }
-    iterator find(const key_type& key) const { return rep.find(key); }
-    size_type count(const key_type& key) const { return rep.count(key); }
-    pair<iterator, iterator> equal_range(const key_type& key) const { return rep.equal_range(key); }
-    size_type erase(const key_type& key) { return rep.erase(key); }
-    void erase(iterator it) { rep.erase(it); }
-    void erase(iterator f, iterator l) { rep.erase(f, l); }
-    void clear() { rep.clear(); }
-    void resize(size_type hint) { rep.rehash(hint); }
-    size_type bucket_count() const { return rep.bucket_count(); }
-    size_type max_bucket_count() const { return rep.max_bucket_count(); }
-    size_type elems_in_bucket(size_type n) const { return rep.bucket_size(n); }
+    template <typename Iterator>
+        requires(input_iterator<Iterator>)
+    unordered_multiset(Iterator first, Iterator last) : ht_(100, hasher(), key_equal()) {
+        ht_.insert_equal(first, last);
+    }
+    template <typename Iterator>
+        requires(input_iterator<Iterator>)
+    unordered_multiset(Iterator first, Iterator list, size_type n) : ht_(n, hasher(), key_equal()) {
+        ht_.insert_equal(first, list);
+    }
+    template <typename Iterator>
+        requires(input_iterator<Iterator>)
+    unordered_multiset(Iterator first, Iterator last, size_type n, const hasher& hf) : ht_(n, hf, key_equal()) {
+        ht_.insert_equal(first, last);
+    }
+    template <typename Iterator>
+        requires(input_iterator<Iterator>)
+    unordered_multiset(Iterator first, Iterator last, size_type n, const hasher& hf, const key_equal& eql)
+        : ht_(n, hf, eql) {
+        ht_.insert_equal(first, last);
+    }
+
+    unordered_multiset(std::initializer_list<value_type> l)
+        : unordered_multiset(l.begin(), l.end()) {}
+    unordered_multiset(std::initializer_list<value_type> l, size_type n)
+        : unordered_multiset(l.begin(), l.end(), n) {}
+    unordered_multiset(std::initializer_list<value_type> l, size_type n, const hasher& hf)
+        : unordered_multiset(l.begin(), l.end(), n, hf) {}
+    unordered_multiset(std::initializer_list<value_type> l, size_type n, const hasher& hf, const key_equal& eql)
+        : unordered_multiset(l.begin(), l.end(), n, hf, eql) {}
+
+    MSTL_NODISCARD iterator begin() noexcept { return ht_.begin(); }
+    MSTL_NODISCARD iterator end() noexcept { return ht_.end(); }
+    MSTL_NODISCARD const_iterator cbegin() const noexcept { return ht_.cbegin(); }
+    MSTL_NODISCARD const_iterator cend() const noexcept { return ht_.cend(); }
+
+    MSTL_NODISCARD size_type size() const noexcept { return ht_.size(); }
+    MSTL_NODISCARD size_type max_size() const noexcept { return ht_.max_size(); }
+    MSTL_NODISCARD bool empty() const noexcept { return ht_.empty(); }
+
+    MSTL_NODISCARD size_type count(const key_type& key) const noexcept(noexcept(ht_.count(key))) {
+        return ht_.count(key);
+    }
+    MSTL_NODISCARD size_type bucket_count() const noexcept { return ht_.bucket_count(); }
+    MSTL_NODISCARD size_type max_bucket_count() const noexcept { return ht_.max_bucket_count(); }
+    MSTL_NODISCARD size_type bucket_size(size_type n) const noexcept { return ht_.bucket_size(n); }
+
+    MSTL_NODISCARD allocator_type get_allocator() const noexcept { return allocator_type(); }
+
+    MSTL_NODISCARD hasher hash_funct() const noexcept(noexcept(ht_.hash_func())) { return ht_.hash_func(); }
+    MSTL_NODISCARD key_equal key_eq() const noexcept(noexcept(ht_.key_eql())) { return ht_.key_eql(); }
+
+    MSTL_NODISCARD float load_factor() const noexcept { return ht_.load_factor(); }
+    MSTL_NODISCARD float max_load_factor() const noexcept { return ht_.max_load_factor(); }
+    void max_load_factor(float new_max) noexcept { ht_.max_load_factor(new_max); }
+
+    void rehash(size_type new_size) { ht_.rehash(new_size); }
+    void reserve(size_type max_count) { ht_.reserve(max_count); }
+
+    template <typename... Args>
+    iterator emplace(Args&&... args) {
+        return ht_.emplace_equal(MSTL::forward<Args>(args)...);
+    }
+
+    iterator insert(const value_type& obj) {
+        return ht_.insert_equal(obj);
+    }
+    iterator insert(value_type&& obj) {
+        return ht_.insert_equal(MSTL::forward<value_type>(obj));
+    }
+    template <typename Iterator>
+        requires(input_iterator<Iterator>)
+    void insert(Iterator first, Iterator last) { ht_.insert_equal(first, last); }
+
+    size_type erase(const key_type& key) noexcept { return ht_.erase(key); }
+    void erase(iterator it) noexcept { ht_.erase(it); }
+    void erase(iterator first, iterator last) noexcept { ht_.erase(first, last); }
+    void clear() noexcept { ht_.clear(); }
+
+    void swap(self& x) noexcept(noexcept(ht_.swap(x.ht_))) { ht_.swap(x.ht_); }
+
+    MSTL_NODISCARD iterator find(const key_type& key) { return ht_.find(key); }
+    MSTL_NODISCARD const_iterator find(const key_type& key) const { return ht_.find(key); }
+
+    pair<iterator, iterator> equal_range(const key_type& key) { return ht_.equal_range(key); }
+    pair<const_iterator, const_iterator> equal_range(const key_type& key) const {
+        return ht_.equal_range(key);
+    }
 };
 template <class Val, class HashFcn, class EqualKey, class Alloc>
-inline bool operator ==(const unordered_multiset<Val, HashFcn, EqualKey, Alloc>& hs1,
-    const unordered_multiset<Val, HashFcn, EqualKey, Alloc>& hs2) {
-    return hs1.rep == hs2.rep;
+inline MSTL_NODISCARD bool operator ==(
+    const unordered_multiset<Val, HashFcn, EqualKey, Alloc>& lh,
+    const unordered_multiset<Val, HashFcn, EqualKey, Alloc>& rh) {
+    return lh.ht_ == rh.ht_;
 }
 template <class Val, class HashFcn, class EqualKey, class Alloc>
-inline void swap(unordered_multiset<Val, HashFcn, EqualKey, Alloc>& hs1,
-    unordered_multiset<Val, HashFcn, EqualKey, Alloc>& hs2) {
-    hs1.swap(hs2);
+inline MSTL_NODISCARD bool operator !=(
+    const unordered_multiset<Val, HashFcn, EqualKey, Alloc>& lh,
+    const unordered_multiset<Val, HashFcn, EqualKey, Alloc>& rh) {
+    return !(lh.ht_ == rh.ht_);
+}
+template <class Val, class HashFcn, class EqualKey, class Alloc>
+void swap(unordered_multiset<Val, HashFcn, EqualKey, Alloc>& lh,
+    unordered_multiset<Val, HashFcn, EqualKey, Alloc>& rh) noexcept(noexcept(lh.swap(rh))) {
+    lh.swap(rh);
 }
 
 MSTL_END_NAMESPACE__
