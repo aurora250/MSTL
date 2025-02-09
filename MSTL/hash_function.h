@@ -18,7 +18,7 @@ struct hash<T*> {
 // DJB2 is a non-cryptographic hash algorithm
 // with simple implement, fast speed and evenly distributed.
 // but in some special cases, there will still occur hash conflicts.
-size_t DJB2_hash(const char* str);
+size_t DJB2_hash(const char* str) noexcept;
 
 #ifdef MSTL_DATA_BUS_WIDTH_32__
 
@@ -28,17 +28,17 @@ constexpr uint32_t HASH_UPDATE_CONSTANT32 = 0xe6546b64;
 constexpr uint32_t FINAL_MIX_MULTIPLIER32_1 = 0x85ebca6b;
 constexpr uint32_t FINAL_MIX_MULTIPLIER32_2 = 0xc2b2ae35;
 
-constexpr uint32_t hash_rotate_x32(uint32_t x, int r) {
+constexpr uint32_t hash_rotate_x32(uint32_t x, int r) noexcept {
     return (x << r) | (x >> (32 - r));
 }
 
-uint32_t MurmurHash_x32(const char* key, size_t len, uint32_t seed);
+uint32_t MurmurHash_x32(const char* key, size_t len, uint32_t seed) noexcept;
 
 #endif
 
 #ifdef MSTL_DATA_BUS_WIDTH_64__
 
-constexpr uint64_t hash_rotate_x64(uint64_t x, int r) {
+constexpr uint64_t hash_rotate_x64(uint64_t x, int r) noexcept {
     return (x << r) | (x >> (64 - r));
 }
 
@@ -49,7 +49,7 @@ constexpr uint64_t FINAL_MIX_MULTIPLIER64_2 = 0xc4ceb9fe1a85ec53ULL;
 constexpr uint64_t HASH_UPDATE_CONSTANT64_1 = 0x52dce729;
 constexpr uint64_t HASH_UPDATE_CONSTANT64_2 = 0x38495ab5;
 
-constexpr uint64_t hash_mix_x64(uint64_t k) {
+constexpr uint64_t hash_mix_x64(uint64_t k) noexcept {
     k ^= k >> 33;
     k *= FINAL_MIX_MULTIPLIER64_1;
     k ^= k >> 33;
@@ -61,16 +61,16 @@ constexpr uint64_t hash_mix_x64(uint64_t k) {
 // MurmurHash is a non-cryptographic hash algorithm 
 // with fast speed, low collision rate and customizable seed.
 // MurmurHash_x64 is MurmurHash3 version.
-pair<size_t, size_t> MurmurHash_x64(const char* key, size_t len, uint32_t seed);
+pair<size_t, size_t> MurmurHash_x64(const char* key, size_t len, uint32_t seed) noexcept;
 
 #endif
 
 inline size_t string_hash(const char* s) noexcept {
 #ifdef MSTL_DATA_BUS_WIDTH_64__
-    pair<size_t, size_t> p = MurmurHash_x64(s, MSTL::strlen(s), std::rand());
+    pair<size_t, size_t> p = MurmurHash_x64(s, MSTL::strlen(s), 0);
     return p.first ^ p.second;
 #elif MSTL_DATA_BUS_WIDTH_32__
-    return (size_t)MurmurHash_x32(s, MSTL::strlen(s), std::rand());
+    return (size_t)MurmurHash_x32(s, MSTL::strlen(s), 0);
 #else 
     return DJB2_hash(s);
 #endif
@@ -106,7 +106,7 @@ static constexpr size_t FNV_PRIME = 16777619U;
 // the FNV (Fowler-Noll-Vo) is a non-cryptographic hash algorithm
 // with a good avalanche effect and a low collision rate.
 // FNV_hash function is FNV-1a version.
-inline size_t FNV_hash(const unsigned char* first, size_t count) noexcept {
+inline size_t FNV_hash(const byte_t* first, size_t count) noexcept {
     size_t result = FNV_OFFSET_BASIS;
     for (size_t i = 0; i < count; i++) {
         result ^= (size_t)first[i];
@@ -118,7 +118,7 @@ inline size_t FNV_hash(const unsigned char* first, size_t count) noexcept {
 #define FLOAT_HASH_STRUCT__(OPT) \
     TEMNULL__ struct hash<OPT> { \
         MSTL_NODISCARD size_t operator ()(const OPT& x) const noexcept { \
-            return x == 0.0f ? 0 : FNV_hash((const unsigned char*)&x, sizeof(OPT)); \
+            return x == 0.0f ? 0 : FNV_hash((const byte_t*)&x, sizeof(OPT)); \
         } \
     };
 MSTL_MACRO_RANGE_FLOAT(FLOAT_HASH_STRUCT__)

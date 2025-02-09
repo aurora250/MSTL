@@ -640,5 +640,25 @@ MSTL_CONSTEXPR void container_base::orphan_all() noexcept {
         next->proxy_ = nullptr;
 }
 
+
+template <typename, typename...>
+struct map_key_extract {
+    static constexpr bool extractable = false;
+};
+template <typename Key, typename Next>
+struct map_key_extract<Key, Key, Next> {
+    static constexpr bool extractable = true;
+    static const Key& extract(const Key& key, const Next&) noexcept {
+        return key;
+    }
+};
+template <typename Key, typename First, typename Second>
+struct map_key_extract<Key, pair<First, Second>> {
+    static constexpr bool extractable = is_same_v<Key, remove_cvref_t<First>>;
+    static const Key& extract(const pair<First, Second>& pir) {
+        return pir.first;
+    }
+};
+
 MSTL_END_NAMESPACE__
 #endif // MSTL_MEMORY_HPP__

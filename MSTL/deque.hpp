@@ -31,7 +31,7 @@ struct deque_iterator {
         return deque_buf_size(BufSize, sizeof(T));
     }
 
-    void change_buff(map_pointer new_node) {
+    void change_buff(map_pointer new_node) noexcept {
         node_ = new_node;
         first_ = *new_node;
         last_ = first_ + difference_type(buff_size());
@@ -432,10 +432,7 @@ public:
         swap(x);
     }
     self& operator =(self&& x) noexcept {
-        if (MSTL::addressof(x) == this) {
-            x.clear();
-            return *this;
-        }
+        if (MSTL::addressof(x) == this) return *this;
         clear();
         swap(x);
         return *this;
@@ -493,7 +490,7 @@ public:
     }
     void resize(size_type new_size) { resize(new_size, T()); }
 
-    template <typename ...Args>
+    template <typename... Args>
     typename iterator emplace(iterator position, Args&& ...args) {
         range_check(position);
         if (position.cur_ == start_.cur_) {
@@ -508,24 +505,24 @@ public:
             return (emplace_aux)(position, MSTL::forward<Args>(args)...);
     }
 
-    template <typename... U>
-    void emplace_back(U&&... args) {
+    template <typename... Args>
+    void emplace_back(Args&&... args) {
         if (finish_.cur_ != finish_.last_ - 1) {
-            MSTL::construct(finish_.cur_, MSTL::forward<U>(args)...);
+            MSTL::construct(finish_.cur_, MSTL::forward<Args>(args)...);
             ++finish_.cur_;
         }
         else {
             reserve_back();
             *(finish_.node_ + 1) = data_alloc_.allocate(buff_size());
-            MSTL::construct(finish_.cur_, MSTL::forward<U>(args)...);
+            MSTL::construct(finish_.cur_, MSTL::forward<Args>(args)...);
             finish_.change_buff(finish_.node_ + 1);
             finish_.cur_ = finish_.first_;
         }
     }
-    template <typename... U>
-    void emplace_front(U&&... args) {
+    template <typename... Args>
+    void emplace_front(Args&&... args) {
         if (start_.cur_ != start_.first_) {
-            MSTL::construct(start_.cur_ - 1, MSTL::forward<U>(args)...);
+            MSTL::construct(start_.cur_ - 1, MSTL::forward<Args>(args)...);
             --start_.cur_;
         }
         else {
@@ -533,7 +530,7 @@ public:
             *(start_.node_ - 1) = data_alloc_.allocate(buff_size());
             start_.change_buff(start_.node_ - 1);
             start_.cur_ = start_.last_ - 1;
-            MSTL::construct(start_.cur_, MSTL::forward<U>(args)...);
+            MSTL::construct(start_.cur_, MSTL::forward<Args>(args)...);
         }
     }
 
@@ -587,8 +584,57 @@ public:
         insert(begin(), first, last);
     }
 
-    void assign(std::initializer_list<T> ilist) {
-        assign(ilist.begin(), ilist.end());
+    void assign(std::initializer_list<T> l) {
+        assign(l.begin(), l.end());
+    }
+
+    iterator insert(iterator position, const T& x) {
+        return (emplace)(position, x);
+    }
+    iterator insert(iterator position, T&& x) {
+        return (emplace)(position, MSTL::forward<T>(x));
+    }
+    iterator insert(iterator position) {
+        return (emplace)(position, T());
+    }
+
+    template <typename Iterator>
+        requires(input_iterator<Iterator>)
+    iterator insert(iterator position, Iterator first, Iterator last) {
+        range_check(position);
+        Exception(MSTL::distance(first, last) >= 0, StopIterator("deque insert out of ranges."));
+        if (position == start_) {
+            for (--last; first != last; --last)
+                (emplace_front)(*last);
+            (emplace_front)(*first);
+            return start_;
+        }
+        else if (position == finish_) {
+            for (; first != last; ++first)
+                (emplace_back)(*first);
+            return finish_ - 1;
+        }
+        else
+            return range_insert(position, first, last);
+    }
+    iterator insert(iterator position, std::initializer_list<T> l) {
+        insert(position, l.begin(), l.end());
+    }
+    iterator insert(iterator position, size_t n, const T& x) {
+        range_check(position);
+        if (position == start_) {
+            for (size_t i = 0; i < n; i++)
+                (emplace_front)(x);
+            return start_;
+        }
+        else if (position == finish_) {
+            for (size_t i = 0; i < n; i++)
+                (emplace_back)(x);
+            return finish_ - 1;
+        }
+        else
+            return range_insert(position, size_type(n), x);
+
     }
 
     iterator erase(iterator position) noexcept {
@@ -646,55 +692,6 @@ public:
             MSTL::destroy(start_.cur_, start_.last_);
         }
         finish_ = start_;
-    }
-
-    iterator insert(iterator position, const T& x) {
-        return (emplace)(position, x);
-    }
-    iterator insert(iterator position, T&& x) {
-        return (emplace)(position, MSTL::forward<T>(x));
-    }
-    iterator insert(iterator position) {
-        return (emplace)(position, T());
-    }
-
-    template <typename Iterator>
-        requires(input_iterator<Iterator>)
-    iterator insert(iterator position, Iterator first, Iterator last) {
-        range_check(position);
-        Exception(MSTL::distance(first, last) >= 0, StopIterator("deque insert out of ranges."));
-        if (position == start_) {
-            for (--last; first != last; --last) 
-                (emplace_front)(*last);
-            (emplace_front)(*first);
-            return start_;
-        }
-        else if (position == finish_) {
-            for (; first != last; ++first) 
-                (emplace_back)(*first);
-            return finish_ - 1;
-        }
-        else 
-            return range_insert(position, first, last);
-    }
-    iterator insert(iterator position, std::initializer_list<T> l) {
-        insert(position, l.begin(), l.end());
-    }
-    iterator insert(iterator position, size_t n, const T& x) {
-        range_check(position);
-        if (position == start_) {
-            for (size_t i = 0; i < n; i++)
-                (emplace_front)(x);
-            return start_;
-        }
-        else if (position == finish_) {
-            for (size_t i = 0; i < n; i++)
-                (emplace_back)(x);
-            return finish_ - 1;
-        }
-        else
-            return range_insert(position, size_type(n), x);
-
     }
 
     void swap(self& x) noexcept {

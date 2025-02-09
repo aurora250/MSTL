@@ -5,7 +5,7 @@ MSTL_BEGIN_NAMESPACE__
 #pragma warning(push)
 #pragma warning(disable: 26819)
 
-size_t DJB2_hash(const char* str) {
+size_t DJB2_hash(const char* str) noexcept {
     size_t hash = 5381;
     while (*str) {
         hash = ((hash << 5) + hash) + *str;
@@ -16,7 +16,7 @@ size_t DJB2_hash(const char* str) {
 
 #ifdef MSTL_DATA_BUS_WIDTH_32__
 
-uint32_t MurmurHash_x32(const char* key, size_t len, uint32_t seed) {
+uint32_t MurmurHash_x32(const char* key, size_t len, uint32_t seed) noexcept {
     const uint8_t* data = reinterpret_cast<const uint8_t*>(key);
     const size_t nblocks = len / 4;
 
@@ -65,7 +65,7 @@ uint32_t MurmurHash_x32(const char* key, size_t len, uint32_t seed) {
 
 #ifdef MSTL_DATA_BUS_WIDTH_64__
 
-pair<size_t, size_t> MurmurHash_x64(const char* key, size_t len, uint32_t seed) {
+pair<size_t, size_t> MurmurHash_x64(const char* key, size_t len, uint32_t seed) noexcept {
     const uint8_t* data = reinterpret_cast<const uint8_t*>(key);
     const size_t nblocks = len / 16;
 

@@ -1,6 +1,6 @@
 #ifndef MSTL_TRACE_MEMORY_HPP__
 #define MSTL_TRACE_MEMORY_HPP__
-#include "hash_map.hpp"
+#include "unordered_map.hpp"
 #include "boost/stacktrace.hpp"
 MSTL_BEGIN_NAMESPACE__
 
@@ -71,7 +71,7 @@ public:
     }
 
 private:
-    hash_map<T*, boost::stacktrace::stacktrace> traces_;
+    unordered_map<T*, boost::stacktrace::stacktrace> traces_;
     std::allocator<T> alloc_;
 };
 template <typename T, typename U>

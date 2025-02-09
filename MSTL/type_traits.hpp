@@ -1364,7 +1364,6 @@ using get_rebind_type_t = typename get_rebind_type<T, U>::type;
 
 template <class T>
 concept is_allocator_v = requires(T& alloc) {
-    typename T::value_type;
     alloc.deallocate(alloc.allocate(size_t{ 1 }), size_t{ 1 });
 };
 template <class T>
@@ -1509,10 +1508,10 @@ struct iterator_traits_base<Iterator,
     typename Iterator::difference_type, typename Iterator::pointer, typename Iterator::reference>>
 {
     using iterator_category = typename Iterator::iterator_category;
-    using value_type = typename Iterator::value_type;
-    using difference_type = typename Iterator::difference_type;
-    using pointer = typename Iterator::pointer;
-    using reference = typename Iterator::reference;
+    using value_type        = typename Iterator::value_type;
+    using difference_type   = typename Iterator::difference_type;
+    using pointer           = typename Iterator::pointer;
+    using reference         = typename Iterator::reference;
 };
 
 template <typename Iterator>
@@ -1522,10 +1521,10 @@ template <typename T>
     requires(is_object_v<T>)
 struct iterator_traits<T*> {
     using iterator_category = std::random_access_iterator_tag;
-    using value_type = remove_cv_t<T>;
-    using difference_type = ptrdiff_t;
-    using pointer = T*;
-    using reference = T&;
+    using value_type        = remove_cv_t<T>;
+    using difference_type   = ptrdiff_t;
+    using pointer           = T*;
+    using reference         = T&;
 };
 
 template <typename Iterator>

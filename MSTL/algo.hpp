@@ -142,9 +142,8 @@ Iterator adjacent_find(Iterator first, Iterator last, BinaryPredicate binary_pre
 // count
 template <typename Iterator, typename T>
 	requires(input_iterator<Iterator>)
-typename std::iterator_traits<Iterator>::difference_type
-count(Iterator first, Iterator last, const T& value) {
-	typename std::iterator_traits<Iterator>::difference_type n = 0;
+iter_dif_t<Iterator> count(Iterator first, Iterator last, const T& value) {
+	iter_dif_t n = 0;
 	for (; first != last; ++first) {
 		if (*first == value) ++n;
 	}
@@ -153,9 +152,8 @@ count(Iterator first, Iterator last, const T& value) {
 
 template <typename Iterator, typename T, typename BinaryPredicate>
 	requires(input_iterator<Iterator>)
-typename std::iterator_traits<Iterator>::difference_type
-count_if(Iterator first, Iterator last, const T& value, BinaryPredicate pred) {
-	typename std::iterator_traits<Iterator>::difference_type n = 0;
+iter_dif_t<Iterator> count_if(Iterator first, Iterator last, const T& value, BinaryPredicate pred) {
+	iter_dif_t<Iterator> n = 0;
 	for (; first != last; ++first) {
 		if (pred(*first, value)) ++n;
 	}
@@ -196,10 +194,8 @@ Iterator find_if_not(Iterator first, Iterator last, Predicate pred) {
 template <typename Iterator1, typename Iterator2>
 	requires(forward_iterator<Iterator1> && forward_iterator<Iterator2>)
 Iterator1 search(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2) {
-	using Distance1 = typename std::iterator_traits<Iterator1>::difference_type;
-	using Distance2 = typename std::iterator_traits<Iterator2>::difference_type;
-	Distance1 d1 = MSTL::distance(first1, last1);
-	Distance2 d2 = MSTL::distance(first2, last2);
+	iter_dif_t<Iterator1> d1 = MSTL::distance(first1, last1);
+	iter_dif_t<Iterator2> d2 = MSTL::distance(first2, last2);
 	if (d1 < d2) return last1;
 	Iterator1 current1 = first1;
 	Iterator2 current2 = first2;
@@ -222,10 +218,8 @@ template <typename Iterator1, typename Iterator2, typename BinaryPredicate>
 	requires(forward_iterator<Iterator1> && forward_iterator<Iterator2>)
 Iterator1 search(Iterator1 first1, Iterator1 last1, Iterator2 first2,
 	Iterator2 last2, BinaryPredicate binary_pred) {
-	using Distance1 = typename std::iterator_traits<Iterator1>::difference_type;
-	using Distance2 = typename std::iterator_traits<Iterator2>::difference_type;
-	Distance1 d1 = MSTL::distance(first1, last1);
-	Distance2 d2 = MSTL::distance(first2, last2);
+	iter_dif_t<Iterator1> d1 = MSTL::distance(first1, last1);
+	iter_dif_t<Iterator2> d2 = MSTL::distance(first2, last2);
 	if (d1 < d2) return last1;
 	Iterator1 current1 = first1;
 	Iterator2 current2 = first2;
@@ -314,8 +308,8 @@ Iterator1 find_end(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator
 template <typename Iterator1, typename Iterator2>
 	requires(bidirectional_iterator<Iterator1>&& bidirectional_iterator<Iterator2>)
 Iterator1 find_end(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2) {
-	using reviter1 = typename std::reverse_iterator<Iterator1>;
-	using reviter2 = typename std::reverse_iterator<Iterator2>;
+	using reviter1 = typename MSTL::reverse_iterator<Iterator1>;
+	using reviter2 = typename MSTL::reverse_iterator<Iterator2>;
 	reviter1 rlast1(first1);
 	reviter2 rlast2(first2);
 	reviter1 rresult = MSTL::search(reviter1(last1), rlast1, reviter2(last2), rlast2);
@@ -592,8 +586,7 @@ void rotate(Iterator first, Iterator middle, Iterator last) {
 template <typename Iterator, typename Distance>
 	requires(random_access_iterator<Iterator>)
 void rotate_cycle_aux(Iterator first, Iterator last, Iterator initial, Distance shift) {
-	using T = typename std::iterator_traits<Iterator>::value_type;
-	T value = *initial;
+	iter_val_t<Iterator> value = *initial;
 	Iterator ptr1 = initial;
 	Iterator ptr2 = ptr1 + shift;
 	while (ptr2 != initial) {
@@ -611,8 +604,7 @@ template <typename Iterator, typename Distance>
 	requires(random_access_iterator<Iterator>)
 void rotate(Iterator first, Iterator middle, Iterator last) {
 	if (first == middle || middle == last) return;
-	using Distance = typename std::iterator_traits<Iterator>::difference_type;
-	Distance n = MSTL::gcd(last - first, middle - first);
+	iter_dif_t<Iterator> n = MSTL::gcd(last - first, middle - first);
 	while (n--)
 		(rotate_cycle_aux)(first, last, first + n, middle - first);
 }
@@ -689,8 +681,8 @@ Iterator unique(Iterator first, Iterator last, BinaryPredicate binary_pred) {
 // lower bound
 template <typename Iterator, typename T>
 	requires(forward_iterator<Iterator>)
-Iterator lower_bound(Iterator first, Iterator last, const T& value) {
-	using Distance = typename std::iterator_traits<Iterator>::difference_type;
+Iterator lower_bound(Iterator first, Iterator last, const T& value) noexcept {
+	using Distance = iter_dif_t<Iterator>;
 	Distance len = MSTL::distance(first, last);
 	Distance half;
 	Iterator middle;
@@ -711,7 +703,7 @@ Iterator lower_bound(Iterator first, Iterator last, const T& value) {
 template <typename Iterator, typename T>
 	requires(random_access_iterator<Iterator>)
 Iterator lower_bound(Iterator first, Iterator last, const T& value) {
-	using Distance = typename std::iterator_traits<Iterator>::difference_type;
+	using Distance = iter_dif_t<Iterator>;
 	Distance len = last - first;
 	Distance half;
 	Iterator middle;
@@ -730,7 +722,7 @@ Iterator lower_bound(Iterator first, Iterator last, const T& value) {
 template <typename Iterator, typename T, typename Compare>
 	requires(forward_iterator<Iterator>)
 Iterator lower_bound(Iterator first, Iterator last, const T& value, Compare comp) {
-	using Distance = typename std::iterator_traits<Iterator>::difference_type;
+	using Distance = iter_dif_t<Iterator>;
 	Distance len = MSTL::distance(first, last);
 	Distance half;
 	Iterator middle;
@@ -751,7 +743,7 @@ Iterator lower_bound(Iterator first, Iterator last, const T& value, Compare comp
 template <typename Iterator, typename T, typename Compare>
 	requires(random_access_iterator<Iterator>)
 Iterator lower_bound(Iterator first, Iterator last, const T& value, Compare comp) {
-	using Distance = typename std::iterator_traits<Iterator>::difference_type;
+	using Distance = iter_dif_t<Iterator>;
 	Distance len = last - first;
 	Distance half;
 	Iterator middle;
@@ -771,7 +763,7 @@ Iterator lower_bound(Iterator first, Iterator last, const T& value, Compare comp
 template <typename Iterator, typename T>
 	requires(forward_iterator<Iterator>)
 Iterator upper_bound(Iterator first, Iterator last, const T& value) {
-	using Distance = typename std::iterator_traits<Iterator>::difference_type;
+	using Distance = iter_dif_t<Iterator>;
 	Distance len = MSTL::distance(first, last);
 	Distance half;
 	Iterator middle;
@@ -793,7 +785,7 @@ Iterator upper_bound(Iterator first, Iterator last, const T& value) {
 template <typename Iterator, typename T>
 	requires(random_access_iterator<Iterator>)
 Iterator upper_bound(Iterator first, Iterator last, const T& value) {
-	using Distance = typename std::iterator_traits<Iterator>::difference_type;
+	using Distance = iter_dif_t<Iterator>;
 	Distance len = last - first;
 	Distance half;
 	Iterator middle;
@@ -813,7 +805,7 @@ Iterator upper_bound(Iterator first, Iterator last, const T& value) {
 template <typename Iterator, typename T, typename Compare>
 	requires(forward_iterator<Iterator>)
 Iterator upper_bound(Iterator first, Iterator last, const T& value, Compare comp) {
-	using Distance = typename std::iterator_traits<Iterator>::difference_type;
+	using Distance = iter_dif_t<Iterator>;
 	Distance len = distance(first, last);
 	Distance half;
 	Iterator middle;
@@ -835,7 +827,7 @@ Iterator upper_bound(Iterator first, Iterator last, const T& value, Compare comp
 template <typename Iterator, typename T, typename Compare>
 	requires(random_access_iterator<Iterator>)
 Iterator upper_bound(Iterator first, Iterator last, const T& value, Compare comp) {
-	using Distance = typename std::iterator_traits<Iterator>::difference_type;
+	using Distance = iter_dif_t<Iterator>;
 	Distance len = last - first;
 	Distance half;
 	Iterator middle;
@@ -871,10 +863,8 @@ bool binary_search(Iterator first, Iterator last, const T& value, Compare comp) 
 template <class Iterator1, class Iterator2, class BinaryPred>
 	requires(bidirectional_iterator<Iterator1>&& bidirectional_iterator<Iterator2>)
 bool is_permutation(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2) {
-	using Distance1 = MSTL::iter_dif_t<Iterator1>;
-	using Distance2 = MSTL::iter_dif_t<Iterator2>;
-	Distance1 len1 = MSTL::distance(first1, last1);
-	Distance2 len2 = MSTL::distance(first2, last2);
+	iter_dif_t<Iterator1> len1 = MSTL::distance(first1, last1);
+	iter_dif_t<Iterator2> len2 = MSTL::distance(first2, last2);
 	if (len1 != len2) return false;
 
 	for (; first1 != last1 && first2 != last2; ++first1, ++first2) {
@@ -914,8 +904,8 @@ bool is_permutation(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterato
 template <class Iterator1, class Iterator2, class BinaryPred>
 	requires(bidirectional_iterator<Iterator1> && bidirectional_iterator<Iterator2>)
 bool is_permutation(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2, BinaryPred pred) {
-	auto len1 = MSTL::distance(first1, last1);
-	auto len2 = MSTL::distance(first2, last2);
+	iter_dif_t<Iterator1> len1 = MSTL::distance(first1, last1);
+	iter_dif_t<Iterator2> len2 = MSTL::distance(first2, last2);
 	if (len1 != len2)
 		return false;
 	for (; first1 != last1 && first2 != last2; ++first1, (void) ++first2) {
@@ -924,9 +914,9 @@ bool is_permutation(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterato
 	}
 	if (first1 == last1)
 		return true;
-	for (auto i = first1; i != last1; ++i) {
+	for (Iterator1 i = first1; i != last1; ++i) {
 		bool is_repeated = false;
-		for (auto j = first1; j != i; ++j) {
+		for (Iterator1 j = first1; j != i; ++j) {
 			if (pred(*j, *i)) {
 				is_repeated = true;
 				break;
@@ -934,15 +924,15 @@ bool is_permutation(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterato
 		}
 
 		if (!is_repeated) {
-			auto c2 = 0;
-			for (auto j = first2; j != last2; ++j) {
+			size_t c2 = 0;
+			for (Iterator2 j = first2; j != last2; ++j) {
 				if (pred(*i, *j))
 					++c2;
 			}
 			if (c2 == 0)
 				return false;
-			auto c1 = 1;
-			auto j = i;
+			size_t c1 = 1;
+			Iterator1 j = i;
 			for (++j; j != last1; ++j) {
 				if (pred(*i, *j))
 					++c1;
@@ -1060,7 +1050,7 @@ bool prev_permutation(Iterator first, Iterator last, Compare comp) {
 	}
 }
 
-// random shuffle
+// shuffle
 template <typename Iterator>
 	requires(random_access_iterator<Iterator>)
 void shuffle(Iterator first, Iterator last) {
@@ -1085,11 +1075,10 @@ void shuffle(Iterator first, Iterator last, Generator& rand) {
 template <typename Iterator, typename T>
 	requires(forward_iterator<Iterator>)
 pair<Iterator, Iterator> equal_range(Iterator first, Iterator last, const T& value) {
-	using Distance = typename std::iterator_traits<Iterator>::difference_type;
+	using Distance = iter_dif_t<Iterator>;
 	Distance len = distance(first, last);
 	Distance half;
 	Iterator middle, left, right;
-
 	while (len > 0) {
 		half = len >> 1;
 		middle = first;
@@ -1114,7 +1103,7 @@ pair<Iterator, Iterator> equal_range(Iterator first, Iterator last, const T& val
 template <typename Iterator, typename T, typename Distance>
 	requires(random_access_iterator<Iterator>)
 pair<Iterator, Iterator> equal_range(Iterator first, Iterator last, const T& value) {
-	using Distance = typename std::iterator_traits<Iterator>::difference_type;
+	using Distance = iter_dif_t<Iterator>;
 	Distance len = last - first;
 	Distance half;
 	Iterator middle, left, right;
@@ -1139,7 +1128,7 @@ pair<Iterator, Iterator> equal_range(Iterator first, Iterator last, const T& val
 template <typename Iterator, typename T, typename Compare>
 	requires(forward_iterator<Iterator>)
 pair<Iterator, Iterator> equal_range(Iterator first, Iterator last, const T& value, Compare comp) {
-	using Distance = typename std::iterator_traits<Iterator>::difference_type;
+	using Distance = iter_dif_t<Iterator>;
 	Distance len = distance(first, last);
 	Distance half;
 	Iterator middle, left, right;
@@ -1167,7 +1156,7 @@ pair<Iterator, Iterator> equal_range(Iterator first, Iterator last, const T& val
 template <typename Iterator, typename T, typename Compare>
 	requires(random_access_iterator<Iterator>)
 pair<Iterator, Iterator> equal_range(Iterator first, Iterator last, const T& value, Compare comp) {
-	using Distance = typename std::iterator_traits<Iterator>::difference_type;
+	using Distance = iter_dif_t<Iterator>;
 	Distance len = last - first;
 	Distance half;
 	Iterator middle, left, right;
@@ -1412,7 +1401,7 @@ template <class Iterator>
 	requires(bidirectional_iterator<Iterator>)
 void inplace_merge(Iterator first, Iterator middle, Iterator last) {
 	if (first == middle || middle == last) return;
-	using Distance = typename std::iterator_traits<Iterator>::difference_type;
+	using Distance = iter_dif_t<Iterator>;
 	Distance len1 = MSTL::distance(first, middle);
 	Distance len2 = MSTL::distance(middle, last);
 	temporary_buffer<Iterator> buffer(first, last);
@@ -1427,7 +1416,7 @@ template <class Iterator, class Compare>
 	requires(bidirectional_iterator<Iterator>)
 void inplace_merge(Iterator first, Iterator middle, Iterator last, Compare comp) {
 	if (first == middle || middle == last) return;
-	using Distance = typename std::iterator_traits<Iterator>::difference_type;
+	using Distance = iter_dif_t<Iterator>;
 	Distance len1 = MSTL::distance(first, middle);
 	Distance len2 = MSTL::distance(middle, last);
 	temporary_buffer<Iterator> buffer(first, last);

@@ -61,7 +61,7 @@ void transform_reduce(Iterator first, Iterator last, UnaryOp transform, BinaryOp
 template <typename Iterator1, typename Iterator2>
 	requires(input_iterator<Iterator1> && input_iterator<Iterator2>)
 MSTL_CONSTEXPR Iterator2 adjacent_difference(Iterator1 first, Iterator1 last, Iterator2 result) {
-	using T = typename iterator_traits<Iterator1>::value_type;
+	using T = iter_val_t<Iterator1>;
 	if (first == last) return result;
 	*result = *first;
 	T value = *first;
@@ -78,7 +78,7 @@ template <typename Iterator1, typename Iterator2, typename BinaryOperation>
 MSTL_CONSTEXPR Iterator2 adjacent_difference(Iterator1 first, Iterator1 last,
 	Iterator2 result, BinaryOperation binary_op) {
 	if (first == last) return result;
-	using T = typename iterator_traits<Iterator1>::value_type;
+	using T = iter_val_t<Iterator1>;
 	*result = *first;
 	T value = *first;
 	while (++first != last) {
@@ -111,11 +111,10 @@ MSTL_CONSTEXPR T inner_product(Iterator1 first1, Iterator1 last1, Iterator2 firs
 // partial sum
 template <typename Iterator1, typename Iterator2>
 	requires(input_iterator<Iterator1> && input_iterator<Iterator2>)
-MSTL_CONSTEXPR Iterator2 partial_sum(Iterator1 first, Iterator1  last, Iterator2 result) {
+MSTL_CONSTEXPR Iterator2 partial_sum(Iterator1 first, Iterator1 last, Iterator2 result) {
 	if (first == last) return result;
-	using T = typename iterator_traits<Iterator1>::value_type;
 	*result = *first;
-	T value = *first;
+	iter_val_t<Iterator1> value = *first;
 	while (++first != last) {
 		value = value + *first;
 		*++result = value;
@@ -128,9 +127,8 @@ template <typename Iterator1, typename Iterator2, typename BinaryOperation>
 MSTL_CONSTEXPR Iterator2 partial_sum(
 	Iterator1 first, Iterator1 last, Iterator2 result, BinaryOperation binary_op) {
 	if (first == last) return result;
-	using T = typename iterator_traits<Iterator1>::value_type;
 	*result = *first;
-	T value = *first;
+	iter_val_t<Iterator1> value = *first;
 	while (++first != last) {
 		value = binary_op(value, *first);
 		*++result = value;

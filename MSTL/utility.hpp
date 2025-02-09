@@ -380,7 +380,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR const T2&& get(const pair<T1, T2>&& pir) noexcept 
 }
 
 
-template <typename T, typename... Args, enable_if_t<is_constructible_v<T, Args...>, int> = 0>
+template <typename T, typename... Args>
 MSTL_CONSTEXPR void construct(T* const ptr, Args&&... args)
 noexcept(is_nothrow_constructible_v<T, Args...>) {
 	::new (static_cast<void*>(ptr)) T(MSTL::forward<Args>(args)...);

@@ -4,32 +4,35 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator>
-MSTL_NODISCARD MSTL_CONSTEXPR iter_cat_t<Iterator> iterator_category(const Iterator&) {
-    using category = iter_cat_t<Iterator>;
-    return category();
+MSTL_NODISCARD MSTL_CONSTEXPR iter_cat_t<Iterator> iterator_category(const Iterator&) noexcept {
+    return iter_cat_t<Iterator>();
 }
 template <typename Iterator>
-MSTL_NODISCARD MSTL_CONSTEXPR iter_dif_t<Iterator>* distance_type(const Iterator&) {
+MSTL_NODISCARD MSTL_CONSTEXPR iter_dif_t<Iterator>* distance_type(const Iterator&) noexcept {
     return static_cast<iter_dif_t<Iterator>*>(0);
 }
 template <typename Iterator>
-MSTL_NODISCARD MSTL_CONSTEXPR iter_val_t<Iterator>* value_type(const Iterator&) {
+MSTL_NODISCARD MSTL_CONSTEXPR iter_val_t<Iterator>* value_type(const Iterator&) noexcept {
     return static_cast<iter_val_t<Iterator>*>(0);
 }
 
 template <typename Iterator, typename Distance>
     requires(iterator_typedef<Iterator>)
 MSTL_CONSTEXPR void advance(Iterator& i, Distance n) {
-    if constexpr (random_access_iterator<Iterator>)
+    if constexpr (is_ranges_rnd_iter_v<Iterator>) {
         i += n;
-    else if constexpr (bidirectional_iterator<Iterator>) {
-        if (n >= 0)
-            while (n--) ++i;
-        else
-            while (n++) --i;
     }
-    else 
-        while (n--) ++i;
+    else {
+        if constexpr (is_signed_v<Distance> && !is_ranges_bid_iter_v<Iterator>) {
+            MSTL_DEBUG_VERIFY__(n >= 0, "negative advance of non-bidirectional iterator");
+        }
+        if constexpr (is_signed_v<Distance> && is_ranges_bid_iter_v<Iterator>) {
+            for (; n < 0; ++n) 
+                --i;
+        }
+        for (; 0 < n; --n) 
+            ++i;
+    }
 }
 
 template <typename Iterator>
@@ -46,9 +49,9 @@ MSTL_CONSTEXPR Iterator next(Iterator iter, iter_dif_t<Iterator> n = 1) {
 }
 
 template <typename Iterator>
-    requires(random_access_iterator<Iterator>)
+    requires(iterator_typedef<Iterator>)
 MSTL_CONSTEXPR iter_dif_t<Iterator> distance(Iterator first, Iterator last) {
-    if constexpr (random_access_iterator<Iterator>)
+    if constexpr (is_ranges_rnd_iter_v<Iterator>)
         return last - first;
     else {
         iter_dif_t<Iterator> n = 0;
@@ -158,9 +161,9 @@ inserter(Container& x, typename Container::iterator it) noexcept {
     return insert_iterator<Container>(x, it);
 }
 
-template <class Iterator>
-    requires(bidirectional_iterator<Iterator>)
+template <typename Iterator>
 class reverse_iterator {
+    static_assert(is_ranges_bid_iter_v<Iterator>, "reverse iterator requires bidirectional iterator.");
 public:
     using iterator_category = iter_cat_t<Iterator>;
     using value_type        = iter_val_t<Iterator>;

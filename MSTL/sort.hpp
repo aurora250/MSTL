@@ -404,12 +404,10 @@ template <typename Iterator, typename Mapper>
     requires(random_access_iterator<Iterator>)
 void radix_sort_greater(Iterator first, Iterator last, Mapper mapper) {
     if (first == last) return;
-    using Distance = typename iterator_traits<Iterator>::difference_type;
-    using T = typename iterator_traits<Iterator>::value_type;
-    using Mapped = remove_reference_t<decltype(mapper(*first))>;
-    Distance length = MSTL::distance(first, last);
+    using Mapped = remove_cvref_t<decltype(mapper(*first))>;
+    iter_dif_t<Iterator> length = MSTL::distance(first, last);
     vector<Mapped> mapped_values(length);
-    vector<T> bucket(length);
+    vector<iter_val_t<Iterator>> bucket(length);
     vector<int> count(10);
     Iterator it = first;
     FOR_EACH(value, mapped_values) {

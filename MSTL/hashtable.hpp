@@ -4,51 +4,52 @@
 #include "vector.hpp"
 #include "concepts.hpp"
 #include "hash_function.h"
-#include "tuple.hpp"
+#include "mathlib.h"
 MSTL_BEGIN_NAMESPACE__
 
-template <class T>
+template <typename T>
 struct __hashtable_node {
     __hashtable_node* next_;
     T data_;
 };
 
-template <class Value, class Key, class HashFcn, class ExtractKey, class EqualKey,
-    class Alloc = standard_allocator<__hashtable_node<Value>>>
+template <typename Value, typename Key, typename HashFcn, typename ExtractKey, typename EqualKey,
+    typename Alloc = standard_allocator<__hashtable_node<Value>>>
 class hashtable;
 
-template <class Value, class Key, class HashFcn,
-    class ExtractKey, class EqualKey, class Alloc>
+template <typename Value, typename Key, typename HashFcn, typename ExtractKey, typename EqualKey, typename Alloc>
 struct hashtable_const_iterator;
 
-template <class Value, class Key, class HashFcn, class ExtractKey, class EqualKey, class Alloc>
+template <typename Value, typename Key, typename HashFcn, typename ExtractKey, typename EqualKey, typename Alloc>
 struct hashtable_iterator {
-    typedef hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc> hashtable;
-    typedef hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc> iterator;
-    typedef hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc> const_iterator;
-    typedef __hashtable_node<Value> node;
-    typedef std::forward_iterator_tag iterator_category;
-    typedef Value value_type;
-    typedef ptrdiff_t difference_type;
-    typedef size_t size_type;
-    typedef Value& reference;
-    typedef Value* pointer;
+    using hashtable         = hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+    using iterator          = hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+    using const_iterator    = hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+    using node              = __hashtable_node<Value>;
+    using iterator_category = std::forward_iterator_tag;
+    using value_type        = Value;
+    using difference_type   = ptrdiff_t;
+    using size_type         = size_t;
+    using reference         = Value&;
+    using pointer           = Value*;
 
     node* cur_;
     hashtable* ht_;
+    size_t hash_val_;
 
-    hashtable_iterator(node* n, hashtable* tab) : cur_(n), ht_(tab) {}
-    hashtable_iterator() : cur_(nullptr), ht_(nullptr) {}
-    hashtable_iterator(const iterator& it) : cur_(it.cur_), ht_(it.ht_) {}
+    hashtable_iterator() : cur_(nullptr), ht_(nullptr), hash_val_(0) {}
+    hashtable_iterator(node* n, size_t hv, hashtable* tab) : cur_(n), ht_(tab), hash_val_(hv) {}
+    hashtable_iterator(const iterator& it) : cur_(it.cur_), ht_(it.ht_), hash_val_(it.hash_val_) {}
+
     MSTL_NODISCARD reference operator *() const noexcept { return cur_->data_; }
     MSTL_NODISCARD pointer operator ->() const noexcept { return &(operator*()); }
+
     iterator& operator ++() {
         const node* old = cur_;
         cur_ = cur_->next_;
-        if (!cur_) {
-            size_type bucket = ht_->bkt_num(old->data_);
-            while (!cur_ && ++bucket < ht_->buckets_.size())
-                cur_ = ht_->buckets_[bucket];
+        if (cur_ == nullptr) {
+            while (cur_ == nullptr && ++hash_val_ < ht_->buckets_.size())
+                cur_ = ht_->buckets_[hash_val_];
         }
         return *this;
     }
@@ -58,14 +59,14 @@ struct hashtable_iterator {
         return tmp;
     }
 };
-template <class Value, class Key, class HashFcn, class ExtractKey, class EqualKey, class Alloc>
+template <typename Value, typename Key, typename HashFcn, typename ExtractKey, typename EqualKey, typename Alloc>
 MSTL_NODISCARD bool operator ==(
     const hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& lh, 
     const hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& rh) 
 noexcept(noexcept(lh.cur_ == rh.cur_)) {
     return lh.cur_ == rh.cur_;
 }
-template <class Value, class Key, class HashFcn, class ExtractKey, class EqualKey, class Alloc>
+template <typename Value, typename Key, typename HashFcn, typename ExtractKey, typename EqualKey, typename Alloc>
 MSTL_NODISCARD bool operator !=(
     const hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& lh,
     const hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& rh)
@@ -73,35 +74,38 @@ MSTL_NODISCARD bool operator !=(
     return !(lh == rh);
 }
 
-template <class Value, class Key, class HashFcn, class ExtractKey, class EqualKey, class Alloc>
+template <typename Value, typename Key, typename HashFcn, typename ExtractKey, typename EqualKey, typename Alloc>
 struct hashtable_const_iterator {
-    typedef hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc> hashtable;
-    typedef hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc> iterator;
-    typedef hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc> const_iterator;
-    typedef __hashtable_node<Value> node;
-    typedef std::forward_iterator_tag iterator_category;
-    typedef Value value_type;
-    typedef ptrdiff_t difference_type;
-    typedef size_t size_type;
-    typedef const Value& reference;
-    typedef const Value* pointer;
+    using hashtable         = hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+    using iterator          = hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+    using const_iterator    = hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+    using node              = __hashtable_node<Value>;
+    using iterator_category = std::forward_iterator_tag;
+    using value_type        = Value;
+    using difference_type   = ptrdiff_t;
+    using size_type         = size_t;
+    using reference         = const Value&;
+    using pointer           = const Value*;
 
     const node* cur_;
     const hashtable* ht_;
+    size_t hash_val_;
 
-    hashtable_const_iterator(const node* n, const hashtable* tab)
-        : cur_(n), ht_(tab) {}
-    hashtable_const_iterator() noexcept : cur_(nullptr), ht_(nullptr) {}
-    hashtable_const_iterator(const iterator& it) : cur_(it.cur_), ht_(it.ht_) {}
+    hashtable_const_iterator() noexcept : cur_(nullptr), ht_(nullptr), hash_val_(0) {}
+    hashtable_const_iterator(const node* n, size_t hv, const hashtable* tab)
+        : cur_(n), ht_(tab), hash_val_(hv) {}
+    hashtable_const_iterator(const iterator& it) : cur_(it.cur_), ht_(it.ht_), hash_val_(it.hash_val_) {}
+
     MSTL_NODISCARD reference operator *() const noexcept { return cur_->data_; }
     MSTL_NODISCARD pointer operator ->() const noexcept { return &(operator*()); }
+
     const_iterator& operator ++() {
         const node* old = cur_;
         cur_ = cur_->next_;
-        if (!cur_) {
-            size_type bucket = ht_->bkt_num(old->data_);
-            while (!cur_ && ++bucket < ht_->buckets_.size())
-                cur_ = ht_->buckets_[bucket];
+        if (cur_ == nullptr) {
+            while (cur_ == nullptr && ++hash_val_ < ht_->buckets_.size()) {
+                cur_ = ht_->buckets_[hash_val_];
+            }
         }
         return *this;
     }
@@ -111,490 +115,152 @@ struct hashtable_const_iterator {
         return tmp;
     }
 };
-template <class Value, class Key, class HashFcn, class ExtractKey, class EqualKey, class Alloc>
+template <typename Value, typename Key, typename HashFcn, typename ExtractKey, typename EqualKey, typename Alloc>
 MSTL_NODISCARD bool operator ==(
     const hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& lh,
     const hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& rh)
     noexcept(noexcept(lh.cur_ == rh.cur_)) {
     return lh.cur_ == rh.cur_;
 }
-template <class Value, class Key, class HashFcn, class ExtractKey, class EqualKey, class Alloc>
+template <typename Value, typename Key, typename HashFcn, typename ExtractKey, typename EqualKey, typename Alloc>
 MSTL_NODISCARD bool operator !=(
     const hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& lh,
     const hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& rh)
-    noexcept(noexcept(!(lh == rh))) {
-    return !(lh == rh);
+    noexcept(noexcept(lh.cur_ != rh.cur_)) {
+    return lh.cur_ != rh.cur_;
 }
 
-MSTL_NODISCARD inline size_t hashtable_next_prime(size_t n) noexcept {
-    const mathui_t* first = PRIME_LIST;
-    const mathui_t* last = PRIME_LIST + PRIMER_COUNT__;
-    const mathui_t* pos = lower_bound(first, last, n);
+#ifdef MSTL_DATA_BUS_WIDTH_64__
+
+static MSTL_CONSTEXPR uint16_t HASH_PRIMER_COUNT__ = 99;
+
+static MSTL_CONSTEXPR size_t HASH_PRIME_LIST[HASH_PRIMER_COUNT__] = {
+    101,                    173,                        263,                        397,
+    599,                    907,                        1361,                       2053, 
+    3083,                   4637,                       6959,                       10453, 
+    15683,                  23531,                      35311,                      52967, 
+    79451,                  119179,                     178781,                     268189, 
+    402299,                 603457,                     905189,                     1357787,
+    2036687,                3055043,                    4582577,                    6873871, 
+    10310819,               15466229,                   23199347,                   34799021, 
+    52198537,               78297827,                   117446801,                  176170229,
+    264255353,              396383041,                  594574583,                  891861923, 
+    1337792887,             2006689337,                 3010034021u,                4515051137ull, 
+    6772576709ull,          10158865069ull,             15238297621ull,             22857446471ull,
+    34286169707ull,         51429254599ull,             77143881917ull,             115715822899ull,
+    173573734363ull,        260360601547ull,            390540902329ull,            585811353559ull, 
+    878717030339ull,        1318075545511ull,           1977113318311ull,           2965669977497ull,
+    4448504966249ull,       6672757449409ull,           10009136174239ull,          15013704261371ull,
+    22520556392057ull,      33780834588157ull,          50671251882247ull,          76006877823377ull,
+    114010316735089ull,     171015475102649ull,         256523212653977ull,         384784818980971ull,
+    577177228471507ull,     865765842707309ull,         1298648764060979ull,        1947973146091477ull, 
+    2921959719137273ull,    4382939578705967ull,        6574409368058969ull,        9861614052088471ull, 
+    14792421078132871ull,   22188631617199337ull,       33282947425799017ull,       49924421138698549ull,
+    74886631708047827ull,   112329947562071807ull,      168494921343107851ull,      252742382014661767ull,
+    379113573021992729ull,  568670359532989111ull,      853005539299483657ull,      1279508308949225477ull,
+    1919262463423838231ull, 2878893695135757317ull,     4318340542703636011ull,     6477510814055453699ull,
+    9716266221083181299ull, 14574399331624771603ull,    18446744073709551557ull
+};
+
+MSTL_NODISCARD inline size_t hashtable_next_prime(size_t n) {
+    const size_t* first = HASH_PRIME_LIST;
+    const size_t* last = HASH_PRIME_LIST + HASH_PRIMER_COUNT__;
+    const size_t* pos = MSTL::lower_bound(first, last, n);
+    return pos == last ? *(last - 1) : *pos;
+}
+
+#else
+
+static MSTL_CONSTEXPR uint16_t HASH_PRIMER_COUNT__ = 28;
+
+static MSTL_CONSTEXPR uint32_t HASH_PRIME_LIST[HASH_PRIMER_COUNT__] = {
+    53,         97,           193,         389,       769,
+    1543,       3079,         6151,        12289,     24593,
+    49157,      98317,        196613,      393241,    786433,
+    1572869,    3145739,      6291469,     12582917,  25165843,
+    50331653,   100663319,    201326611,   402653189, 805306457,
+    1610612741, 3221225473u,  4294967291u
+};
+
+MSTL_NODISCARD inline size_t hashtable_next_prime(size_t n) {
+    const uint32_t* first = HASH_PRIME_LIST;
+    const uint32_t* last = HASH_PRIME_LIST + HASH_PRIMER_COUNT__;
+    const uint32_t* pos = MSTL::lower_bound(first, last, n);
     return pos == last ? size_t(*(last - 1)) : size_t(*pos);
 }
 
-template <class Value, class Key, class HashFcn, class ExtractKey, class EqualKey, class Alloc>
+#endif
+
+template <typename Value, typename Key, typename HashFcn, typename ExtractKey, typename EqualKey, typename Alloc>
 class hashtable {
 public:
-    using key_type = Key;
-    using value_type = Value;
-    using hasher = HashFcn;
-    using key_equal = EqualKey;
-    using size_type = size_t;
-    using difference_type = ptrdiff_t;
-    using pointer = value_type*;
-    using const_pointer = const value_type*;
-    using reference = value_type&;
-    using const_reference = const value_type&;
-    using node_type = __hashtable_node<value_type>;
-    using link_type = node_type*;
-    using allocator_type = Alloc;
-    using iterator = hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
-    using const_iterator = hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
-    using self = hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+    using key_type          = Key;
+    using value_type        = Value;
+    using hasher            = HashFcn;
+    using key_equal         = EqualKey;
+    using size_type         = size_t;
+    using difference_type   = ptrdiff_t;
+    using pointer           = value_type*;
+    using const_pointer     = const value_type*;
+    using reference         = value_type&;
+    using const_reference   = const value_type&;
+    using node_type         = __hashtable_node<value_type>;
+    using link_type         = node_type*;
+    using allocator_type    = Alloc;
+    using iterator          = hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+    using const_iterator    = hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+    using self              = hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
 
     friend struct hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
     friend struct hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
-    friend bool operator ==(const hashtable&, const hashtable&);
+
+    template <typename Value1, typename Key1, typename HashFcn1,
+        typename ExtractKey1, typename EqualKey1, typename Alloc1>
+    friend bool operator ==(const hashtable<Value1, Key1, HashFcn1, ExtractKey1, EqualKey1, Alloc1>&,
+        const hashtable<Value1, Key1, HashFcn1, ExtractKey1, EqualKey1, Alloc1>&) noexcept;
 
 private:
     hasher hasher_;
     key_equal equals_;
-    ExtractKey get_key_;
+    ExtractKey extracter_;
     vector<link_type> buckets_;
     size_type size_;
+    float factor_;
     allocator_type alloc_;
 
-public:
-    explicit hashtable(size_type n) 
-        : hasher_(HashFcn()), equals_(EqualKey()), get_key_(ExtractKey()), size_(0) {}
-    hashtable(size_type n, const HashFcn& hf)
-        : hasher_(hf), equals_(EqualKey()), get_key_(ExtractKey()), size_(0) {
-        initialize_buckets(n);
-    }
-    hashtable(size_type n, const HashFcn& hf, const EqualKey& eql)
-        : hasher_(hf), equals_(eql), get_key_(ExtractKey()), size_(0) {
-        initialize_buckets(n);
-    }
-    hashtable(size_type n, const HashFcn& hf, const EqualKey& eql, const ExtractKey& ext)
-        : hasher_(hf), equals_(eql), get_key_(ext), size_(0) {
-        initialize_buckets(n);
-    }
-    hashtable(const self& ht)
-        : hasher_(ht.hasher_), equals_(ht.equals_), get_key_(ht.get_key_), size_(0) {
-        copy_from(ht);
-    }
-    self& operator =(const self& ht) {
-        if (std::addressof(ht) != this) return *this;
-        clear();
-        hasher_ = ht.hasher_;
-        equals_ = ht.equals_;
-        get_key_ = ht.get_key_;
-        copy_from(ht);
-        return *this;
-    }
-    explicit hashtable(self&& ht) noexcept(noexcept(swap(ht)))
-        : hasher_(ht.hasher_), equals_(ht.equals_), get_key_(ht.get_key_), size_(0) {
-        swap(ht);
-    }
-    self& operator =(self&& ht) noexcept(noexcept(swap(ht))) {
-        if (std::addressof(ht) == this) {
-            ht.clear();
-            return *this;
-        }
-        clear();
-        swap(ht);
-        return *this;
-    }
-    ~hashtable() { clear(); }
-
-    MSTL_NODISCARD hasher hash_func() const noexcept(nothrow_copy_constructible<hasher>) {
-        return hasher_;
-    }
-    MSTL_NODISCARD key_equal key_eql() const noexcept(nothrow_copy_constructible<key_equal>) {
-        return equals_;
-    }
-    MSTL_NODISCARD size_type size() const noexcept { return size_; }
-    MSTL_NODISCARD bool empty() const noexcept { return size_ == 0; }
-
-    MSTL_NODISCARD iterator begin() noexcept {
-        for (size_type n = 0; n < buckets_.size(); ++n)
-            if (buckets_[n])
-                return iterator(buckets_[n], this);
-        return end();
-    }
-    MSTL_NODISCARD iterator end() noexcept { return iterator(nullptr, this); }
-
-    MSTL_NODISCARD const_iterator cbegin() const noexcept {
-        for (size_type n = 0; n < buckets_.size(); ++n) {
-            if (buckets_[n]) 
-                return const_iterator(buckets_[n], this);
-        }
-        return cend();
-    }
-    MSTL_NODISCARD const_iterator cend() const noexcept {
-        return const_iterator(nullptr, this);
-    }
-
-    void swap(self& ht) noexcept(noexcept(std::swap(hasher_, ht.hasher_)) 
-        && noexcept(std::swap(equals_, ht.equals_)) && noexcept(std::swap(get_key_, ht.get_key_))) {
-        if (this == std::addressof(ht)) return;
-        std::swap(hasher_, ht.hasher_);
-        std::swap(equals_, ht.equals_);
-        std::swap(get_key_, ht.get_key_);
-        buckets_.swap(ht.buckets_);
-        std::swap(size_, ht.size_);
-    }
-
-    MSTL_NODISCARD size_type buckets_size() const noexcept { return buckets_.size(); }
-    MSTL_NODISCARD size_type max_buckets_size() const noexcept { 
-        return PRIME_LIST[PRIMER_COUNT__ - 1];
-    }
-    MSTL_NODISCARD size_type bucket_count(size_type bucket) const noexcept {
-        size_type result = 0;
-        for (node_type* cur = buckets_[bucket]; cur; cur = cur->next_) 
-            result++;
-        return result;
-    }
-    MSTL_NODISCARD size_type count(const key_type& key) const noexcept {
-        const size_type n = bkt_num_key(key);
-        size_type result = 0;
-        for (const node_type* cur = buckets_[n]; cur; cur = cur->next_) {
-            if (equals_(get_key_(cur->data_), key)) ++result;
-        }
-        return result;
-    }
-
-    pair<iterator, bool> insert_unique(const value_type& x) {
-        resize(size_ + 1);
-        return insert_unique_noresize(x);
-    }
-    iterator insert_equal(const value_type& x) {
-        resize(size_ + 1);
-        return insert_equal_noresize(x);
-    }
-    pair<iterator, bool> insert_unique(value_type&& x) {
-        resize(size_ + 1);
-        return insert_unique_noresize(std::forward<value_type>(x));
-    }
-    iterator insert_equal(value_type&& x) {
-        resize(size_ + 1);
-        return insert_equal_noresize(std::forward<value_type>(x));
-    }
-    template <typename T = value_type> 
-    pair<iterator, bool> insert_unique_noresize(T&& x) {
-        const size_type n = bkt_num(x);
-        node_type* first = buckets_[n];
-        for (node_type* cur = first; cur; cur = cur->next_) {
-            if (equals_(get_key_(cur->data_), get_key_(x))) {
-                buckets_[n] = cur->next_;
-                delete_node(cur);
-                node_type* tmp = new_node(std::forward<T>(x));
-                tmp->next_ = buckets_[n];
-                buckets_[n] = tmp;
-                return pair<iterator, bool>(iterator(tmp, this), false);
-            }
-        }
-        node_type* tmp = new_node(std::forward<T>(x));
-        tmp->next_ = first;
-        buckets_[n] = tmp;
-        ++size_;
-        return pair<iterator, bool>(iterator(tmp, this), true);
-    }
-    
-    template <typename T = value_type>
-    iterator insert_equal_noresize(T&& x) {
-        const size_type n = bkt_num(x);
-        node_type* first = buckets_[n];
-        for (node_type* cur = first; cur; cur = cur->next_) {
-            if (equals_(get_key_(cur->data_), get_key_(x))) {
-                node_type* tmp = new_node(std::forward<T>(x));
-                tmp->next_ = cur->next_;
-                cur->next_ = tmp;
-                ++size_;
-                return iterator(tmp, this);
-            }
-        }
-        node_type* tmp = new_node(std::forward<T>(x));
-        tmp->next_ = first;
-        buckets_[n] = tmp;
-        ++size_;
-        return iterator(tmp, this);
-    }
-
-    template <class Iterator>
-        requires(input_iterator<Iterator>)
-    void insert_unique(Iterator f, Iterator l) {
-        for (; f != l; ++f) insert_unique(*f);
-    }
-    template <class Iterator>
-        requires(input_iterator<Iterator>)
-    void insert_equal(Iterator f, Iterator l) {
-        for (; f != l; ++f) insert_equal(*f);
-    }
-    template <class Iterator>
-        requires(forward_iterator<Iterator>)
-    void insert_unique(Iterator f, Iterator l) {
-        size_type n = 0;
-        MSTL::distance(f, l, n);
-        resize(size_ + n);
-        for (; n > 0; --n, ++f) insert_unique_noresize(*f);
-    }
-    template <class Iterator>
-        requires(forward_iterator<Iterator>)
-    void insert_equal(Iterator f, Iterator l) {
-        size_type n = 0;
-        MSTL::distance(f, l, n);
-        resize(size_ + n);
-        for (; n > 0; --n, ++f) insert_equal_noresize(*f);
-    }
-
-    template <typename T = value_type> 
-    reference find_or_insert(T&& x) {
-        resize(size_ + 1);
-        size_type n = bkt_num(x);
-        node_type* first = buckets_[n];
-        for (node_type* cur = first; cur; cur = cur->next_) {
-            if (equals_(get_key_(cur->data_), get_key_(x))) 
-                return cur->data_;
-        }
-        node_type* tmp = new_node(std::forward<T>(x));
-        tmp->next_ = first;
-        buckets_[n] = tmp;
-        ++size_;
-        return tmp->data_;
-    }
-
-    MSTL_NODISCARD iterator find(const key_type& key) {
-        size_type n = bkt_num_key(key);
-        node_type* first;
-        for (first = buckets_[n]; first && !equals_(get_key_(first->data_), key);
-            first = first->next_);
-        return iterator(first, this);
-    }
-    MSTL_NODISCARD const_iterator find(const key_type& key) const {
-        size_type n = bkt_num_key(key);
-        const node_type* first;
-        for (first = buckets_[n]; first && !equals_(get_key_(first->data_), key); 
-            first = first->next_);
-        return const_iterator(first, this);
-    }
-
-    template <typename... Args>
-    pair<iterator, bool> emplace_unique(Args&&... args) {
-        return insert_unique_noresize(std::move(value_type(args...)));
-    }
-    template <typename... Args>
-    iterator emplace_equal(Args&&... args) {
-        return insert_equal_noresize(std::move(value_type(args...)));
-    }
-
-    pair<iterator, iterator> equal_range(const key_type& key) {
-        typedef pair<iterator, iterator> iter_pair;
-        const size_type n = bkt_num_key(key);
-        for (node_type* first = buckets_[n]; first; first = first->next_) {
-            if (equals_(get_key_(first->data_), key)) {
-                for (node_type* cur = first->next_; cur; cur = cur->next_) {
-                    if (!equals_(get_key_(cur->data_), key))
-                        return iter_pair(iterator(first, this), iterator(cur, this));
-                }
-                for (size_type m = n + 1; m < buckets_.size(); ++m) {
-                    if (buckets_[m])
-                        return iter_pair(iterator(first, this),
-                            iterator(buckets_[m], this));
-                }
-                return iter_pair(iterator(first, this), end());
-            }
-        }
-        return iter_pair(end(), end());
-    }
-    pair<const_iterator, const_iterator> equal_range(const key_type& key) const {
-        typedef pair<const_iterator, const_iterator> citer_pair;
-        const size_type n = bkt_num_key(key);
-        for (const node_type* first = buckets_[n]; first; first = first->next_) {
-            if (equals_(get_key_(first->data_), key)) {
-                for (const node_type* cur = first->next_; cur; cur = cur->next_) {
-                    if (!equals_(get_key_(cur->data_), key))
-                        return citer_pair(const_iterator(first, this), const_iterator(cur, this));
-                }
-                for (size_type m = n + 1; m < buckets_.size(); ++m) {
-                    if (buckets_[m])
-                        return citer_pair(const_iterator(first, this), const_iterator(buckets_[m], this));
-                }
-                return citer_pair(const_iterator(first, this), end());
-            }
-        }
-        return citer_pair(end(), end());
-    }
-
-    size_type erase(const key_type& key) noexcept {
-        const size_type n = bkt_num_key(key);
-        node_type* first = buckets_[n];
-        size_type erased = 0;
-        if (first) {
-            node_type* cur = first;
-            node_type* next = cur->next_;
-            while (next) {
-                if (equals_(get_key_(next->data_), key)) {
-                    cur->next_ = next->next_;
-                    delete_node(next);
-                    next = cur->next_;
-                    ++erased;
-                    --size_;
-                }
-                else {
-                    cur = next;
-                    next = cur->next_;
-                }
-            }
-            if (equals_(get_key_(first->data_), key)) {
-                buckets_[n] = first->next_;
-                delete_node(first);
-                ++erased;
-                --size_;
-            }
-        }
-        return erased;
-    }
-    void erase(const iterator& it) noexcept {
-        if (node_type* const p = it.cur_) {
-            const size_type n = bkt_num(p->data_);
-            node_type* cur = buckets_[n];
-            if (cur == p) {
-                buckets_[n] = cur->next_;
-                delete_node(cur);
-                --size_;
-            }
-            else {
-                node_type* next = cur->next_;
-                while (next) {
-                    if (next == p) {
-                        cur->next_ = next->next_;
-                        delete_node(next);
-                        --size_;
-                        break;
-                    }
-                    else {
-                        cur = next;
-                        next = cur->next_;
-                    }
-                }
-            }
-        }
-    }
-    void erase(iterator first, iterator last) noexcept { // range optimize
-        size_type f_bucket = first.cur_ ? bkt_num(first.cur_->data_) : buckets_.size();
-        size_type l_bucket = last.cur_ ? bkt_num(last.cur_->data_) : buckets_.size();
-        if (first.cur_ == last.cur_) return;
-        else if (f_bucket == l_bucket)
-            erase_bucket(f_bucket, first.cur_, last.cur_);
-        else {
-            erase_bucket(f_bucket, first.cur_, 0);
-            for (size_type n = f_bucket + 1; n < l_bucket; ++n)
-                erase_bucket(n, 0);
-            if (l_bucket != buckets_.size())
-                erase_bucket(l_bucket, last.cur_);
-        }
-    }
-
-    void erase(const const_iterator& it) noexcept {
-        erase(iterator(const_cast<node_type*>(it.cur_), const_cast<hashtable*>(it.ht_)));
-    }
-    void erase(const_iterator first, const_iterator last) noexcept {
-        erase(iterator(const_cast<node_type*>(first.cur_), const_cast<hashtable*>(first.ht_)),
-            iterator(const_cast<node_type*>(last.cur_), const_cast<hashtable*>(last.ht_)));
-    }
-
-    void resize(size_type new_size) {
-        const size_type old_size = buckets_.size();
-        if (new_size > old_size) {
-            const size_type n = next_size(new_size);
-            if (n > old_size) {
-                vector<node_type*> tmp(n, nullptr);
-                MSTL_TRY__{
-                    for (size_type bucket = 0; bucket < old_size; ++bucket) {
-                        node_type* first = buckets_[bucket];
-                        while (first != nullptr) {
-                            size_type new_bucket = bkt_num(first->data_, n);
-                            buckets_[bucket] = first->next_;
-                            first->next_ = tmp[new_bucket];
-                            tmp[new_bucket] = first;
-                            first = buckets_[bucket];
-                        }
-                    }
-                    buckets_.swap(tmp);
-                }
-                MSTL_CATCH_UNWIND__{
-                    for (size_type bucket = 0; bucket < tmp.size(); ++bucket) {
-                        while (tmp[bucket] != nullptr) {
-                            node_type* next = tmp[bucket]->next_;
-                            delete_node(tmp[bucket]);
-                            tmp[bucket] = next;
-                        }
-                    }
-                    MSTL_EXEC_MEMORY__
-                }
-            }
-        }
-    }
-    void clear() noexcept {
-        for (size_type i = 0; i < buckets_.size(); ++i) {
-            node_type* cur = buckets_[i];
-            while (cur != nullptr) {
-                node_type* next = cur->next_;
-                delete_node(cur);
-                cur = next; // stack like
-            }
-            buckets_[i] = 0;
-        }
-        size_ = 0;
-    }
-
-private:
-    size_type next_size(size_type n) const noexcept {
+    inline size_type next_size(size_type n) const noexcept {
         return hashtable_next_prime(n);
     }
+
     void initialize_buckets(size_type n) {
         const size_type n_buckets = next_size(n);
         buckets_.reserve(n_buckets);
         buckets_.insert(buckets_.end(), n_buckets, nullptr);
         size_ = 0;
     }
-    template <typename T = key_type>
-    size_type bkt_num_key(T&& key) const noexcept {
-        return bkt_num_key(std::forward<T>(key), buckets_.size());
+
+    size_type bkt_num_key(const key_type& key, size_t n) const noexcept(is_nothrow_hashable_v<key_type>) {
+        return hasher_(key) % n;
     }
-    template <typename T = value_type>
-    size_type bkt_num(T&& obj) const noexcept {
-        return bkt_num_key(get_key_(std::forward<T>(obj)));
-    }
-    template <typename T = key_type>
-    size_type bkt_num_key(T&& key, size_t n) const noexcept {
-        return hasher_(std::forward<T>(key)) % n;
-    }
-    template <typename T = value_type>
-    size_type bkt_num(T&& obj, size_t n) const noexcept {
-        return bkt_num_key(get_key_(std::forward<T>(obj)), n);
+    size_type bkt_num(const value_type& obj, size_t n) const noexcept(is_nothrow_hashable_v<key_type>) {
+        return bkt_num_key(extracter_(obj), n);
     }
 
     template <typename... Args>
     node_type* new_node(Args&&... args) {
         node_type* n = alloc_.allocate();
-        n->next_ = 0;
+        n->next_ = nullptr;
         MSTL_TRY__{
-            MSTL::construct(&n->data_, std::forward<decltype(args)>(args)...);
-            return n;
+            MSTL::construct(&n->data_, MSTL::forward<Args>(args)...);
         }
-        MSTL_CATCH_UNWIND__{
-            alloc_.deallocate(n);
-            MSTL_EXEC_MEMORY__;
-            return nullptr; // never run
-        }
+        MSTL_CATCH_UNWIND_THROW_M__(delete_node(n));
+        return n;
     }
     void delete_node(node_type* n) noexcept {
         MSTL::destroy(&n->data_);
         alloc_.deallocate(n);
     }
+
     void erase_bucket(const size_type n, node_type* first, node_type* last) noexcept {
         node_type* cur = buckets_[n];
         if (cur == first) erase_bucket(n, last);
@@ -623,22 +289,434 @@ private:
     void copy_from(const hashtable& ht) {
         buckets_.clear();
         buckets_.reserve(ht.buckets_.size());
-        buckets_.insert(buckets_.end(), ht.buckets_.size(), (node_type*)0);
+        buckets_.insert(buckets_.end(), ht.buckets_.size(), nullptr);
         MSTL_TRY__{
             for (size_type i = 0; i < ht.buckets_.size(); ++i) {
                 if (const node_type* cur = ht.buckets_[i]) {
-                    node_type* copy = new_node(cur->data_);
+                    node_type* copy = (new_node)(cur->data_);
                     buckets_[i] = copy;
-                    for (node_type* next = cur->next_; next; cur = next, next = cur->next_) {
-                        copy->next_ = new_node(next->data_);
+                    for (node_type* next = cur->next_; next != nullptr; cur = next, next = cur->next_) {
+                        copy->next_ = (new_node)(next->data_);
                         copy = copy->next_;
                     }
                 }
             }
             size_ = ht.size_;
+            factor_ = ht.factor_;
         }
         MSTL_CATCH_UNWIND_THROW_M__(clear());
     }
+
+    pair<iterator, bool> insert_unique_noresize(node_type* x) {
+        const size_type n = bkt_num(x->data_, buckets_.size());
+        node_type* first = buckets_[n];
+        for (node_type* cur = first; cur != nullptr; cur = cur->next_) {
+            if (equals_(extracter_(cur->data_), extracter_(x->data_))) {
+                buckets_[n] = cur->next_;
+                delete_node(cur);
+                x->next_ = buckets_[n];
+                buckets_[n] = x;
+                return pair<iterator, bool>(iterator(x, n, this), false);
+            }
+        }
+        x->next_ = first;
+        buckets_[n] = x;
+        ++size_;
+        return pair<iterator, bool>(iterator(x, n, this), true);
+    }
+
+    iterator insert_equal_noresize(node_type* x) {
+        const size_type n = bkt_num(x->data_, buckets_.size());
+        node_type* first = buckets_[n];
+        for (node_type* cur = first; cur != nullptr; cur = cur->next_) {
+            if (equals_(extracter_(cur->data_), extracter_(x->data_))) {
+                while (cur->next_ != nullptr) {
+                    cur = cur->next_;
+                }
+                cur->next_ = x;
+                x->next_ = nullptr;
+                ++size_;
+                return iterator(x, n, this);
+            }
+        }
+        x->next_ = first;
+        buckets_[n] = x;
+        ++size_;
+        return iterator(x, n, this);
+    }
+
+public:
+    explicit hashtable(size_type n) 
+        : hasher_(HashFcn()), equals_(EqualKey()), extracter_(ExtractKey()), size_(0), factor_(1.0f) {}
+
+    hashtable(size_type n, const HashFcn& hf)
+        : hasher_(hf), equals_(EqualKey()), extracter_(ExtractKey()), size_(0), factor_(1.0f) {
+        initialize_buckets(n);
+    }
+    hashtable(size_type n, const HashFcn& hf, const EqualKey& eql)
+        : hasher_(hf), equals_(eql), extracter_(ExtractKey()), size_(0), factor_(1.0f) {
+        initialize_buckets(n);
+    }
+    hashtable(size_type n, const HashFcn& hf, const EqualKey& eql, const ExtractKey& ext)
+        : hasher_(hf), equals_(eql), extracter_(ext), size_(0), factor_(1.0f) {
+        initialize_buckets(n);
+    }
+
+    hashtable(const self& ht)
+        : hasher_(ht.hasher_), equals_(ht.equals_), extracter_(ht.extracter_), size_(0), factor_(1.0f) {
+        copy_from(ht);
+    }
+    self& operator =(const self& ht) {
+        if (MSTL::addressof(ht) == this) return *this;
+        clear();
+        hasher_ = ht.hasher_;
+        equals_ = ht.equals_;
+        extracter_ = ht.extracter_;
+        copy_from(ht);
+        return *this;
+    }
+
+    explicit hashtable(self&& ht) noexcept(noexcept(swap(ht)))
+        : hasher_(ht.hasher_), equals_(ht.equals_), extracter_(ht.extracter_), size_(0), factor_(1.0f) {
+        swap(ht);
+    }
+    self& operator =(self&& ht) noexcept(noexcept(swap(ht))) {
+        if (MSTL::addressof(ht) == this) return *this;
+        clear();
+        swap(ht);
+        return *this;
+    }
+
+    ~hashtable() { clear(); }
+
+    MSTL_NODISCARD iterator begin() noexcept {
+        for (size_type n = 0; n < buckets_.size(); ++n)
+            if (buckets_[n] != nullptr)
+                return iterator(buckets_[n], n, this);
+        return end();
+    }
+    MSTL_NODISCARD iterator end() noexcept { return iterator(nullptr, 0, this); }
+
+    MSTL_NODISCARD const_iterator cbegin() const noexcept {
+        for (size_type n = 0; n < buckets_.size(); ++n) {
+            if (buckets_[n] != nullptr) 
+                return const_iterator(buckets_[n], n, this);
+        }
+        return cend();
+    }
+    MSTL_NODISCARD const_iterator cend() const noexcept {
+        return const_iterator(nullptr, 0, this);
+    }
+
+    MSTL_NODISCARD size_type size() const noexcept { return size_; }
+    MSTL_NODISCARD size_type max_size() const noexcept { return static_cast<size_type>(-1); }
+    MSTL_NODISCARD bool empty() const noexcept { return size_ == 0; }
+    MSTL_NODISCARD size_type bucket_count() const noexcept { return buckets_.size(); }
+    MSTL_NODISCARD size_type max_bucket_count() const noexcept {
+        return HASH_PRIME_LIST[HASH_PRIMER_COUNT__ - 1];
+    }
+    MSTL_NODISCARD size_type bucket(const key_type& key) const noexcept(is_nothrow_hashable_v<key_type>) {
+        return bkt_num_key(key);
+    }
+    MSTL_NODISCARD size_type bucket_size(size_type bucket) const noexcept {
+        size_type result = 0;
+        for (node_type* cur = buckets_[bucket]; cur != nullptr; cur = cur->next_)
+            result++;
+        return result;
+    }
+
+    MSTL_NODISCARD allocator_type get_allocator() const noexcept { return allocator_type(); }
+
+    MSTL_NODISCARD hasher hash_func() const noexcept(is_nothrow_copy_constructible_v<hasher>) {
+        return hasher_;
+    }
+    MSTL_NODISCARD key_equal key_eql() const noexcept(is_nothrow_copy_constructible_v<key_equal>) {
+        return equals_;
+    }
+    MSTL_NODISCARD float load_factor() const noexcept {
+        return static_cast<float>(size()) / static_cast<float>(bucket_count());
+    }
+    MSTL_NODISCARD float max_load_factor() const noexcept {
+        return factor_;
+    }
+    void max_load_factor(float new_max) noexcept {
+        MSTL_DEBUG_VERIFY__(!std::isnan(new_max) && new_max > 0, "hashtable load factor invalid.");
+        factor_ = new_max;
+    }
+
+    void rehash(size_type new_size) {
+        const size_type old_size = buckets_.size();
+        if (new_size <= old_size) return;
+        const size_type n = next_size(new_size);
+        if (n <= old_size) return;
+        vector<node_type*> tmp(n, nullptr);
+        MSTL_TRY__{
+            for (size_type bucket = 0; bucket < old_size; ++bucket) {
+                node_type* first = buckets_[bucket];
+                while (first != nullptr) {
+                    size_type new_bucket = bkt_num(first->data_, n);
+                    buckets_[bucket] = first->next_;
+                    first->next_ = tmp[new_bucket];
+                    tmp[new_bucket] = first;
+                    first = buckets_[bucket];
+                }
+            }
+            buckets_.swap(tmp);
+        }
+        MSTL_CATCH_UNWIND__{
+            for (size_type bucket = 0; bucket < tmp.size(); ++bucket) {
+                while (tmp[bucket] != nullptr) {
+                    node_type* next = tmp[bucket]->next_;
+                    delete_node(tmp[bucket]);
+                    tmp[bucket] = next;
+                }
+            }
+            MSTL_EXEC_MEMORY__
+        }
+    }
+
+    void reserve(size_type max_count) {
+        rehash(static_cast<size_type>(MSTL::ceil(static_cast<float>(max_count) / factor_, 0)));
+    }
+
+    template <typename... Args>
+    pair<iterator, bool> emplace_unique(Args&&... args) {
+        rehash(size_ + 1);
+        node_type* node = (new_node)(MSTL::forward<Args>(args)...);
+        return (insert_unique_noresize)(node);
+    }
+    template <typename... Args>
+    iterator emplace_equal(Args&&... args) {
+        rehash(size_ + 1);
+        node_type* node = (new_node)(MSTL::forward<Args>(args)...);
+        return (insert_equal_noresize)(node);
+    }
+
+    pair<iterator, bool> insert_unique(const value_type& x) {
+        return (emplace_unique)(x);
+    }
+    pair<iterator, bool> insert_unique(value_type&& x) {
+        return (emplace_unique)(MSTL::move(x));
+    }
+    iterator insert_equal(const value_type& x) {
+        return (emplace_equal)(x);
+    }
+    iterator insert_equal(value_type&& x) {
+        return (emplace_equal)(MSTL::move(x));
+    }
+
+    template <class Iterator>
+        requires(input_iterator<Iterator>)
+    void insert_unique(Iterator first, Iterator last) {
+        for (; first != last; ++first) 
+            insert_unique(*first);
+    }
+    template <class Iterator>
+        requires(forward_iterator<Iterator>)
+    void insert_unique(Iterator first, Iterator last) {
+        size_type n = 0;
+        MSTL::distance(first, last, n);
+        rehash(size_ + n);
+        for (; n > 0; --n, ++first) {
+            node_type* tmp = (new_node)(*first);
+            insert_unique_noresize(tmp);
+        }
+    }
+    void insert_unique(std::initializer_list<value_type> l) {
+        insert_unique(l.begin(), l.end());
+    }
+
+    template <class Iterator>
+        requires(input_iterator<Iterator>)
+    void insert_equal(Iterator first, Iterator last) {
+        for (; first != last; ++first) insert_equal(*first);
+    }
+    template <class Iterator>
+        requires(forward_iterator<Iterator>)
+    void insert_equal(Iterator first, Iterator last) {
+        size_type n = 0;
+        MSTL::distance(first, last, n);
+        rehash(size_ + n);
+        for (; n > 0; --n, ++first) {
+            node_type* tmp = (new_node)(*first);
+            insert_equal_noresize(tmp);
+        }
+    }
+    void insert_equal(std::initializer_list<value_type> l) {
+        insert_equal(l.begin(), l.end());
+    }
+
+    size_type erase(const key_type& key) noexcept(is_nothrow_hashable_v<key_type>) {
+        const size_type n = bkt_num_key(key, buckets_.size());
+        node_type* first = buckets_[n];
+        size_type erased = 0;
+        if (first != nullptr) {
+            node_type* cur = first;
+            node_type* next = cur->next_;
+            while (next != nullptr) {
+                if (equals_(extracter_(next->data_), key)) {
+                    cur->next_ = next->next_;
+                    delete_node(next);
+                    next = cur->next_;
+                    ++erased;
+                    --size_;
+                }
+                else {
+                    cur = next;
+                    next = cur->next_;
+                }
+            }
+            if (equals_(extracter_(first->data_), key)) {
+                buckets_[n] = first->next_;
+                delete_node(first);
+                ++erased;
+                --size_;
+            }
+        }
+        return erased;
+    }
+    void erase(const iterator& it) noexcept(is_nothrow_hashable_v<key_type>) {
+        node_type* const p = it.cur_;
+        if (p != nullptr) {
+            const size_type n = it.hash_val_;
+            node_type* cur = buckets_[n];
+            if (cur == p) {
+                buckets_[n] = cur->next_;
+                delete_node(cur);
+                --size_;
+            }
+            else {
+                node_type* next = cur->next_;
+                while (next != nullptr) {
+                    if (next == p) {
+                        cur->next_ = next->next_;
+                        delete_node(next);
+                        --size_;
+                        break;
+                    }
+                    else {
+                        cur = next;
+                        next = cur->next_;
+                    }
+                }
+            }
+        }
+    }
+    void erase(iterator first, iterator last) noexcept(is_nothrow_hashable_v<key_type>) {
+        size_type f_bucket = first.cur_ ? first.hash_val_ : buckets_.size();
+        size_type l_bucket = last.cur_ ? last.hash_val_ : buckets_.size();
+        if (first.cur_ == last.cur_) return;
+        else if (f_bucket == l_bucket)
+            erase_bucket(f_bucket, first.cur_, last.cur_);
+        else {
+            erase_bucket(f_bucket, first.cur_, 0);
+            for (size_type n = f_bucket + 1; n < l_bucket; ++n)
+                erase_bucket(n, 0);
+            if (l_bucket != buckets_.size())
+                erase_bucket(l_bucket, last.cur_);
+        }
+    }
+
+    void erase(const const_iterator& it) noexcept(is_nothrow_hashable_v<key_type>) {
+        erase(iterator(const_cast<node_type*>(it.cur_), it.hash_val_, const_cast<hashtable*>(it.ht_)));
+    }
+    void erase(const_iterator first, const_iterator last) noexcept(is_nothrow_hashable_v<key_type>) {
+        erase(iterator(const_cast<node_type*>(first.cur_), first.hash_val_, const_cast<hashtable*>(first.ht_)),
+            iterator(const_cast<node_type*>(last.cur_), last.hash_val_, const_cast<hashtable*>(last.ht_)));
+    }
+
+    void clear() noexcept {
+        for (size_type i = 0; i < buckets_.size(); ++i) {
+            node_type* cur = buckets_[i];
+            while (cur != nullptr) {
+                node_type* next = cur->next_;
+                delete_node(cur);
+                cur = next;
+            }
+            buckets_[i] = 0;
+        }
+        size_ = 0;
+    }
+
+    void swap(self& ht) noexcept(is_nothrow_swappable_v<HashFcn> && is_nothrow_swappable_v<EqualKey>) {
+        if (MSTL::addressof(ht) == this) return;
+        MSTL::swap(hasher_, ht.hasher_);
+        MSTL::swap(equals_, ht.equals_);
+        MSTL::swap(extracter_, ht.extracter_);
+        buckets_.swap(ht.buckets_);
+        MSTL::swap(size_, ht.size_);
+        MSTL::swap(factor_, ht.factor_);
+    }
+
+    MSTL_NODISCARD iterator find(const key_type& key) noexcept(is_nothrow_hashable_v<key_type>) {
+        size_type n = bkt_num_key(key, buckets_.size());
+        node_type* first;
+        for (first = buckets_[n]; first != nullptr && !equals_(extracter_(first->data_), key);
+            first = first->next_);
+        return iterator(first, n, this);
+    }
+
+    MSTL_NODISCARD const_iterator find(const key_type& key) const noexcept(is_nothrow_hashable_v<key_type>) {
+        size_type n = bkt_num_key(key, buckets_.size());
+        const node_type* first;
+        for (first = buckets_[n]; first != nullptr && !equals_(extracter_(first->data_), key);
+            first = first->next_);
+        return const_iterator(first, n, this);
+    }
+
+    MSTL_NODISCARD size_type count(const key_type& key) const noexcept(is_nothrow_hashable_v<key_type>) {
+        const size_type n = bkt_num_key(key);
+        size_type result = 0;
+        for (const node_type* cur = buckets_[n]; cur != nullptr; cur = cur->next_) {
+            if (equals_(extracter_(cur->data_), key)) ++result;
+        }
+        return result;
+    }
+    MSTL_NODISCARD bool contains(const key_type& key) const noexcept(is_nothrow_hashable_v<key_type>) {
+        return find(key) == cend();
+    }
+
+    pair<iterator, iterator> equal_range(const key_type& key) {
+        typedef pair<iterator, iterator> iter_pair;
+        const size_type n = bkt_num_key(key);
+        for (node_type* first = buckets_[n]; first != nullptr; first = first->next_) {
+            if (equals_(extracter_(first->data_), key)) {
+                for (node_type* cur = first->next_; cur != nullptr; cur = cur->next_) {
+                    if (!equals_(extracter_(cur->data_), key))
+                        return iter_pair(iterator(first, n, this), iterator(cur, n, this));
+                }
+                for (size_type m = n + 1; m < buckets_.size(); ++m) {
+                    if (buckets_[m] != nullptr)
+                        return iter_pair(iterator(first, this),
+                            iterator(buckets_[m], m, this));
+                }
+                return iter_pair(iterator(first, n, this), end());
+            }
+        }
+        return iter_pair(end(), end());
+    }
+
+    pair<const_iterator, const_iterator> equal_range(const key_type& key) const {
+        typedef pair<const_iterator, const_iterator> citer_pair;
+        const size_type n = bkt_num_key(key);
+        for (const node_type* first = buckets_[n]; first != nullptr; first = first->next_) {
+            if (equals_(extracter_(first->data_), key)) {
+                for (const node_type* cur = first->next_; cur != nullptr; cur = cur->next_) {
+                    if (!equals_(extracter_(cur->data_), key))
+                        return citer_pair(const_iterator(first, n, this), const_iterator(cur, n, this));
+                }
+                for (size_type m = n + 1; m < buckets_.size(); ++m) {
+                    if (buckets_[m] != nullptr)
+                        return citer_pair(const_iterator(first, m, this), const_iterator(buckets_[m], this));
+                }
+                return citer_pair(const_iterator(first, n, this), end());
+            }
+        }
+        return citer_pair(end(), end());
+    }
+
+    // merge 
+    // extract
 };
 template <typename Value, typename Key, typename HashFcn,
     typename ExtractKey, typename EqualKey, typename Alloc>
@@ -650,8 +728,9 @@ MSTL_NODISCARD bool operator ==(
     for (size_t n = 0; n < lh.buckets_.size(); n++) {
         node* cur1 = lh.buckets_[n];
         node* cur2 = rh.buckets_[n];
-        for (; cur1 && cur2 && cur1->data_ == cur2->data_; cur1 = cur1->next_, cur2 = cur2->next_);
-        if (cur1 || cur2) return false;
+        for (; cur1 != nullptr && cur2 != nullptr && cur1->data_ == cur2->data_; 
+            cur1 = cur1->next_, cur2 = cur2->next_);
+        if (cur1 != nullptr || cur2 != nullptr) return false;
     }
     return true;
 }
@@ -659,8 +738,7 @@ template <typename Value, typename Key, typename HashFcn,
     typename ExtractKey, typename EqualKey, typename Alloc>
 MSTL_NODISCARD bool operator !=(
     const hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& lh,
-    const hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& rh)
-noexcept(noexcept(!(lh == rh))) {
+    const hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& rh) noexcept {
     return !(lh == rh);
 }
 template <typename Value, typename Key, typename HashFcn,

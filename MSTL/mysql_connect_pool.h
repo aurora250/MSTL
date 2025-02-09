@@ -4,6 +4,8 @@
 #if MSTL_DLL_LINK__
 #include "errorlib.h"
 #include "threadsafe_print.h"
+#include "queue.hpp"
+#include "tuple.hpp"
 #include <winsock.h>
 #include <mysql.h>
 #include <string>
@@ -13,8 +15,6 @@
 #include <functional>
 #include <condition_variable>
 #include <sstream>
-#include "queue.hpp"
-#include "tuple.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 extern const std::string DEFAULT_IP;
@@ -49,10 +49,10 @@ private:
 		ss << "'" << str << "'";
 	}
 	template <typename Tuple, size_t... Index>
-	void create_sql(const Tuple& t, std::index_sequence<Index...>) {
+	void create_sql(const Tuple& t, MSTL::index_sequence<Index...>) {
 		((Index == sizeof...(Index) - 1 ?
-			__create_sql_last(std::get<Index>(t)) :
-			__create_sql(std::get<Index>(t))), ...);
+			__create_sql_last(MSTL::get<Index>(t)) :
+			__create_sql(MSTL::get<Index>(t))), ...);
 	}
 public:
 	DBConnect();
@@ -64,8 +64,8 @@ public:
 	template <typename... Args>
 	bool INSERT_INTO(std::string table, Args... args) {
 		ss << "INSERT INTO " << table << " VALUES (";
-		auto tuple = std::make_tuple(std::forward<Args>(args)...);
-		(create_sql)(tuple, std::make_index_sequence<sizeof...(Args)>{});
+		auto tuple = MSTL::make_tuple(MSTL::forward<Args>(args)...);
+		(create_sql)(tuple, MSTL::make_index_sequence<sizeof...(Args)>{});
 		ss << ")";
 		std::string sql = ss.str(); ss.str("");
 		return exec(sql);

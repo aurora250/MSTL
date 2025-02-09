@@ -25,8 +25,8 @@ public:
 	explicit MSTL_CONSTEXPR vector_iterator(pointer ptr) : ptr_(ptr) {}
 	MSTL_CONSTEXPR vector_iterator(const iterator& x) noexcept : ptr_(x.ptr_) {}
 
-	MSTL_CONSTEXPR self& operator=(const self& rh) noexcept {
-		if (*this == rh) return *this;
+	MSTL_CONSTEXPR self& operator =(const self& rh) noexcept {
+		if (MSTL::addressof(rh) == this) return *this;
 		this->ptr_ = rh.ptr_;
 		return *this;
 	}
@@ -156,7 +156,7 @@ private:
 		requires(forward_iterator<Iterator>)
 	MSTL_CONSTEXPR pointer allocate_and_copy(size_type n, Iterator first, Iterator last) {
 		pointer result = alloc_.allocate(n);
-		MSTL::uninitialized_copy(&*first, &*last, result);
+		MSTL::uninitialized_copy(first, last, result);
 		return result;
 	}
 
@@ -223,43 +223,43 @@ private:
 public:
 	MSTL_CONSTEXPR vector() 
 		noexcept(is_nothrow_default_constructible_v<T>)
-		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
+		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
 		(fill_initialize)(1, T());
 		finish_ = start_;
 		end_of_storage_ = finish_;
 	}
 
 	MSTL_CONSTEXPR explicit vector(size_type n) 
-		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
+		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
 		(fill_initialize)(n, T());
 	}
 	MSTL_CONSTEXPR explicit vector(size_type n, const T& value)
-		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
+		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
 		(fill_initialize)(n, value);
 	}
 	MSTL_CONSTEXPR explicit vector(int n, const T& value)
-		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
+		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
 		(fill_initialize)(n, value);
 	}
 	MSTL_CONSTEXPR explicit vector(long n, const T& value)
-		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
+		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
 		(fill_initialize)(n, value);
 	}
 	MSTL_CONSTEXPR explicit vector(size_type n, T&& value)
-		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
+		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
 		(fill_initialize)(n, MSTL::forward<T>(value));
 	}
 	MSTL_CONSTEXPR explicit vector(int n, T&& value)
-		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
+		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
 		(fill_initialize)(n, MSTL::forward<T>(value));
 	}
 	MSTL_CONSTEXPR explicit vector(long n, T&& value)
-		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
+		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
 		(fill_initialize)(n, MSTL::forward<T>(value));
 	}
 
-	MSTL_CONSTEXPR vector(const self& x) 
-		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
+	MSTL_CONSTEXPR vector(const self& x)
+		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
 		start_ = (allocate_and_copy)(x.cend() - x.cbegin(), x.cbegin(), x.cend());
 		finish_ = start_ + (x.cend() - x.cbegin());
 		end_of_storage_ = finish_;
@@ -272,15 +272,12 @@ public:
 	}
 
 	MSTL_CONSTEXPR vector(self&& x) noexcept
-		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
+		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
 		swap(x);
 	}
 
 	MSTL_CONSTEXPR self& operator =(self&& x) noexcept {
-		if (MSTL::addressof(x) == this) {
-			x.clear();
-			return *this;
-		}
+		if (MSTL::addressof(x) == this) return *this;
 		clear();
 		swap(x);
 		return *this;
@@ -289,7 +286,7 @@ public:
 	template <typename Iterator>
 		requires(input_iterator<Iterator>)
 	MSTL_CONSTEXPR vector(Iterator first, Iterator last)
-		: start_(0), finish_(0), end_of_storage_(0), alloc_() {
+		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
 		MSTL_DEBUG_VERIFY__(first <= last, "vector iterator-constructor out of ranges.");
 		range_initialize(first, last);
 	}
@@ -356,15 +353,33 @@ public:
 		return start_ == finish_;
 	}
 
-	MSTL_NODISCARD MSTL_CONSTEXPR pointer data() noexcept { return start_; }
-	MSTL_NODISCARD MSTL_CONSTEXPR const pointer data() const noexcept { return start_; }
+	MSTL_NODISCARD MSTL_CONSTEXPR pointer data() noexcept {
+		MSTL_DEBUG_VERIFY__(!empty(), "data called on empty vector");
+		return start_;
+	}
+	MSTL_NODISCARD MSTL_CONSTEXPR const pointer data() const noexcept {
+		MSTL_DEBUG_VERIFY__(!empty(), "data called on empty vector");
+		return start_;
+	}
 
 	MSTL_NODISCARD MSTL_CONSTEXPR allocator_type get_allocator() const noexcept { return allocator_type(); }
 
-	MSTL_NODISCARD MSTL_CONSTEXPR reference front() noexcept { return *start_; }
-	MSTL_NODISCARD MSTL_CONSTEXPR const_reference front() const noexcept { return *start_; }
-	MSTL_NODISCARD MSTL_CONSTEXPR reference back() noexcept { return *(finish_ - 1); }
-	MSTL_NODISCARD MSTL_CONSTEXPR const_reference back() const noexcept { return *(finish_ - 1); }
+	MSTL_NODISCARD MSTL_CONSTEXPR reference front() noexcept {
+		MSTL_DEBUG_VERIFY__(!empty(), "front called on empty vector");
+		return *start_; 
+	}
+	MSTL_NODISCARD MSTL_CONSTEXPR const_reference front() const noexcept {
+		MSTL_DEBUG_VERIFY__(!empty(), "front called on empty vector");
+		return *start_;
+	}
+	MSTL_NODISCARD MSTL_CONSTEXPR reference back() noexcept {
+		MSTL_DEBUG_VERIFY__(!empty(), "back called on empty vector");
+		return *(finish_ - 1);
+	}
+	MSTL_NODISCARD MSTL_CONSTEXPR const_reference back() const noexcept {
+		MSTL_DEBUG_VERIFY__(!empty(), "back called on empty vector");
+		return *(finish_ - 1);
+	}
 
 	MSTL_CONSTEXPR void reserve(size_type n) {
 		MSTL_DEBUG_VERIFY__(n < max_size(), "vector reserve out of allocate bounds.");
@@ -450,7 +465,7 @@ public:
 
 	template <class Iterator>
 		requires(input_iterator<Iterator>)
-	void assign(Iterator first, Iterator last) {
+	MSTL_CONSTEXPR void assign(Iterator first, Iterator last) {
 		MSTL_DEBUG_VERIFY__(MSTL::distance(first, last) >= 0, "vector assign out of ranges.");
 		pointer cur = start_;
 		for ( ; first != last && cur != finish_; ++first, ++cur)
@@ -487,27 +502,6 @@ public:
 		assign(l.begin(), l.end());
 	}
 
-	MSTL_CONSTEXPR iterator erase(iterator first, iterator last) 
-		noexcept(is_nothrow_move_assignable_v<value_type>) {
-		MSTL_DEBUG_VERIFY__(0 <= MSTL::distance(first, last), "vector erase out of ranges.");
-		pointer i = MSTL::copy(&*last, finish_, &*first);
-		MSTL::destroy(i, finish_);
-		finish_ = finish_ - (last - first);
-		return iterator(finish_);
-	}
-
-	MSTL_CONSTEXPR iterator erase(iterator position)
-		noexcept(is_nothrow_move_assignable_v<value_type>) {
-		range_check(position);
-		if ((position + 1) != end()) 
-			MSTL::copy(&*(position + 1), finish_, &*position);
-		--finish_;
-		MSTL::destroy(finish_);
-		return position;
-	}
-
-	MSTL_CONSTEXPR void clear() noexcept { erase(begin(), end()); }
-
 	MSTL_CONSTEXPR iterator insert(iterator position, const T& x) {
 		size_type n = position - begin();
 		(emplace)(position, x);
@@ -527,7 +521,7 @@ public:
 		requires(input_iterator<Iterator>)
 	MSTL_CONSTEXPR void insert(iterator position, Iterator first, Iterator last) {
 		MSTL_DEBUG_VERIFY__(
-			first <= last, "vector insert resource iterator out of ranges."
+			MSTL::distance(first, last) >= 0, "vector insert resource iterator out of ranges."
 		);
 		range_insert(position, first, last);
 	}
@@ -557,7 +551,7 @@ public:
 		}
 		else {
 			const size_type old_size = size();
-			const size_type len = old_size + max(old_size, n);
+			const size_type len = old_size + MSTL::max(old_size, n);
 			pointer new_start = alloc_.allocate(len);
 			pointer new_finish = new_start;
 			new_finish = MSTL::uninitialized_copy(start_, &*position, new_start);
@@ -571,6 +565,27 @@ public:
 		}
 	}
 
+	MSTL_CONSTEXPR iterator erase(iterator first, iterator last) 
+		noexcept(is_nothrow_move_assignable_v<value_type>) {
+		MSTL_DEBUG_VERIFY__(MSTL::distance(first, last) >= 0, "vector erase out of ranges.");
+		pointer i = MSTL::copy(&*last, finish_, &*first);
+		MSTL::destroy(i, finish_);
+		finish_ = finish_ - (last - first);
+		return iterator(finish_);
+	}
+
+	MSTL_CONSTEXPR iterator erase(iterator position)
+		noexcept(is_nothrow_move_assignable_v<value_type>) {
+		range_check(position);
+		if ((position + 1) != end()) 
+			MSTL::copy(position + 1, end(), position);
+		--finish_;
+		MSTL::destroy(finish_);
+		return position;
+	}
+
+	MSTL_CONSTEXPR void clear() noexcept { erase(begin(), end()); }
+
 	MSTL_CONSTEXPR void swap(self& x) noexcept {
 		if (MSTL::addressof(x) == this) return;
 		MSTL::swap(start_, x.start_);
@@ -578,20 +593,20 @@ public:
 		MSTL::swap(end_of_storage_, x.end_of_storage_);
 	}
 
-	MSTL_NODISCARD MSTL_CONSTEXPR const_reference at(size_type _pos) const {
-		range_check(_pos);
-		return *(start_ + _pos);
+	MSTL_NODISCARD MSTL_CONSTEXPR const_reference at(size_type position) const {
+		range_check(position);
+		return *(start_ + position);
 	}
-	MSTL_NODISCARD MSTL_CONSTEXPR reference at(size_type _pos) {
+	MSTL_NODISCARD MSTL_CONSTEXPR reference at(size_type position) {
 		return const_cast<reference>(
-			static_cast<const self*>(this)->at(_pos)
+			static_cast<const self*>(this)->at(position)
 			);
 	}
-	MSTL_NODISCARD MSTL_CONSTEXPR const_reference operator [](size_type _pos) const {
-		return this->at(_pos);
+	MSTL_NODISCARD MSTL_CONSTEXPR const_reference operator [](size_type position) const {
+		return this->at(position);
 	}
-	MSTL_NODISCARD MSTL_CONSTEXPR reference operator [](size_type _pos) {
-		return this->at(_pos);
+	MSTL_NODISCARD MSTL_CONSTEXPR reference operator [](size_type position) {
+		return this->at(position);
 	}
 };
 #if MSTL_SUPPORT_DEDUCTION_GUIDES__

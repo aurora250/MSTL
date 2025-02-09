@@ -168,12 +168,9 @@ struct identity : public unary_function<T, T> {
 };
 
 template <typename Pair>
-	requires(is_pair_v<Pair>)
 struct select1st : public unary_function<Pair, typename Pair::first_type> {
-	MSTL_NODISCARD MSTL_CONSTEXPR typename Pair::first_type&& 
-		operator()(Pair&& x) const noexcept(noexcept(MSTL::forward<typename Pair::first_type>(x.first))) {
-		return MSTL::forward<typename Pair::first_type>(x.first);
-	}
+	static_assert(is_pair_v<Pair>, "select1st requires pair type.");
+
 	MSTL_NODISCARD MSTL_CONSTEXPR const typename Pair::first_type& 
 		operator()(const Pair& x) const noexcept {
 		return x.first;
@@ -181,41 +178,14 @@ struct select1st : public unary_function<Pair, typename Pair::first_type> {
 };
 
 template <typename Pair>
-	requires(is_pair_v<Pair>)
 struct select2nd : public unary_function<Pair, typename Pair::second_type> {
-	MSTL_NODISCARD MSTL_CONSTEXPR typename Pair::second_type&&
-		operator()(Pair&& x) const noexcept(noexcept(MSTL::forward<typename Pair::second_type>(x.second))) {
-		return MSTL::forward<typename Pair::second_type>(x.second);
-	}
+	static_assert(is_pair_v<Pair>, "select2nd requires pair type.");
+
 	MSTL_NODISCARD MSTL_CONSTEXPR const typename Pair::second_type&
 		operator()(const Pair& x) const noexcept {
 		return x.second;
 	}
 };
 
-struct display {
-	typedef display self;
-
-	display(const char* finish = "", const char* split = "")
-		noexcept(is_nothrow_constructible_v<std::string, const char*>)
-		: split_(split), finish_(finish) {}
-	explicit display(const std::string& split, const std::string& finish) 
-		noexcept(is_nothrow_copy_constructible_v<std::string>)
-		: split_(split), finish_(finish) {}
-	explicit display(std::string&& split, std::string&& finish)
-		noexcept(is_nothrow_move_constructible_v<std::string>)
-		: split_(MSTL::forward<std::string>(split)), finish_(MSTL::forward<std::string>(finish)) {}
-
-	template <typename... T>
-	self& operator ()(T&&... value) {
-		((std::cout << MSTL::forward<T>(value) << split_), ...);
-		std::cout << finish_ << std::flush;
-		return *this;
-	}
-	std::string split_;
-	std::string finish_;
-};
-
 MSTL_END_NAMESPACE__
-
 #endif // MSTL_FUNCTOR_HPP__

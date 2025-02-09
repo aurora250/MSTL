@@ -37,16 +37,6 @@ struct constants {
 	static MSTL_CONSTEXPR mathld_t INFINITY_LD = 1.7976931348623158e+308L;
 };
 
-static MSTL_CONSTEXPR mathus_t PRIMER_COUNT__ = 28;
-static MSTL_CONSTEXPR mathui_t PRIME_LIST[PRIMER_COUNT__] = {
-  53,         97,           193,         389,       769,
-  1543,       3079,         6151,        12289,     24593,
-  49157,      98317,        196613,      393241,    786433,
-  1572869,    3145739,      6291469,     12582917,  25165843,
-  50331653,   100663319,    201326611,   402653189, 805306457,
-  1610612741, 3221225473u,  4294967291u
-};
-
 static MSTL_CONSTEXPR mathus_t LEONARDO_COUNT__ = 46;
 static MSTL_CONSTEXPR mathui_t LEONARDO_LIST[LEONARDO_COUNT__] = {
 	1,			1,			3,			5,			9, 

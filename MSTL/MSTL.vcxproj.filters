@@ -134,10 +134,10 @@
     <ClInclude Include="tuple.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="hash_map.hpp">
+    <ClInclude Include="unordered_map.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="hash_set.hpp">
+    <ClInclude Include="unordered_set.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="sort.hpp">

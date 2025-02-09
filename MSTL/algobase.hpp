@@ -49,23 +49,23 @@ noexcept(noexcept(MSTL::swap(*a, *b))) {
 
 // maximum
 template <typename T>
-MSTL_CONSTEXPR const T& max(const T& a, const T& b) {
+MSTL_CONSTEXPR const T& max(const T& a, const T& b) noexcept {
 	return a < b ? b : a;
 }
 
 template <typename T, typename Compare>
-MSTL_CONSTEXPR const T& max(const T& a, const T& b, Compare comp) {
+MSTL_CONSTEXPR const T& max(const T& a, const T& b, Compare comp) noexcept {
 	return comp(a, b) ? b : a;
 }
 
 // minimum
 template <typename T>
-MSTL_CONSTEXPR const T& min(const T& a, const T& b) {
+MSTL_CONSTEXPR const T& min(const T& a, const T& b) noexcept {
 	return b < a ? b : a;
 }
 
 template <typename T, typename Compare>
-MSTL_CONSTEXPR const T& min(const T& a, const T& b, Compare comp) {
+MSTL_CONSTEXPR const T& min(const T& a, const T& b, Compare comp) noexcept {
 	return comp(b, a) ? b : a;
 }
 
@@ -118,7 +118,7 @@ minmax(Iterator first, Iterator last, Compare comp) {
 
 // mediam
 template <class T>
-MSTL_CONSTEXPR const T& median(const T& a, const T& b, const T& c) {
+MSTL_CONSTEXPR const T& median(const T& a, const T& b, const T& c) noexcept {
 	if (a < b)
 		if (b < c)
 			return b;
@@ -135,7 +135,7 @@ MSTL_CONSTEXPR const T& median(const T& a, const T& b, const T& c) {
 }
 
 template <class T, class Compare>
-MSTL_CONSTEXPR const T& median(const T& a, const T& b, const T& c, Compare comp) {
+MSTL_CONSTEXPR const T& median(const T& a, const T& b, const T& c, Compare comp) noexcept {
 	if (comp(a, b))
 		if (comp(b, c))
 			return b;
@@ -154,7 +154,7 @@ MSTL_CONSTEXPR const T& median(const T& a, const T& b, const T& c, Compare comp)
 // max element
 template <typename Iterator>
 	requires(forward_iterator<Iterator>)
-MSTL_CONSTEXPR Iterator max_element(Iterator first, Iterator last) {
+MSTL_CONSTEXPR Iterator max_element(Iterator first, Iterator last) noexcept {
 	if (first == last) return first;
 	Iterator result = first;
 	while (++first != last)
@@ -164,7 +164,7 @@ MSTL_CONSTEXPR Iterator max_element(Iterator first, Iterator last) {
 
 template <typename Iterator, typename Compare>
 	requires(forward_iterator<Iterator>)
-MSTL_CONSTEXPR Iterator max_element(Iterator first, Iterator last, Compare comp) {
+MSTL_CONSTEXPR Iterator max_element(Iterator first, Iterator last, Compare comp) noexcept {
 	if (first == last) return first;
 	Iterator result = first;
 	while (++first != last)
@@ -175,7 +175,7 @@ MSTL_CONSTEXPR Iterator max_element(Iterator first, Iterator last, Compare comp)
 // min element
 template <typename Iterator>
 	requires(forward_iterator<Iterator>)
-MSTL_CONSTEXPR Iterator min_element(Iterator first, Iterator last) {
+MSTL_CONSTEXPR Iterator min_element(Iterator first, Iterator last) noexcept {
 	if (first == last) return first;
 	Iterator result = first;
 	while (++first != last)
@@ -185,7 +185,7 @@ MSTL_CONSTEXPR Iterator min_element(Iterator first, Iterator last) {
 
 template <typename Iterator, typename Compare>
 	requires(forward_iterator<Iterator>)
-MSTL_CONSTEXPR Iterator min_element(Iterator first, Iterator last, Compare comp) {
+MSTL_CONSTEXPR Iterator min_element(Iterator first, Iterator last, Compare comp) noexcept {
 	if (first == last) return first;
 	Iterator result = first;
 	while (++first != last)
@@ -212,7 +212,7 @@ MSTL_CONSTEXPR pair<Iterator, Iterator> minmax_element(Iterator first, Iterator 
 
 // clamp
 template <typename T>
-const T& clamp(const T& value, const T& lower, const T& upper) {
+const T& clamp(const T& value, const T& lower, const T& upper) noexcept {
 	if (value < lower) 
 		return lower;
 	else if (upper < value) 
@@ -221,7 +221,7 @@ const T& clamp(const T& value, const T& lower, const T& upper) {
 }
 
 template <typename T, typename Compare>
-const T& clamp(const T& value, const T& lower, const T& upper, Compare comp) {
+const T& clamp(const T& value, const T& lower, const T& upper, Compare comp) noexcept {
 	if (comp(value, lower))
 		return lower;
 	else if (comp(upper, value))
@@ -274,8 +274,7 @@ MSTL_CONSTEXPR mismatch(Iterator1 first1, Iterator1 last1, Iterator2 first2) {
 template <typename Iterator1, typename Iterator2, typename Compare>
 	requires(input_iterator<Iterator1> && input_iterator<Iterator2>)
 pair<Iterator1, Iterator2>
-MSTL_CONSTEXPR mismatch(Iterator1 first1, Iterator1 last1,
-	Iterator2 first2, Compare comp) {
+MSTL_CONSTEXPR mismatch(Iterator1 first1, Iterator1 last1, Iterator2 first2, Compare comp) {
 	while (first1 != last1 && comp(*first1, *first2)) {
 		++first1; ++first2;
 	}

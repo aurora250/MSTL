@@ -93,7 +93,6 @@ void try_copy() {
     std::cout << *result << std::endl; //0
     //输出区间的终点和输入区间重叠 没有问题
     MSTL::copy(first, last, result);
-    MSTL::for_each(id.begin(), id.end(), display()); //2 3 4 5 6 5 6 7 8
     std::cout << std::endl;
 
     //int ia[] = { 0,1,2,3,4,5,6,7,8 };
@@ -157,14 +156,6 @@ void try_vec() {
         v.push_back(4);
         detailof(v);
         vector<int> v2(v);
-        display out("\n");
-        out(v.front());
-        MSTL_TRY__{
-            out(v[1]);
-        }
-        MSTL_CATCH_ERROR_UNUSE__{
-            std::cout << "err" << std::endl;
-        }
         v.insert(v.end(), v2.cbegin(), v2.cend());
         detailof(v);
         v.pop_back();
@@ -181,7 +172,6 @@ void try_vec() {
         v4.emplace(v4.begin() + 1, 5);
         v4.erase(--v4.end());
         detailof(v4);
-        out(*v4.data());
         vector<int, ctype_allocator<int>> cvec;
         cvec.emplace_back(3);
         cvec.emplace_back(4);
@@ -230,26 +220,36 @@ void try_tup() {
 }
 void try_hash() {
     MSTL_NAMESPACE__;
-    hash_map<int, char> m;
+    unordered_map<int, char> m;
     m[1] = 'a';
     m[2] = 'b';
     m.insert(pair(3, 'c'));
     m.emplace(2, 'c');
     m.insert(pair(1, 'b'));
     detailof(m);
-    auto m2 = std::move(m);
+    unordered_map<int, char> m2;
+    m2.insert(m.begin(), m.end());
     detailof(m2);
-    std::cout << *++m2.begin() << ":";
-    // std::cout << m2.at(4) << std::endl;
-    hash_multimap<std::string, int> mm;
-    mm.insert(pair(std::string("a"), 1));
+    std::cout << *++m2.begin() << std::endl;
+    unordered_multimap<std::string, int> mm;
     mm.emplace("a", 1);
+    mm.emplace("a", 2);
+    mm.insert(pair(std::string("a"), 1));
     detailof(mm);
     mm.clear();
     detailof(mm);
-    hash_map<int, std::unique_ptr<int>> uncopy;
+    unordered_map<int, std::unique_ptr<int>> uncopy;
     uncopy.emplace(1, std::make_unique<int>(1));
     detailof(uncopy);
+    uncopy.erase(uncopy.begin());
+
+    unordered_set<pair<int, char>> us;
+    us.emplace(1, 'c');
+    us.insert(pair(4, 'r'));
+    detailof(us);
+    us.erase(pair(4, 'r'));
+    us.erase(us.begin());
+    detailof(us);
 }
 
 void try_pool() {
@@ -386,6 +386,6 @@ void try_algo() {
 
 int main() {
     MSTL_NAMESPACE__;
-    try_pque();
+    try_hash();
     return 0;
 }
