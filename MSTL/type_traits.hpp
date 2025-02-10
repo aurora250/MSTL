@@ -755,7 +755,7 @@ constexpr bool is_default_constructible_v = is_default_constructible<T>::value;
 
 
 template <typename T>
-void implicitly_default_construct_aux(const T&) { MSTL_NO_EVALUATION }
+void implicitly_default_construct_aux(const T&) noexcept { MSTL_NO_EVALUATION }
 
 template <typename, typename = void>
 struct is_implicitly_default_constructible : false_type {};
@@ -971,7 +971,7 @@ template <typename T>
 using set_unsigned_byte = typename sign_byte_aux<sizeof(T)>::template unsigned_t<T>;
 
 template <typename T>
-struct make_signed {
+struct set_signed {
     static_assert(is_nonbool_integral<T> || is_enum_v<T>,
         "make signed only support non bool integral types and enum types");
 
@@ -979,9 +979,19 @@ struct make_signed {
     using unsigned_type = typename remove_cv<T>::template apply_t<set_unsigned_byte>;
 };
 template <typename T>
-using make_signed_t = typename make_signed<T>::signed_type;
+using make_signed_t = typename set_signed<T>::signed_type;
 template <typename T>
-using make_unsigned_t = typename make_signed<T>::unsigned_type;
+using make_unsigned_t = typename set_signed<T>::unsigned_type;
+
+template <typename T>
+struct make_signed {
+    using type = make_signed_t<T>;
+};
+template <typename T>
+struct make_unsigned {
+    using type = make_unsigned_t<T>;
+};
+
 
 template <typename T>
 constexpr make_signed_t<T> signed_value(T x) {
@@ -1042,8 +1052,7 @@ constexpr bool is_base_of_v = is_base_of<Base, Derived>::value;
 
 // decay_t will simulate the decline in the argument passing of function:
 //   ref and cv qualifier will be removed;
-//   array types will be converted to pointer types;
-//   function types will be converted to function pointer types.
+//   array and function types will be converted to pointer types unless they are used to iitialize referece.
 template <typename T>
 struct decay {
     using rem_ref_t = remove_reference_t<T>;

@@ -159,6 +159,7 @@ struct less_equal<void> {
 };
 
 //others:
+
 template <typename T>
 struct identity : public unary_function<T, T> {
 	template <typename U = T>

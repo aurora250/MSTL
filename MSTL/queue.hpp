@@ -213,6 +213,7 @@ template <typename Iterator, typename Compare = less<iter_val_t<Iterator>>,
 priority_queue(Iterator, Iterator, Compare = Compare(), Sequence = Sequence())
 -> priority_queue<iter_val_t<Iterator>, Sequence, Compare>;
 #endif
+
 template <typename T, typename Sequence, typename Compare>
     requires(is_swappable_v<Sequence> && is_swappable_v<Compare>)
 void swap(priority_queue<T, Sequence, Compare>& lh, priority_queue<T, Sequence, Compare>& rh)

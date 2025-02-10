@@ -164,6 +164,7 @@ inserter(Container& x, typename Container::iterator it) noexcept {
 template <typename Iterator>
 class reverse_iterator {
     static_assert(is_ranges_bid_iter_v<Iterator>, "reverse iterator requires bidirectional iterator.");
+
 public:
     using iterator_category = iter_cat_t<Iterator>;
     using value_type        = iter_val_t<Iterator>;
@@ -172,6 +173,7 @@ public:
     using reference         = iter_ref_t<Iterator>;
     using self              = reverse_iterator<Iterator>;
 
+public:
     MSTL_CONSTEXPR reverse_iterator() = default;
 
     MSTL_CONSTEXPR explicit reverse_iterator(Iterator x)
@@ -270,42 +272,42 @@ public:
 private:
     Iterator current;
 };
-template <class Iterator1, class Iterator2>
+template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
     noexcept(noexcept(MSTL::declcopy<bool>(x.get_current() == y.get_current()))) 
     requires requires { { x.get_current() == y.get_current() } -> convertible_to<bool>; } {
     return x.get_current() == y.get_current();
 }
-template <class Iterator1, class Iterator2>
+template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
     noexcept(noexcept(MSTL::declcopy<bool>(x.get_current() != y.get_current())))
     requires requires { { x.get_current() != y.get_current() } -> convertible_to<bool>; } {
     return x.get_current() != y.get_current();
 }
-template <class Iterator1, class Iterator2>
+template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator <(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
     noexcept(noexcept(MSTL::declcopy<bool>(x.get_current() > y.get_current())))
     requires requires { { x.get_current() > y.get_current() } -> convertible_to<bool>; } {
     return x.get_current() > y.get_current();
 }
-template <class Iterator1, class Iterator2>
+template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator >(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
     noexcept(noexcept(MSTL::declcopy<bool>(x.get_current() < y.get_current())))
     requires requires { { x.get_current() < y.get_current() } -> convertible_to<bool>; } {
     return x.get_current() < y.get_current();
 }
-template <class Iterator1, class Iterator2>
+template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator <=(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
     noexcept(noexcept(MSTL::declcopy<bool>(x.get_current() >= y.get_current())))
     requires requires { { x.get_current() >= y.get_current() } -> convertible_to<bool>; } {
     return x.get_current() >= y.get_current();
 }
-template <class Iterator1, class Iterator2>
+template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator >=(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
     noexcept(noexcept(MSTL::declcopy<bool>(x.get_current() <= y.get_current())))
@@ -313,13 +315,13 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool operator >=(
     return x.get_current() <= y.get_current();
 }
 
-template <class Iterator1, class Iterator2>
+template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator -(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
     noexcept(noexcept(y.get_current() - x.get_current())) {
     return y.get_current() - x.get_current();
 }
-template <class Iterator>
+template <typename Iterator>
 MSTL_CONSTEXPR reverse_iterator<Iterator> operator +(
     iter_dif_t<Iterator> n, const reverse_iterator<Iterator>& x)
     noexcept(noexcept(x + n)) {

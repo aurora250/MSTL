@@ -168,12 +168,12 @@ private:
     iterator start_;
     iterator finish_;
 
-    inline void range_check(size_type position) const {
-        Exception(position < static_cast<size_type>(MSTL::distance(start_, finish_)), 
-            StopIterator("deque index out of ranges."));
+    inline void range_check(size_type position) const noexcept {
+        MSTL_DEBUG_VERIFY__(position < static_cast<size_type>(MSTL::distance(start_, finish_)), 
+            "deque index out of ranges.");
     }
-    inline void range_check(iterator position) const {
-        Exception(position >= start_ && position <= finish_, StopIterator("deque index out of ranges."));
+    inline void range_check(iterator position) const noexcept {
+        MSTL_DEBUG_VERIFY__(position >= start_ && position <= finish_, "deque index out of ranges.");
     }
 
     MSTL_CONSTEXPR static size_t buff_size() noexcept {
@@ -182,7 +182,7 @@ private:
 
     void create_map_and_nodes(size_type n) {
         size_type node_nums = n / buff_size() + 1;
-        map_size_ = max(size_type(8), node_nums + 2);
+        map_size_ = MSTL::max(size_type(8), node_nums + 2);
         map_ = map_alloc_.allocate(map_size_);
         map_pointer nstart = map_ + (map_size_ - node_nums) / 2;
         map_pointer nfinish = nstart + node_nums - 1;
@@ -218,7 +218,7 @@ private:
             else MSTL::copy_backward(start_.node_, finish_.node_ + 1, new_start + old_num_nodes);
         }
         else {
-            size_type new_map_size = map_size_ + max(map_size_, nodes_to_add) + 2;
+            size_type new_map_size = map_size_ + MSTL::max(map_size_, nodes_to_add) + 2;
             map_pointer new_map = map_alloc_.allocate(new_map_size);
             new_start = new_map + (new_map_size - new_num_nodes) / 2
                 + (add_at_front ? nodes_to_add : 0);
@@ -370,8 +370,8 @@ private:
     }
 
 public:
-    deque() : data_alloc_(), map_alloc_(), map_(0),
-        map_size_(1), start_(0), finish_(0) {
+    deque() : data_alloc_(), map_alloc_(), map_(nullptr),
+        map_size_(0), start_(nullptr), finish_(nullptr) {
         map_ = map_alloc_.allocate(1);
         *map_ = data_alloc_.allocate(buff_size());
         start_.change_buff(map_);
@@ -381,30 +381,29 @@ public:
     }
 
     explicit deque(size_type n) :
-        data_alloc_(), map_alloc_(), map_(0), map_size_(0), start_(), finish_() {
+        data_alloc_(), map_alloc_(), map_(nullptr), map_size_(0), start_(nullptr), finish_(nullptr) {
         (fill_initialize)(n, T());
     }
 
     deque(size_type n, const T& x) :
-        data_alloc_(), map_alloc_(), map_(0), map_size_(0), start_(), finish_() {
+        data_alloc_(), map_alloc_(), map_(nullptr), map_size_(0), start_(nullptr), finish_(nullptr) {
         (fill_initialize)(n, x);
     }
     deque(size_type n, T&& x) :
-        data_alloc_(), map_alloc_(), map_(0), map_size_(0), start_(), finish_() {
+        data_alloc_(), map_alloc_(), map_(nullptr), map_size_(0), start_(nullptr), finish_(nullptr) {
         (fill_initialize)(n, MSTL::forward<T>(x));
     }
 
     template <typename Iterator>
         requires(input_iterator<Iterator>)
     deque(Iterator first, Iterator last) :
-        data_alloc_(), map_alloc_(), map_(0), map_size_(0), start_(), finish_() {
+        data_alloc_(), map_alloc_(), map_(nullptr), map_size_(0), start_(nullptr), finish_(nullptr) {
         Exception(MSTL::distance(first, last) >= 0,
             StopIterator("deque iterator-constructor out of ranges."));
-        difference_type n = last - first;
-        create_map_and_nodes(n);
+        create_map_and_nodes(MSTL::distance(first, last));
         for (map_pointer cur = start_.node_; cur < finish_.node_; ++cur) {
             MSTL::uninitialized_copy(first, first + buff_size(), *cur);
-            first = first + buff_size();
+            MSTL::advance(first, buff_size());
         }
         MSTL::uninitialized_copy(first, last, finish_.first_);
     }
@@ -428,7 +427,7 @@ public:
     }
 
     deque(self&& x) noexcept : data_alloc_(), map_alloc_(),
-        map_(0), map_size_(0), start_(0), finish_(0) {
+        map_(nullptr), map_size_(0), start_(nullptr), finish_(nullptr) {
         swap(x);
     }
     self& operator =(self&& x) noexcept {

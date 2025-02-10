@@ -201,15 +201,43 @@ void try_pque() {
     q.pop();
     detailof(q);
 }
-void try_map() {
+
+void try_rb() {
     MSTL_NAMESPACE__;
     map<int, char> m;
     m.insert(pair(1, 'c'));
-    m[1] = 'c';
+    m.emplace(3, 'c');
+    m.emplace_hint(m.end(), 4, 'd');
+    m[1] = 'a';
     m[100] = 'x';
-    m[2] = 'l';
+    m[2] = 'b';
     detailof(m);
-    sout << m[1] << endl;
+    m.erase(m.begin());
+    detailof(m);
+    sout << m[100] << " ," << m.at(2) << endl;
+    m.clear();
+    sout << m.empty() << endl;
+
+    multimap<int, const char*> mm;
+    mm.emplace(1, "c");
+    mm.emplace(2, "b");
+    mm.emplace(1, "a");
+    detailof(mm);
+    mm.erase(mm.begin());
+    mm.insert(mm.begin(), pair(1, "a"));
+    detailof(mm);
+    mm.clear();
+    sout << mm.empty() << endl;
+
+    set<int> s{ 1,2,3,4,5 };
+    s.insert(s.begin(), 1);
+    s.emplace(2);
+    detailof(s);
+
+    multiset<int> ms{ 4,5,6,7,8,8 };
+    ms.insert(ms.begin(), 9);
+    ms.emplace(10);
+    detailof(ms);
 }
 void try_tup() {
     MSTL_NAMESPACE__;
@@ -254,6 +282,7 @@ void try_hash() {
     unordered_multiset<pair<int, const char*>> ms;
     ms.emplace(1, "234");
     ms.insert(make_pair(2, "345"));
+    ms.emplace(1, "234");
     detailof(ms);
     ms.erase(ms.begin());
     detailof(ms);
@@ -380,12 +409,12 @@ void try_sort() {
 
 void try_algo() {
     MSTL_NAMESPACE__;
-    std::vector<int> v1 = { 1, 3, 5 };
-    std::vector<int> v2 = { 2, 4, 6 };
-    std::vector<int> result(v1.size() + v2.size());
+    vector<int> v1 = { 1, 3, 5 };
+    vector<int> v2 = { 2, 4, 6 };
+    vector<int> result(v1.size() + v2.size());
     merge(v1.begin(), v1.end(), v2.begin(), v2.end(), result.begin());
     detailof(result);
-    std::vector<int> v3 = { 1, 3, 5, 2, 4, 6 };
+    vector<int> v3 = { 1, 3, 5, 2, 4, 6 };
     auto middle = v3.begin() + 3;
     inplace_merge(v3.begin(), middle, v3.end());
     detailof(v3);
@@ -393,6 +422,6 @@ void try_algo() {
 
 int main() {
     MSTL_NAMESPACE__;
-    try_hash();
+    try_rb();
     return 0;
 }

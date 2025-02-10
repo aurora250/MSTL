@@ -106,11 +106,13 @@ private:
     size_type size_;
     allocator_type alloc_;
 
-    inline void range_check(size_type position) const {
-        Exception(position < size_, StopIterator());
+    inline void range_check(size_type position) const noexcept {
+        MSTL_DEBUG_VERIFY__(position < size_, "list index out of ranges.");
     }
-    inline void range_check(iterator position) const {
-        Exception(MSTL::distance(static_cast<const_iterator>(position), cend()) >= 0, StopIterator());
+    inline void range_check(iterator position) const noexcept {
+        MSTL_DEBUG_VERIFY__(MSTL::distance(static_cast<const_iterator>(position), cend()) >= 0, 
+            "list iterator out of ranges."
+        );
     }
 
     template <typename... Args>
@@ -480,21 +482,21 @@ public:
         sort(MSTL::less<T>());
     }
 
-    const_reference at(size_type position) const {
+    MSTL_NODISCARD const_reference at(size_type position) const {
         range_check(position);
         const_iterator iter = cbegin();
         while (position--) iter++;
         return iter.node_->data_;
     }
-    reference at(size_type position) {
+    MSTL_NODISCARD reference at(size_type position) {
         return const_cast<reference>(
             static_cast<const self*>(this)->at(position)
             );
     }
-    const_reference operator [](size_type position) const {
+    MSTL_NODISCARD const_reference operator [](size_type position) const {
         return this->at(position);
     }
-    reference operator [](size_type position) {
+    MSTL_NODISCARD reference operator [](size_type position) {
         return this->at(position);
     }
 };

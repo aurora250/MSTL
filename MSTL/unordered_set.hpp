@@ -141,11 +141,39 @@ public:
     MSTL_NODISCARD iterator find(const key_type& key) { return ht_.find(key); }
     MSTL_NODISCARD const_iterator find(const key_type& key) const { return ht_.find(key); }
 
-    pair<iterator, iterator> equal_range(const key_type& key) { return ht_.equal_range(key); }
-    pair<const_iterator, const_iterator> equal_range(const key_type& key) const {
+    MSTL_NODISCARD pair<iterator, iterator> equal_range(const key_type& key) { return ht_.equal_range(key); }
+    MSTL_NODISCARD pair<const_iterator, const_iterator> equal_range(const key_type& key) const {
         return ht_.equal_range(key);
     }
 };
+#if MSTL_SUPPORT_DEDUCTION_GUIDES__
+template <typename Iterator, typename HashFcn = hash<iter_val_t<Iterator>>, typename Compare
+    = equal_to<iter_val_t<Iterator>>, typename Alloc = standard_allocator<iter_val_t<Iterator>>>
+unordered_set(Iterator, Iterator, HashFcn = HashFcn(), Compare = Compare(), Alloc = Alloc())
+-> unordered_set<iter_val_t<Iterator>, HashFcn, Compare, Alloc>;
+
+template <typename Key, typename HashFcn = hash<Key>, typename Compare = equal_to<Key>,
+    typename Alloc = standard_allocator<Key>>
+unordered_set(std::initializer_list<Key>, HashFcn = _Hasher(), Compare = Compare(), Alloc = Alloc()) 
+-> unordered_set<Key, HashFcn, Compare, Alloc>;
+
+template <typename Iterator, typename Alloc>
+unordered_set(Iterator, Iterator, Alloc)
+-> unordered_set<iter_val_t<Iterator>, hash<iter_val_t<Iterator>>, equal_to<iter_val_t<Iterator>>, Alloc>;
+
+template <typename Iterator, typename HashFcn, typename Alloc>
+unordered_set(Iterator, Iterator, HashFcn, Alloc)
+-> unordered_set<iter_val_t<Iterator>, HashFcn, equal_to<iter_val_t<Iterator>>, Alloc>;
+
+template <typename Key, typename Alloc>
+unordered_set(std::initializer_list<Key>, Alloc)
+-> unordered_set<Key, hash<Key>, equal_to<Key>, Alloc>;
+
+template <typename Key, typename HashFcn, typename Alloc>
+unordered_set(std::initializer_list<Key>, HashFcn, Alloc)
+-> unordered_set<Key, HashFcn, equal_to<Key>, Alloc>;
+#endif
+
 template <class Value, class HashFcn, class EqualKey, class Alloc>
 inline MSTL_NODISCARD bool operator ==(
     const unordered_set<Value, HashFcn, EqualKey, Alloc>& lh,
@@ -303,11 +331,39 @@ public:
     MSTL_NODISCARD iterator find(const key_type& key) { return ht_.find(key); }
     MSTL_NODISCARD const_iterator find(const key_type& key) const { return ht_.find(key); }
 
-    pair<iterator, iterator> equal_range(const key_type& key) { return ht_.equal_range(key); }
-    pair<const_iterator, const_iterator> equal_range(const key_type& key) const {
+    MSTL_NODISCARD pair<iterator, iterator> equal_range(const key_type& key) { return ht_.equal_range(key); }
+    MSTL_NODISCARD pair<const_iterator, const_iterator> equal_range(const key_type& key) const {
         return ht_.equal_range(key);
     }
 };
+#if MSTL_SUPPORT_DEDUCTION_GUIDES__
+template <typename Iterator, typename HashFcn = hash<iter_val_t<Iterator>>, typename Compare
+    = equal_to<iter_val_t<Iterator>>, typename Alloc = standard_allocator<iter_val_t<Iterator>>>
+unordered_multiset(Iterator, Iterator, HashFcn = HashFcn(), Compare = Compare(), Alloc = Alloc())
+-> unordered_multiset<iter_val_t<Iterator>, HashFcn, Compare, Alloc>;
+
+template <typename Key, typename HashFcn = hash<Key>, typename Compare = equal_to<Key>,
+    typename Alloc = standard_allocator<Key>>
+unordered_multiset(std::initializer_list<Key>, HashFcn = _Hasher(), Compare = Compare(), Alloc = Alloc()) 
+-> unordered_multiset<Key, HashFcn, Compare, Alloc>;
+
+template <typename Iterator, typename Alloc>
+unordered_multiset(Iterator, Iterator, Alloc)
+-> unordered_multiset<iter_val_t<Iterator>, hash<iter_val_t<Iterator>>, equal_to<iter_val_t<Iterator>>, Alloc>;
+
+template <typename Iterator, typename HashFcn, typename Alloc>
+unordered_multiset(Iterator, Iterator, HashFcn, Alloc)
+-> unordered_multiset<iter_val_t<Iterator>, HashFcn, equal_to<iter_val_t<Iterator>>, Alloc>;
+
+template <typename Key, typename Alloc>
+unordered_multiset(std::initializer_list<Key>, Alloc)
+-> unordered_multiset<Key, hash<Key>, equal_to<Key>, Alloc>;
+
+template <typename Key, typename HashFcn, typename Alloc>
+unordered_multiset(std::initializer_list<Key>, HashFcn, Alloc)
+-> unordered_multiset<Key, HashFcn, equal_to<Key>, Alloc>;
+#endif
+
 template <class Val, class HashFcn, class EqualKey, class Alloc>
 inline MSTL_NODISCARD bool operator ==(
     const unordered_multiset<Val, HashFcn, EqualKey, Alloc>& lh,

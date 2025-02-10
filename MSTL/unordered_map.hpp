@@ -142,8 +142,8 @@ public:
     MSTL_NODISCARD iterator find(const key_type& key) { return ht_.find(key); }
     MSTL_NODISCARD const_iterator find(const key_type& key) const { return ht_.find(key); }
 
-    pair<iterator, iterator> equal_range(const key_type& key) { return ht_.equal_range(key); }
-    pair<const_iterator, const_iterator> equal_range(const key_type& key) const {
+    MSTL_NODISCARD pair<iterator, iterator> equal_range(const key_type& key) { return ht_.equal_range(key); }
+    MSTL_NODISCARD pair<const_iterator, const_iterator> equal_range(const key_type& key) const {
         return ht_.equal_range(key);
     }
 
@@ -162,6 +162,34 @@ public:
         return const_cast<reference>(static_cast<const self*>(this)->at(key));
     }
 };
+#ifdef MSTL_SUPPORT_DEDUCTION_GUIDES__
+template <typename Iterator, typename HashFcn = hash<get_iter_key_t<Iterator>>,
+    typename Compare = equal_to<get_iter_key_t<Iterator>>, typename Alloc>
+unordered_map(Iterator, Iterator, HashFcn = HashFcn(), Compare = Compare(), Alloc = Alloc())
+-> unordered_map<get_iter_key_t<Iterator>, get_iter_val_t<Iterator>, HashFcn, Compare, Alloc>;
+
+template <typename Key, typename T, typename HashFcn = hash<Key>, typename Compare = equal_to<Key>,
+    typename Alloc = standard_allocator<pair<const Key, T>>>
+unordered_map(std::initializer_list<pair<Key, T>>, HashFcn = HashFcn(), Compare = Compare(), Alloc = Alloc())
+-> unordered_map<Key, T, HashFcn, Compare, Alloc>;
+
+template <typename Iterator, typename Alloc>
+unordered_map(Iterator, Iterator, Alloc) -> unordered_map<get_iter_key_t<Iterator>, get_iter_val_t<Iterator>,
+    hash<get_iter_key_t<Iterator>>, equal_to<get_iter_key_t<Iterator>>, Alloc>;
+
+template <typename Iterator, typename HashFcn, typename Alloc>
+unordered_map(Iterator, Iterator, HashFcn, Alloc) -> unordered_map<get_iter_key_t<Iterator>,
+    get_iter_val_t<Iterator>, HashFcn, equal_to<get_iter_key_t<Iterator>>, Alloc>;
+
+template <typename Key, typename T, typename Alloc>
+unordered_map(std::initializer_list<pair<Key, T>>, Alloc)
+-> unordered_map<Key, T, hash<Key>, equal_to<Key>, Alloc>;
+
+template <typename Key, typename T, typename HashFcn, typename Alloc>
+unordered_map(std::initializer_list<pair<Key, T>>, HashFcn, Alloc)
+-> unordered_map<Key, T, HashFcn, equal_to<Key>, Alloc>;
+#endif
+
 template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
 inline MSTL_NODISCARD bool operator ==(
     const unordered_map<Key, T, HashFcn, EqualKey, Alloc>& lh,
@@ -319,11 +347,39 @@ public:
     MSTL_NODISCARD iterator find(const key_type& key) { return ht_.find(key); }
     MSTL_NODISCARD const_iterator find(const key_type& key) const { return ht_.find(key); }
 
-    pair<iterator, iterator> equal_range(const key_type& key) { return ht_.equal_range(key); }
-    pair<const_iterator, const_iterator> equal_range(const key_type& key) const {
+    MSTL_NODISCARD pair<iterator, iterator> equal_range(const key_type& key) { return ht_.equal_range(key); }
+    MSTL_NODISCARD pair<const_iterator, const_iterator> equal_range(const key_type& key) const {
         return ht_.equal_range(key);
     }
 };
+#ifdef MSTL_SUPPORT_DEDUCTION_GUIDES__
+template <typename Iterator, typename HashFcn = hash<get_iter_key_t<Iterator>>,
+    typename Compare = equal_to<get_iter_key_t<Iterator>>, typename Alloc>
+unordered_multimap(Iterator, Iterator, HashFcn = HashFcn(), Compare = Compare(), Alloc = Alloc())
+-> unordered_multimap<get_iter_key_t<Iterator>, get_iter_val_t<Iterator>, HashFcn, Compare, Alloc>;
+
+template <typename Key, typename T, typename HashFcn = hash<Key>, typename Compare = equal_to<Key>,
+    typename Alloc = standard_allocator<pair<const Key, T>>>
+unordered_multimap(std::initializer_list<pair<Key, T>>, HashFcn = HashFcn(), Compare = Compare(), Alloc = Alloc())
+-> unordered_multimap<Key, T, HashFcn, Compare, Alloc>;
+
+template <typename Iterator, typename Alloc>
+unordered_multimap(Iterator, Iterator, Alloc) -> unordered_multimap<get_iter_key_t<Iterator>, get_iter_val_t<Iterator>,
+    hash<get_iter_key_t<Iterator>>, equal_to<get_iter_key_t<Iterator>>, Alloc>;
+
+template <typename Iterator, typename HashFcn, typename Alloc>
+unordered_multimap(Iterator, Iterator, HashFcn, Alloc) -> unordered_multimap<get_iter_key_t<Iterator>,
+    get_iter_val_t<Iterator>, HashFcn, equal_to<get_iter_key_t<Iterator>>, Alloc>;
+
+template <typename Key, typename T, typename Alloc>
+unordered_multimap(std::initializer_list<pair<Key, T>>, Alloc)
+-> unordered_multimap<Key, T, hash<Key>, equal_to<Key>, Alloc>;
+
+template <typename Key, typename T, typename HashFcn, typename Alloc>
+unordered_multimap(std::initializer_list<pair<Key, T>>, HashFcn, Alloc)
+-> unordered_multimap<Key, T, HashFcn, equal_to<Key>, Alloc>;
+#endif
+
 template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
 inline MSTL_NODISCARD bool operator ==(const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& lh,
     const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& rh) noexcept {

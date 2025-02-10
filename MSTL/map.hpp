@@ -6,276 +6,462 @@ MSTL_BEGIN_NAMESPACE__
 template <typename Key, typename T, typename Compare = less<Key>,
 	typename Alloc = standard_allocator<__rb_tree_node<pair<const Key, T>>>>
 class map {
-public:
-	typedef Key							key_type;
-	typedef T							data_type;
-	typedef T							mapped_type;
-	typedef pair<const Key, T>			value_type;
-	typedef Compare						key_compare;
-	typedef map<Key, T, Compare, Alloc> self;
+#ifdef MSTL_VERSION_20__	
+	static_assert(is_allocator_v<Alloc>, "Alloc type is not a standard allocator type.");
+#endif
+	static_assert(is_same_v<__rb_tree_node<pair<const Key, T>>, typename Alloc::value_type>, 
+		"allocator type mismatch.");
+	static_assert(is_object_v<T>, "map only contains object types.");
 
-	class value_compare : public binary_function<value_type, value_type, bool> {
+public:
+	using key_type		= Key;
+	using data_type		= T;
+	using mapped_type	= T;
+	using value_type	= pair<const Key, T>;
+	using key_compare	= Compare;
+	using self			= map<Key, T, Compare, Alloc>;
+
+	struct value_compare : public binary_function<value_type, value_type, bool> {
 	private:
+		Compare comp_;
+
 		friend class map;
-		Compare comp;
+
 	public:
-		bool operator ()(const value_type& x, const value_type& y) {
-			return comp(x.first, y.first);
+		bool operator ()(const value_type& x, const value_type& y) const noexcept {
+			return comp_(x.first, y.first);
 		}
 	};
+
 private:
-	typedef rb_tree<key_type, value_type, select1st<value_type>, key_compare, Alloc> rep_type;
-	rep_type t;
-
-	friend inline bool operator ==(const map& x, const map& y);
-	friend inline bool operator <(const map& x, const map& y);
+	using base_type			= rb_tree<Key, pair<const Key, T>, select1st<pair<const Key, T>>, Compare, Alloc>;
 public:
-	typedef typename rep_type::pointer			pointer;
-	typedef typename rep_type::const_pointer	const_pointer;
-	typedef typename rep_type::reference		reference;
-	typedef typename rep_type::const_reference	const_reference;
-	typedef typename rep_type::iterator			iterator;
-	typedef typename rep_type::const_iterator	const_iterator;
-	typedef typename rep_type::size_type		size_type;
-	typedef typename rep_type::difference_type	difference_type;
+	using size_type			= typename base_type::size_type;
+	using difference_type	= typename base_type::difference_type;
+	using pointer			= typename base_type::pointer;
+	using const_pointer		= typename base_type::const_pointer;
+	using reference			= typename base_type::reference;
+	using const_reference	= typename base_type::const_reference;
+	using iterator			= typename base_type::iterator;
+	using allocator_type	= typename base_type::allocator_type;
+	using const_iterator	= typename base_type::const_iterator;
+	using reverse_iterator	= typename base_type::reverse_iterator;
+	using const_reverse_iterator = typename base_type::const_reverse_iterator;
 
-	map() : t(Compare()) {}
-	explicit map(const Compare& comp) : t(comp) {}
+private:
+	base_type tree_;
+
+	friend inline bool operator ==(const map&, const map&);
+	friend inline bool operator <(const map&, const map&);
+
+public:
+	map() : tree_(Compare()) {}
+	explicit map(const key_compare& comp) : tree_(comp) {}
+
+	map(const self& x) : tree_(x.tree_) {}
+
+	self& operator =(const self& x) {
+		tree_ = x.tree_;
+		return *this;
+	}
+
+	map(self&& x) noexcept(is_nothrow_move_constructible_v<base_type>) 
+		: tree_(MSTL::move(x.tree_)) {}
+
+	self& operator =(self&& x) noexcept(noexcept(swap(x))) {
+		tree_ = MSTL::move(x.tree_);
+		return *this;
+	}
+
+	template <typename Iterator>
+		requires(input_iterator<Iterator>)
+	map(Iterator first, Iterator last) : tree_(Compare()) {
+		tree_.insert_unique(first, last);
+	}
+	template <typename Iterator>
+		requires(input_iterator<Iterator>)
+	map(Iterator first, Iterator last, const key_compare& comp) : tree_(comp) {
+		tree_.insert_unique(first, last);
+	}
+
 	map(std::initializer_list<value_type> l) : map(l.begin(), l.end()) {}
+	map(std::initializer_list<value_type> l, const key_compare& comp) : map(l.begin(), l.end(), comp) {}
+
 	self& operator =(std::initializer_list<value_type> l) {
 		clear();
 		insert(l.begin(), l.end());
 		return *this;
 	}
-	template <typename Iterator>
-		requires(input_iterator<Iterator>)
-	map(Iterator first, Iterator last) : t(Compare()) {
-		t.insert_unique(first, last);
-	}
-	template <typename Iterator>
-		requires(input_iterator<Iterator>)
-	map(Iterator first, Iterator last, const Compare& comp) : t(comp) {
-		t.insert_unique(first, last);
-	}
-	map(const self& x) : t(x.t) {}
-	self& operator =(const self& x) {
-		if (*this == x) return *this;
-		t = x.t;
-		return *this;
-	}
-	map(self&& x) : t(std::move(x.t)) {}
-	self& operator =(self&& x) {
-		clear();
-		swap(std::forward<self>(x));
-		return *this;
-	}
 	~map() = default;
 
-	MSTL_NODISCARD iterator begin() noexcept { return t.begin(); }
-	MSTL_NODISCARD iterator end() noexcept { return t.end(); }
-	MSTL_NODISCARD const_iterator cbegin() const noexcept { return t.cbegin(); }
-	MSTL_NODISCARD const_iterator cend() const noexcept { return t.cend(); }
-	MSTL_NODISCARD bool empty() const noexcept { return t.empty(); }
-	MSTL_NODISCARD size_type size() const noexcept { return t.size(); }
-	MSTL_NODISCARD key_compare key_comp() const noexcept { return t.key_comp(); }
-	MSTL_NODISCARD value_compare value_comp() const noexcept { return value_compare(t.key_comp()); }
+	MSTL_NODISCARD iterator begin() noexcept { return tree_.begin(); }
+	MSTL_NODISCARD iterator end() noexcept { return tree_.end(); }
+	MSTL_NODISCARD const_iterator cbegin() const noexcept { return tree_.cbegin(); }
+	MSTL_NODISCARD const_iterator cend() const noexcept { return tree_.cend(); }
+	MSTL_NODISCARD reverse_iterator rbegin() noexcept { return reverse_iterator(tree_.begin()); }
+	MSTL_NODISCARD reverse_iterator rend() noexcept { return reverse_iterator(tree_.end()); }
+	MSTL_NODISCARD const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(tree_.cbegin()); }
+	MSTL_NODISCARD const_reverse_iterator crend() const noexcept { return const_reverse_iterator(tree_.cend()); }
 
+	MSTL_NODISCARD size_type size() const noexcept { return tree_.size(); }
+	MSTL_NODISCARD size_type max_size() const noexcept { return tree_.max_size(); }
+	MSTL_NODISCARD bool empty() const noexcept { return tree_.empty(); }
+
+	MSTL_NODISCARD allocator_type get_allocator() const noexcept { return allocator_type(); }
+
+	MSTL_NODISCARD key_compare key_comp() const noexcept { return tree_.key_comp(); }
+	MSTL_NODISCARD value_compare value_comp() const noexcept { return value_compare(tree_.key_comp()); }
+
+	template <typename... Args>
+	pair<iterator, bool> emplace(Args&&... args) {
+		return tree_.emplace_unique(MSTL::forward<Args>(args)...);
+	}
 	pair<iterator, bool> insert(const value_type& x) {
-		return t.insert_unique(x);
+		return tree_.insert_unique(x);
 	}
 	pair<iterator, bool> insert(value_type&& x) {
-		return t.insert_unique(std::forward<value_type>(x));
+		return tree_.insert_unique(MSTL::move(x));
+	}
+
+	template <typename... Args>
+	iterator emplace_hint(iterator position, Args&&... args) {
+		return tree_.emplace_unique_hint(position, MSTL::forward<Args>(args)...);
 	}
 	iterator insert(iterator position, const value_type& x) {
-		return t.insert_unique(position, x);
+		return tree_.insert_unique(position, x);
 	}
-	template <class Iterator>
-		requires(input_iterator<Iterator>)
+	iterator insert(iterator position, value_type&& x) {
+		return tree_.insert_unique(position, MSTL::move(x));
+	}
+
+	template <typename Iterator>
 	void insert(Iterator first, Iterator last) {
-		t.insert_unique(first, last);
+		tree_.insert_unique(first, last);
 	}
-	void erase(iterator position) noexcept { t.erase(position); }
-	size_type erase(const key_type& x) noexcept { return t.erase(x); }
-	void erase(iterator first, iterator last) noexcept { t.erase(first, last); }
-	void clear() noexcept { t.clear(); }
 
-	MSTL_NODISCARD const_iterator find(const key_type& x) const { return t.find(x); }
-	void swap(self& x) noexcept(noexcept(t.swap(x.t))) { t.swap(x.t); }
-	MSTL_NODISCARD size_type count(const key_type& x) const { 
-		return t.count(x); 
-	}
-	MSTL_NODISCARD iterator lower_bound(const key_type& x) {
-		return t.lower_bound(x);
-	}
-	MSTL_NODISCARD const_iterator lower_bound(const key_type& x) const {
-		return t.lower_bound(x);
-	}
-	MSTL_NODISCARD iterator upper_bound(const key_type& x) {
-		return t.upper_bound(x);
-	}
-	MSTL_NODISCARD const_iterator upper_bound(const key_type& x) const {
-		return t.upper_bound(x);
-	}
-	MSTL_NODISCARD pair<iterator, iterator> equal_range(const key_type& x) {
-		return t.equal_range(x);
-	}
+	void erase(iterator position) noexcept { tree_.erase(position); }
+	size_type erase(const key_type& x) noexcept { return tree_.erase(x); }
+	void erase(iterator first, iterator last) noexcept { tree_.erase(first, last); }
+
+	void clear() noexcept { tree_.clear(); }
+
+	void swap(self& x) noexcept(noexcept(tree_.swap(x.tree_))) { tree_.swap(x.tree_); }
+
+	MSTL_NODISCARD iterator find(const key_type& x) { return tree_.find(x); }
+	MSTL_NODISCARD const_iterator find(const key_type& x) const { return tree_.find(x); }
+	MSTL_NODISCARD size_type count(const key_type& x) const { return tree_.count(x); }
+
+	MSTL_NODISCARD iterator lower_bound(const key_type& x) { return tree_.lower_bound(x); }
+	MSTL_NODISCARD const_iterator lower_bound(const key_type& x) const { return tree_.lower_bound(x); }
+	MSTL_NODISCARD iterator upper_bound(const key_type& x) { return tree_.upper_bound(x); }
+	MSTL_NODISCARD const_iterator upper_bound(const key_type& x) const { return tree_.upper_bound(x); }
+
+	MSTL_NODISCARD pair<iterator, iterator> equal_range(const key_type& x) { return tree_.equal_range(x); }
 	MSTL_NODISCARD pair<const_iterator, const_iterator> equal_range(const key_type& x) const {
-		return t.equal_range(x);
+		return tree_.equal_range(x);
 	}
 
-	T& operator[](const key_type& k) {
-		return (*((
-			insert(value_type(k, T()))
-			).first)).second;
-	}
-	MSTL_NODISCARD T& at(const key_type& k) {
-		auto iter = find(k);
-		Exception(iter != end(), StopIterator("Key does not exist"));
+	MSTL_NODISCARD mapped_type& operator [](const key_type& k) {
+		iterator iter = tree_.lower_bound(k);
+		if (iter == end() || key_comp()(k, iter->first))
+			iter = tree_.emplace_unique_hint(iter, k, T());
 		return iter->second;
 	}
-	MSTL_NODISCARD const T& at(const key_type& k) const {
-		auto iter = find(k);
-		Exception(iter != end(), StopIterator("Key does not exist"));
+	MSTL_NODISCARD mapped_type& operator [](key_type&& k) {
+		iterator iter = tree_.lower_bound(k);
+		if (iter == end() || key_comp()(k, iter->first))
+			iter = tree_.emplace_unique_hint(iter, MSTL::move(k), T());
 		return iter->second;
+	}
+	MSTL_NODISCARD const mapped_type& at(const key_type& k) const {
+		const_iterator iter = lower_bound(k);
+		Exception(!(iter == cend() && key_comp()(iter->first, k)),
+			ValueError("the value of this key does not exists."));
+		return iter->second;
+	}
+	MSTL_NODISCARD mapped_type& at(const key_type& k) {
+		return const_cast<mapped_type&>(const_cast<const self*>(this)->at(k));
 	}
 };
-template <class Key, class T, class Compare, class Alloc>
-MSTL_NODISCARD inline bool operator ==(
-	const map<Key, T, Compare, Alloc>& x, const map<Key, T, Compare, Alloc>& y) {
-	return x.t == y.t;
+#ifdef MSTL_SUPPORT_DEDUCTION_GUIDES__
+template <typename Iterator, typename Compare, typename Alloc
+	= standard_allocator<pair<const get_iter_key_t<Iterator>, get_iter_val_t<Iterator>>>>
+map(Iterator, Iterator, Compare = Compare(), Alloc = Alloc()) ->
+map<get_iter_key_t<Iterator>, get_iter_val_t<Iterator>, Compare, Alloc>;
+
+template <typename Key, typename T, typename Compare = less<Key>, typename Alloc 
+	= standard_allocator<pair<const Key, T>>>
+map(std::initializer_list<pair<Key, T>>, Compare = Compare(), Alloc = Alloc()) -> map<Key, T, Compare, Alloc>;
+
+template <typename Iterator, typename Alloc>
+map(Iterator, Iterator, Alloc) ->
+map<get_iter_key_t<Iterator>, get_iter_val_t<Iterator>, less<get_iter_key_t<Iterator>>, Alloc>;
+
+template <typename Key, typename T, typename Alloc>
+map(std::initializer_list<pair<Key, T>>, Alloc) -> map<Key, T, less<Key>, Alloc>;
+#endif
+
+template <typename Key, typename T, typename Compare, typename Alloc>
+inline MSTL_NODISCARD bool operator ==(
+	const map<Key, T, Compare, Alloc>& lh,
+	const map<Key, T, Compare, Alloc>& rh) noexcept {
+	return lh.tree_ == rh.tree_;
 }
-template <class Key, class T, class Compare, class Alloc>
-MSTL_NODISCARD inline bool operator !=(
-	const map<Key, T, Compare, Alloc>& x, const map<Key, T, Compare, Alloc>& y) {
-	return !(x == y);
+template <typename Key, typename T, typename Compare, typename Alloc>
+inline MSTL_NODISCARD bool operator !=(
+	const map<Key, T, Compare, Alloc>& lh,
+	const map<Key, T, Compare, Alloc>& rh) noexcept {
+	return !(lh.tree_ == rh.tree_);
 }
-template <class Key, class T, class Compare, class Alloc>
-MSTL_NODISCARD inline bool operator <(
-	const map<Key, T, Compare, Alloc>& x, const map<Key, T, Compare, Alloc>& y) {
-	return x.t < y.t;
+template <typename Key, typename T, typename Compare, typename Alloc>
+inline MSTL_NODISCARD bool operator <(
+	const map<Key, T, Compare, Alloc>& lh,
+	const map<Key, T, Compare, Alloc>& rh) noexcept {
+	return lh.tree_ < rh.tree_;
 }
-template <class Key, class T, class Compare, class Alloc>
-MSTL_NODISCARD inline bool operator >(
-	const map<Key, T, Compare, Alloc>& x, const map<Key, T, Compare, Alloc>& y) {
-	return y < x;
+template <typename Key, typename T, typename Compare, typename Alloc>
+inline MSTL_NODISCARD bool operator >(
+	const map<Key, T, Compare, Alloc>& lh,
+	const map<Key, T, Compare, Alloc>& rh) noexcept {
+	return lh.tree_ > rh.tree_;
 }
-template <class Key, class T, class Compare, class Alloc>
-MSTL_NODISCARD inline bool operator <=(
-	const map<Key, T, Compare, Alloc>& x, const map<Key, T, Compare, Alloc>& y) {
-	return !(x > y);
+template <typename Key, typename T, typename Compare, typename Alloc>
+inline MSTL_NODISCARD bool operator <=(
+	const map<Key, T, Compare, Alloc>& lh,
+	const map<Key, T, Compare, Alloc>& rh) noexcept {
+	return lh.tree_ <= rh.tree_;
 }
-template <class Key, class T, class Compare, class Alloc>
-MSTL_NODISCARD inline bool operator >=(
-	const map<Key, T, Compare, Alloc>& x, const map<Key, T, Compare, Alloc>& y) {
-	return !(x < y);
+template <typename Key, typename T, typename Compare, typename Alloc>
+inline MSTL_NODISCARD bool operator >=(
+	const map<Key, T, Compare, Alloc>& lh,
+	const map<Key, T, Compare, Alloc>& rh) noexcept {
+	return lh.tree_ >= rh.tree_;
 }
-template <class Key, class T, class Compare, class Alloc>
-void swap(map<Key, T, Compare, Alloc>& x, map<Key, T, Compare, Alloc>& y) 
-	noexcept(noexcept(x.swap(y))) {
-	x.swap(y);
+template <typename Key, typename T, typename Compare, typename Alloc>
+void swap(map<Key, T, Compare, Alloc>& lh, map<Key, T, Compare, Alloc>& rh) 
+	noexcept(noexcept(lh.swap(rh))) {
+	lh.swap(rh);
 }
 
-template <class Key, class T, class Compare = less<Key>,
-	class Alloc = standard_allocator<__rb_tree_node<pair<const Key, T>>>>
+
+template <typename Key, typename T, typename Compare = less<Key>,
+	typename Alloc = standard_allocator<__rb_tree_node<pair<const Key, T>>>>
 class multimap {
-public:
-	typedef Key key_type;
-	typedef T data_type;
-	typedef T mapped_type;
-	typedef pair<const Key, T> value_type;
-	typedef Compare key_compare;
-	typedef multimap<Key, T, Compare, Alloc> self;
+#ifdef MSTL_VERSION_20__	
+	static_assert(is_allocator_v<Alloc>, "Alloc type is not a standard allocator type.");
+#endif
+	static_assert(is_same_v<__rb_tree_node<pair<const Key, T>>, typename Alloc::value_type>,
+		"allocator type mismatch.");
+	static_assert(is_object_v<T>, "multimap only contains object types.");
 
-	class value_compare : public binary_function<value_type, value_type, bool> {
-		friend class multimap<Key, T, Compare, Alloc>;
-	protected:
-		Compare comp;
-		value_compare(Compare c) : comp(c) {}
+public:
+	using key_type		= Key;
+	using data_type		= T;
+	using mapped_type	= T;
+	using value_type	= pair<const Key, T>;
+	using key_compare	= Compare;
+	using self			= multimap<Key, T, Compare, Alloc>;
+
+	struct value_compare : public binary_function<value_type, value_type, bool> {
+	private:
+		Compare comp_;
+
+		friend class multimap;
+
 	public:
-		bool operator ()(const value_type& x, const value_type& y) const {
-			return comp(x.first, y.first);
+		bool operator ()(const value_type& x, const value_type& y) const noexcept {
+			return comp_(x.first, y.first);
 		}
 	};
-private:
-	typedef rb_tree<key_type, value_type, select1st<value_type>, key_compare, Alloc> rep_type;
-	rep_type t;
-public:
-	typedef typename rep_type::pointer pointer;
-	typedef typename rep_type::const_pointer const_pointer;
-	typedef typename rep_type::reference reference;
-	typedef typename rep_type::const_reference const_reference;
-	typedef typename rep_type::iterator iterator;
-	typedef typename rep_type::const_iterator const_iterator;
-	typedef typename rep_type::reverse_iterator reverse_iterator;
-	typedef typename rep_type::const_reverse_iterator const_reverse_iterator;
-	typedef typename rep_type::size_type size_type;
-	typedef typename rep_type::difference_type difference_type;
 
-	multimap() : t(Compare()) { }
-	explicit multimap(const Compare& comp) : t(comp) { }
-	template <class Iterator>
-	multimap(Iterator first, Iterator last) : t(Compare()) {
-		t.insert_equal(first, last);
-	}
-	template <class Iterator>
-	multimap(Iterator first, Iterator last, const Compare& comp) : t(comp) {
-		t.insert_equal(first, last);
-	}
-	multimap(const multimap<Key, T, Compare, Alloc>& x) : t(x.t) {}
-	multimap<Key, T, Compare, Alloc>& operator =(const multimap<Key, T, Compare, Alloc>& x) {
-		t = x.t;
+private:
+	using base_type			= rb_tree<Key, pair<const Key, T>, select1st<pair<const Key, T>>, Compare, Alloc>;
+public:
+	using size_type			= typename base_type::size_type;
+	using difference_type	= typename base_type::difference_type;
+	using pointer			= typename base_type::pointer;
+	using const_pointer		= typename base_type::const_pointer;
+	using reference			= typename base_type::reference;
+	using const_reference	= typename base_type::const_reference;
+	using iterator			= typename base_type::iterator;
+	using allocator_type	= typename base_type::allocator_type;
+	using const_iterator	= typename base_type::const_iterator;
+	using reverse_iterator	= typename base_type::reverse_iterator;
+	using const_reverse_iterator = typename base_type::const_reverse_iterator;
+
+private:
+	base_type tree_;
+
+	friend inline bool operator ==(const multimap&, const multimap&);
+	friend inline bool operator <(const multimap&, const multimap&);
+
+public:
+	multimap() : tree_(Compare()) {}
+	explicit multimap(const key_compare& comp) : tree_(comp) {}
+
+	multimap(const self& x) : tree_(x.tree_) {}
+
+	self& operator =(const self& x) {
+		tree_ = x.tree_;
 		return *this;
 	}
 
-	key_compare key_comp() const { return t.key_comp(); }
-	value_compare value_comp() const { return value_compare(t.key_comp()); }
-	iterator begin() { return t.begin(); }
-	const_iterator const_begin() const { return t.begin(); }
-	iterator end() { return t.end(); }
-	const_iterator const_end() const { return t.end(); }
-	reverse_iterator rbegin() { return t.rbegin(); }
-	const_reverse_iterator rbegin() const { return t.rbegin(); }
-	reverse_iterator rend() { return t.rend(); }
-	const_reverse_iterator rend() const { return t.rend(); }
-	bool empty() const { return t.empty(); }
-	size_type size() const { return t.size(); }
-	size_type max_size() const { return t.max_size(); }
-	void swap(multimap<Key, T, Compare, Alloc>& x) { t.swap(x.t); }
-	iterator insert(const value_type& x) { return t.insert_equal(x); }
-	iterator insert(iterator position, const value_type& x) { return t.insert_equal(position, x); }
-	template <class Iterator>
-	void insert(Iterator first, Iterator last) { t.insert_equal(first, last); }
-	void erase(iterator position) { t.erase(position); }
-	size_type erase(const key_type& x) { return t.erase(x); }
-	void erase(iterator first, iterator last) { t.erase(first, last); }
-	void clear() { t.clear(); }
+	multimap(self&& x) noexcept(is_nothrow_move_constructible_v<base_type>)
+		: tree_(MSTL::move(x.tree_)) {}
 
-	iterator find(const key_type& x) { return t.find(x); }
-	const_iterator find(const key_type& x) const { return t.find(x); }
-	size_type count(const key_type& x) const { return t.count(x); }
-	iterator lower_bound(const key_type& x) { return t.lower_bound(x); }
-	const_iterator lower_bound(const key_type& x) const { return t.lower_bound(x); }
-	iterator upper_bound(const key_type& x) { return t.upper_bound(x); }
-	const_iterator upper_bound(const key_type& x) const { return t.upper_bound(x); }
-	pair<iterator, iterator> equal_range(const key_type& x) {  return t.equal_range(x); }
-	pair<const_iterator, const_iterator> equal_range(const key_type& x) const { return t.equal_range(x); }
-	friend bool operator ==(const multimap&, const multimap&);
-	friend bool operator <(const multimap&, const multimap&);
+	self& operator =(self&& x) noexcept(noexcept(swap(x))) {
+		tree_ = MSTL::move(x.tree_);
+		return *this;
+	}
+
+	template <typename Iterator>
+		requires(input_iterator<Iterator>)
+	multimap(Iterator first, Iterator last) : tree_(Compare()) {
+		tree_.insert_equal(first, last);
+	}
+	template <typename Iterator>
+		requires(input_iterator<Iterator>)
+	multimap(Iterator first, Iterator last, const key_compare& comp) : tree_(comp) {
+		tree_.insert_equal(first, last);
+	}
+
+	multimap(std::initializer_list<value_type> l) : multimap(l.begin(), l.end()) {}
+	multimap(std::initializer_list<value_type> l, const key_compare& comp) : multimap(l.begin(), l.end(), comp) {}
+
+	self& operator =(std::initializer_list<value_type> l) {
+		clear();
+		insert(l.begin(), l.end());
+		return *this;
+	}
+	~multimap() = default;
+
+	MSTL_NODISCARD iterator begin() noexcept { return tree_.begin(); }
+	MSTL_NODISCARD iterator end() noexcept { return tree_.end(); }
+	MSTL_NODISCARD const_iterator cbegin() const noexcept { return tree_.cbegin(); }
+	MSTL_NODISCARD const_iterator cend() const noexcept { return tree_.cend(); }
+	MSTL_NODISCARD reverse_iterator rbegin() noexcept { return reverse_iterator(tree_.begin()); }
+	MSTL_NODISCARD reverse_iterator rend() noexcept { return reverse_iterator(tree_.end()); }
+	MSTL_NODISCARD const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(tree_.cbegin()); }
+	MSTL_NODISCARD const_reverse_iterator crend() const noexcept { return const_reverse_iterator(tree_.cend()); }
+
+	MSTL_NODISCARD size_type size() const noexcept { return tree_.size(); }
+	MSTL_NODISCARD size_type max_size() const noexcept { return tree_.max_size(); }
+	MSTL_NODISCARD bool empty() const noexcept { return tree_.empty(); }
+
+	MSTL_NODISCARD allocator_type get_allocator() const noexcept { return allocator_type(); }
+
+	MSTL_NODISCARD key_compare key_comp() const noexcept { return tree_.key_comp(); }
+	MSTL_NODISCARD value_compare value_comp() const noexcept { return value_compare(tree_.key_comp()); }
+
+	template <typename... Args>
+	iterator emplace(Args&&... args) {
+		return tree_.emplace_equal(MSTL::forward<Args>(args)...);
+	}
+	iterator insert(const value_type& x) {
+		return tree_.insert_equal(x);
+	}
+	iterator insert(value_type&& x) {
+		return tree_.insert_equal(MSTL::move(x));
+	}
+
+	template <typename... Args>
+	iterator emplace_hint(iterator position, Args&&... args) {
+		return tree_.emplace_equal_hint(position, MSTL::forward<Args>(args)...);
+	}
+	iterator insert(iterator position, const value_type& x) {
+		return tree_.insert_equal(position, x);
+	}
+	iterator insert(iterator position, value_type&& x) {
+		return tree_.insert_equal(position, MSTL::move(x));
+	}
+
+	template <typename Iterator>
+	void insert(Iterator first, Iterator last) {
+		tree_.insert_equal(first, last);
+	}
+
+	void erase(iterator position) noexcept { tree_.erase(position); }
+	size_type erase(const key_type& x) noexcept { return tree_.erase(x); }
+	void erase(iterator first, iterator last) noexcept { tree_.erase(first, last); }
+
+	void clear() noexcept { tree_.clear(); }
+
+	void swap(self& x) noexcept(noexcept(tree_.swap(x.tree_))) { tree_.swap(x.tree_); }
+
+	MSTL_NODISCARD iterator find(const key_type& x) { return tree_.find(x); }
+	MSTL_NODISCARD const_iterator find(const key_type& x) const { return tree_.find(x); }
+	MSTL_NODISCARD size_type count(const key_type& x) const { return tree_.count(x); }
+
+	MSTL_NODISCARD iterator lower_bound(const key_type& x) { return tree_.lower_bound(x); }
+	MSTL_NODISCARD const_iterator lower_bound(const key_type& x) const { return tree_.lower_bound(x); }
+	MSTL_NODISCARD iterator upper_bound(const key_type& x) { return tree_.upper_bound(x); }
+	MSTL_NODISCARD const_iterator upper_bound(const key_type& x) const { return tree_.upper_bound(x); }
+
+	MSTL_NODISCARD pair<iterator, iterator> equal_range(const key_type& x) { return tree_.equal_range(x); }
+	MSTL_NODISCARD pair<const_iterator, const_iterator> equal_range(const key_type& x) const {
+		return tree_.equal_range(x);
+	}
 };
+#ifdef MSTL_SUPPORT_DEDUCTION_GUIDES__
+template <typename Iterator, typename Compare, typename Alloc
+	= standard_allocator<pair<const get_iter_key_t<Iterator>, get_iter_val_t<Iterator>>>>
+multimap(Iterator, Iterator, Compare = Compare(), Alloc = Alloc()) ->
+	multimap<get_iter_key_t<Iterator>, get_iter_val_t<Iterator>, Compare, Alloc>;
 
-template <class Key, class T, class Compare, class Alloc>
-inline bool operator==(const multimap<Key, T, Compare, Alloc>& x, const multimap<Key, T, Compare, Alloc>& y) {
-	return x.t == y.t;
+template <typename Key, typename T, typename Compare = less<Key>, typename Alloc 
+	= standard_allocator<pair<const Key, T>>>
+multimap(std::initializer_list<pair<Key, T>>, Compare = Compare(), Alloc = Alloc()) 
+-> multimap<Key, T, Compare, Alloc>;
+
+template <typename Iterator, typename Alloc>
+multimap(Iterator, Iterator, Alloc) ->
+multimap<get_iter_key_t<Iterator>, get_iter_val_t<Iterator>, less<get_iter_key_t<Iterator>>, Alloc>;
+
+template <typename Key, typename T, typename Alloc>
+multimap(std::initializer_list<pair<Key, T>>, Alloc) -> multimap<Key, T, less<Key>, Alloc>;
+#endif
+
+template <typename Key, typename T, typename Compare, typename Alloc>
+inline MSTL_NODISCARD bool operator ==(
+	const multimap<Key, T, Compare, Alloc>& lh,
+	const multimap<Key, T, Compare, Alloc>& rh) noexcept {
+	return lh.tree_ == rh.tree_;
 }
-template <class Key, class T, class Compare, class Alloc>
-inline bool operator<(const multimap<Key, T, Compare, Alloc>& x, const multimap<Key, T, Compare, Alloc>& y) {
-	return x.t < y.t;
+template <typename Key, typename T, typename Compare, typename Alloc>
+inline MSTL_NODISCARD bool operator !=(
+	const multimap<Key, T, Compare, Alloc>& lh,
+	const multimap<Key, T, Compare, Alloc>& rh) noexcept {
+	return !(lh.tree_ == rh.tree_);
 }
-template <class Key, class T, class Compare, class Alloc>
-inline void swap(multimap<Key, T, Compare, Alloc>& x, multimap<Key, T, Compare, Alloc>& y) {
-	x.swap(y);
+template <typename Key, typename T, typename Compare, typename Alloc>
+inline MSTL_NODISCARD bool operator <(
+	const multimap<Key, T, Compare, Alloc>& lh,
+	const multimap<Key, T, Compare, Alloc>& rh) noexcept {
+	return lh.tree_ < rh.tree_;
+}
+template <typename Key, typename T, typename Compare, typename Alloc>
+inline MSTL_NODISCARD bool operator >(
+	const multimap<Key, T, Compare, Alloc>& lh,
+	const multimap<Key, T, Compare, Alloc>& rh) noexcept {
+	return lh.tree_ > rh.tree_;
+}
+template <typename Key, typename T, typename Compare, typename Alloc>
+inline MSTL_NODISCARD bool operator <=(
+	const multimap<Key, T, Compare, Alloc>& lh,
+	const multimap<Key, T, Compare, Alloc>& rh) noexcept {
+	return lh.tree_ <= rh.tree_;
+}
+template <typename Key, typename T, typename Compare, typename Alloc>
+inline MSTL_NODISCARD bool operator >=(
+	const multimap<Key, T, Compare, Alloc>& lh,
+	const multimap<Key, T, Compare, Alloc>& rh) noexcept {
+	return lh.tree_ >= rh.tree_;
+}
+template <typename Key, typename T, typename Compare, typename Alloc>
+void swap(multimap<Key, T, Compare, Alloc>& lh, multimap<Key, T, Compare, Alloc>& rh)
+noexcept(noexcept(lh.swap(rh))) {
+	lh.swap(rh);
 }
 
 MSTL_END_NAMESPACE__
-
 #endif // MSTL_MAP_HPP__

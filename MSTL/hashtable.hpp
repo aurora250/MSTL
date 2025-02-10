@@ -253,7 +253,7 @@ private:
         MSTL_TRY__{
             MSTL::construct(&n->data_, MSTL::forward<Args>(args)...);
         }
-        MSTL_CATCH_UNWIND_THROW_M__(delete_node(n));
+        MSTL_CATCH_UNWIND_THROW_U__(delete_node(n));
         return n;
     }
     void delete_node(node_type* n) noexcept {
@@ -676,7 +676,7 @@ public:
         return find(key) != cend();
     }
 
-    pair<iterator, iterator> equal_range(const key_type& key) {
+    MSTL_NODISCARD pair<iterator, iterator> equal_range(const key_type& key) {
         typedef pair<iterator, iterator> iter_pair;
         const size_type n = bkt_num_key(key);
         for (node_type* first = buckets_[n]; first != nullptr; first = first->next_) {
@@ -696,7 +696,7 @@ public:
         return iter_pair(end(), end());
     }
 
-    pair<const_iterator, const_iterator> equal_range(const key_type& key) const {
+    MSTL_NODISCARD pair<const_iterator, const_iterator> equal_range(const key_type& key) const {
         typedef pair<const_iterator, const_iterator> citer_pair;
         const size_type n = bkt_num_key(key);
         for (const node_type* first = buckets_[n]; first != nullptr; first = first->next_) {

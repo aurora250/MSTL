@@ -16,7 +16,7 @@ struct integer_sequence {
 };
 template <typename T, T Size>
 using make_integer_sequence =
-#ifdef MSTL_SUPPORT_MAKE_INTEGER_SEQ
+#ifdef MSTL_SUPPORT_MAKE_INTEGER_SEQ__
 __make_integer_seq<integer_sequence, T, Size>;
 #else
 integer_sequence<T, __integer_pack(Size)...>;
@@ -237,6 +237,7 @@ struct pair {
 template <typename T1, typename T2>
 pair(T1, T2) -> pair<T1, T2>;
 #endif
+
 template <typename T1, typename T2, typename U1, typename U2>
 MSTL_CONSTEXPR bool operator ==(const pair<T1, T2>& x, const pair<U1, U2>& y) {
 	return x.first == y.first && x.second == y.second;
@@ -406,6 +407,15 @@ MSTL_CONSTEXPR void destroy(Iterator, Iterator) noexcept {}
 #define DESTORY_CHAR_FUNCTION__(OPT) \
     inline void destroy(OPT*, OPT*) noexcept {}
 MSTL_MACRO_RANGE_CHARS(DESTORY_CHAR_FUNCTION__)
+
+
+template <typename Iterator>
+using get_iter_key_t = remove_const_t<typename iterator_traits<Iterator>::value_type::first_type>;
+template <typename Iterator>
+using get_iter_val_t = typename iterator_traits<Iterator>::value_type::second_type;
+template <typename Iterator>
+using get_iter_pair_t = pair<add_const_t<typename iterator_traits<Iterator>::value_type::first_type>,
+	typename iterator_traits<Iterator>::value_type::second_type>;
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_UTILITY_HPP__

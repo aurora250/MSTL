@@ -108,10 +108,11 @@
 	#define MSTL_SUPPORT_DECLALLOC__		1
 #endif
 #if defined(MSTL_COMPILE_MSVC__)
-	#define MSTL_SUPPORT_MAKE_INTEGER_SEQ	1
+	#define MSTL_SUPPORT_MAKE_INTEGER_SEQ__	1
 #endif
 
 
+// to libraries : boost / mysql
 #define MSTL_DLL_LINK__	1
 
 
@@ -202,8 +203,8 @@ using ccstring_t = const char* const;
 
 MSTL_CONSTEXPR size_t MSTL_SPLIT_LENGTH = 15;
 
-wchar_t* wmemcpy(wchar_t* _dest, const wchar_t* _rsc, int _byte);
 void* memcpy(void* _dest, void* _rsc, int _byte);
+wchar_t* wmemcpy(wchar_t* _dest, const wchar_t* _rsc, int _byte);
 
 int memcmp(const void* _dest, const void* _rsc, int _byte);
 int wmemcmp(const wchar_t* _dest, const wchar_t* _rsc, int _byte);

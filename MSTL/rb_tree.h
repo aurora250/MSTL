@@ -2,15 +2,15 @@
 #define MSTL_RB_TREE_H__
 #include "memory.hpp"
 #include "functor.hpp"
+#include "algo.hpp"
 MSTL_BEGIN_NAMESPACE__
 
-typedef bool RB_TREE_COLORS;
-const RB_TREE_COLORS RB_TREE_RED__ = false;
-const RB_TREE_COLORS RB_TREE_BLACK__ = true;
+static MSTL_CONSTEXPR bool RB_TREE_RED__ = false;
+static MSTL_CONSTEXPR bool RB_TREE_BLACK__ = true;
 
 struct __rb_tree_node_base {
-    typedef RB_TREE_COLORS          color_type;
-    typedef __rb_tree_node_base*    base_ptr;
+    using color_type    = bool;
+    using base_ptr      = __rb_tree_node_base*;
 
     color_type color_;
     base_ptr parent_;
@@ -22,21 +22,22 @@ struct __rb_tree_node_base {
 };
 template <typename T>
 struct __rb_tree_node : public __rb_tree_node_base {
-    typedef __rb_tree_node<T>*  link_type;
-    typedef T                   value_type;
-    
+    using link_type     = __rb_tree_node<T>*;
+    using value_type    = T;
+
+    T data_;
+
     __rb_tree_node() = default;
     __rb_tree_node(const __rb_tree_node&) = delete;
     __rb_tree_node& operator =(const __rb_tree_node&) = delete;
     ~__rb_tree_node() = default;
-
-    T data_;
 };
 
 struct __rb_tree_base_iterator {
-    typedef __rb_tree_node_base::base_ptr    base_ptr;
-    typedef std::bidirectional_iterator_tag  iterator_category;
-    typedef ptrdiff_t                        difference_type;
+    using iterator_category = std::bidirectional_iterator_tag;
+    using base_ptr          = __rb_tree_node_base::base_ptr;
+    using difference_type   = ptrdiff_t;
+
     base_ptr node_;
 
     void increment() noexcept;
@@ -45,16 +46,16 @@ struct __rb_tree_base_iterator {
 
 template<typename T, typename Ref = T&, typename Ptr = T*>
 struct rb_tree_iterator : public __rb_tree_base_iterator {
-    typedef T                                       value_type;
-    typedef Ref                                     reference;
-    typedef Ptr                                     pointer;
-    typedef rb_tree_iterator<T, T&, T*>             iterator;
-    typedef rb_tree_iterator<T, const T&, const T*> const_iterator;
-    typedef const T&                                const_reference;
-    typedef rb_tree_iterator<T, Ref, Ptr>           self;
-    typedef __rb_tree_node<T>*                      link_type;
+    using value_type        = T;
+    using reference         = Ref;
+    using pointer           = Ptr;
+    using iterator          = rb_tree_iterator<T, T&, T*>;
+    using const_iterator    = rb_tree_iterator<T, const T&, const T*>;
+    using const_reference   = const T&;
+    using link_type         = __rb_tree_node<T>*;
+    using self              = rb_tree_iterator<T, Ref, Ptr>;
 
-    rb_tree_iterator() = default;
+    rb_tree_iterator() : node_(nullptr) {}
     rb_tree_iterator(link_type x) { node_ = x; }
     rb_tree_iterator(const iterator& it) { node_ = it.node_; }
     ~rb_tree_iterator() = default;
@@ -68,7 +69,7 @@ struct rb_tree_iterator : public __rb_tree_base_iterator {
     }
     self& operator ++(int) noexcept {
         self tmp = *this;
-        increment();
+        ++*this;
         return tmp;
     }
     self& operator --() noexcept {
@@ -77,420 +78,441 @@ struct rb_tree_iterator : public __rb_tree_base_iterator {
     }
     self operator --(int) noexcept {
         self tmp = *this;
-        decrement();
+        --*this;
         return tmp;
     }
 };
-inline MSTL_NODISCARD bool operator ==(const __rb_tree_base_iterator& x,
-    const __rb_tree_base_iterator& y) noexcept(noexcept(x.node_ == y.node_)) {
+inline MSTL_NODISCARD bool operator ==(
+    const __rb_tree_base_iterator& x,
+    const __rb_tree_base_iterator& y) noexcept {
     return x.node_ == y.node_;
 }
-inline MSTL_NODISCARD bool operator !=(const __rb_tree_base_iterator& x,
-    const __rb_tree_base_iterator& y) noexcept(noexcept(x.node_ != y.node_)) {
+inline MSTL_NODISCARD bool operator !=(
+    const __rb_tree_base_iterator& x,
+    const __rb_tree_base_iterator& y) noexcept {
     return x.node_ != y.node_;
 }
 
-void __rb_tree_rotate_left(__rb_tree_node_base* x, __rb_tree_node_base*& root) noexcept;
-void __rb_tree_rotate_right(__rb_tree_node_base* x, __rb_tree_node_base*& root) noexcept;
+
+void rb_tree_rotate_left(__rb_tree_node_base* x, __rb_tree_node_base*& root) noexcept;
+void rb_tree_rotate_right(__rb_tree_node_base* x, __rb_tree_node_base*& root) noexcept;
 void rb_tree_rebalance(__rb_tree_node_base* x, __rb_tree_node_base*& root) noexcept;
-__rb_tree_node_base* __rb_tree_rebalance_for_erase(
+__rb_tree_node_base* rb_tree_rebalance_for_erase(
     __rb_tree_node_base* z, __rb_tree_node_base*& root,
     __rb_tree_node_base*& leftmost, __rb_tree_node_base*& rightmost) noexcept;
-int __black_count(__rb_tree_node_base* node, __rb_tree_node_base* root) noexcept;
+uint32_t rbtree_black_count(__rb_tree_node_base* node, __rb_tree_node_base* root) noexcept;
+
 
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, 
     typename Alloc = standard_allocator<__rb_tree_node<Value>>>
 class rb_tree {
 private:
-    typedef __rb_tree_node_base*    base_ptr;
-    typedef __rb_tree_node<Value>   rb_tree_node;
-    typedef Alloc                   rb_tree_node_allocator;
-    typedef RB_TREE_COLORS          color_type;
+    using base_ptr          = __rb_tree_node_base*;
+    using node_type         = __rb_tree_node<Value>;
+    using color_type        = bool;
 public:
-    typedef Key                     key_type;
-    typedef Value                   value_type;
-    typedef value_type*             pointer;
-    typedef const value_type*       const_pointer;
-    typedef value_type&             reference;
-    typedef const value_type&       const_reference;
-    typedef rb_tree_node*           link_type;
-    typedef size_t                  size_type;
-    typedef ptrdiff_t               difference_type;
-    typedef rb_tree<Key, Value, KeyOfValue, Compare, Alloc>                 self;
-    typedef rb_tree_iterator<value_type, reference, pointer>                iterator;
-    typedef rb_tree_iterator<value_type, const_reference, const_pointer>    const_iterator;
+    using key_type          = Key;
+    using value_type        = Value;
+    using pointer           = value_type*;
+    using const_pointer     = const value_type*;
+    using reference         = value_type&;
+    using const_reference   = const value_type&;
+    using link_type         = node_type*;
+    using size_type         = size_t;
+    using difference_type   = ptrdiff_t;
+    using allocator_type    = Alloc;
+    using self              = rb_tree<Key, Value, KeyOfValue, Compare, Alloc>;
+    using iterator          = rb_tree_iterator<value_type, reference, pointer>;
+    using const_iterator    = rb_tree_iterator<value_type, const_reference, const_pointer>;
+    using reverse_iterator  = MSTL::reverse_iterator<iterator>;
+    using const_reverse_iterator = MSTL::reverse_iterator<const_iterator>;
+
 private:
-    size_type node_num_;
+    size_type size_;
     link_type header_;
     Compare key_compare_;
-    rb_tree_node_allocator alloc_;
+    KeyOfValue extracter_;
+    allocator_type alloc_;
 
-    link_type get_node() {
-        return alloc_.allocate();
-    }
-    void put_node(link_type p) noexcept {
-        alloc_.deallocate(p);
-    }
+    bool rb_state_verify(const rb_tree&) noexcept;
+
     template <typename... Args>
     link_type create_node(Args... args) {
-        link_type tmp = get_node();
+        link_type tmp = alloc_.allocate();
         MSTL_TRY__{
-            MSTL::construct(&tmp->data_, std::forward<Args>(args)...);
+            MSTL::construct(&tmp->data_, MSTL::forward<Args>(args)...);
         }
-        MSTL_CATCH_UNWIND_THROW_M__(put_node(tmp));
+        MSTL_CATCH_UNWIND_THROW_M__(destroy_node(tmp));
         return tmp;
     }
-    link_type clone_node(link_type x) {
-        link_type tmp = create_node(x->data_);
+    link_type copy_node(link_type x) {
+        link_type tmp = (create_node)(x->data_);
         tmp->color_ = x->color_;
-        tmp->left_ = 0;
-        tmp->right_ = 0;
+        tmp->left_ = nullptr;
+        tmp->right_ = nullptr;
         return tmp;
     }
     void destroy_node(link_type p) noexcept {
+        if (p == nullptr) return;
         destroy(&p->data_);
-        put_node(p);
+        alloc_.deallocate(p);
     }
 
-    link_type& root() const { return (link_type&)header_->parent_; }
-    link_type& leftmost() const { return (link_type&)header_->left_; }
-    link_type& rightmost() const { return (link_type&)header_->right_; }
+    link_type& root() const noexcept { return (link_type&)header_->parent_; }
+    link_type& leftmost() const noexcept { return (link_type&)header_->left_; }
+    link_type& rightmost() const noexcept { return (link_type&)header_->right_; }
 
-    static link_type& left(link_type x) { return (link_type&)(x->left_); }
-    static link_type& right(link_type x) { return (link_type&)(x->right_); }
-    static link_type& parent(link_type x) { return (link_type&)(x->parent_); }
+    static link_type& left(link_type x) noexcept { return (link_type&)(x->left_); }
+    static link_type& right(link_type x) noexcept { return (link_type&)(x->right_); }
+    static link_type& parent(link_type x) noexcept { return (link_type&)(x->parent_); }
+    static const Key& key(link_type x) noexcept { return KeyOfValue()(x->data_); }
+    static const Key& key(base_ptr x) noexcept { return KeyOfValue()(link_type(x)->data_); }
 
-    static reference value(link_type x) { return x->data_; }
-    static const Key& key(link_type x) { return KeyOfValue()(value(x)); }
-    static color_type& color(link_type x) { return (color_type&)(x->color_); }
-
-    static link_type minimum(link_type x) noexcept { 
-        return (link_type)__rb_tree_node_base::minimum(x); 
+    static link_type minimum(link_type x) noexcept {
+        return (link_type)__rb_tree_node_base::minimum(x);
     }
-    static link_type maximum(link_type x) noexcept { 
-        return (link_type)__rb_tree_node_base::maximum(x); 
+    static link_type maximum(link_type x) noexcept {
+        return (link_type)__rb_tree_node_base::maximum(x);
     }
 
-    iterator insert_aux(base_ptr x_, base_ptr y_, const value_type& v) {
-        link_type x = (link_type)x_;
-        link_type y = (link_type)y_;
-        link_type z;
-        if (y == header_ || x != 0 || key_compare_(KeyOfValue()(v), key(y))) {
-            z = create_node(v);
-            left(y) = z;
+    iterator insert_node_into(base_ptr bx, base_ptr by, link_type p) {
+        link_type x = (link_type)bx;
+        link_type y = (link_type)by;
+        if (y == header_ || x != nullptr || key_compare_(key(p), key(y))) {
+            left(y) = p;
             if (y == header_) {
-                root() = z;
-                rightmost() = z;
+                root() = p;
+                rightmost() = p;
             }
-            else if (y == leftmost()) leftmost() = z;
+            else if (y == leftmost()) leftmost() = p;
         }
         else {
-            z = create_node(v);
-            right(y) = z;
-            if (y == rightmost()) rightmost() = z;
+            right(y) = p;
+            if (y == rightmost()) rightmost() = p;
         }
-        parent(z) = y;
-        left(z) = 0;
-        right(z) = 0;
-        (rb_tree_rebalance)(z, header_->parent_);
-        ++node_num_;
-        return iterator(z);
+        parent(p) = y;
+        left(p) = nullptr;
+        right(p) = nullptr;
+        (rb_tree_rebalance)(p, header_->parent_);
+        ++size_;
+        return iterator(p);
     }
-    iterator insert_aux(base_ptr x_, base_ptr y_, value_type&& v) {
-        link_type x = (link_type)x_;
-        link_type y = (link_type)y_;
-        link_type z;
-        if (y == header_ || x != 0 || key_compare_(KeyOfValue()(v), key(y))) {
-            z = create_node(std::forward<value_type>(v));
-            left(y) = z;
-            if (y == header_) {
-                root() = z;
-                rightmost() = z;
-            }
-            else if (y == leftmost()) leftmost() = z;
-        }
-        else {
-            z = create_node(std::forward<value_type>(v));
-            right(y) = z;
-            if (y == rightmost()) rightmost() = z;
-        }
-        parent(z) = y;
-        left(z) = 0;
-        right(z) = 0;
-        (rb_tree_rebalance)(z, header_->parent_);
-        ++node_num_;
-        return iterator(z);
-    }
-    link_type copy_aux(link_type x, link_type p) {
-        link_type top = clone_node(x);
-        top->parent_ = p;
+
+    link_type copy_under_node(link_type x, link_type parent) {
+        link_type top = copy_node(x);
+        top->parent_ = parent;
         MSTL_TRY__{
-            if (x->right_) top->right_ = copy_aux(right(x), top);
-            p = top;
+            if (x->right_ != nullptr) 
+                top->right_ = copy_under_node(right(x), top);
+            parent = top;
             x = left(x);
-            while (x != 0) {
-                link_type y = clone_node(x);
-                p->left_ = y;
-                y->parent_ = p;
-                if (x->right_) y->right_ = copy_aux(right(x), y);
-                p = y;
+            while (x != nullptr) {
+                link_type y = copy_node(x);
+                parent->left_ = y;
+                y->parent_ = parent;
+                if (x->right_ != nullptr) 
+                    y->right_ = copy_under_node(right(x), y);
+                parent = y;
                 x = left(x);
             }
         }
-        MSTL_CATCH_UNWIND_THROW_M__(erase_aux(top));
+        MSTL_CATCH_UNWIND_THROW_U__(erase_under_node(top));
         return top;
     }
-    void erase_aux(link_type x) noexcept {
-        while (x != 0) {
-            erase_aux(right(x));
-            link_type y = left(x);
-            destroy_node(x);
-            x = y;
-        }
+    void erase_under_node(link_type x) noexcept {
+        while (x == nullptr) return;
+        erase_under_node(right(x));
+        link_type y = left(x);
+        destroy_node(x);
+        x = y;
     }
 
-    void init() {
-        header_ = get_node();
-        color(header_) = RB_TREE_RED__;
-        root() = 0;
+    void header_init() {
+        header_ = alloc_.allocate();
+        header_->color_ = RB_TREE_RED__;
+        root() = nullptr;
         leftmost() = header_;
         rightmost() = header_;
     }
-public:
-    rb_tree(const Compare& comp = Compare()) : node_num_(0), key_compare_(comp) {
-        init();
-    }
-    rb_tree(const self& x)
-        : node_num_(0), key_compare_(x.key_compare_) {
-        header_ = get_node();
-        color(header_) = RB_TREE_RED__;
-        if (x.root() == 0) {
-            root() = 0;
+
+    void copy_from(const self& x) {
+        if (x.root() == nullptr) {
+            root() = nullptr;
             leftmost() = header_;
             rightmost() = header_;
         }
         else {
             MSTL_TRY__{
-              root() = copy_aux(x.root(), header_);
+              root() = copy_under_node(x.root(), header_);
             }
-            MSTL_CATCH_UNWIND_THROW_M__(put_node(header_));
+            MSTL_CATCH_UNWIND_THROW_M__(alloc_.deallocate(header_));
             leftmost() = minimum(root());
             rightmost() = maximum(root());
         }
-        node_num_ = x.node_num_;
+        size_ = x.size_;
+    }
+
+    pair<iterator, bool> insert_unique_node(link_type p) {
+        link_type y = header_;
+        link_type x = root();
+        bool comp = true;
+        while (x != nullptr) {
+            y = x;
+            comp = key_compare_(key(p), key(x));
+            x = comp ? left(x) : right(x);
+        }
+        iterator j(y);
+        if (comp) {
+            if (j == begin())
+                return pair<iterator, bool>(insert_node_into(x, y, p), true);
+            else --j;
+        }
+        if (key_compare_(key(link_type(j.node_)), key(p)))
+            return pair<iterator, bool>(insert_node_into(x, y, p), true);
+        return pair<iterator, bool>(j, false);
+    }
+    iterator insert_equal_node(link_type p) {
+        link_type y = header_;
+        link_type x = root();
+        while (x != nullptr) {
+            y = x;
+            x = key_compare_(key(p), key(x)) ? left(x) : right(x);
+        }
+        return insert_node_into(x, y, p);
+    }
+
+public:
+    rb_tree()
+        : size_(0), header_(nullptr), key_compare_(), extracter_(), alloc_() {}
+
+    explicit rb_tree(const Compare& comp) 
+        : size_(0), header_(nullptr), key_compare_(comp), extracter_(), alloc_() {
+        header_init();
+    }
+
+    rb_tree(const self& x)  : size_(x.size_), header_(nullptr),
+        key_compare_(x.key_compare_), extracter_(x.extracter_), alloc_() {
+        header_init();
+        copy_from(x);
     }
     self& operator =(const self& x) {
-        if (*this == x) return *this;
+        if (MSTL::addressof(x) == this) return *this;
         clear();
-        node_num_ = 0;
-        key_compare_ = x.key_compare_;
-        if (x.root() == 0) {
-            root() = 0;
-            leftmost() = header_;
-            rightmost() = header_;
-        }
-        else {
-            root() = copy_aux(x.root(), header_);
-            leftmost() = minimum(root());
-            rightmost() = maximum(root());
-            node_num_ = x.node_num_;
-        }
+        copy_from(x);
         return *this;
     }
-    rb_tree(self&& x) : node_num_(0), key_compare_(x.key_compare_) {
-        init();
-        swap(std::forward<self>(x));
-    }
-    self& operator =(self&& x) {
+
+    rb_tree(self&& x) 
+        noexcept(is_nothrow_move_constructible_v<Compare> && is_nothrow_move_constructible_v<KeyOfValue>)
+        : size_(x.size_), header_(MSTL::move(x.header_)), key_compare_(MSTL::move(x.key_compare_)),
+        extracter_(MSTL::move(x.extracter_)), alloc_() {}
+
+    self& operator =(self&& x) noexcept(noexcept(swap(x))) {
+        if (MSTL::addressof(x) == this) return *this;
         clear();
-        swap(std::forward<self>(x));
+        swap(x);
         return *this;
     }
+
     ~rb_tree() {
         clear();
-        put_node(header_);
+        alloc_.deallocate(header_);
     }
 
     MSTL_NODISCARD iterator begin() noexcept { return leftmost(); }
     MSTL_NODISCARD iterator end() noexcept { return header_; }
     MSTL_NODISCARD const_iterator cbegin() const noexcept { return leftmost(); }
     MSTL_NODISCARD const_iterator cend() const noexcept { return header_; }
+    MSTL_NODISCARD reverse_iterator rbegin() noexcept { return reverse_iterator(begin()); }
+    MSTL_NODISCARD reverse_iterator rend() noexcept { return reverse_iterator(end()); }
+    MSTL_NODISCARD const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cbegin()); }
+    MSTL_NODISCARD const_reverse_iterator crend() const noexcept { return const_reverse_iterator(cend()); }
 
-    void swap(self& rep) noexcept(noexcept(std::swap(key_compare_, rep.key_compare_))) {
-        std::swap(header_, rep.header_);
-        std::swap(node_num_, rep.node_num_);
-        std::swap(key_compare_, rep.key_compare_);
+    MSTL_NODISCARD size_type size() const noexcept { return size_; }
+    MSTL_NODISCARD size_type max_size() const noexcept { return static_cast<size_type>(-1); }
+    MSTL_NODISCARD bool empty() const noexcept { return size_ == 0; }
+
+    MSTL_NODISCARD allocator_type get_allocator() const noexcept { return allocator_type(); }
+
+    MSTL_NODISCARD Compare key_comp() const noexcept(is_nothrow_copy_constructible_v<Compare>) {
+        return key_compare_;
     }
 
-    MSTL_NODISCARD bool empty() const noexcept { return node_num_ == 0; }
-    MSTL_NODISCARD Compare key_comp() const noexcept { return key_compare_; }
-    MSTL_NODISCARD size_type size() const noexcept { return node_num_; }
-
+    template <typename... Args>
+    pair<iterator, bool> emplace_unique(Args&&... args) {
+        link_type tmp = (create_node)(MSTL::forward<Args>(args)...);
+        return (insert_unique_node)(tmp);
+    }
     pair<iterator, bool> insert_unique(const value_type& v) {
-        link_type y = header_;
-        link_type x = root();
-        bool comp = true;
-        while (x != 0) {
-            y = x;
-            comp = key_compare_(KeyOfValue()(v), key(x));
-            x = comp ? left(x) : right(x);
-        }
-        iterator j = iterator(y);
-        if (comp) {
-            if (j == begin()) 
-                return pair<iterator, bool>(insert_aux(x, y, v), true);
-            else --j;
-        }
-        if (key_compare_(KeyOfValue()(value(link_type(j.node_))), KeyOfValue()(v)))
-            return pair<iterator, bool>(insert_aux(x, y, v), true);
-        return pair<iterator, bool>(iterator(j), false);
+        return (emplace_unique)(v);
     }
     pair<iterator, bool> insert_unique(value_type&& v) {
-        link_type y = header_;
-        link_type x = root();
-        bool comp = true;
-        while (x != 0) {
-            y = x;
-            comp = key_compare_(KeyOfValue()(v), key(x));
-            x = comp ? left(x) : right(x);
-        }
-        iterator j = iterator(y);
-        if (comp) {
-            if (j == begin())
-                return pair<iterator, bool>(insert_aux(x, y, std::forward<value_type>(v)), true);
-            else --j;
-        }
-        if (key_compare_(KeyOfValue()(
-            value(link_type(j.node_))), KeyOfValue()(v)))
-            return pair<iterator, bool>(insert_aux(x, y, std::forward<value_type>(v)), true);
-        return pair<iterator, bool>(iterator(j), false);
+        return (emplace_unique)(MSTL::move(v));
     }
-    iterator insert_unique(iterator position, const value_type& v) {
+    template <typename... Args>
+    iterator emplace_unique_hint(iterator position, Args&&... args) {
+        link_type tmp = (create_node)(MSTL::forward<Args>(args)...);
         if (position.node_ == header_->left_) {
-            if (size() > 0 && key_compare_(KeyOfValue()(v), key(position.node_)))
-                return insert_aux(position.node_, position.node_, v);
-            else  return insert_unique(v).first;
+            if (size() > 0 && key_compare_(key(tmp), key(position.node_)))
+                return insert_node_into(position.node_, position.node_, tmp);
+            else
+                return insert_unique_node(tmp).first;
         }
         else if (position.node_ == header_) {
-            if (key_compare_(key(rightmost()), KeyOfValue()(v)))
-                return insert_aux(0, rightmost(), v);
-            else  return insert_unique(v).first;
+            if (key_compare_(key(rightmost()), key(tmp)))
+                return insert_node_into(nullptr, rightmost(), tmp);
+            else
+                return insert_unique_node(tmp).first;
         }
         else {
             iterator before = position;
             --before;
-            if (key_compare_(key(before.node_), KeyOfValue()(v))
-                && key_compare_(KeyOfValue()(v), key(position.node_)))
-                if (right(before.node_) == 0)
-                    return insert_aux(0, before.node_, v);
-                else  return insert_aux(position.node_, position.node_, v);
-            else  return insert_unique(v).first;
+            if (key_compare_(key(before.node_), key(tmp)) &&
+                key_compare_(key(tmp), key(position.node_)))
+                if (right(link_type(before.node_)) == nullptr)
+                    return insert_node_into(nullptr, before.node_, tmp);
+                else
+                    return insert_node_into(position.node_, position.node_, tmp);
+            else
+                return insert_unique_node(tmp).first;
         }
+    }
+    iterator insert_unique(iterator position, const value_type& v) {
+        return (emplace_unique_hint)(position, v);
+    }
+    iterator insert_unique(iterator position, value_type&& v) {
+        return (emplace_unique_hint)(position, MSTL::move(v));
     }
     template <typename Iterator> 
         requires(input_iterator<Iterator>)
     void insert_unique(Iterator first, Iterator last) {
         for (; first != last; ++first) insert_unique(*first);
     }
+
+    template <typename... Args>
+    iterator emplace_equal(Args&&... args) {
+        link_type tmp = (create_node)(MSTL::forward<Args>(args)...);
+        return (insert_equal_node)(tmp);
+    }
     iterator insert_equal(const value_type& v) {
-        link_type y = header_;
-        link_type x = root();
-        while (x != 0) {
-            y = x;
-            x = key_compare_(KeyOfValue()(v), key(x)) ? left(x) : right(x);
-        }
-        return insert_aux(x, y, v);
+        return (emplace_equal)(v);
     }
     iterator insert_equal(value_type&& v) {
-        link_type y = header_;
-        link_type x = root();
-        while (x != 0) {
-            y = x;
-            x = key_compare_(KeyOfValue()(
-                std::forward<value_type>(v)), key(x)) ? left(x) : right(x);
-        }
-        return insert_aux(x, y, std::forward<value_type>(v));
+        return (emplace_equal)(MSTL::move(v));
     }
-    iterator insert_equal(iterator position, const_reference v) {
+    template <typename... Args>
+    iterator emplace_equal_hint(iterator position, Args&&... args) {
+        link_type tmp = (create_node)(MSTL::forward<Args>(args)...);
         if (position.node_ == header_->left_) {
-            if (size() > 0 && key_compare_(KeyOfValue()(v), key(position.node_)))
-                return insert_aux(position.node_, position.node_, v);
-            else  return insert_equal(v);
+            if (size() > 0 && key_compare_(key(tmp), key(position.node_)))
+                return insert_node_into(position.node_, position.node_, tmp);
+            else
+                return insert_equal_node(tmp);
 
         }
         else if (position.node_ == header_) {
-            if (!key_compare_(KeyOfValue()(v), key(rightmost())))
-                return insert_aux(0, rightmost(), v);
-            else  return insert_equal(v);
+            if (!key_compare_(key(tmp), key(rightmost())))
+                return insert_node_into(nullptr, rightmost(), tmp);
+            else
+                return insert_equal_node(tmp);
         }
         else {
             iterator before = position;
             --before;
-            if (!key_compare_(KeyOfValue()(v), key(before.node_))
-                && !key_compare_(key(position.node_), KeyOfValue()(v)))
-                if (right(before.node_) == 0) return insert_aux(0, before.node_, v);
-                else  return insert_aux(position.node_, position.node_, v);
-            else  return insert_equal(v);
+            if (!key_compare_(key(tmp), key(before.node_)) &&
+                !key_compare_(key(position.node_), key(tmp)))
+                if (right(link_type(before.node_)) == nullptr)
+                    return insert_node_into(nullptr, before.node_, tmp);
+                else
+                    return insert_node_into(position.node_, position.node_, tmp);
+            else
+                return insert_equal_node(tmp);
         }
     }
+    iterator insert_equal(iterator position, const value_type& v) {
+        return (emplace_equal_hint)(position, v);
+    }
+    iterator insert_equal(iterator position, value_type&& v) {
+        return (emplace_equal_hint)(position, MSTL::move(v));
+    }
     template <typename Iterator>
+        requires(input_iterator<Iterator>)
     void insert_equal(Iterator first, Iterator last) {
         for (; first != last; ++first) insert_equal(*first);
     }
-    size_type erase(const Key& x) noexcept {
-        pair<iterator, iterator> p = equal_range(x);
-        size_type n = 0;
-        distance(p.first, p.second, n);
+
+    size_type erase(const key_type& k) noexcept {
+        pair<iterator, iterator> p = equal_range(k);
+        size_type n = MSTL::distance(p.first, p.second);
         erase(p.first, p.second);
         return n;
     }
     void erase(iterator position) noexcept {
         link_type y = (link_type)
-            __rb_tree_rebalance_for_erase(position.node_, header_->parent_,
-                header_->left_, header_->right_);
+            rb_tree_rebalance_for_erase(position.node_, header_->parent_, header_->left_, header_->right_);
         destroy_node(y);
-        --node_num_;
+        --size_;
     }
     void erase(iterator first, iterator last) noexcept {
-        if (first == begin() && last == end()) clear();
-        else
+        if (first == begin() && last == end()) 
+            clear();
+        else 
             while (first != last) erase(first++);
     }
-    void erase(const Key* first, const Key* last) noexcept {
-        while (first != last) erase(*first++);
-    }
+
     void clear() noexcept {
-        if (node_num_ == 0) return;
-        erase_aux(root());
+        if (size_ == 0) return;
+        erase_under_node(root());
         leftmost() = header_;
-        root() = 0;
+        root() = nullptr;
         rightmost() = header_;
-        node_num_ = 0;
+        size_ = 0;
     }
 
-    MSTL_NODISCARD const_iterator find(const Key& k) const {
+    void swap(self& x) noexcept(is_nothrow_swappable_v<Compare> && is_nothrow_swappable_v<KeyOfValue>) {
+        MSTL::swap(header_, x.header_);
+        MSTL::swap(size_, x.size_);
+        MSTL::swap(key_compare_, x.key_compare_);
+        MSTL::swap(extracter_, x.extracter_);
+    }
+
+    MSTL_NODISCARD iterator find(const key_type& k) {
         link_type y = header_;
         link_type x = root();
-        while (x != 0) {
+        while (x != nullptr) {
             if (!key_compare_(key(x), k)) {
                 y = x;
                 x = left(x);
             }
             else x = right(x);
         }
-        const_iterator j = const_iterator(y);
-        return (j == end() || key_compare_(k, KeyOfValue()(y->data_))) ? end() : j;
+        iterator j(y);
+        return (j == end() || key_compare_(k, key(y))) ? end() : j;
     }
-    MSTL_NODISCARD size_type count(const Key& k) const {
+    MSTL_NODISCARD const_iterator find(const key_type& k) const {
+        link_type y = header_;
+        link_type x = root();
+        while (x != nullptr) {
+            if (!key_compare_(key(x), k)) {
+                y = x;
+                x = left(x);
+            }
+            else x = right(x);
+        }
+        const_iterator j(y);
+        return (j == cend() || key_compare_(k, key(y))) ? cend() : j;
+    }
+
+    MSTL_NODISCARD size_type count(const key_type& k) const {
         pair<const_iterator, const_iterator> p = equal_range(k);
-        size_type n = 0;
-        MSTL::distance(p.first, p.second, n);
+        size_type n = MSTL::distance(p.first, p.second);
         return n;
     }
-    MSTL_NODISCARD iterator lower_bound(const Key& k) {
+
+    MSTL_NODISCARD iterator lower_bound(const key_type& k) {
         link_type y = header_;
         link_type x = root();
-        while (x != 0) {
+        while (x != nullptr) {
             if (!key_compare_(key(x), k)) {
                 y = x;
                 x = left(x);
@@ -499,10 +521,10 @@ public:
         }
         return iterator(y);
     }
-    MSTL_NODISCARD const_iterator lower_bound(const Key& k) const {
+    MSTL_NODISCARD const_iterator lower_bound(const key_type& k) const {
         link_type y = header_;
         link_type x = root();
-        while (x != 0) {
+        while (x != nullptr) {
             if (!key_compare_(key(x), k)) {
                 y = x;
                 x = left(x);
@@ -511,10 +533,11 @@ public:
         }
         return const_iterator(y);
     }
-    MSTL_NODISCARD iterator upper_bound(const Key& k) {
+
+    MSTL_NODISCARD iterator upper_bound(const key_type& k) {
         link_type y = header_;
         link_type x = root();
-        while (x != 0) {
+        while (x != nullptr) {
             if (key_compare_(k, key(x))) {
                 y = x;
                 x = left(x);
@@ -523,10 +546,10 @@ public:
         }
         return iterator(y);
     }
-    MSTL_NODISCARD const_iterator upper_bound(const Key& k) const {
+    MSTL_NODISCARD const_iterator upper_bound(const key_type& k) const {
         link_type y = header_;
         link_type x = root();
-        while (x != 0) {
+        while (x != nullptr) {
             if (key_compare_(k, key(x))) {
                 y = x;
                 x = left(x);
@@ -535,74 +558,78 @@ public:
         }
         return const_iterator(y);
     }
-    MSTL_NODISCARD pair<iterator, iterator> equal_range(const Key& k) {
-        return pair<iterator, iterator>(lower_bound(k), upper_bound(k));
+
+    MSTL_NODISCARD pair<iterator, iterator> equal_range(const key_type& k) {
+        return pair<iterator, iterator>(this->lower_bound(k), this->upper_bound(k));
     }
-    MSTL_NODISCARD pair<const_iterator, const_iterator> equal_range(const Key& k) const {
-        return pair<const_iterator, const_iterator>(lower_bound(k), upper_bound(k));
-    }
-    bool rb_state_verify() const {
-        if (node_num_ == 0 || begin() == end())
-            return node_num_ == 0 && begin() == end() &&
-            header_->left_ == header_ && header_->right_ == header_;
-        int len = __black_count(leftmost(), root());
-        for (const_iterator it = begin(); it != end(); ++it) {
-            link_type x = (link_type)it.node_;
-            link_type L = left(x);
-            link_type R = right(x);
-            if (x->color_ == RB_TREE_RED__)
-                if ((L && L->color_ == RB_TREE_RED__) || (R && R->color_ == RB_TREE_RED__))
-                    return false;
-            if (L && key_compare_(key(x), key(L))) return false;
-            if (R && key_compare_(key(R), key(x))) return false;
-            if (!L && !R && __black_count(x, root()) != len) return false;
-        }
-        if (leftmost() != __rb_tree_node_base::minimum(root())) return false;
-        if (rightmost() != __rb_tree_node_base::maximum(root())) return false;
-        return true;
+    MSTL_NODISCARD pair<const_iterator, const_iterator> equal_range(const key_type& k) const {
+        return pair<const_iterator, const_iterator>(this->lower_bound(k), this->upper_bound(k));
     }
 };
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(
-    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
-    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) noexcept {
-    return x.size() == y.size() && MSTL::equal(x.cbegin(), x.cend(), y.cbegin());
+    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& lh,
+    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& rh) noexcept {
+    return lh.size() == rh.size() && MSTL::equal(lh.cbegin(), lh.cend(), rh.cbegin());
 }
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(
-    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
-    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) noexcept {
-    return !(x == y);
+    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& lh,
+    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& rh) noexcept {
+    return !(lh == rh);
 }
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator <(
-    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
-    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) noexcept {
-    return MSTL::lexicographical_compare(x.cbegin(), x.cend(),
-        y.cbegin(), y.cend());
+    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& lh,
+    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& rh) noexcept {
+    return MSTL::lexicographical_compare(lh.cbegin(), lh.cend(), rh.cbegin(), rh.cend());
 }
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator >(
-    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
-    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) noexcept {
-    return y < x;
+    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& lh,
+    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& rh) noexcept {
+    return rh < lh;
 }
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator <=(
-    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
-    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) noexcept {
-    return !(x > y);
+    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& lh,
+    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& rh) noexcept {
+    return !(lh > rh);
 }
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator >=(
-    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
-    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) noexcept {
-    return !(x < y);
+    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& lh,
+    const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& rh) noexcept {
+    return !(lh < rh);
 }
-template <class Key, class Value, class KeyOfValue, class Compare, class Alloc>
-void swap(rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& x,
-    rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& y) noexcept(noexcept(x.swap(y))) {
-    x.swap(y);
+template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
+void swap(rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& lh,
+    rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& rh) noexcept(noexcept(lh.swap(rh))) {
+    lh.swap(rh);
+}
+
+template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
+bool rb_state_verify(const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& tree) noexcept {
+    using link_type = typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::link_type;
+    using const_iterator = typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::const_iterator;
+    if (tree.size_ == 0 || tree.cbegin() == tree.cend())
+        return tree.size_ == 0 && tree.cbegin() == tree.cend() &&
+        tree.header_->left_ == tree.header_ && tree.header_->right_ == tree.header_;
+    uint32_t len = MSTL::rbtree_black_count(tree.leftmost(), tree.root());
+    for (const_iterator it = tree.cbegin(); it != tree.cend(); ++it) {
+        link_type x = (link_type)it.node_;
+        link_type L = tree.left(x);
+        link_type R = tree.right(x);
+        if (x->color_ == RB_TREE_RED__)
+            if ((L != nullptr && L->color_ == RB_TREE_RED__) || (R != nullptr && R->color_ == RB_TREE_RED__))
+                return false;
+        if (L != nullptr && tree.key_compare_(tree.key(x), tree.key(L))) return false;
+        if (R != nullptr && tree.key_compare_(tree.key(R), tree.key(x))) return false;
+        if (L == nullptr && R == nullptr && MSTL::rbtree_black_count(x, tree.root()) != len) return false;
+    }
+    if (tree.leftmost() != tree.minimum(tree.root())) return false;
+    if (tree.rightmost() != tree.maximum(tree.root())) return false;
+    return true;
 }
 
 

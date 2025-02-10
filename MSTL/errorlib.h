@@ -25,13 +25,6 @@ struct StopIterator : public Error {  // 迭代器/索引越界
 	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(StopIterator);
 };
 
-struct AssertError : public Error {  // 断言错误 断言错误太宽泛，不爱用
-	typedef AssertError self;
-	MSTL_CONSTEXPR explicit AssertError(cstring_t _info = MSTL_ASSERT_ERROR__) noexcept
-		: Error(_info, __type__) {}
-	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(AssertError);
-};
-
 struct AttributeError : public Error {   // 对象无此属性
 	typedef AttributeError self;
 	MSTL_CONSTEXPR explicit AttributeError(cstring_t _info = "No This Attriubte in This Object.") noexcept
@@ -65,9 +58,6 @@ void Exception(const Error& _err);
 inline void Exception(bool _boolean, const Error& _err = Error()) {
 	if (_boolean) return;
 	else Exception(_err);
-}
-inline void Assert(bool _boolean, const char* _info = MSTL_ASSERT_ERROR__) { // useless in release
-	Exception(_boolean, AssertError(_info));
 }
 
 // just allow void(void) function to run before progess exit
