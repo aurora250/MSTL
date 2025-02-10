@@ -123,13 +123,5 @@ inline size_t FNV_hash(const byte_t* first, size_t count) noexcept {
     };
 MSTL_MACRO_RANGE_FLOAT(FLOAT_HASH_STRUCT__)
 
-
-template <typename T1, typename T2>
-struct hash<MSTL::pair<T1, T2>> {
-    MSTL_NODISCARD size_t operator() (const MSTL::pair<T1, T2>& pair) const noexcept {
-		return hash<T1>()(pair.first) ^ hash<T2>()(pair.second);
-	}
-};
-
 MSTL_END_NAMESPACE__
 #endif // MSTL_HASH_FUNCTION_HPP__

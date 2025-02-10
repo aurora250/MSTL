@@ -7,7 +7,7 @@ void split_line(std::ostream& out, size_t size, char split_type) {
 	out << std::endl;
 }
 
-void* memcpy(void* _dest, void* _rsc, int _byte) {
+void* memcpy(void* _dest, const void* _rsc, size_t _byte) {
 	assert(_dest && _rsc);
 	void* _ret = _dest;
 	while (_byte--) {
@@ -18,10 +18,10 @@ void* memcpy(void* _dest, void* _rsc, int _byte) {
 	return _ret;
 }
 
-wchar_t* wmemcpy(wchar_t* _dest, const wchar_t* _rsc, int _byte) {
+wchar_t* wmemcpy(wchar_t* _dest, const wchar_t* _rsc, size_t _count) {
 	assert(_dest && _rsc);
 	wchar_t* _ret = _dest;
-	while (_byte--) {
+	while (_count--) {
 		*_dest = *_rsc;
 		++_dest;
 		++_rsc;
@@ -29,7 +29,7 @@ wchar_t* wmemcpy(wchar_t* _dest, const wchar_t* _rsc, int _byte) {
 	return _ret;
 }
 
-int memcmp(const void* _dest, const void* _rsc, int _byte) {
+int memcmp(const void* _dest, const void* _rsc, size_t _byte) {
 	assert(_dest && _rsc);
 	while (_byte--) {
 		if (*(char*)_dest != *(char*)_rsc) return (int)(*(char*)_dest - *(char*)_rsc);
@@ -39,9 +39,9 @@ int memcmp(const void* _dest, const void* _rsc, int _byte) {
 	return 0;
 }
 
-int wmemcmp(const wchar_t* _dest, const wchar_t* _rsc, int _byte) {
+int wmemcmp(const wchar_t* _dest, const wchar_t* _rsc, size_t _count) {
 	assert(_dest && _rsc);
-	while (_byte--) {
+	while (_count--) {
 		if (*_dest != *_rsc) return (int)(*_dest - *_rsc);
 		++_dest;
 		++_rsc;
@@ -49,7 +49,31 @@ int wmemcmp(const wchar_t* _dest, const wchar_t* _rsc, int _byte) {
 	return 0;
 }
 
-void* memmove(void* _dest, const void* _rsc, int _byte) {
+void* memchr(const void* _dest, int _val, size_t _byte) {
+	assert(_dest);
+	const char* p = (const char*)_dest;
+	while (_byte--) {
+		if (*p == (char)_val) {
+			return (void*)p;
+		}
+		p++;
+	}
+	return nullptr;
+}
+
+wchar_t* wmemchr(const wchar_t* _dest, wchar_t _val, size_t _count) {
+	assert(_dest);
+	const wchar_t* p = _dest;
+	while (_count--) {
+		if (*p == _val) {
+			return const_cast<wchar_t*>(p);
+		}
+		p++;
+	}
+	return nullptr;
+}
+
+void* memmove(void* _dest, const void* _rsc, size_t _byte) {
 	assert(_dest && _rsc);
 	void* _ret = _dest;
 	if (_dest < _rsc) {
@@ -67,13 +91,27 @@ void* memmove(void* _dest, const void* _rsc, int _byte) {
 	return _ret;
 }
 
-void* memset(void* _dest, int _val, int _size) {
+wchar_t* wmemmove(wchar_t* _dest, const wchar_t* _src, size_t _count) {
+	assert(_dest && _src);
+	return (wchar_t*)memmove(_dest, _src, _count * sizeof(wchar_t));
+}
+
+void* memset(void* _dest, int _val, size_t _size) {
 	assert(_dest);
 	void* ret = (char*)_dest;
-	while (_size--)
-	{
+	while (_size--) {
 		*(char*)_dest = _val;
 		_dest = (char*)_dest + 1;
+	}
+	return ret;
+}
+
+wchar_t* wmemset(wchar_t* _dest, wchar_t _val, size_t _count) {
+	assert(_dest);
+	wchar_t* ret = _dest;
+	while (_count--) {
+		*_dest = _val;
+		_dest++;
 	}
 	return ret;
 }
@@ -81,6 +119,11 @@ void* memset(void* _dest, int _val, int _size) {
 
 int strlen(const char* _str) {
 	if (*_str != '\0') return strlen(_str + 1) + 1;
+	else return 0;
+}
+
+int wcslen(const wchar_t* _str) {
+	if (*_str != L'\0') return wcslen(_str + 1) + 1;
 	else return 0;
 }
 
@@ -120,12 +163,12 @@ const char* strstr(const char* _dest, const char* _sou) {
 		if (*_s2 == '\0') return _cur;
 		_cur++;
 	}
-	return NULL;
+	return nullptr;
 }
 
 char* memstr(char* _data, int _len, char* _sub) {
-	if (_data == NULL || _len <= 0 || _sub == NULL) return NULL;
-	if (*_sub == '\0') return NULL;
+	if (_data == nullptr || _len <= 0 || _sub == nullptr) return nullptr;
+	if (*_sub == '\0') return nullptr;
 	int _sublen = strlen(_sub);
 	char* _cur = _data;
 	int _las = _len - _sublen + 1;
@@ -135,7 +178,7 @@ char* memstr(char* _data, int _len, char* _sub) {
 		}
 		_cur++;
 	}
-	return NULL;
+	return nullptr;
 }
 
 MSTL_END_NAMESPACE__

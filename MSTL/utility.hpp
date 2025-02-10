@@ -1,6 +1,6 @@
 #ifndef MSTL_UTILITY_HPP__
 #define MSTL_UTILITY_HPP__
-#include "type_traits.hpp"
+#include "concepts.hpp"
 #include "macro_ranges.h"
 MSTL_BEGIN_NAMESPACE__
 
@@ -67,24 +67,11 @@ MSTL_CONSTEXPR T initialize() noexcept(
 	is_nothrow_default_constructible_v<T> && is_nothrow_move_constructible_v<T>) {
 	return T();
 }
-#define INITIALIZE_INT_FUNCTION__(OPT) \
-	TEMNULL__ MSTL_CONSTEXPR OPT initialize<OPT>() noexcept { return 0; }
-MSTL_MACRO_RANGE_INTEGRAL(INITIALIZE_INT_FUNCTION__)
-
-#define INITIALIZE_FLOAT_FUNCTION__(OPT) \
-	TEMNULL__ MSTL_CONSTEXPR OPT initialize<OPT>() noexcept { return 0.0; }
-MSTL_MACRO_RANGE_FLOAT(INITIALIZE_FLOAT_FUNCTION__)
-
-#define INITIALIZE_BASIC_CHAR_FUNCTION__(OPT) \
-	TEMNULL__ MSTL_CONSTEXPR OPT initialize<OPT>() noexcept { return '\0'; }
-MSTL_MACRO_RANGE_BASIC_CHARS(INITIALIZE_BASIC_CHAR_FUNCTION__)
-
-TEMNULL__ MSTL_CONSTEXPR wchar_t initialize<wchar_t>() noexcept { return L'\0'; }
-#ifdef MSTL_VERSION_20__
-TEMNULL__ MSTL_CONSTEXPR char8_t initialize<char8_t>() noexcept { return u8'\0'; }
-#endif
-TEMNULL__ MSTL_CONSTEXPR char16_t initialize<char16_t>() noexcept { return u'\0'; }
-TEMNULL__ MSTL_CONSTEXPR char32_t initialize<char32_t>() noexcept { return U'\0'; }
+#define INITIALIZE_BASIC_FUNCTION__(OPT) \
+	TEMNULL__ MSTL_CONSTEXPR OPT initialize<OPT>() noexcept { return OPT(0); }
+MSTL_MACRO_RANGE_CHARS(INITIALIZE_BASIC_FUNCTION__)
+MSTL_MACRO_RANGE_FLOAT(INITIALIZE_BASIC_FUNCTION__)
+MSTL_MACRO_RANGE_INTEGRAL(INITIALIZE_BASIC_FUNCTION__)
 
 
 struct piecewise_construct_tag {
@@ -275,6 +262,13 @@ noexcept(conjunction_v<is_nothrow_constructible<unwrap_ref_decay_t<T1>, T1>,
 	using unwrap_pair = pair<unwrap_ref_decay_t<T1>, unwrap_ref_decay_t<T2>>;
 	return unwrap_pair(MSTL::forward<T1>(x), MSTL::forward<T2>(y));
 }
+
+template <typename T1, typename T2>
+struct hash<MSTL::pair<T1, T2>> {
+	MSTL_NODISCARD size_t operator() (const MSTL::pair<T1, T2>& pair) const noexcept {
+		return hash<remove_cvref_t<T1>>()(pair.first) ^ hash<remove_cvref_t<T2>>()(pair.second);
+	}
+};
 
 
 template <typename... Types>

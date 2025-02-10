@@ -423,6 +423,18 @@ MSTL_NODISCARD MSTL_CONSTEXPR T make_from_tuple(Tuple&& tup) noexcept(noexcept(M
 		MSTL::forward<Tuple>(tup), make_index_sequence<tuple_size_v<remove_reference_t<Tuple>>>{});
 }
 
-MSTL_END_NAMESPACE__
+template <typename... Args>
+struct hash<MSTL::tuple<Args...>> {
+private:
+	template <typename Tuple, size_t... Idx>
+	MSTL_CONSTEXPR size_t broaden_tuple(const Tuple& tup, MSTL::index_sequence<Idx...>) const noexcept {
+		return (hash<remove_cvref_t<tuple_element_t<Idx, Tuple>>>()(MSTL::get<Idx>(tup)) ^ ...);
+	}
+public:
+	MSTL_NODISCARD MSTL_CONSTEXPR size_t operator()(const MSTL::tuple<Args...>& tup) const noexcept {
+		return (broaden_tuple)(tup, MSTL::index_sequence_for<Args...>());
+	}
+};
 
+MSTL_END_NAMESPACE__
 #endif // MSTL_TUPLE_HPP__

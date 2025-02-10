@@ -110,6 +110,12 @@
 #if defined(MSTL_COMPILE_MSVC__)
 	#define MSTL_SUPPORT_MAKE_INTEGER_SEQ__	1
 #endif
+#if defined(MSTL_COMPILE_CLANG__)
+	#define MSTL_SUPPORT_MEM_INTRINSICS__	1
+#endif
+#if defined(MSTL_VERSION_20__) && !defined(MSTL_COMPILE_CLANG__) && !defined(MSTL_COMPILE_WITH_EDG__)
+	#define MSTL_SUPPORT_U8_INTRINSICS__	1
+#endif 
 
 
 // to libraries : boost / mysql
@@ -203,22 +209,30 @@ using ccstring_t = const char* const;
 
 MSTL_CONSTEXPR size_t MSTL_SPLIT_LENGTH = 15;
 
-void* memcpy(void* _dest, void* _rsc, int _byte);
-wchar_t* wmemcpy(wchar_t* _dest, const wchar_t* _rsc, int _byte);
+void* memcpy(void*, const void*, size_t);
+wchar_t* wmemcpy(wchar_t*, const wchar_t*, size_t);
 
-int memcmp(const void* _dest, const void* _rsc, int _byte);
-int wmemcmp(const wchar_t* _dest, const wchar_t* _rsc, int _byte);
+int memcmp(const void*, const void*, size_t);
+int wmemcmp(const wchar_t*, const wchar_t*, size_t);
 
-void* memmove(void* _dest, const void* _rsc, int _byte);
-void* memset(void* _dest, int _val, int _byte);
+void* memchr(const void*, int, size_t);
+wchar_t* wmemchr(const wchar_t*, wchar_t, size_t);
 
-int strlen(const char* _str);
-char* strcpy(char* _dest, const char* _sou);
-int strcmp(const char* _des, const char* _sou);
-const char* strstr(const char* _des, const char* _sou);
-char* memstr(char* _data, int _len, char* _sub);
+void* memmove(void*, const void*, size_t);
+wchar_t* wmemmove(wchar_t*, const wchar_t*, size_t);
 
-void split_line(std::ostream & out = std::cout, size_t size = MSTL_SPLIT_LENGTH, char split_type = '-');
+void* memset(void*, int, size_t);
+wchar_t* wmemset(wchar_t*, wchar_t, size_t);
+
+int strlen(const char*);
+int wcslen(const wchar_t*);
+
+char* strcpy(char*, const char*);
+int strcmp(const char*, const char*);
+const char* strstr(const char*, const char*);
+char* memstr(char*, int, char*);
+
+void split_line(std::ostream& = std::cout, size_t = MSTL_SPLIT_LENGTH, char = '-');
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_BASICLIB_H__

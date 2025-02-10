@@ -170,5 +170,8 @@
     <ClInclude Include="macro_ranges.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="string_view.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
