@@ -206,10 +206,10 @@ public:
     MSTL_NODISCARD iterator end() noexcept { return this->node_; }
     MSTL_NODISCARD const_iterator cbegin() const noexcept { return this->node_->next_; }
     MSTL_NODISCARD const_iterator cend() const noexcept { return this->node_; }
-    MSTL_NODISCARD reverse_iterator rbegin() noexcept { return reverse_iterator(begin()); }
-    MSTL_NODISCARD reverse_iterator rend() noexcept { return reverse_iterator(end()); }
-    MSTL_NODISCARD const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(begin()); }
-    MSTL_NODISCARD const_reverse_iterator crend() const noexcept { return const_reverse_iterator(end()); }
+    MSTL_NODISCARD reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+    MSTL_NODISCARD reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+    MSTL_NODISCARD const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cend()); }
+    MSTL_NODISCARD const_reverse_iterator crend() const noexcept { return const_reverse_iterator(cbegin()); }
 
     MSTL_NODISCARD size_type size() const noexcept { return size_; }
     MSTL_NODISCARD size_type max_size() const noexcept { return static_cast<size_type>(-1); }
