@@ -190,27 +190,27 @@ unordered_map(std::initializer_list<pair<Key, T>>, HashFcn, Alloc)
 -> unordered_map<Key, T, HashFcn, equal_to<Key>, Alloc>;
 #endif
 
-template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
+template <typename Key, typename T, typename HashFcn, typename EqualKey, typename Alloc>
 inline MSTL_NODISCARD bool operator ==(
     const unordered_map<Key, T, HashFcn, EqualKey, Alloc>& lh,
     const unordered_map<Key, T, HashFcn, EqualKey, Alloc>& rh) noexcept {
     return lh.ht_ == rh.ht_;
 }
-template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
+template <typename Key, typename T, typename HashFcn, typename EqualKey, typename Alloc>
 inline MSTL_NODISCARD bool operator !=(
     const unordered_map<Key, T, HashFcn, EqualKey, Alloc>& lh,
     const unordered_map<Key, T, HashFcn, EqualKey, Alloc>& rh) noexcept {
     return !(lh.ht_ == rh.ht_);
 }
-template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
+template <typename Key, typename T, typename HashFcn, typename EqualKey, typename Alloc>
 void swap(const unordered_map<Key, T, HashFcn, EqualKey, Alloc>& lh,
     const unordered_map<Key, T, HashFcn, EqualKey, Alloc>& rh) noexcept(noexcept(lh.swap(rh))) {
     lh.swap(rh);
 }
 
 
-template <class Key, class T, class HashFcn = hash<Key>, class EqualKey = equal_to<Key>,
-    class Alloc = standard_allocator<__hashtable_node<pair<const Key, T>>>>
+template <typename Key, typename T, typename HashFcn = hash<Key>, typename EqualKey = equal_to<Key>,
+    typename Alloc = standard_allocator<__hashtable_node<pair<const Key, T>>>>
     requires(is_hash_v<HashFcn, Key>)
 class unordered_multimap {
 #ifdef MSTL_VERSION_20__
@@ -380,17 +380,17 @@ unordered_multimap(std::initializer_list<pair<Key, T>>, HashFcn, Alloc)
 -> unordered_multimap<Key, T, HashFcn, equal_to<Key>, Alloc>;
 #endif
 
-template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
+template <typename Key, typename T, typename HashFcn, typename EqualKey, typename Alloc>
 inline MSTL_NODISCARD bool operator ==(const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& lh,
     const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& rh) noexcept {
     return lh.ht_ == rh.ht_;
 }
-template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
+template <typename Key, typename T, typename HashFcn, typename EqualKey, typename Alloc>
 inline MSTL_NODISCARD bool operator !=(const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& lh,
     const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& rh) noexcept {
     return !(lh.ht_ == rh.ht_);
 }
-template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
+template <typename Key, typename T, typename HashFcn, typename EqualKey, typename Alloc>
 void swap(const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& lh,
     const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& rh) noexcept(noexcept(lh.swap(rh))) {
     lh.swap(rh);

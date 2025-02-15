@@ -227,7 +227,7 @@ struct pointer_traits<T*> {
     }
 };
 
-template <class Ptr>
+template <typename Ptr>
 decltype(auto) ptr_const_cast(Ptr ptr) noexcept {
     using T = typename pointer_traits<Ptr>::element_type;
     using NonConst = remove_const_t<T>;
@@ -235,7 +235,7 @@ decltype(auto) ptr_const_cast(Ptr ptr) noexcept {
 
     return pointer_traits<Dest>::pointer_to(const_cast<NonConst&>(*ptr));
 }
-template <class T>
+template <typename T>
 decltype(auto) ptr_const_cast(T* ptr) noexcept {
     return const_cast<remove_const_t<T>*>(ptr);
 }
@@ -263,83 +263,83 @@ MSTL_NODISCARD constexpr decltype(auto) to_address(const Ptr& x) noexcept {
 
 
 
-template <class Ptr>
+template <typename Ptr>
 MSTL_NODISCARD constexpr auto unfancy(Ptr p) noexcept {
     return MSTL::addressof(*p);
 }
-template <class T>
+template <typename T>
 MSTL_NODISCARD constexpr T* unfancy(T* p) noexcept {
     return p;
 }
-template <class Ptr>
+template <typename Ptr>
 constexpr decltype(auto) unfancy_maybe_null(Ptr p) noexcept {
     return p ? MSTL::addressof(*p) : nullptr;
 }
-template <class T>
+template <typename T>
 constexpr T* unfancy_maybe_null(T* p) noexcept {
     return p;
 }
 
 
-template <class Ptr, class T>
+template <typename Ptr, typename T>
 using rebind_pointer_t = typename pointer_traits<Ptr>::template rebind<T>;
 
-template <class Ptr, enable_if_t<!is_pointer_v<Ptr>, int> = 0>
-MSTL_CONSTEXPR Ptr refancy(typename pointer_traits<Ptr>::element_type* _Ptr) noexcept {
-    return pointer_traits<Ptr>::pointer_to(*_Ptr);
+template <typename Ptr, enable_if_t<!is_pointer_v<Ptr>, int> = 0>
+MSTL_CONSTEXPR Ptr refancy(typename pointer_traits<Ptr>::element_type* p) noexcept {
+    return pointer_traits<Ptr>::pointer_to(*p);
 }
-template <class Ptr, enable_if_t<is_pointer_v<Ptr>, int> = 0>
-MSTL_CONSTEXPR Ptr refancy(Ptr _Ptr) noexcept {
-    return _Ptr;
+template <typename Ptr, enable_if_t<is_pointer_v<Ptr>, int> = 0>
+MSTL_CONSTEXPR Ptr refancy(Ptr p) noexcept {
+    return p;
 }
-template <class Ptr, enable_if_t<!is_pointer_v<Ptr>, int> = 0>
-MSTL_CONSTEXPR Ptr refancy_maybe_null(typename pointer_traits<Ptr>::element_type* _Ptr) noexcept {
-    return _Ptr == nullptr ? Ptr() : pointer_traits<Ptr>::pointer_to(*_Ptr);
+template <typename Ptr, enable_if_t<!is_pointer_v<Ptr>, int> = 0>
+MSTL_CONSTEXPR Ptr refancy_maybe_null(typename pointer_traits<Ptr>::element_type* p) noexcept {
+    return p == nullptr ? Ptr() : pointer_traits<Ptr>::pointer_to(*p);
 }
-template <class Ptr, enable_if_t<is_pointer_v<Ptr>, int> = 0>
+template <typename Ptr, enable_if_t<is_pointer_v<Ptr>, int> = 0>
 MSTL_CONSTEXPR Ptr refancy_maybe_null(Ptr p) noexcept {
     return p;
 }
 
 
-template <class T, class = void>
+template <typename T, typename = void>
 struct get_pointer_type {
     using type = typename T::value_type*;
 };
-template <class T>
+template <typename T>
 struct get_pointer_type<T, void_t<typename T::pointer>> {
     using type = typename T::pointer;
 };
 
-template <class T, class = void>
+template <typename T, typename = void>
 struct get_difference_type {
     using pointer = typename get_pointer_type<T>::type;
     using type = typename pointer_traits<pointer>::difference_type;
 };
-template <class T>
+template <typename T>
 struct get_difference_type<T, void_t<typename T::difference_type>> {
     using type = typename T::difference_type;
 };
 
-template <class T, class = void>
+template <typename T, typename = void>
 struct get_size_type {
     using type = make_unsigned_t<typename get_difference_type<T>::type>;
 };
-template <class T>
+template <typename T>
 struct get_size_type<T, void_t<typename T::size_type>> {
     using type = typename T::size_type;
 };
 
-template <class T, class U, class = void>
+template <typename T, typename U, typename = void>
 struct get_alloc_rebind_type {
     using type = typename replace_first_parameter<U, T>::type;
 };
-template <class T, class U>
+template <typename T, typename U>
 struct get_alloc_rebind_type<T, U, void_t<typename T::template rebind<U>::other>> {
     using type = typename T::template rebind<U>::other;
 };
 
-template <class Alloc>
+template <typename Alloc>
 struct allocator_traits {
     using allocator_type = Alloc;
     using value_type = typename Alloc::value_type;
@@ -364,6 +364,7 @@ struct allocator_traits {
 template <typename T>
 class standard_allocator {
     static_assert(is_allocable_v<T>, "allocator can`t alloc void, reference, function or const type.");
+
 public:
     using value_type = T;
     using pointer = T*;
@@ -416,6 +417,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(
 template <typename T>
 class ctype_allocator {
     static_assert(is_allocable_v<T>, "allocator can`t alloc void, reference, function or const type.");
+
 public:
     using value_type = T;
     using pointer = T*;
@@ -462,6 +464,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(const ctype_allocator<T>&, const 
 template <typename T>
 class new_allocator {
     static_assert(is_allocable_v<T>, "allocator can`t alloc void, reference, function or const type.");
+
 public:
     using value_type = T;
     using pointer = T*;
@@ -506,12 +509,12 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(const new_allocator<T>&, const ne
 }
 
 
-template <class Alloc>
+template <typename Alloc>
 using alloc_ptr_t = typename allocator_traits<Alloc>::pointer;
-template <class Alloc>
+template <typename Alloc>
 using alloc_size_t = typename allocator_traits<Alloc>::size_type;
 
-template <class Alloc>
+template <typename Alloc>
 MSTL_CONSTEXPR void delete_internal(Alloc& alloc, typename Alloc::value_type* const ptr) noexcept {
     ptr->~T();
     if constexpr (is_same_v<alloc_ptr_t<Alloc>, typename Alloc::value_type*>) {

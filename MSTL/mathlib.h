@@ -4,26 +4,26 @@
 #include "type_traits.hpp"
 MSTL_BEGIN_NAMESPACE__
 
-// 0 ~ 2^16-1
-typedef unsigned short mathus_t;
-// -2^16 ~ 2^16-1
-typedef int mathi_t;
-// 0 ~ 2^32-1
-typedef unsigned int mathui_t;
-// -2^32 ~ 2^32-1
-typedef MSTL_LONG_LONG_TYPE mathl_t;
-// 0 ~ 2^64-1
-typedef unsigned MSTL_LONG_LONG_TYPE mathul_t;
-// 2.3E-308 ~ 1.7E+308
-typedef double mathd_t;
-// 3.4E-4932 ~ 1.1E+4932
-typedef long double mathld_t;
+// 0 ~ 2^16 - 1
+using mathus_t	= unsigned short;
+// -2^16 ~ 2^16 - 1
+using mathi_t	= int;
+// 0 ~ 2^32 - 1
+using mathui_t	= unsigned int;
+// -2^32 ~ 2^32 - 1
+using mathl_t	= MSTL_LONG_LONG_TYPE;
+// 0 ~ 2^64 - 1
+using mathul_t	= unsigned MSTL_LONG_LONG_TYPE;
+// 2.3E - 308 ~ 1.7E + 308
+using mathd_t	= double;
+// 3.4E - 4932 ~ 1.1E + 4932
+using mathld_t	= long double;
 // invalid
-typedef void mathud_t;
+using mathud_t	= void;
 // invalid
-typedef void mathuld_t;
+using mathuld_t = void;
 
-struct constants {
+namespace constants {
 	static MSTL_CONSTEXPR mathld_t EULER = 2.718281828459045L;
 	static MSTL_CONSTEXPR mathld_t PI = 3.141592653589793L;  // radian
 	static MSTL_CONSTEXPR mathld_t PHI = 1.618033988749895L;
@@ -196,26 +196,22 @@ MSTL_CONSTEXPR mathul_t factorial(mathul_t n) noexcept {
 	return h;
 }
 
-// bit 精确到第几位，>0 操作小数位，≤0 操作整数位
+// bit down to the nearest digit, > 0 operates on decimal places, and ≤ 0 on integer places.
 MSTL_CONSTEXPR mathld_t floor_bit(mathld_t x, mathui_t bit) noexcept {
 	mathld_t times = power(10.0, bit);
 	mathl_t int_part = (mathl_t)(x * times);
-	if (x < 0 && (mathl_t)(x * times * 10) / 10.0 != int_part) {
+	if (x < 0 && (mathl_t)(x * times * 10) / 10.0 != int_part) 
 		return (int_part - 1) / times;
-	}
-	else {
+	else 
 		return int_part / times;
-	}
 }
 MSTL_CONSTEXPR mathld_t ceil_bit(mathld_t x, mathui_t bit) noexcept {
 	mathld_t times = power(10.0, bit);
 	mathl_t int_part = (mathl_t)(x * times);
-	if (x > 0 && (mathl_t)(x * times * 10) / 10.0 != int_part) {
+	if (x > 0 && (mathl_t)(x * times * 10) / 10.0 != int_part) 
 		return (int_part + 1) / times;
-	}
-	else {
+	else 
 		return int_part / times;
-	}
 }
 
 MSTL_CONSTEXPR mathld_t round_bit(mathld_t x, mathui_t bit) noexcept {

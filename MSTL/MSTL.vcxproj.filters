@@ -42,9 +42,6 @@
     <ClCompile Include="logging.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="hash_function.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="mathlib.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -143,9 +140,6 @@
     <ClInclude Include="sort.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="hash_function.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="thread_pool.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -170,7 +164,16 @@
     <ClInclude Include="macro_ranges.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="string_view.h">
+    <ClInclude Include="string_view.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="bitmap.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="basic_string.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="string.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,6 +1,6 @@
 #ifndef MSTL_TYPE_TRAITS_HPP__
 #define MSTL_TYPE_TRAITS_HPP__
-#include "basiclib.h"
+#include "macro_ranges.h"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T, T Value>
@@ -310,14 +310,20 @@ using void_t = void;
 
 
 template <typename T>
-constexpr bool is_integral_v = is_any_of_v<remove_cv_t<T>,
-    bool, char, signed char, unsigned char, wchar_t, 
+constexpr bool is_character_v = is_any_of_v<remove_cv_t<T>,
+    char, signed char, unsigned char, wchar_t,
 #ifdef MSTL_VERSION_20__
     char8_t,
 #endif
-    char16_t, char32_t, short, unsigned short, int, unsigned int, long,
-    unsigned long, long long, unsigned long long
+    char16_t, char32_t
 >;
+template <typename T>
+struct is_character : bool_constant<is_character_v<T>> {};
+
+
+template <typename T>
+constexpr bool is_integral_v = is_any_of_v<remove_cv_t<T>, short, unsigned short, int, unsigned int, long,
+    unsigned long, long long, unsigned long long> || is_character_v<T>;
 template <typename T>
 struct is_integral : bool_constant<is_integral_v<T>> {};
 
@@ -1093,103 +1099,103 @@ template <typename T1, typename T2, typename... Rest>
 struct common_type<T1, T2, Rest...> : common_type<common_type_t<T1, T2>, Rest...> {};
 
 
-template <class, class, template <class> class, template <class> class>
+template <typename, typename, template <typename> typename, template <typename> typename>
 struct basic_common_reference {};
-template <class T1>
+template <typename T1>
 struct add_qualifier_aux {
-    template <class T2>
+    template <typename T2>
     using apply_t = copy_ref_t<T1, copy_cv_t<T1, T2>>;
 };
 
-template <class...>
+template <typename...>
 struct common_reference;
-template <class... Types>
+template <typename... Types>
 using common_reference_t = common_reference<Types...>::type;
 
 template <>
 struct common_reference<> {};
-template <class T>
+template <typename T>
 struct common_reference<T> {
     using type = T;
 };
 
-template <class T1, class T2>
+template <typename T1, typename T2>
 struct common_reference_base_aux : common_type<T1, T2> {};
 
-template <class T1, class T2>
+template <typename T1, typename T2>
     requires requires { typename common_ternary_operator_t<T1, T2>; }
 struct common_reference_base_aux<T1, T2> {
     using type = common_ternary_operator_t<T1, T2>;
 };
 
-template <class T1, class T2>
+template <typename T1, typename T2>
 using qualifier_extract = basic_common_reference<remove_cvref_t<T1>, remove_cvref_t<T2>,
     add_qualifier_aux<T1>::template apply_t, add_qualifier_aux<T2>::template apply_t>::type;
 
-template <class T1, class T2>
+template <typename T1, typename T2>
 struct common_ref_qualify_aux : common_reference_base_aux<T1, T2> {};
 
-template <class T1, class T2>
+template <typename T1, typename T2>
     requires requires { typename qualifier_extract<T1, T2>; }
 struct common_ref_qualify_aux<T1, T2> {
     using type = qualifier_extract<T1, T2>;
 };
 
-template <class T1, class T2>
+template <typename T1, typename T2>
 struct common_reference_ptr_aux : common_ref_qualify_aux<T1, T2> {};
 
-template <class T1, class T2>
+template <typename T1, typename T2>
     requires is_lvalue_reference_v<common_ternary_operator_t<copy_cv_t<T1, T2>&, copy_cv_t<T2, T1>&>>
 using common_lvalue_aux = common_ternary_operator_t<copy_cv_t<T1, T2>&, copy_cv_t<T2, T1>&>;
 
-template <class, class>
+template <typename, typename>
 struct common_reference_aux {};
 
-template <class T1, class T2>
+template <typename T1, typename T2>
     requires requires { typename common_lvalue_aux<T1, T2>; }
 struct common_reference_aux<T1&, T2&> {
     using type = common_lvalue_aux<T1, T2>;
 };
 
-template <class T1, class T2>
+template <typename T1, typename T2>
     requires is_convertible_v<T1&&, common_lvalue_aux<const T1, T2>>
 struct common_reference_aux<T1&&, T2&> {
     using type = common_lvalue_aux<const T1, T2>;
 };
 
-template <class T1, class T2>
+template <typename T1, typename T2>
     requires is_convertible_v<T2&&, common_lvalue_aux<const T2, T1>>
 struct common_reference_aux<T1&, T2&&> {
     using type = common_lvalue_aux<const T2, T1>;
 };
 
-template <class T1, class T2>
+template <typename T1, typename T2>
 using common_rvalue_aux = remove_reference_t<common_lvalue_aux<T1, T2>>&&;
 
-template <class T1, class T2>
+template <typename T1, typename T2>
     requires is_convertible_v<T1&&, common_rvalue_aux<T1, T2>>
 && is_convertible_v<T2&&, common_rvalue_aux<T1, T2>>
 struct common_reference_aux<T1&&, T2&&> {
     using type = common_rvalue_aux<T1, T2>;
 };
 
-template <class T1, class T2>
+template <typename T1, typename T2>
 using common_reference_aux_t = common_reference_aux<T1, T2>::type;
 
-template <class T1, class T2>
+template <typename T1, typename T2>
     requires is_convertible_v<add_pointer_t<T1>, add_pointer_t<common_reference_aux_t<T1, T2>>>
 && is_convertible_v<add_pointer_t<T2>, add_pointer_t<common_reference_aux_t<T1, T2>>>
 struct common_reference_ptr_aux<T1, T2> {
     using type = common_reference_aux_t<T1, T2>;
 };
 
-template <class T1, class T2>
+template <typename T1, typename T2>
 struct common_reference<T1, T2> : common_reference_ptr_aux<T1, T2> {};
 
-template <class T1, class T2, class T3, class... Rest>
+template <typename T1, typename T2, typename T3, typename... Rest>
 struct common_reference<T1, T2, T3, Rest...> {};
 
-template <class T1, class T2, class T3, class... Rest>
+template <typename T1, typename T2, typename T3, typename... Rest>
     requires requires { typename common_reference_t<T1, T2>; }
 struct common_reference<T1, T2, T3, Rest...> : common_reference<common_reference_t<T1, T2>, T3, Rest...> {};
 
@@ -1359,23 +1365,23 @@ struct replace_first_parameter<NewFirst, T<First, Rest...>> {
 };
 
 
-template <class T, class U, class = void>
+template <typename T, typename U, typename = void>
 struct get_rebind_type {
     using type = typename replace_first_parameter<U, T>::type;
 };
-template <class T, class U>
+template <typename T, typename U>
 struct get_rebind_type<T, U, void_t<typename T::template rebind<U>>> {
     using type = typename T::template rebind<U>;
 };
-template <class T, class U>
+template <typename T, typename U>
 using get_rebind_type_t = typename get_rebind_type<T, U>::type;
 
 
-template <class T>
+template <typename T>
 concept is_allocator_v = requires(T& alloc) {
     alloc.deallocate(alloc.allocate(size_t{ 1 }), size_t{ 1 });
 };
-template <class T>
+template <typename T>
 struct is_allocator : bool_constant<is_allocator_v<T>> {};
 
 
@@ -1497,7 +1503,51 @@ noexcept(MSTL::declcopy<Ptr>(MSTL::declval<Iterator>().operator->()));
 
 
 template <typename Key>
-struct hash;
+struct hash {};
+
+template <typename T>
+struct hash<T*> {
+    MSTL_NODISCARD constexpr size_t operator()(T* ptr) const noexcept {
+        return reinterpret_cast<size_t>(ptr);
+    }
+};
+
+#define INT_HASH_STRUCT__(OPT) \
+    TEMNULL__ struct hash<OPT> { \
+        MSTL_NODISCARD constexpr size_t operator ()(OPT x) const noexcept { return static_cast<size_t>(x); } \
+    };
+MSTL_MACRO_RANGE_CHARS(INT_HASH_STRUCT__)
+MSTL_MACRO_RANGE_INTEGRAL(INT_HASH_STRUCT__)
+
+
+#if defined(MSTL_PLATFORM_WIN64__) || defined(MSTL_PLATFORM_LINUX64__)
+static constexpr size_t FNV_OFFSET_BASIS = 14695981039346656037ULL;
+static constexpr size_t FNV_PRIME = 1099511628211ULL;
+#elif defined(MSTL_PLATFORM_WIN32__) || defined(MSTL_PLATFORM_LINUX32__)
+static constexpr size_t FNV_OFFSET_BASIS = 2166136261U;
+static constexpr size_t FNV_PRIME = 16777619U;
+#endif
+
+// the FNV (Fowler-Noll-Vo) is a non-cryptographic hash algorithm
+// with a good avalanche effect and a low collision rate.
+// FNV_hash function is FNV-1a version.
+constexpr size_t FNV_hash(const byte_t* first, size_t count) noexcept {
+    size_t result = FNV_OFFSET_BASIS;
+    for (size_t i = 0; i < count; i++) {
+        result ^= (size_t)first[i];
+        result *= FNV_PRIME;
+    }
+    return result;
+}
+
+#define FLOAT_HASH_STRUCT__(OPT) \
+    TEMNULL__ struct hash<OPT> { \
+        MSTL_NODISCARD constexpr size_t operator ()(const OPT& x) const noexcept { \
+            return x == 0.0f ? 0 : FNV_hash((const byte_t*)&x, sizeof(OPT)); \
+        } \
+    };
+MSTL_MACRO_RANGE_FLOAT(FLOAT_HASH_STRUCT__)
+
 
 template <typename, typename = void>
 struct is_nothrow_hashable : false_type {};

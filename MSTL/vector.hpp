@@ -33,8 +33,8 @@ public:
 
 	~vector_iterator() noexcept = default;
 
-	MSTL_NODISCARD MSTL_CONSTEXPR reference operator*() const noexcept { return *ptr_; }
-	MSTL_NODISCARD MSTL_CONSTEXPR pointer operator->() const noexcept { return ptr_; }
+	MSTL_NODISCARD MSTL_CONSTEXPR reference operator *() const noexcept { return *ptr_; }
+	MSTL_NODISCARD MSTL_CONSTEXPR pointer operator ->() const noexcept { return ptr_; }
 
 	MSTL_CONSTEXPR self& operator ++() noexcept {
 		++ptr_;
@@ -638,7 +638,7 @@ template <typename T, typename Alloc>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator <=(const vector<T, Alloc>& lh, const vector<T, Alloc>& rh) {
 	return !(lh > rh);
 }
-template <class T, class Alloc>
+template <typename T, typename Alloc>
 MSTL_CONSTEXPR void swap(vector<T, Alloc>& x, vector<T, Alloc>& y) noexcept {
 	x.swap(y);
 }

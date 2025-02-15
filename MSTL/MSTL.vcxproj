@@ -138,7 +138,6 @@
   <ItemGroup>
     <ClCompile Include="basiclib.cpp" />
     <ClCompile Include="check_type.cpp" />
-    <ClCompile Include="hash_function.cpp" />
     <ClCompile Include="logging.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="errorlib.cpp" />
@@ -152,13 +151,15 @@
     <ClInclude Include="algo.hpp" />
     <ClInclude Include="algobase.hpp" />
     <ClInclude Include="algorithm.hpp" />
-    <ClInclude Include="string_view.h" />
+    <ClInclude Include="basic_string.h" />
+    <ClInclude Include="bitmap.hpp" />
+    <ClInclude Include="string.hpp" />
+    <ClInclude Include="string_view.hpp" />
     <ClInclude Include="container.h" />
     <ClInclude Include="logging.h" />
     <ClInclude Include="macro_ranges.h" />
     <ClInclude Include="mysql_connect_pool.h" />
     <ClInclude Include="hashtable.hpp" />
-    <ClInclude Include="hash_function.h" />
     <ClInclude Include="unordered_map.hpp" />
     <ClInclude Include="unordered_set.hpp" />
     <ClInclude Include="heap.hpp" />

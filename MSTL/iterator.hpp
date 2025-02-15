@@ -1,6 +1,7 @@
 #ifndef MSTL_ITERATOR_HPP__
 #define MSTL_ITERATOR_HPP__
 #include "concepts.hpp"
+#include "errorlib.h"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator>
@@ -333,6 +334,8 @@ make_reverse_iterator(Iterator it) noexcept(is_nothrow_move_constructible_v<Iter
     return reverse_iterator<Iterator>(MSTL::move(it));
 }
 
-MSTL_END_NAMESPACE__
+#define MSTL_ITERATOR_DEREFERENCE_CHECK__(COND, NAME) \
+    MSTL_DEBUG_VERIFY__(COND, "cannot dereference value-initialized NAME iterator")
 
+MSTL_END_NAMESPACE__
 #endif // MSTL_ITERATOR_HPP__

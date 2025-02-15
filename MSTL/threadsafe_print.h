@@ -14,22 +14,18 @@ MSTL_BEGIN_NAMESPACE__
 class Output;
 class ThreadsafeOutput;
 
-namespace concepts {
-    template <typename T>
-    concept SStreamOverloaded = requires(const T& t, std::stringstream& ss) {
-        { ss << t } -> std::convertible_to<std::stringstream&>;
-    };
-    template <typename T>
-    concept OutputManipulator = requires(T t, Output& out) {
-        { t(out) } -> std::convertible_to<Output&>;
-    };
-    template <typename T>
-    concept ThreadsafeOutputManipulator = requires(T t, ThreadsafeOutput& out) {
-        { t(out) } -> std::convertible_to<ThreadsafeOutput&>;
-    };
-}
-
-using namespace concepts;
+template <typename T>
+concept SStreamOverloaded = requires(const T & t, std::stringstream & ss) {
+    { ss << t } -> std::convertible_to<std::stringstream&>;
+};
+template <typename T>
+concept OutputManipulator = requires(T t, Output & out) {
+    { t(out) } -> std::convertible_to<Output&>;
+};
+template <typename T>
+concept ThreadsafeOutputManipulator = requires(T t, ThreadsafeOutput & out) {
+    { t(out) } -> std::convertible_to<ThreadsafeOutput&>;
+};
 
 class Output {
 public:

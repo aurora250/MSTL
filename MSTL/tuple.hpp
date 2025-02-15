@@ -37,17 +37,17 @@ template <typename Dest, typename... Srcs>
 concept TupleExplicitlyConvertible = tuple_explicitly_convertible_v<Dest, Srcs...>;
 
 
-template <class, class, class...>
+template <typename, typename, typename...>
 struct tuple_perfect_forward : true_type {};
-template <class Tuple1, class Tuple2>
+template <typename Tuple1, typename Tuple2>
 struct tuple_perfect_forward<Tuple1, Tuple2> : bool_constant<!is_same_v<Tuple1, remove_cvref_t<Tuple2>>> {};
 
-template <class T1, class T2, class U1, class U2>
+template <typename T1, typename T2, typename U1, typename U2>
 struct tuple_perfect_forward<tuple<T1, T2>, U1, U2>
 	: bool_constant<disjunction_v<negation<is_same<remove_cvref_t<U1>, std::allocator_arg_t>>,
 	is_same<remove_cvref_t<T1>, std::allocator_arg_t>>> {};
 
-template <class T1, class T2, class T3, class U1, class U2, class U3>
+template <typename T1, typename T2, typename T3, typename U1, typename U2, typename U3>
 struct tuple_perfect_forward<tuple<T1, T2, T3>, U1, U2, U3>
 	: bool_constant<disjunction_v<negation<is_same<remove_cvref_t<U1>, std::allocator_arg_t>>,
 	is_same<remove_cvref_t<T1>, std::allocator_arg_t>>> {};
@@ -126,11 +126,10 @@ struct unpack_tuple_construct_tag {
 };
 
 
-TEMNULL__
-struct tuple<> {
+TEMNULL__ struct tuple<> {
 	MSTL_CONSTEXPR tuple() noexcept = default;
 	MSTL_CONSTEXPR tuple(const tuple&) noexcept = default;
-	template <class Tag>
+	template <typename Tag>
 		requires(is_same_v<Tag, exact_arg_construct_tag>)
 	MSTL_CONSTEXPR tuple(Tag) noexcept {}
 
@@ -147,16 +146,16 @@ public:
 	using this_type = This;
 	using base_type = tuple<Rest...>;
 
-	template <class Tag, class U1, class... U2>
+	template <typename Tag, typename U1, typename... U2>
 		requires(is_same_v<Tag, exact_arg_construct_tag>)
 	MSTL_CONSTEXPR tuple(Tag, U1&& this_arg, U2&&... rest_arg)
 		: base_type(exact_arg_construct_tag{}, MSTL::forward<U2>(rest_arg)...), data_(MSTL::forward<U1>(this_arg)) {}
 
-	template <class Tag, class Tuple, size_t... Index>
+	template <typename Tag, typename Tuple, size_t... Index>
 		requires(is_same_v<Tag, unpack_tuple_construct_tag>)
 	MSTL_CONSTEXPR tuple(Tag, Tuple&&, index_sequence<Index...>);
 
-	template <class Tag, class Tuple>
+	template <typename Tag, typename Tuple>
 		requires(is_same_v<Tag, unpack_tuple_construct_tag>)
 	MSTL_CONSTEXPR tuple(Tag, Tuple&& tup) 
 		: tuple(unpack_tuple_construct_tag{}, MSTL::forward<Tuple>(tup), 
@@ -247,7 +246,7 @@ public:
 		return *this;
 	}
 
-	template <class T1, class T2>
+	template <typename T1, typename T2>
 		requires(tuple_assignable_v<tuple, const T1&, const T2&>)
 	MSTL_CONSTEXPR tuple& operator=(const pair<T1, T2>& pir) noexcept(
 		tuple_nothrow_assignable_v<tuple, const T1&, const T2&>) {
@@ -256,7 +255,7 @@ public:
 		return *this;
 	}
 
-	template <class T1, class T2>
+	template <typename T1, typename T2>
 		requires(tuple_assignable_v<tuple, T1, T2>)
 	MSTL_CONSTEXPR tuple& operator=(pair<T1, T2>&& pir) noexcept(
 		tuple_nothrow_assignable_v<tuple, T1, T2>) {
@@ -324,16 +323,16 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool operator <(const tuple<T1...>& lh, const tupl
 	return lh.less_to(rh);
 }
 template <typename... T1, typename... T2>
-MSTL_NODISCARD MSTL_CONSTEXPR bool operator >=(const tuple<T1...>& lh, const tuple<T2...>& rh) {
-	return !(lh < rh);
-}
-template <typename... T1, typename... T2>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator >(const tuple<T1...>& lh, const tuple<T2...>& rh) {
 	return rh < lh;
 }
 template <typename... T1, typename... T2>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator <=(const tuple<T1...>& lh, const tuple<T2...>& rh) {
 	return !(rh < lh);
+}
+template <typename... T1, typename... T2>
+MSTL_NODISCARD MSTL_CONSTEXPR bool operator >=(const tuple<T1...>& lh, const tuple<T2...>& rh) {
+	return !(lh < rh);
 }
 template <typename... T>
 	requires(conjunction_v<is_swappable<T>...>)
@@ -367,7 +366,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR const tuple_element_t<Index, Types...>&& get(const
 	return static_cast<const T&&>(static_cast<const tuple_type&&>(tup).data_);
 }
 
-template <size_t Index, class... Types>
+template <size_t Index, typename... Types>
 MSTL_NODISCARD MSTL_CONSTEXPR tuple_element_t<Index, Types...>&& pair_get_from_tuple(tuple<Types...>&& tup) noexcept {
 	using T = tuple_element_t<Index, tuple<Types...>>;
 	using tuple_type = tuple_extract_base_t<Index, tuple<Types...>>;
@@ -375,8 +374,8 @@ MSTL_NODISCARD MSTL_CONSTEXPR tuple_element_t<Index, Types...>&& pair_get_from_t
 }
 
 
-template <class This, class... Rest>
-template <class Tag, class Tuple, size_t... Index>
+template <typename This, typename... Rest>
+template <typename Tag, typename Tuple, size_t... Index>
 	requires(is_same_v<Tag, unpack_tuple_construct_tag>)
 MSTL_CONSTEXPR tuple<This, Rest...>::tuple(Tag, Tuple&& tup, index_sequence<Index...>)
 	: tuple(exact_arg_construct_tag{}, MSTL::get<Index>(MSTL::forward<Tuple>(tup))...) {}
@@ -410,16 +409,16 @@ concept ConstructibleFromTuple = constructible_from_tuple<T, Tuple>;
 
 
 template <typename T, typename Tuple, size_t... Index>
-MSTL_NODISCARD MSTL_CONSTEXPR T make_from_tuple_idx(Tuple&& tup, index_sequence<Index...>)
+MSTL_NODISCARD MSTL_CONSTEXPR T broaden_make_from_tuple(Tuple&& tup, index_sequence<Index...>)
 noexcept(is_nothrow_constructible_v<T, decltype(MSTL::get<Index>(MSTL::forward<Tuple>(tup)))...>) {
 	return T(MSTL::get<Index>(MSTL::forward<Tuple>(tup))...);
 }
 
 template <typename T, typename Tuple>
 	requires(constructible_from_tuple<T, Tuple>)
-MSTL_NODISCARD MSTL_CONSTEXPR T make_from_tuple(Tuple&& tup) noexcept(noexcept(MSTL::make_from_tuple_idx<T>(
+MSTL_NODISCARD MSTL_CONSTEXPR T make_from_tuple(Tuple&& tup) noexcept(noexcept(MSTL::broaden_make_from_tuple<T>(
 	MSTL::forward<Tuple>(tup), make_index_sequence<tuple_size_v<remove_reference_t<Tuple>>>{}))) {
-	return MSTL::make_from_tuple_idx<T>(
+	return MSTL::broaden_make_from_tuple<T>(
 		MSTL::forward<Tuple>(tup), make_index_sequence<tuple_size_v<remove_reference_t<Tuple>>>{});
 }
 

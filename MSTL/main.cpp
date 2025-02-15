@@ -1,4 +1,5 @@
-﻿#include "mstlc++.hpp"
+﻿#include "string.hpp"
+#include "mstlc++.hpp"
 
 void try_lls();
 void try_exc() {
@@ -46,7 +47,6 @@ void try_lls() {
 class Foo {};
 void try_check() {
     MSTL_NAMESPACE__;
-    using std::string;
     std::cout << check_type<string>() << std::endl;
     std::cout << check_type<const volatile void* const*&>() << std::endl;
     std::cout << check_type<int(*)[]>() << std::endl;
@@ -422,6 +422,6 @@ void try_algo() {
 
 int main() {
     MSTL_NAMESPACE__;
-    try_rb();
+    try_check();
     return 0;
 }

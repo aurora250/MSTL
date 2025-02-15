@@ -50,7 +50,7 @@ public:
     MSTL_NODISCARD const Sequence& get_container() const noexcept { return seq_; }
 };
 #ifdef MSTL_SUPPORT_DEDUCTION_GUIDES__
-template <class Sequence>
+template <typename Sequence>
 stack(Sequence) -> stack<typename Sequence::value_type, Sequence>;
 #endif
 

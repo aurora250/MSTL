@@ -3,7 +3,6 @@
 #include "algo.hpp"
 #include "vector.hpp"
 #include "concepts.hpp"
-#include "hash_function.h"
 #include "mathlib.h"
 MSTL_BEGIN_NAMESPACE__
 

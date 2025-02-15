@@ -5,7 +5,6 @@
 #include "memory.hpp"
 #include "check_type.h"
 #include "mathlib.h"
-#include "hash_function.h"
 #include "concepts.hpp"
 #include "logging.h"
 

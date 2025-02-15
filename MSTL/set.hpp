@@ -197,14 +197,14 @@ inline MSTL_NODISCARD bool operator >=(
 	const set<Key, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ >= rh.tree_;
 }
-template <class Key, class Compare, class Alloc>
+template <typename Key, typename Compare, typename Alloc>
 void swap(set<Key, Compare, Alloc>& lh, set<Key, Compare, Alloc>& rh) 
 noexcept(noexcept(lh.swap(rh))) {
 	lh.swap(rh);
 }
 
 
-template <class Key, class Compare = less<Key>, class Alloc = standard_allocator<__rb_tree_node<Key>>>
+template <typename Key, typename Compare = less<Key>, typename Alloc = standard_allocator<__rb_tree_node<Key>>>
 class multiset {
 #ifdef MSTL_VERSION_20__	
 	static_assert(is_allocator_v<Alloc>, "Alloc type is not a standard allocator type.");
@@ -400,7 +400,7 @@ inline MSTL_NODISCARD bool operator >=(
 	const multiset<Key, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ >= rh.tree_;
 }
-template <class Key, class Compare, class Alloc>
+template <typename Key, typename Compare, typename Alloc>
 void swap(multiset<Key, Compare, Alloc>& lh, multiset<Key, Compare, Alloc>& rh)
 noexcept(noexcept(lh.swap(rh))) {
 	lh.swap(rh);

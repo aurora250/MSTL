@@ -3,10 +3,10 @@
 #include "type_traits.hpp"
 MSTL_BEGIN_NAMESPACE__
 
-template <class T1, class T2>
+template <typename T1, typename T2>
 concept same_as = is_same_v<T1, T2> && is_same_v<T2, T1>;
 
-template <class T1, class T2>
+template <typename T1, typename T2>
 concept common_reference_with = requires {
 	typename common_reference_t<T1, T2>;
 	typename common_reference_t<T2, T1>;
@@ -15,7 +15,7 @@ concept common_reference_with = requires {
 && convertible_to<T1, common_reference_t<T1, T2>>
 && convertible_to<T2, common_reference_t<T1, T2>>;
 
-template <class T1, class T2>
+template <typename T1, typename T2>
 concept common_with = requires { typename common_type_t<T1, T2>; typename common_type_t<T2, T1>; }
 && same_as<common_type_t<T1, T2>, common_type_t<T2, T1>> && requires {
 	static_cast<common_type_t<T1, T2>>(MSTL::declval<T1>());
@@ -24,7 +24,7 @@ concept common_with = requires { typename common_type_t<T1, T2>; typename common
 && common_reference_with<add_lvalue_reference_t<common_type_t<T1, T2>>,
 	common_reference_t<add_lvalue_reference_t<const T1>, add_lvalue_reference_t<const T2>>>;
 
-template <class Derived, class Base>
+template <typename Derived, typename Base>
 concept derived_from = is_base_of_v<Base, Derived>
 && is_convertible_to_v<const volatile Derived*, const volatile Base*>;
 
@@ -43,7 +43,7 @@ template<typename T>
 concept default_constructible = is_default_constructible_v<T>;
 template<typename T>
 concept implicit_constructible = is_implicitly_default_constructible_v<T>;
-template <class T>
+template <typename T>
 concept move_constructible = is_move_constructible_v<T>;
 template<typename T>
 concept copy_constructible = move_constructible<T>
@@ -60,7 +60,7 @@ template<typename T, typename... Args>
 concept nothrow_constructible_from = is_nothrow_constructible_v<T, Args...>;
 
 
-template <class T>
+template <typename T>
 concept default_initializable = constructible_from<T> && requires {
 	T{};
 	::new (static_cast<void*>(nullptr)) T;
@@ -73,7 +73,7 @@ template <typename T>
 concept nothrow_swappable = is_nothrow_swappable_v<T>;
 
 
-template <class To, class From>
+template <typename To, typename From>
 concept assignable_from = is_lvalue_reference_v<To>
 && common_reference_with<const remove_reference_t<To>&, const remove_reference_t<From>&>
 && requires(To x, From&& y) {
@@ -87,13 +87,13 @@ template <typename T>
 concept trivially_assignable = trivially_copy_assignable<T> || trivial_move_assignable<T>;
 
 
-template <class T>
+template <typename T>
 concept movable = is_object_v<T>
 && move_constructible<T>
 && assignable_from<T&, T>
 && swappable<T>;
 
-template <class T>
+template <typename T>
 concept copyable = copy_constructible<T>
 && movable<T>
 && assignable_from<T&, T&>
@@ -101,7 +101,7 @@ concept copyable = copy_constructible<T>
 && assignable_from<T&, const T>;
 
 
-template <class T1, class T2>
+template <typename T1, typename T2>
 concept one_way_equality_comparable =
 	requires(const remove_reference_t<T1>& x, const remove_reference_t<T2>& y) {
 		{ x == y } -> convertible_to<bool>;
@@ -109,21 +109,21 @@ concept one_way_equality_comparable =
 };
 
 
-template <class T1, class T2>
+template <typename T1, typename T2>
 concept both_equality_comparable =
 one_way_equality_comparable<T1, T2>&& one_way_equality_comparable<T2, T1>;
 
-template <class T>
+template <typename T>
 concept equality_comparable = one_way_equality_comparable<T, T>;
 
-template <class T1, class T2>
+template <typename T1, typename T2>
 concept equality_comparable_with = equality_comparable<T1> && equality_comparable<T2>
 && common_reference_with<const remove_reference_t<T1>&, const remove_reference_t<T2>&>
 && equality_comparable<common_reference_t<const remove_reference_t<T1>&, const remove_reference_t<T2>&>>
 && both_equality_comparable<T1, T2>;
 
 
-template <class T1, class T2>
+template <typename T1, typename T2>
 concept one_way_ordered = requires(const remove_reference_t<T1>& x, const remove_reference_t<T2>& y) {
 	{ x < y } -> convertible_to<bool>;
 	{ x > y } -> convertible_to<bool>;
@@ -131,26 +131,26 @@ concept one_way_ordered = requires(const remove_reference_t<T1>& x, const remove
 	{ x >= y } -> convertible_to<bool>;
 };
 
-template <class T1, class T2>
+template <typename T1, typename T2>
 concept both_ordered_with = one_way_ordered<T1, T2>&& one_way_ordered<T2, T1>;
 
-template <class T>
+template <typename T>
 concept totally_ordered = equality_comparable<T> && one_way_ordered<T, T>;
 
-template <class T1, class T2>
+template <typename T1, typename T2>
 concept totally_ordered_with = totally_ordered<T1> && totally_ordered<T2>
 && equality_comparable_with<T1, T2>
 && totally_ordered<common_reference_t<const remove_reference_t<T1>&, const remove_reference_t<T2>&>>
 && both_ordered_with<T1, T2>;
 
 
-template <class T>
+template <typename T>
 concept semiregular = copyable<T> && default_initializable<T>;
-template <class T>
+template <typename T>
 concept regular = semiregular<T> && equality_comparable<T>;
 
 
-template<typename T>
+template <typename T>
 concept is_printable = requires(T t) {
 	{ std::cout << t } -> convertible_to<std::ostream&>;
 };
@@ -208,18 +208,18 @@ concept random_access_iterator = bidirectional_iterator<Iterator> &&
 	{ it1[n] } -> convertible_to<typename iterator_traits<Iterator>::value_type>;
 };
 #endif
-template <class T, class = void>
+template <typename T, typename = void>
 constexpr bool is_iterator_v = false;
-template <class T>
+template <typename T>
 constexpr bool is_iterator_v<T, void_t<iter_cat_t<T>>> = true;
-template <class T>
+template <typename T>
 struct is_iterator : bool_constant<is_iterator_v<T>> {};
 
 
-template <class Iterator>
+template <typename Iterator>
 constexpr bool is_input_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::input_iterator_tag>;
 
-template <class Iterator>
+template <typename Iterator>
 constexpr bool is_ranges_input_iter_v =
 #ifdef MSTL_VERSION_20__
 input_iterator<Iterator> ||
@@ -227,10 +227,10 @@ input_iterator<Iterator> ||
 is_input_iter_v<Iterator>;
 
 
-template <class Iterator>
+template <typename Iterator>
 constexpr bool is_fwd_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::forward_iterator_tag>;
 
-template <class Iterator>
+template <typename Iterator>
 constexpr bool is_ranges_fwd_iter_v =
 #ifdef MSTL_VERSION_20__
 forward_iterator<Iterator> ||
@@ -238,10 +238,10 @@ forward_iterator<Iterator> ||
 is_fwd_iter_v<Iterator>;
 
 
-template <class Iterator>
+template <typename Iterator>
 constexpr bool is_bid_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::bidirectional_iterator_tag>;
 
-template <class Iterator>
+template <typename Iterator>
 constexpr bool is_ranges_bid_iter_v =
 #ifdef MSTL_VERSION_20__
 bidirectional_iterator<Iterator> ||
@@ -249,10 +249,10 @@ bidirectional_iterator<Iterator> ||
 is_bid_iter_v<Iterator>;
 
 
-template <class Iterator>
+template <typename Iterator>
 constexpr bool is_rnd_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::random_access_iterator_tag>;
 
-template <class Iterator>
+template <typename Iterator>
 constexpr bool is_ranges_rnd_iter_v =
 #ifdef MSTL_VERSION_20__
 random_access_iterator<Iterator> ||

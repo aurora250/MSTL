@@ -67,10 +67,10 @@ MSTL_NORETURN void Exit(bool _abort = false, void(*_func)(void) = nullptr);
 
 #define MSTL_TRY__ try
 #define MSTL_CATCH_UNWIND__ catch(...)
-#define MSTL_CATCH_UNWIND_THROW_U__(action) MSTL_CATCH_UNWIND__ { action; throw; }
-#define MSTL_CATCH_UNWIND_THROW_M__(action) \
+#define MSTL_CATCH_UNWIND_THROW_U__(CON) MSTL_CATCH_UNWIND__ { CON; throw; }
+#define MSTL_CATCH_UNWIND_THROW_M__(ACT) \
 	MSTL_CATCH_UNWIND__ { \
-		action; \
+		ACT; \
 		MSTL_EXEC_MEMORY__ \
 	};
 #define MSTL_CATCH_ERROR__ catch(const Error& error)
