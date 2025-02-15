@@ -289,7 +289,6 @@ void try_hash() {
 }
 
 void try_pool() {
-    using namespace std;
     MSTL_NAMESPACE__;
     {
         ThreadPool pool;
@@ -334,21 +333,12 @@ void try_sql() {
     DBConnectPool* pool = new DBConnectPool("root", "147258hu", "book");
     for (int i = 0; i < 5000; i++) {
         std::shared_ptr<DBConnect> ptr = pool->get_connect();
-        ptr->INSERT_INTO("Manager", "ADM00009", "Hu", 'M', 5000);
-    }
-    delete pool;
-    std::cout << clock() - begin << std::endl;
-
-    begin = clock();
-    for (int i = 0; i < 5000; i++) {
         char sql[power(2, 10)] = { 0 };
         sprintf_s(sql, "INSERT INTO Manager VALUES('%s', '%s', '%c', %d)",
             "ADM000009", "Hu", 'M', 5000);
-        DBConnect* con = new DBConnect();
-        con->connect_to("root", "147258hu", "book");
-        con->exec(sql);
-        delete con;
+        ptr->exec(sql);
     }
+    delete pool;
     std::cout << clock() - begin << std::endl;
 }
 void try_log() {
@@ -420,8 +410,36 @@ void try_algo() {
     detailof(v3);
 }
 
+struct Student : MSTL::enable_shared_from<Student> {
+    const char* name;
+    int age;
+
+    explicit Student(const char* name_, int age_) : name(name_), age(age_) {
+        std::cout << "Student 构造\n";
+    }
+
+    Student(Student&&) = delete;
+
+    void func() {
+        std::cout << (void*)shared_from_this().get() << '\n';
+    }
+
+    ~Student() {
+        std::cout << "Student 析构\n";
+    }
+};
+
+struct StudentDerived : Student {
+    explicit StudentDerived(const char* name_, int age_) : Student(name_, age_) {
+        std::cout << "StudentDerived 构造\n";
+    }
+
+    ~StudentDerived() {
+        std::cout << "StudentDerived 析构\n";
+    }
+};
 int main() {
     MSTL_NAMESPACE__;
-    try_check();
+    try_vec();
     return 0;
 }

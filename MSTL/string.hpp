@@ -29,25 +29,28 @@ TEMNULL__ struct hash<std::string> {
 };
 
 
+#pragma warning(push)
+#pragma warning(disable: 4455)
 inline namespace string_operator {
-    MSTL_NODISCARD string operator ""s(const char* str, size_t len) noexcept {
+    inline MSTL_NODISCARD string operator ""s(const char* str, size_t len) noexcept {
         return string(str, len);
     }
-    MSTL_NODISCARD wstring operator ""s(const wchar_t* str, size_t len) noexcept {
+    inline MSTL_NODISCARD wstring operator ""s(const wchar_t* str, size_t len) noexcept {
         return wstring(str, len);
     }
 #ifdef MSTL_VERSION_20__
-    MSTL_NODISCARD u8string operator ""s(const char8_t* str, size_t len) noexcept {
+    inline MSTL_NODISCARD u8string operator ""s(const char8_t* str, size_t len) noexcept {
         return u8string(str, len);
     }
 #endif // MSTL_VERSION_20__
-    MSTL_NODISCARD u16string operator ""s(const char16_t* str, size_t len) noexcept {
+    inline MSTL_NODISCARD u16string operator ""s(const char16_t* str, size_t len) noexcept {
         return u16string(str, len);
     }
-    MSTL_NODISCARD u32string operator ""s(const char32_t* str, size_t len) noexcept {
+    inline MSTL_NODISCARD u32string operator ""s(const char32_t* str, size_t len) noexcept {
         return u32string(str, len);
     }
 }
+#pragma warning(pop)
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_STRING_HPP__

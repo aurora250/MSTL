@@ -104,7 +104,7 @@ public:
 private:
     link_type node_;
     size_type size_;
-    allocator_type alloc_;
+    MSTL_NO_UNIADS allocator_type alloc_;
 
     inline void range_check(size_type position) const noexcept {
         MSTL_DEBUG_VERIFY__(position < size_, "list index out of ranges.");

@@ -105,7 +105,7 @@ private:
     pointer data_ = nullptr;
     size_type size_ = 0;
     size_type alloc_size_ = 0;
-    allocator_type alloc_{};
+    MSTL_NO_UNIADS allocator_type alloc_{};
 
     static constexpr uint32_t STRING_BUFFER_THRESHHOLD = 32u;
 

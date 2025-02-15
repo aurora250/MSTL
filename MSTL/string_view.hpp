@@ -963,6 +963,8 @@ using u16string_view = basic_string_view<char16_t>;
 using u32string_view = basic_string_view<char32_t>;
 
 
+#pragma warning(push)
+#pragma warning(disable: 4455)
 inline namespace string_operator {
     MSTL_NODISCARD constexpr string_view operator ""sv(const char* str, size_t len) noexcept {
         return string_view(str, len);
@@ -982,6 +984,7 @@ inline namespace string_operator {
         return u32string_view(str, len);
     }
 }
+#pragma warning(pop)
 
 
 // DJB2 is a non-cryptographic hash algorithm

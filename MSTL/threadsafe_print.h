@@ -1,6 +1,7 @@
 #ifndef MSTL_THREADSAFE_PRINT_H__
 #define MSTL_THREADSAFE_PRINT_H__
 #include "queue.hpp"
+#include "concepts.hpp"
 #include <shared_mutex>
 #include <string>
 #include <thread>
@@ -8,7 +9,6 @@
 #include <sstream>
 #include <atomic>
 #include <functional>
-#include <type_traits>
 MSTL_BEGIN_NAMESPACE__
 
 class Output;
@@ -16,15 +16,15 @@ class ThreadsafeOutput;
 
 template <typename T>
 concept SStreamOverloaded = requires(const T & t, std::stringstream & ss) {
-    { ss << t } -> std::convertible_to<std::stringstream&>;
+    { ss << t } -> convertible_to<std::stringstream&>;
 };
 template <typename T>
 concept OutputManipulator = requires(T t, Output & out) {
-    { t(out) } -> std::convertible_to<Output&>;
+    { t(out) } -> convertible_to<Output&>;
 };
 template <typename T>
 concept ThreadsafeOutputManipulator = requires(T t, ThreadsafeOutput & out) {
-    { t(out) } -> std::convertible_to<ThreadsafeOutput&>;
+    { t(out) } -> convertible_to<ThreadsafeOutput&>;
 };
 
 class Output {
@@ -114,11 +114,6 @@ inline void show_data_only(const Container& c, Output& _out) {
         if (vl != _band) _out << ", ";
     }
     _out << ']';
-}
-template <typename T1, typename T2> 
-    requires (is_printable<T1> && is_printable<T2>)
-inline void show_data_only(const std::pair<T1, T2>& p, Output& _out) {
-    _out << "{ " << p.first << ", " << p.second << " }";
 }
 template <typename Container> 
     requires(is_detailable<Container>)

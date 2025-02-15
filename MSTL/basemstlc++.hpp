@@ -9,7 +9,7 @@
 #include "logging.h"
 
 #include "tuple.hpp"
-#include "function.hpp"
+#include "functional.hpp"
 #include "iterator.hpp"
 #include "algorithm.hpp"
 

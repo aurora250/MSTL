@@ -130,9 +130,9 @@ public:
 private:
     size_type size_;
     link_type header_;
-    Compare key_compare_;
-    KeyOfValue extracter_;
-    allocator_type alloc_;
+    MSTL_NO_UNIADS Compare key_compare_;
+    MSTL_NO_UNIADS KeyOfValue extracter_;
+    MSTL_NO_UNIADS allocator_type alloc_;
 
     bool rb_state_verify(const rb_tree&) noexcept;
 

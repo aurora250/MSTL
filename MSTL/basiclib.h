@@ -83,11 +83,11 @@
 #endif
 
 
-#if defined(MSTL_VERSION_20__)
-	#define MSTL_SUPPORT_CONCEPTS__			1
+#if defined(MSTL_VERSION_11__)
+	#define MSTL_SUPPORT_CONSTEXPR__		1
 #endif
-#if defined(MSTL_VERSION_17__)
-	#define MSTL_SUPPORT_NODISCARD__		1
+#if defined(MSTL_VERSION_11__)
+	#define MSTL_SUPPORT_STATIC_ASSERT__	1
 #endif
 #if defined(MSTL_VERSION_11__)
 	#define MSTL_SUPPORT_NORETURN__			1
@@ -98,14 +98,21 @@
 #if defined(MSTL_VERSION_17__)
 	#define MSTL_SUPPORT_DEDUCTION_GUIDES__ 1
 #endif
-#if defined(MSTL_VERSION_11__)
-	#define MSTL_SUPPORT_CONSTEXPR__		1
+#if defined(MSTL_VERSION_17__)
+	#define MSTL_SUPPORT_NODISCARD__		1
 #endif
-#if defined(MSTL_VERSION_11__)
-	#define MSTL_SUPPORT_STATIC_ASSERT__	1
+#if defined(MSTL_VERSION_17__)
+	#define MSTL_SUPPORT_NO_UNIQUE_ADS__	1
+#endif
+#if defined(MSTL_VERSION_20__)
+	#define MSTL_SUPPORT_CONCEPTS__			1
+#endif
+
+#if defined(MSTL_COMPILE_GNUC__) && defined(MSTL_VERSION_17__)
+	#define MSTL_SUPPORT_UNLIKELY__			1
 #endif
 #if defined(MSTL_COMPILE_MSVC__)
-	#define MSTL_SUPPORT_DECLALLOC__		1
+	#define MSTL_SUPPORT_DECLSPEC__			1
 #endif
 #if defined(MSTL_COMPILE_MSVC__)
 	#define MSTL_SUPPORT_MAKE_INTEGER_SEQ__	1
@@ -152,6 +159,12 @@
 	#define MSTL_ALLOCNODISCARD
 #endif
 
+#ifdef MSTL_SUPPORT_UNLIKELY__
+	#define MSTL_UNLIKELY [[unlikely]]
+#else 
+	#define MSTL_UNLIKELY
+#endif
+
 #ifdef MSTL_SUPPORT_NORETURN__
 	#define MSTL_NORETURN [[noreturn]]
 #else 
@@ -168,10 +181,18 @@
 	#define MSTL_FADEPRECATED
 #endif
 
-#ifdef MSTL_SUPPORT_DECLALLOC__
+#ifdef MSTL_SUPPORT_DECLSPEC__
 	#define MSTL_DECLALLOC __declspec(allocator)
+	#define MSTL_DECLNOVTB __declspec(novtable)
 #else
-	#define MSTL_DECLALLOC 
+	#define MSTL_DECLALLOC
+	#define MSTL_DECLNOVTB
+#endif
+
+#ifdef MSTL_SUPPORT_NO_UNIQUE_ADS__
+	#define MSTL_NO_UNIADS [[no_unique_address]]
+#else
+	#define MSTL_NO_UNIADS
 #endif
 
 #if defined(MSTL_COMPILE_MSVC__)

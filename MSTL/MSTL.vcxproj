@@ -173,7 +173,7 @@
     <ClInclude Include="check_type.h" />
     <ClInclude Include="deque.hpp" />
     <ClInclude Include="errorlib.h" />
-    <ClInclude Include="function.hpp" />
+    <ClInclude Include="functional.hpp" />
     <ClInclude Include="functor.hpp" />
     <ClInclude Include="iterator.hpp" />
     <ClInclude Include="list.hpp" />

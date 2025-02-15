@@ -83,7 +83,7 @@
     <ClInclude Include="mstlc++.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="function.hpp">
+    <ClInclude Include="functional.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="iterator.hpp">

@@ -1,7 +1,6 @@
-// Container / Algorithm / Functor / Iterator / Adaptor / Allocator
-
 #ifndef MSTL_MSTLCPP_HPP__
 #define MSTL_MSTLCPP_HPP__
+
 #include "basemstlc++.hpp"
 
 #include "list.hpp"

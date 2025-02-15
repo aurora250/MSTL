@@ -219,13 +219,13 @@ public:
         const hashtable<Value1, Key1, HashFcn1, ExtractKey1, EqualKey1, Alloc1>&) noexcept;
 
 private:
-    hasher hasher_;
-    key_equal equals_;
-    ExtractKey extracter_;
     vector<link_type> buckets_;
     size_type size_;
     float factor_;
-    allocator_type alloc_;
+    MSTL_NO_UNIADS hasher hasher_;
+    MSTL_NO_UNIADS key_equal equals_;
+    MSTL_NO_UNIADS ExtractKey extracter_;
+    MSTL_NO_UNIADS allocator_type alloc_;
 
     inline size_type next_size(size_type n) const noexcept {
         return hashtable_next_prime(n);

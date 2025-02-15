@@ -53,8 +53,8 @@ noexcept(is_nothrow_move_constructible_v<T> && is_nothrow_move_assignable_v<T>) 
 template <typename T, typename U>
 MSTL_CONSTEXPR T exchange(T& val, U&& new_val) noexcept(conjunction_v<
 	is_nothrow_move_constructible<T>, is_nothrow_assignable<T&, U>>) {
-	T old_val = static_cast<T&&>(val);
-	val = static_cast<U&&>(new_val);
+	T old_val = MSTL::move(val);
+	val = MSTL::forward<U>(new_val);
 	return old_val;
 }
 
@@ -76,9 +76,13 @@ MSTL_MACRO_RANGE_INTEGRAL(INITIALIZE_BASIC_FUNCTION__)
 
 struct piecewise_construct_tag {
 	constexpr explicit piecewise_construct_tag() = default;
-	~piecewise_construct_tag() = default;
 };
 inline constexpr piecewise_construct_tag pair_piecewise_construct_t;
+
+struct inplace_construct_tag {
+	constexpr explicit inplace_construct_tag() = default;
+};
+inline constexpr inplace_construct_tag inplace_construct_t;
 
 template <typename...>
 class tuple;

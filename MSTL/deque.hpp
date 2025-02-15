@@ -161,8 +161,8 @@ private:
     using map_pointer       = pointer*;
     using map_allocator     = standard_allocator<pointer>;
 
-    allocator_type data_alloc_;
-    map_allocator map_alloc_;
+    MSTL_NO_UNIADS allocator_type data_alloc_;
+    MSTL_NO_UNIADS map_allocator map_alloc_;
     map_pointer map_;
     size_type map_size_;
     iterator start_;

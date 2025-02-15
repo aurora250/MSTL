@@ -127,7 +127,7 @@ private:
 	pointer start_;
 	pointer finish_;
 	pointer end_of_storage_;
-	allocator_type alloc_;
+	MSTL_NO_UNIADS allocator_type alloc_;
 
 	MSTL_CONSTEXPR inline void range_check(size_type position) const noexcept {
 		MSTL_DEBUG_VERIFY__(

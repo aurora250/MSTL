@@ -1,6 +1,7 @@
 #ifndef MSTL_MEMORY_HPP__
 #define MSTL_MEMORY_HPP__
 #include "algobase.hpp"
+#include <atomic>
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator1, typename Iterator2>
@@ -135,8 +136,9 @@ MSTL_CONSTEXPR uninitialized_move_n(Iterator1 first, size_t count, Iterator2 res
 
 
 template <typename Iterator, typename T = typename iterator_traits<Iterator>::value_type>
-    requires(forward_iterator<Iterator>)
 class temporary_buffer {
+    static_assert(is_ranges_fwd_iter_v<Iterator>, "temporary buffer requires forward iterator type.");
+
 private:
     ptrdiff_t original_len_;
     ptrdiff_t len_;
@@ -527,123 +529,6 @@ MSTL_CONSTEXPR void delete_internal(Alloc& alloc, typename Alloc::value_type* co
 }
 
 
-struct iterator_base;
-struct container_base;
-
-struct container_proxy {
-    MSTL_CONSTEXPR container_proxy() noexcept = default;
-    MSTL_CONSTEXPR container_proxy(container_base* _Mycont_) noexcept : cont_(_Mycont_) {}
-
-    const container_base* cont_ = nullptr;
-    mutable iterator_base* first_iter_ = nullptr;
-};
-
-struct container_base {
-public:
-    container_proxy* proxy_ = nullptr;
-
-public:
-    MSTL_CONSTEXPR container_base() noexcept = default;
-
-    container_base(const container_base&) = delete;
-    container_base& operator =(const container_base&) = delete;
-
-    MSTL_CONSTEXPR void swap_proxy_and_iterators(container_base& cont) noexcept {
-        container_proxy* tmp = proxy_;
-        proxy_ = cont.proxy_;
-        cont.proxy_ = tmp;
-
-        if (proxy_) proxy_->cont_ = this;
-        if (cont.proxy_)  cont.proxy_->cont_ = &cont;
-    }
-
-    template <class Alloc>
-    MSTL_CONSTEXPR void alloc_proxy(Alloc&& _Al) {
-        container_proxy* const proxy = MSTL::unfancy(_Al.allocate(1));
-        MSTL::construct(proxy, this);
-        proxy_ = proxy;
-        proxy->cont_ = this;
-    }
-
-    template <class Alloc>
-    MSTL_CONSTEXPR void reset_proxy(Alloc&& old_alloc, Alloc&& new_alloc) {
-        container_proxy* const proxy = MSTL::unfancy(new_alloc.allocate(1));
-        MSTL::construct(proxy, this);
-        proxy->cont_ = this;
-        MSTL::delete_internal(old_alloc, MSTL::exchange(proxy_, proxy));
-    }
-
-private:
-    MSTL_CONSTEXPR void orphan_all() noexcept;
-};
-
-struct iterator_base {
-public:
-    MSTL_CONSTEXPR iterator_base() noexcept = default;
-    MSTL_CONSTEXPR iterator_base(const iterator_base& iter) noexcept {
-        *this = iter;
-    }
-    MSTL_CONSTEXPR iterator_base& operator =(const iterator_base& iter) noexcept {
-        if (proxy_ == iter.proxy_) return *this;
-
-        if (iter.proxy_) adopt_aux(iter.proxy_->cont_);
-        else orphan_this();
-        return *this;
-    }
-
-    MSTL_CONSTEXPR ~iterator_base() noexcept {
-        orphan_this();
-    }
-
-    MSTL_CONSTEXPR void adopt(const container_base* cont) noexcept {
-        adopt_aux(cont);
-    }
-    MSTL_CONSTEXPR const container_base* get_container() const noexcept {
-        return proxy_ ? proxy_->cont_ : nullptr;
-    }
-
-    mutable container_proxy* proxy_ = nullptr;
-    mutable iterator_base* next_iter_ = nullptr;
-
-private:
-    MSTL_CONSTEXPR void adopt_aux(const container_base* cont) noexcept {
-        if (!cont) {
-            orphan_this();
-            return;
-        }
-
-        container_proxy* proxy = cont->proxy_;
-        if (proxy_ != proxy) {
-            if (proxy_) {
-                orphan_this();
-            }
-            next_iter_ = proxy->first_iter_;
-            proxy->first_iter_ = this;
-            proxy_ = proxy;
-        }
-    }
-
-    MSTL_CONSTEXPR void orphan_this() noexcept {
-        if (!proxy_) return;
-
-        iterator_base** next = &proxy_->first_iter_;
-        while (*next && *next != this) {
-            next = &(*next)->next_iter_;
-        }
-        MSTL_DEBUG_VERIFY__(*next, "iterator proxy invalid!");
-        *next = next_iter_;
-        proxy_ = nullptr;
-    }
-};
-
-MSTL_CONSTEXPR void container_base::orphan_all() noexcept {
-    if (!proxy_)  return;
-
-    for (iterator_base* next = MSTL::exchange(proxy_->first_iter_, nullptr); next; next = next->next_iter_)
-        next->proxy_ = nullptr;
-}
-
-
 template <typename, typename...>
 struct map_key_extract {
     static constexpr bool extractable = false;
@@ -662,6 +547,543 @@ struct map_key_extract<Key, pair<First, Second>> {
         return pir.first;
     }
 };
+
+
+template <class T>
+struct default_deleter {
+    void operator()(T* p) const noexcept { delete p; }
+};
+template <class T>
+struct default_deleter<T[]> {
+    void operator()(T* p) const { delete[] p; }
+};
+
+
+template <class T, class Deleter = default_deleter<T>>
+class unique_ptr {
+private:
+    T* ptr_;
+    MSTL_NO_UNIADS Deleter deleter_;
+
+public:
+    using element_type  = T;
+    using pointer       = T*;
+    using deleter_type  = Deleter;
+    using self          = unique_ptr<T, Deleter>;
+
+    unique_ptr(nullptr_t = nullptr) noexcept : ptr_(nullptr) {}
+    explicit unique_ptr(T* p) noexcept : ptr_(p) {}
+
+    template <class U, class = enable_if_t<is_convertible_v<U*, T*>>>
+    unique_ptr(unique_ptr<U, Deleter>&& x) noexcept : ptr_(x.ptr_) {
+        x.ptr_ = nullptr;
+    }
+
+    unique_ptr(self const&) = delete;
+    self& operator =(self const&) = delete;
+
+    unique_ptr(self&& x) noexcept : ptr_(x.ptr_) {
+        x.ptr_ = nullptr;
+    }
+    self& operator =(self&& x) noexcept {
+        if (this != &x) MSTL_UNLIKELY {
+            if (ptr_) deleter_(ptr_);
+            ptr_ = MSTL::exchange(x.ptr_, nullptr);
+        }
+        return *this;
+    }
+
+    ~unique_ptr() noexcept {
+        if (ptr_) deleter_(ptr_);
+    }
+
+    MSTL_NODISCARD T* get() const noexcept {
+        return ptr_;
+    }
+    MSTL_NODISCARD T* operator ->() const noexcept {
+        return ptr_;
+    }
+    MSTL_NODISCARD add_lvalue_reference_t<T> operator *() const noexcept {
+        return *ptr_;
+    }
+    MSTL_NODISCARD Deleter get_deleter() const noexcept {
+        return deleter_;
+    }
+
+    T* release() noexcept {
+        T* tmp = ptr_;
+        ptr_ = nullptr;
+        return tmp;
+    }
+    void reset(T* ptr = nullptr) noexcept {
+        if (ptr_) deleter_(ptr_);
+        ptr_ = ptr;
+    }
+
+    void swap(unique_ptr& x) noexcept {
+        MSTL::swap(ptr_, x.ptr_);
+    }
+
+    explicit operator bool() const noexcept {
+        return ptr_ != nullptr;
+    }
+    bool operator ==(const self& rh) const noexcept {
+        return ptr_ == rh.ptr_;
+    }
+    bool operator !=(const self& rh) const noexcept {
+        return ptr_ != rh.ptr_;
+    }
+    bool operator <(const self& rh) const noexcept {
+        return ptr_ < rh.ptr_;
+    }
+    bool operator >(const self& rh) const noexcept {
+        return ptr_ > rh.ptr_;
+    }
+    bool operator <=(const self& rh) const noexcept {
+        return ptr_ <= rh.ptr_;
+    }
+    bool operator >=(const self& rh) const noexcept {
+        return ptr_ >= rh.ptr_;
+    }
+};
+
+template <class T, class Deleter>
+class unique_ptr<T[], Deleter> : public unique_ptr<T, Deleter> {
+    using unique_ptr<T, Deleter>::unique_ptr;
+
+    add_lvalue_reference_t<T> operator [](size_t idx) {
+        return this->get()[idx];
+    }
+};
+
+template <class T, class... Args, enable_if_t<!is_unbounded_array_v<T>, int> = 0>
+unique_ptr<T> make_unique(Args&&... args) {
+    return unique_ptr<T>(new T(MSTL::forward<Args>(args)...));
+}
+template <class T, enable_if_t<is_unbounded_array_v<T>, int> = 0>
+unique_ptr<T> make_unique(size_t len) {
+    return unique_ptr<T>(new remove_extent_t<T>[len]());
+}
+
+template <class T, enable_if_t<!is_unbounded_array_v<T>, int> = 0>
+unique_ptr<T> make_unique_for_overwrite() {
+    return unique_ptr<T>(new T);
+}
+template <class T, enable_if_t<is_unbounded_array_v<T>, int> = 0>
+unique_ptr<T> make_unique_for_overwrite(size_t len) {
+    return unique_ptr<T>(new remove_extent_t<T>[len]);
+}
+
+
+struct smart_ptr_counter {
+    std::atomic<long> count_;
+
+    smart_ptr_counter() noexcept : count_(1) {}
+    smart_ptr_counter(smart_ptr_counter&&) = delete;
+    virtual ~smart_ptr_counter() = default;
+
+    void incref() noexcept {
+        count_.fetch_add(1, std::memory_order::relaxed);
+    }
+    void decref() noexcept {
+        if (count_.fetch_sub(1, std::memory_order::relaxed) == 1) {
+            delete this;
+        }
+    }
+    long countref() const noexcept {
+        return count_.load(std::memory_order::relaxed);
+    }
+};
+
+template <class T, class Deleter>
+struct smart_ptr_counter_impl final : smart_ptr_counter {
+    T* ptr_;
+    MSTL_NO_UNIADS Deleter deleter_;
+
+    explicit smart_ptr_counter_impl(T* ptr) noexcept : ptr_(ptr) {}
+
+    explicit smart_ptr_counter_impl(T* ptr, Deleter deleter) noexcept
+        : ptr_(ptr), deleter_(MSTL::move(deleter)) {}
+
+    ~smart_ptr_counter_impl() noexcept override {
+        deleter_(ptr_);
+    }
+};
+
+template <class T, class Deleter>
+struct smart_ptr_counter_impl_fused final : smart_ptr_counter {
+    T* ptr_;
+    void* mem_;
+    MSTL_NO_UNIADS Deleter deleter_;
+
+    explicit smart_ptr_counter_impl_fused(T* ptr, void* mem, Deleter deleter) noexcept
+        : ptr_(ptr), mem_(mem), deleter_(MSTL::move(deleter)) {}
+
+    ~smart_ptr_counter_impl_fused() noexcept {
+        deleter_(ptr_);
+    }
+
+    void operator delete(void* mem) noexcept {
+#if MSTL_VERSION_17__
+        ::operator delete(mem, std::align_val_t(MSTL::max(alignof(T), alignof(smart_ptr_counter_impl_fused))));
+#else
+        ::operator delete(mem);
+#endif
+    }
+};
+
+template <typename T>
+struct enable_shared_from;
+template <class T>
+class shared_ptr;
+
+template <class T, enable_if_t<is_base_of_v<enable_shared_from<T>, T>, int>>
+void __setup_enable_shared_from(T* ptr, smart_ptr_counter* owner);
+template <class T>
+shared_ptr<T> __make_shared_fused(T* ptr, smart_ptr_counter* owner) noexcept {
+    return shared_ptr<T>(ptr, owner);
+}
+
+template <class T>
+class shared_ptr {
+private:
+    T* ptr_;
+    smart_ptr_counter* owner_;
+
+    explicit shared_ptr(T* ptr, smart_ptr_counter* owner) noexcept : ptr_(ptr), owner_(owner) {}
+
+    template <class>
+    friend class shared_ptr;
+
+    template <typename U>
+    friend shared_ptr<U> __make_shared_fused(U*, smart_ptr_counter*) noexcept;
+
+public:
+    using element_type  = T;
+    using pointer       = T*;
+    using self          = shared_ptr<T>;
+
+    shared_ptr(std::nullptr_t = nullptr) noexcept : owner_(nullptr) {}
+
+    template <class U, enable_if_t<is_convertible_v<U*, T*>, int> = 0>
+    explicit shared_ptr(U* ptr) 
+        : ptr_(ptr), owner_(new smart_ptr_counter_impl<U, default_deleter<U>>(ptr)) {
+        MSTL::__setup_enable_shared_from(ptr_, owner_);
+    }
+
+    template <class U, class Deleter, enable_if_t<is_convertible_v<U*, T*>, int> = 0>
+    explicit shared_ptr(U* ptr, Deleter deleter)
+        : ptr_(ptr), owner_(new smart_ptr_counter_impl<U, Deleter>(ptr, MSTL::move(deleter))) {
+        MSTL::__setup_enable_shared_from(ptr_, owner_);
+    }
+
+    template <class U, class Deleter, enable_if_t<is_convertible_v<U*, T*>, int> = 0>
+    explicit shared_ptr(unique_ptr<U, Deleter>&& ptr)
+        : shared_ptr(ptr.release(), ptr.get_deleter()) {}
+
+    shared_ptr(const self& x) noexcept : ptr_(x.ptr_), owner_(x.owner_) {
+        if (owner_) owner_->incref();
+    }
+    self& operator =(const self& x) noexcept {
+        if (MSTL::addressof(x) == this) return *this;
+        if (owner_) owner_->decref();
+        ptr_ = x.ptr_;
+        owner_ = x.owner_;
+        if (owner_) owner_->incref();
+        return *this;
+    }
+    template <class U, enable_if_t<is_convertible_v<U*, T*>, int> = 0>
+    shared_ptr(const shared_ptr<U>& x) noexcept : ptr_(x.ptr_), owner_(x.owner_) {
+        if (owner_) owner_->incref();
+    }
+
+    shared_ptr(self&& x) noexcept : ptr_(x.ptr_), owner_(x.owner_) {
+        x.ptr_ = nullptr;
+        x.owner_ = nullptr;
+    }
+    self& operator =(self&& x) noexcept {
+        if (MSTL::addressof(x) == this) return *this;
+        if (owner_) owner_->decref();
+        ptr_ = x.ptr_;
+        owner_ = x.owner_;
+        x.ptr_ = nullptr;
+        x.owner_ = nullptr;
+        return *this;
+    }
+    template <class U, enable_if_t<is_convertible_v<U*, T*>, int> = 0>
+    shared_ptr(shared_ptr<U>&& x) noexcept : ptr_(x.ptr_), owner_(x.owner_) {
+        x.ptr_ = nullptr;
+        x.owner_ = nullptr;
+    }
+
+    template <class U>
+    shared_ptr(const shared_ptr<U>& x, T* ptr) noexcept : ptr_(ptr), owner_(x.owner_) {
+        if (owner_) owner_->incref();
+    }
+    template <class U>
+    shared_ptr(shared_ptr<U>&& x, T* ptr) noexcept : ptr_(ptr), owner_(x.owner_) {
+        x.ptr_ = nullptr;
+        x.owner_ = nullptr;
+    }
+
+    template <class U, enable_if_t<is_convertible_v<U*, T*>, int> = 0>
+    shared_ptr& operator =(const shared_ptr<U>& x) noexcept {
+        if (MSTL::addressof(x) == this) return *this;
+        if (owner_) owner_->decref();
+        ptr_ = x.ptr_;
+        owner_ = x.owner_;
+        if (owner_) owner_->incref();
+        return *this;
+    }
+    template <class U, enable_if_t<is_convertible_v<U*, T*>, int> = 0>
+    shared_ptr& operator =(shared_ptr<U>&& x) noexcept {
+        if (MSTL::addressof(x) == this) return *this;
+        if (owner_) owner_->decref();
+        ptr_ = x.ptr_;
+        owner_ = x.owner_;
+        x.ptr_ = nullptr;
+        x.owner_ = nullptr;
+        return *this;
+    }
+
+    ~shared_ptr() noexcept {
+        if (owner_) owner_->decref();
+    }
+
+    void reset() noexcept {
+        if (owner_) owner_->decref();
+        owner_ = nullptr;
+        ptr_ = nullptr;
+    }
+    template <class U>
+    void reset(U* ptr) {
+        if (owner_) owner_->decref();
+        ptr_ = nullptr;
+        owner_ = nullptr;
+        ptr_ = ptr;
+        owner_ = new smart_ptr_counter_impl<U, default_deleter<U>>(ptr);
+        MSTL::__setup_enable_shared_from(ptr_, owner_);
+    }
+    template <class U, class Deleter>
+    void reset(U* ptr, Deleter deleter) {
+        if (owner_) owner_->decref();
+        ptr_ = nullptr;
+        owner_ = nullptr;
+        ptr_ = ptr;
+        owner_ = new smart_ptr_counter_impl<U, Deleter>(ptr, MSTL::move(deleter));
+        MSTL::__setup_enable_shared_from(ptr_, owner_);
+    }
+
+    long use_count() noexcept {
+        return owner_ ? owner_->countref() : 0;
+    }
+    bool unique() noexcept {
+        return owner_ ? owner_->countref() == 1 : true;
+    }
+
+    void swap(shared_ptr& x) noexcept {
+        if (MSTL::addressof(x) == this) return;
+        MSTL::swap(ptr_, x.ptr_);
+        MSTL::swap(owner_, x.owner_);
+    }
+
+    MSTL_NODISCARD T* get() const noexcept {
+        return ptr_;
+    }
+    MSTL_NODISCARD T* operator ->() const noexcept {
+        return ptr_;
+    }
+    MSTL_NODISCARD add_lvalue_reference_t<T> operator *() const noexcept {
+        return *ptr_;
+    }
+
+    MSTL_NODISCARD explicit operator bool() const noexcept {
+        return ptr_ != nullptr;
+    }
+    template <class U>
+    MSTL_NODISCARD bool owner_equal(shared_ptr<U> const& rh) const noexcept {
+        return owner_ == rh.owner_;
+    }
+    template <class U>
+    MSTL_NODISCARD bool owner_before(shared_ptr<U> const& rh) const noexcept {
+        return owner_ < rh.owner_;
+    }
+};
+template <typename T, typename U>
+inline MSTL_NODISCARD bool operator ==(const shared_ptr<T>& lh, const shared_ptr<U>& rh) noexcept {
+    return lh.owner_equal(rh);
+}
+template <typename T, typename U>
+inline MSTL_NODISCARD bool operator !=(const shared_ptr<T>& lh, const shared_ptr<U>& rh) noexcept {
+    return !(lh == rh);
+}
+template <typename T, typename U>
+inline MSTL_NODISCARD bool operator <(const shared_ptr<T>& lh, const shared_ptr<U>& rh) noexcept {
+    return lh.owner_before(rh);
+}
+template <typename T, typename U>
+inline MSTL_NODISCARD bool operator >(const shared_ptr<T>& lh, const shared_ptr<U>& rh) noexcept {
+    return rh < lh;
+}
+template <typename T, typename U>
+inline MSTL_NODISCARD bool operator <=(const shared_ptr<T>& lh, const shared_ptr<U>& rh) noexcept {
+    return !(lh > rh);
+}
+template <typename T, typename U>
+inline MSTL_NODISCARD bool operator >=(const shared_ptr<T>& lh, const shared_ptr<U>& rh) noexcept {
+    return !(lh < rh);
+}
+
+
+
+
+template <class T>
+struct shared_ptr<T[]> : shared_ptr<T> {
+    using shared_ptr<T>::shared_ptr;
+
+    add_lvalue_reference_t<T> operator [](size_t idx) {
+        return this->get()[idx];
+    }
+};
+
+
+template <class T>
+struct enable_shared_from {
+private:
+    smart_ptr_counter* owner_;
+
+protected:
+    enable_shared_from() noexcept : owner_(nullptr) {}
+
+    shared_ptr<T> shared_from_this() {
+        static_assert(is_base_of_v<enable_shared_from, T>, "shared from T requires derived class");
+        if (!owner_) Exception(MemoryError("smart pointer share failed."));
+        owner_->incref();
+        return (__make_shared_fused)(static_cast<T*>(this), owner_);
+    }
+
+    shared_ptr<T const> shared_from_this() const {
+        static_assert(is_base_of_v<enable_shared_from, T>, "shared from T requires derived class");
+        if (!owner_) Exception(MemoryError("smart pointer share failed."));
+        owner_->incref();
+        return (__make_shared_fused)(static_cast<T const*>(this), owner_);
+    }
+
+    template <class U>
+    friend void __set_enable_shared_from(enable_shared_from<U>*, smart_ptr_counter*);
+};
+
+template <class T>
+void __set_enable_shared_from(enable_shared_from<T>* ptr, smart_ptr_counter* owner) {
+    ptr->owner_ = owner;
+}
+
+template <class T, enable_if_t<is_base_of_v<enable_shared_from<T>, T>, int> = 0>
+void __setup_enable_shared_from(T* ptr, smart_ptr_counter* owner) {
+    (__set_enable_shared_from)(static_cast<enable_shared_from<T>*>(ptr), owner);
+}
+
+template <class T, enable_if_t<!is_base_of_v<enable_shared_from<T>, T>, int> = 0>
+void __setup_enable_shared_from(T*, smart_ptr_counter*) {}
+
+
+template <class T, class... Args, enable_if_t<!is_unbounded_array_v<T>, int> = 0>
+shared_ptr<T> make_shared(Args&&... args) {
+    auto const deleter = [](T* ptr) noexcept { ptr->~T(); };
+    using Counter = smart_ptr_counter_impl_fused<T, decltype(deleter)>;
+    constexpr size_t offset = MSTL::max(alignof(T), sizeof(Counter));
+    constexpr size_t align = MSTL::max(alignof(T), alignof(Counter));
+    constexpr size_t size = offset + sizeof(T);
+#if MSTL_VERSION_17__
+    void* mem = ::operator new(size, std::align_val_t(align));
+    Counter* counter = reinterpret_cast<Counter*>(mem);
+#else
+    void* mem = ::operator new(size + align);
+    Counter* counter = reinterpret_cast<Counter*>(reinterpret_cast<size_t>(mem) & align);
+#endif
+    T* object = reinterpret_cast<T*>(reinterpret_cast<char*>(counter) + offset);
+    MSTL_TRY__{
+        new (object) T(MSTL::forward<Args>(args)...);
+    }
+    MSTL_CATCH_UNWIND__{
+#if MSTL_VERSION_17__
+        ::operator delete(mem, std::align_val_t(align));
+#else
+        ::operator delete(mem);
+#endif
+        MSTL_EXEC_MEMORY__;
+    }
+    new (counter) Counter(object, mem, deleter);
+    __setup_enable_shared_from(object, counter);
+    return (__make_shared_fused)(object, counter);
+}
+
+template <class T, enable_if_t<!is_unbounded_array_v<T>, int> = 0>
+shared_ptr<T> make_shared_for_overwrite() {
+    auto const deleter = [](T* ptr) noexcept { ptr->~T(); };
+    using Counter = smart_ptr_counter_impl_fused<T, decltype(deleter)>;
+    constexpr size_t offset = MSTL::max(alignof(T), sizeof(Counter));
+    constexpr size_t align = MSTL::max(alignof(T), alignof(Counter));
+    constexpr size_t size = offset + sizeof(T);
+#if MSTL_VERSION_17__
+    void* mem = ::operator new(size, std::align_val_t(align));
+    Counter* counter = reinterpret_cast<Counter*>(mem);
+#else
+    void* mem = ::operator new(size + align);
+    Counter* counter = reinterpret_cast<Counter*>(reinterpret_cast<size_t>(mem) & align);
+#endif
+    T* object = reinterpret_cast<T*>(reinterpret_cast<char*>(counter) + offset);
+    MSTL_TRY__{
+        new (object) T;
+    }
+    MSTL_CATCH_UNWIND__{
+#if MSTL_VERSION_17__
+        ::operator delete(mem, std::align_val_t(align));
+#else
+        ::operator delete(mem);
+#endif
+        MSTL_EXEC_MEMORY__;
+    }
+    new (counter) Counter(object, mem, deleter);
+    __setup_enable_shared_from(object, counter);
+    return (__make_shared_fused)(object, counter);
+}
+
+template <class T, class... Args, enable_if_t<is_unbounded_array_v<T>, int> = 0>
+shared_ptr<T> make_shared(size_t len) {
+    using value = remove_extent_t<T>;
+    value* tmp = new value[len];
+    MSTL_TRY__{ return shared_ptr<T>(tmp); }
+    MSTL_CATCH_UNWIND_THROW_M__(delete[] tmp)
+}
+template <class T, enable_if_t<is_unbounded_array_v<T>, int> = 0>
+shared_ptr<T> make_shared_for_overwrite(size_t len) {
+    using value = remove_extent_t<T>;
+    value* tmp = new value[len];
+    MSTL_TRY__{ return shared_ptr<T>(tmp); }
+    MSTL_CATCH_UNWIND_THROW_M__(delete[] tmp)
+}
+
+
+template <typename T, typename U>
+shared_ptr<T> static_pointer_cast(const shared_ptr<U>& ptr) {
+    return shared_ptr<T>(ptr, static_cast<T*>(ptr.get()));
+}
+template <typename T, typename U>
+shared_ptr<T> const_pointer_cast(const shared_ptr<U>& ptr) {
+    return shared_ptr<T>(ptr, const_cast<T*>(ptr.get()));
+}
+template <typename T, typename U>
+shared_ptr<T> reinterpret_pointer_cast(const shared_ptr<U>& ptr) {
+    return shared_ptr<T>(ptr, reinterpret_cast<T*>(ptr.get()));
+}
+template <typename T, typename U>
+shared_ptr<T> dynamic_pointer_cast(const shared_ptr<U>& ptr) {
+    T* tmp = dynamic_cast<T*>(ptr.get());
+    if (tmp != nullptr) return shared_ptr<T>(ptr, tmp);
+    else return nullptr;
+    
+}
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_MEMORY_HPP__

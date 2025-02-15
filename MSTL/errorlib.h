@@ -64,6 +64,7 @@ inline void Exception(bool _boolean, const Error& _err = Error()) {
 MSTL_NORETURN void Exit(bool _abort = false, void(*_func)(void) = nullptr);
 
 #define MSTL_EXEC_MEMORY__ Exception(MemoryError());
+#define MSTL_EXEC_UNWIND__ throw;
 
 #define MSTL_TRY__ try
 #define MSTL_CATCH_UNWIND__ catch(...)
