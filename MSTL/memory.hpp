@@ -363,9 +363,95 @@ struct allocator_traits {
 };
 
 
+template <size_t Align>
+MSTL_DECLALLOC MSTL_CONSTEXPR void* allocate(const size_t bytes) {
+    if (bytes == 0) return nullptr;
+#if MSTL_VERSION_20__
+    if (MSTL::is_constant_evaluated()) {
+        return ::operator new(bytes);
+    }
+#endif // MSTL_VERSION_20__
+
+#ifdef MSTL_VERSION_17__
+    if constexpr (Align > MEMORY_ALIGN_THRESHHOLD) {
+        size_t align = MSTL::max(Align, MEMORY_BIG_ALLOC_ALIGN);
+#if defined(MSTL_COMPILE_CLANG__) && defined(MSTL_VERSION_20__)
+        if (MSTL::is_constant_evaluated()) {
+            return ::operator new(bytes);
+        }
+        else
+#endif
+        {
+            return ::operator new(bytes, std::align_val_t{ align });
+        }
+    }
+    else
+#endif // MSTL_VERSION_17__
+    {
+        if (bytes >= MEMORY_BIG_ALLOC_THRESHHOLD) {
+            const void* raw_ptr = ::operator new(MEMORY_NO_USER_SIZE + bytes);
+            const uintptr_t holder = reinterpret_cast<uintptr_t>(raw_ptr);
+            MSTL_DEBUG_VERIFY__(holder != 0, "invalid argument");
+            void* const ptr = reinterpret_cast<void*>(
+                (holder + MEMORY_NO_USER_SIZE) & ~(MEMORY_BIG_ALLOC_ALIGN - 1)); // align the memory address
+            static_cast<uintptr_t*>(ptr)[-1] = holder;
+#ifdef MSTL_STATE_DEBUG__
+            static_cast<uintptr_t*>(ptr)[-2] = MEMORY_BIG_ALLOC_SENTINEL;
+#endif
+            return ptr;
+        }
+        else {
+            return ::operator new(bytes);
+        }
+    }
+}
+
+template <size_t Align>
+MSTL_CONSTEXPR void deallocate(void* ptr, size_t bytes) noexcept {
+#if MSTL_VERSION_20__
+    if (MSTL::is_constant_evaluated()) {
+        ::operator delete(ptr);
+        return;
+    }
+#endif // MSTL_VERSION_20__
+
+#ifdef MSTL_VERSION_17__
+    if constexpr (Align > MEMORY_ALIGN_THRESHHOLD) {
+        size_t align = MSTL::max(Align, MEMORY_BIG_ALLOC_ALIGN);
+        ::operator delete(ptr, bytes, std::align_val_t{ align });
+    }
+    else
+#endif // MSTL_VERSION_17__
+    {
+        if (bytes >= MEMORY_BIG_ALLOC_THRESHHOLD) {
+            bytes += MEMORY_NO_USER_SIZE;
+            const uintptr_t* const user_ptr = static_cast<uintptr_t*>(ptr);
+            const uintptr_t holder = user_ptr[-1];
+            MSTL_DEBUG_VERIFY__(user_ptr[-2] == MEMORY_BIG_ALLOC_SENTINEL, "invalid sentinel.");
+#ifdef MSTL_STATE_DEBUG__
+            constexpr uintptr_t min_shift = 2 * sizeof(void*);
+#else
+            constexpr uintptr_t min_shift = sizeof(void*);
+#endif // MSTL_STATE_DEBUG__
+            const uintptr_t shift = reinterpret_cast<uintptr_t>(ptr) - holder;
+            MSTL_DEBUG_VERIFY__(shift >= min_shift && shift <= MEMORY_NO_USER_SIZE, "invalid argument.");
+            ptr = reinterpret_cast<void*>(holder);
+        }
+        ::operator delete(ptr, bytes);
+    }
+}
+
+
+template <typename T>
+constexpr size_t FINAL_ALIGN_SIZE = MSTL::max(alignof(T), MEMORY_ALIGN_THRESHHOLD);
+
+
 template <typename T>
 class standard_allocator {
     static_assert(is_allocable_v<T>, "allocator can`t alloc void, reference, function or const type.");
+
+private:
+    std::allocator<T> alloc_;
 
 public:
     using value_type = T;
@@ -377,10 +463,6 @@ public:
     using difference_type = ptrdiff_t;
     using self = standard_allocator<T>;
 
-private:
-    std::allocator<T> alloc;
-
-public:
     template <typename U>
     struct rebind {
         using other = standard_allocator<U>;
@@ -393,27 +475,35 @@ public:
     MSTL_CONSTEXPR self& operator =(const self&) noexcept = default;
 
     MSTL_ALLOCNODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(const size_type n) {
-        return 0 == n ? 0 : alloc.allocate(n * sizeof(value_type));
+        //static constexpr size_t value_size = sizeof(value_type);
+        //static_assert(value_size > 0, "value type must be complete before allocation called.");
+        //const size_t alloc_size = value_size * n;
+        //MSTL_DEBUG_VERIFY__(alloc_size <= INT_MAX_SIZE, "allocation will cause memory overflow.");
+        //return static_cast<T*>(MSTL::allocate<FINAL_ALIGN_SIZE<T>>(alloc_size));
+        return alloc_.allocate(n);
     }
-    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(void) {
-        return alloc.allocate(sizeof(value_type));
-    }
-    MSTL_CONSTEXPR void deallocate(pointer p) noexcept {
-        alloc.deallocate(p, sizeof(value_type));
+    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate() {
+        return this->allocate(1);
     }
     MSTL_CONSTEXPR void deallocate(pointer p, const size_type n) noexcept {
-        alloc.deallocate(p, n * sizeof(value_type));
+        //static constexpr size_t value_size = sizeof(value_type);
+        //MSTL_DEBUG_VERIFY__(p != nullptr || n == 0, "pointer invalid.");
+        //MSTL::deallocate<FINAL_ALIGN_SIZE<T>>(p, n * value_size);
+        alloc_.deallocate(p, n);
+    }
+    MSTL_CONSTEXPR void deallocate(pointer p) noexcept {
+        this->deallocate(p, 1);
     }
 };
 template <typename T, typename U>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(
     const standard_allocator<T>& lh, const standard_allocator<U>& rh) noexcept {
-    return lh.alloc == rh.alloc;
+    return true;
 }
 template <typename T, typename U>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(
     const standard_allocator<T>& lh, const standard_allocator<U>& rh) noexcept {
-    return lh.alloc != rh.alloc;
+    return false;
 }
 
 template <typename T>
@@ -574,7 +664,7 @@ public:
     unique_ptr(nullptr_t = nullptr) noexcept : ptr_(nullptr) {}
     explicit unique_ptr(T* p) noexcept : ptr_(p) {}
 
-    template <class U, class = enable_if_t<is_convertible_v<U*, T*>>>
+    template <class U, enable_if_t<is_convertible_v<U*, T*>, int> = 0>
     unique_ptr(unique_ptr<U, Deleter>&& x) noexcept : ptr_(x.ptr_) {
         x.ptr_ = nullptr;
     }
@@ -667,16 +757,16 @@ unique_ptr<T> make_unique(size_t len) {
 
 template <class T, enable_if_t<!is_unbounded_array_v<T>, int> = 0>
 unique_ptr<T> make_unique_for_overwrite() {
-    return unique_ptr<T>(new T);
+    return unique_ptr<T>(new T());
 }
 template <class T, enable_if_t<is_unbounded_array_v<T>, int> = 0>
 unique_ptr<T> make_unique_for_overwrite(size_t len) {
-    return unique_ptr<T>(new remove_extent_t<T>[len]);
+    return unique_ptr<T>(new remove_extent_t<T>[len]());
 }
 
 
 struct smart_ptr_counter {
-    std::atomic<long> count_;
+    std::atomic_ulong count_;
 
     smart_ptr_counter() noexcept : count_(1) {}
     smart_ptr_counter(smart_ptr_counter&&) = delete;

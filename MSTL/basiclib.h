@@ -3,10 +3,10 @@
 #include <iostream>
 #include <assert.h>
 
-#if defined(WIN32) || defined(_WIN32) || defined(_WIN32_)
+#if defined(WIN32) || defined(_WIN32) || defined(_WIN32_) || defined(_M_X86)
 	#define MSTL_PLATFORM_WINDOWS__		1
 	#define MSTL_PLATFORM_WIN32__		1
-	#if defined(WIN64) || defined(_WIN64) || defined(_WIN64_)
+	#if defined(WIN64) || defined(_WIN64) || defined(_WIN64_) || defined(_M_X64)
 		#define MSTL_PLATFORM_WIN64__	1
 	#endif // win64
 #elif defined(__linux__) // not windows
@@ -16,8 +16,6 @@
 	#elif (__WORDSIZE == 32) || (__SIZEOF_POINTER__ == 4)
 		#define MSTL_PLATFORM_LINUX32__ 1
 	#endif
-#elif defined(__APPLE__) || defined(TARGET_OS_IPHONE) || defined(TARGET_IPHONE_SIMULATOR) || defined(TARGET_OS_MAC)
-	#define MSTL_PLATFORM_IOS__			1
 #else
 	#define MSTL_PLATFORM_UNSUPPORT__	1
 #endif
@@ -52,10 +50,10 @@
 #endif
 
 
-#if defined(MSTL_PLATFORM_WIN64__) || defined(MSTL_PLATFORM_LINUX64__)
+#if defined(MSTL_PLATFORM_WIN64__) || defined(MSTL_PLATFORM_LINUX64__) || defined(__amd64__) || defined(__x86_64__) || defined(__aarch64__)
 	#define MSTL_DATA_BUS_WIDTH_64__	1
 #endif
-#if defined(MSTL_PLATFORM_WIN32__) || defined(MSTL_PLATFORM_LINUX32__)
+#if defined(MSTL_PLATFORM_WIN32__) || defined(MSTL_PLATFORM_LINUX32__) || defined(__i386__)
 	#define MSTL_DATA_BUS_WIDTH_32__	1
 #endif
 
@@ -196,7 +194,7 @@
 #endif
 
 #if defined(MSTL_COMPILE_MSVC__)
-	#define MSTL_LONG_LONG_TYPE __int64
+	#define MSTL_LLT __int64
 #else
 	#define MSTL_LONG_LONG_TYPE long long
 #endif
@@ -212,23 +210,47 @@
 MSTL_BEGIN_NAMESPACE__
 
 using byte_t	= unsigned char;
-using size_t	= unsigned MSTL_LONG_LONG_TYPE;
-using ptrdiff_t = MSTL_LONG_LONG_TYPE;
-using intptr_t	= MSTL_LONG_LONG_TYPE;
+using size_t	= unsigned MSTL_LLT;
+using ptrdiff_t = MSTL_LLT;
+using intptr_t	= MSTL_LLT;
 
 using int8_t	= signed char;
 using int16_t	= short;
 using int32_t	= int;
-using int64_t	= MSTL_LONG_LONG_TYPE;
+using int64_t	= MSTL_LLT;
 using uint8_t	= unsigned char;
 using uint16_t	= unsigned short;
 using uint32_t	= unsigned int;
-using uint64_t	= unsigned MSTL_LONG_LONG_TYPE;
+using uint64_t	= unsigned MSTL_LLT;
+
+#ifdef MSTL_DATA_BUS_WIDTH_64__
+using uintptr_t = unsigned MSTL_LLT;
+#else
+using uintptr_t = unsigned int;
+#endif
 
 using cstring_t = const char*;
 using ccstring_t = const char* const;
 
-MSTL_CONSTEXPR size_t MSTL_SPLIT_LENGTH = 15;
+
+inline constexpr size_t INT_MAX_SIZE = static_cast<size_t>(-1);
+inline constexpr uint32_t MSTL_SPLIT_LENGTH = 15U;
+
+
+inline constexpr size_t MEMORY_ALIGN_THRESHHOLD = 16ULL;
+inline constexpr size_t MEMORY_BIG_ALLOC_ALIGN = 32ULL;
+inline constexpr size_t MEMORY_BIG_ALLOC_THRESHHOLD = 4096ULL;
+#ifdef MSTL_STATE_DEBUG__
+inline constexpr size_t MEMORY_NO_USER_SIZE = 2 * sizeof(void*) + MEMORY_BIG_ALLOC_ALIGN - 1;
+#else
+inline constexpr size_t NO_USER_SIZE = sizeof(void*) + MEMORY_BIG_ALLOC_ALIGN_THRESHHOLD - 1;
+#endif
+#ifdef MSTL_DATA_BUS_WIDTH_64__
+inline constexpr size_t MEMORY_BIG_ALLOC_SENTINEL = 0xFAFAFAFAFAFAFAFAULL;
+#else
+inline constexpr size_t MEMORY_BIG_ALLOC_SENTINEL = 0xFAFAFAFAUL;
+#endif
+
 
 void* memcpy(void*, const void*, size_t);
 wchar_t* wmemcpy(wchar_t*, const wchar_t*, size_t);
@@ -253,7 +275,7 @@ int strcmp(const char*, const char*);
 const char* strstr(const char*, const char*);
 char* memstr(char*, int, char*);
 
-void split_line(std::ostream& = std::cout, size_t = MSTL_SPLIT_LENGTH, char = '-');
+void split_line(std::ostream& = std::cout, uint32_t = MSTL_SPLIT_LENGTH, char = '-');
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_BASICLIB_H__

@@ -107,8 +107,6 @@ private:
     size_type alloc_size_ = 0;
     MSTL_NO_UNIADS allocator_type alloc_{};
 
-    static constexpr uint32_t STRING_BUFFER_THRESHHOLD = 32u;
-
     inline MSTL_CONSTEXPR void range_check(const size_type n) const noexcept {
         MSTL_DEBUG_VERIFY__(n < size_, "basic string index out of ranges.");
     }
@@ -127,7 +125,7 @@ private:
         requires(input_iterator<Iterator>)
     MSTL_CONSTEXPR void construct_from_iter(Iterator first, Iterator last) {
         size_type n = MSTL::distance(first, last);
-        const size_type init_size = MSTL::max(static_cast<size_type>(STRING_BUFFER_THRESHHOLD), n + 1);
+        const size_type init_size = MSTL::max(static_cast<size_type>(MEMORY_ALIGN_THRESHHOLD), n + 1);
         MSTL_TRY__{
             data_ = alloc_.allocate(init_size);
             size_ = n;
@@ -141,7 +139,7 @@ private:
         requires(forward_iterator<Iterator>)
     MSTL_CONSTEXPR void construct_from_iter(Iterator first, Iterator last) {
         const size_type n = MSTL::distance(first, last);
-        const size_type init_size = MSTL::max(static_cast<size_type>(STRING_BUFFER_THRESHHOLD), n + 1);
+        const size_type init_size = MSTL::max(static_cast<size_type>(MEMORY_ALIGN_THRESHHOLD), n + 1);
         MSTL_TRY__{
             data_ = alloc_.allocate(init_size);
             size_ = n;
@@ -152,7 +150,7 @@ private:
     }
 
     MSTL_CONSTEXPR void construct_from_ptr(const_pointer str, size_type position, size_type n) {
-        const size_type init_size = MSTL::max(static_cast<size_type>(STRING_BUFFER_THRESHHOLD), n + 1);
+        const size_type init_size = MSTL::max(static_cast<size_type>(MEMORY_ALIGN_THRESHHOLD), n + 1);
         data_ = alloc_.allocate(init_size);
         traits_type::copy(data_, str + position, n);
         size_ = n;
@@ -175,13 +173,13 @@ private:
                 reallocate(diff);
             pointer raw_ptr = &*first;
             traits_type::move(raw_ptr + n2, raw_ptr + n1, end() - (first + n1));
-            traits_type::fill(raw_ptr, chr, n2);
+            traits_type::assign(raw_ptr, n2, chr);
             size_ += diff;
         }
         else {
             pointer raw_ptr = &*first;
             traits_type::move(raw_ptr + n2, raw_ptr + n1, end() - (first + n1));
-            traits_type::fill(raw_ptr, chr, n2);
+            traits_type::assign(raw_ptr, n2, chr);
             size_ -= (n1 - n2);
         }
         return *this;
@@ -229,7 +227,7 @@ private:
         const size_t new_cap = MSTL::max(old_cap + n, old_cap + (old_cap >> 1));
         pointer new_buffer = alloc_.allocate(new_cap);
         pointer end1 = traits_type::move(new_buffer, data_, diff) + diff;
-        pointer end2 = traits_type::fill(end1, chr, n) + n;
+        pointer end2 = traits_type::assign(end1, n, chr) + n;
         traits_type::move(end2, data_ + diff, size_ - diff);
         alloc_.deallocate(data_, old_cap);
         data_ = new_buffer;
@@ -256,7 +254,7 @@ private:
 public:
     MSTL_CONSTEXPR basic_string() {
         MSTL_TRY__{
-            data_ = alloc_.allocate(static_cast<size_type>(STRING_BUFFER_THRESHHOLD));
+            data_ = alloc_.allocate(static_cast<size_type>(MEMORY_ALIGN_THRESHHOLD));
             size_ = 0;
             alloc_size_ = 0;
         }
@@ -264,9 +262,9 @@ public:
     }
 
     MSTL_CONSTEXPR basic_string(size_type n, value_type chr) : data_(nullptr), size_(0), alloc_size_(0) {
-        const size_type init_size = MSTL::max(static_cast<size_type>(STRING_BUFFER_THRESHHOLD), n + 1);
+        const size_type init_size = MSTL::max(static_cast<size_type>(MEMORY_ALIGN_THRESHHOLD), n + 1);
         data_ = alloc_.allocate(init_size);
-        traits_type::fill(data_, chr, n);
+        traits_type::assign(data_, n, chr);
         size_ = n;
         alloc_size_ = init_size;
     }
@@ -293,11 +291,11 @@ public:
 
     MSTL_CONSTEXPR basic_string(self&& str) noexcept
         : data_(MSTL::move(str.data_)), size_(str.size_), alloc_size_(str.alloc_size_) {
-        str.set_empty();
+        str.destroy_buffer();
     }
     MSTL_CONSTEXPR self& operator =(self&& str) noexcept {
         if (MSTL::addressof(str) == this) return *this;
-        destroy_buffer();
+        clear();
         swap(str);
         return *this;
     }
@@ -370,11 +368,11 @@ public:
     }
 
     MSTL_CONSTEXPR reference operator [](const size_type n) {
-        if (n == size_) *(data_ + n) = value_type();
+        MSTL_DEBUG_VERIFY__(n <= size_, "basic string index out of range.");
         return *(data_ + n);
     }
     MSTL_CONSTEXPR const_reference operator [](const size_type n) const {
-        if (n == size_) *(data_ + n) = value_type();
+        MSTL_DEBUG_VERIFY__(n <= size_, "basic string index out of range.");
         return *(data_ + n);
     }
 
@@ -421,12 +419,12 @@ public:
         if (alloc_size_ - size_ < n)
             return reallocate_and_fill(position, n, chr);
         if (position == end()) {
-            traits_type::fill(end(), chr, n);
+            traits_type::assign(end(), n, chr);
             size_ += n;
             return position;
         }
         traits_type::move(position + n, position, n);
-        traits_type::fill(position, chr, n);
+        traits_type::assign(position, n, chr);
         size_ += n;
         return position;
     }
@@ -459,7 +457,7 @@ public:
         MSTL_DEBUG_VERIFY__(size_ + n < max_size(), "");
         if (alloc_size_ - size_ < n)
             reallocate(n);
-        traits_type::fill(data_ + size_, chr, n);
+        traits_type::assign(data_ + size_, n, chr);
         size_ += n;
         return *this;
     }
@@ -473,7 +471,23 @@ public:
         return *this;
     }
     MSTL_CONSTEXPR self& append(const self& str) { return append(str, 0, str.size_); }
-    MSTL_CONSTEXPR self& append(const self& str, size_type position) { return append(str, position, str.size_ - position); }
+    MSTL_CONSTEXPR self& append(const self& str, size_type position) {
+        return append(str, position, str.size_ - position);
+    }
+
+    MSTL_CONSTEXPR self& append(self&& str, size_type position, size_type n) {
+        MSTL_DEBUG_VERIFY__(size_ + n < max_size(), "");
+        if (n == 0) return *this;
+        if (alloc_size_ - size_ < n) reallocate(n);
+        traits_type::move(data_ + size_, str.data_ + position, n);
+        size_ += n;
+        str.destroy_buffer();
+        return *this;
+    }
+    MSTL_CONSTEXPR self& append(self&& str) { return append(MSTL::move(str), 0, str.size_); }
+    MSTL_CONSTEXPR self& append(self&& str, size_type position) {
+        return append(MSTL::move(str), position, str.size_ - position);
+    }
 
     MSTL_CONSTEXPR self& append(const_pointer str, size_type n) {
         MSTL_DEBUG_VERIFY__(size_ + n < max_size(), "");
@@ -530,7 +544,10 @@ public:
     }
     MSTL_CONSTEXPR void resize(size_type count) { resize(count, value_type()); }
 
-    MSTL_CONSTEXPR void clear() noexcept { size_ = 0; }
+    MSTL_CONSTEXPR void clear() noexcept {
+        if (data_ != nullptr) data_[0] = value_type();
+        size_ = 0;
+    }
 
 
     MSTL_NODISCARD MSTL_CONSTEXPR self substr(const size_type off = 0, size_type count = npos) const {
@@ -722,12 +739,6 @@ public:
         _str = MSTL::move(tmp);
         delete[] buf;
         return _in;
-    }
-
-    friend std::ostream& operator <<(std::ostream& _out, const self& _str) {
-        for (size_type i = 0; i < _str.size_; ++i)
-            _out << *(_str.data_ + i);
-        return _out;
     }
 
     MSTL_CONSTEXPR bool equal_to(const self& str) const noexcept {

@@ -1,5 +1,5 @@
-﻿#include "string.hpp"
-#include "mstlc++.hpp"
+﻿#include "mstlc++.hpp"
+#include "stringstream.hpp"
 
 void try_lls();
 void try_exc() {
@@ -27,13 +27,13 @@ void try_lls() {
     lls.pop_front();
     detailof_safe(lls);
     list<int> lls2 = { 5,3,2,1,1 };
-    detailof(lls2);
+    detailof_safe(lls2);
     lls2.remove(5);
     lls2.sort();
-    detailof(lls2);
+    detailof_safe(lls2);
     lls2.unique();
-    detailof(lls2);
-    std::list<std::unique_ptr<int>> nocopy;
+    detailof_safe(lls2);
+    list<unique_ptr<int>> nocopy;
     // nocopy.emplace_back(2); not support in std
     Output out;
     out << lls.at(0) << ':' << lls[0] << endl;
@@ -41,7 +41,6 @@ void try_lls() {
     out << lls.front() << ':' << lls.back() << endl;
     sout << out;
     lls.clear();
-    sout << lls.empty() << endl;
 }
 
 class Foo {};
@@ -125,16 +124,16 @@ void try_deq() {
     detailof_safe(a);
     a.pop_back();
     a.pop_front();
-    detailof(a);
+    detailof_safe(a);
     a.assign(10, 5);
-    detailof(a);
+    detailof_safe(a);
     deque<int> b{ 1,2,3,4,5 };
     sout << b.front() << endl;
     detailof_safe(b);
     deque<int> c(std::move(b));
     c.resize(10, 6);
     detailof_safe(c);
-    std::cout << c.at(5) << std::endl;
+    sout << c.at(5) << endl;
     deque<char> d{ 'a', 'b' };
 }
 void try_stack() {
@@ -211,9 +210,9 @@ void try_rb() {
     m[1] = 'a';
     m[100] = 'x';
     m[2] = 'b';
-    detailof(m);
+    detailof_safe(m);
     m.erase(m.begin());
-    detailof(m);
+    detailof_safe(m);
     sout << m[100] << " ," << m.at(2) << endl;
     m.clear();
     sout << m.empty() << endl;
@@ -222,22 +221,22 @@ void try_rb() {
     mm.emplace(1, "c");
     mm.emplace(2, "b");
     mm.emplace(1, "a");
-    detailof(mm);
+    detailof_safe(mm);
     mm.erase(mm.begin());
     mm.insert(mm.begin(), pair(1, "a"));
-    detailof(mm);
+    detailof_safe(mm);
     mm.clear();
     sout << mm.empty() << endl;
 
     set<int> s{ 1,2,3,4,5 };
     s.insert(s.begin(), 1);
     s.emplace(2);
-    detailof(s);
+    detailof_safe(s);
 
     multiset<int> ms{ 4,5,6,7,8,8 };
     ms.insert(ms.begin(), 9);
     ms.emplace(10);
-    detailof(ms);
+    detailof_safe(ms);
 }
 void try_tup() {
     MSTL_NAMESPACE__;
@@ -254,38 +253,38 @@ void try_hash() {
     m.insert(pair(3, 'c'));
     m.emplace(2, 'c');
     m.insert(pair(1, 'b'));
-    detailof(m);
+    detailof_safe(m);
     unordered_map<int, char> m2;
     m2.insert(m.begin(), m.end());
-    detailof(m2);
-    std::cout << *++m2.begin() << std::endl;
-    unordered_multimap<std::string, int> mm;
+    detailof_safe(m2);
+    sout << *++m2.begin() << endl;
+    unordered_multimap<string, int> mm;
     mm.emplace("a", 1);
     mm.emplace("a", 2);
-    mm.insert(pair(std::string("a"), 1));
-    detailof(mm);
+    mm.insert(pair(string("a"), 1));
+    detailof_safe(mm);
     mm.clear();
-    detailof(mm);
-    unordered_map<int, std::unique_ptr<int>> uncopy;
-    uncopy.emplace(1, std::make_unique<int>(1));
-    detailof(uncopy);
+    detailof_safe(mm);
+    unordered_map<int, unique_ptr<int>> uncopy;
+    uncopy.emplace(1, make_unique<int>(1));
+    detailof_safe(uncopy);
     uncopy.erase(uncopy.begin());
 
     unordered_set<pair<int, char>> us;
     us.emplace(1, 'c');
     us.insert(pair(4, 'r'));
-    detailof(us);
+    detailof_safe(us);
     us.erase(pair(4, 'r'));
     us.erase(us.begin());
-    detailof(us);
+    detailof_safe(us);
 
     unordered_multiset<pair<int, const char*>> ms;
     ms.emplace(1, "234");
     ms.insert(make_pair(2, "345"));
     ms.emplace(1, "234");
-    detailof(ms);
+    detailof_safe(ms);
     ms.erase(ms.begin());
-    detailof(ms);
+    detailof_safe(ms);
 }
 
 void try_pool() {
@@ -295,7 +294,7 @@ void try_pool() {
         pool.start();
         pool.submit_task(try_lls);
         pool.submit_task(try_deq);
-        pool.submit_task(try_deq);
+        pool.submit_task(try_hash);
     }
 }
 
@@ -409,37 +408,52 @@ void try_algo() {
     inplace_merge(v3.begin(), middle, v3.end());
     detailof(v3);
 }
+void func_hello(int i) {
+    printf("#%d Hello\n", i);
+}
 
-struct Student : MSTL::enable_shared_from<Student> {
-    const char* name;
-    int age;
-
-    explicit Student(const char* name_, int age_) : name(name_), age(age_) {
-        std::cout << "Student 构造\n";
+struct func_printnum_t {
+    void operator()(int i) const {
+        printf("#%d Numbers are: %d, %d\n", i, x, y);
     }
-
-    Student(Student&&) = delete;
-
-    void func() {
-        std::cout << (void*)shared_from_this().get() << '\n';
-    }
-
-    ~Student() {
-        std::cout << "Student 析构\n";
-    }
+    int x;
+    int y;
 };
 
-struct StudentDerived : Student {
-    explicit StudentDerived(const char* name_, int age_) : Student(name_, age_) {
-        std::cout << "StudentDerived 构造\n";
-    }
+void repeat(const MSTL::function<void(int)>& func) {
+    func(1);
+    func(2);
+}
 
-    ~StudentDerived() {
-        std::cout << "StudentDerived 析构\n";
-    }
-};
+void try_func() {
+    MSTL_NAMESPACE__;
+    int x = 4;
+    int y = 2;
+    repeat([=](int i) {
+        printf("#%d Numbers are: %d, %d\n", i, x, y);
+        });
+    func_printnum_t func_printnum{ x, y };
+    repeat(func_printnum);
+    repeat(func_hello);
+
+    function<void(int)> f{ [](int i) {
+        printf("i = %d\n", i);
+    } };
+
+    f(2);
+    auto ff = f;
+    ff(3);
+}
+void try_ss() {
+    MSTL_NAMESPACE__;
+    stringstream ss;
+    ss << "a" << 'b' << 333 << " " << 9.333 << string("hello") << false << MSTL::move(string("aaaa"));
+    sout << ss.str() << endl;
+    ss.str("");
+    sout << ss.str() << endl;
+}
 int main() {
     MSTL_NAMESPACE__;
-    try_vec();
+    try_ss();
     return 0;
 }

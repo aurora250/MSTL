@@ -25,15 +25,21 @@ MSTL_BEGIN_NAMESPACE__
 	MAC(wchar_t) \
 	MSTL_MACRO_RANGES_UNICODE_CHARS(MAC)
 
-#define MSTL_MACRO_RANGE_INTEGRAL(MAC) \
+#define MSTL_MACRO_RANGE_SINT(MAC) \
 	MAC(short) \
-	MAC(unsigned short) \
 	MAC(int) \
-	MAC(unsigned int) \
 	MAC(long) \
+	MAC(MSTL_LLT) 
+
+#define MSTL_MACRO_RANGE_USINT(MAC) \
+	MAC(unsigned short) \
+	MAC(unsigned int) \
 	MAC(unsigned long) \
-	MAC(MSTL_LONG_LONG_TYPE) \
-	MAC(unsigned MSTL_LONG_LONG_TYPE) 
+	MAC(unsigned MSTL_LLT) 
+
+#define MSTL_MACRO_RANGE_INT(MAC) \
+	MSTL_MACRO_RANGE_SINT(MAC) \
+	MSTL_MACRO_RANGE_USINT(MAC)
 
 #define MSTL_MACRO_RANGE_FLOAT(MAC) \
 	MAC(float) \

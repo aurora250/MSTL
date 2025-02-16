@@ -127,4 +127,5 @@ void ThreadPool::thread_function(int threadid) {
 bool ThreadPool::running() const {
 	return is_running_;
 }
+
 MSTL_END_NAMESPACE__

@@ -11,9 +11,9 @@ using mathi_t	= int;
 // 0 ~ 2^32 - 1
 using mathui_t	= unsigned int;
 // -2^32 ~ 2^32 - 1
-using mathl_t	= MSTL_LONG_LONG_TYPE;
+using mathl_t	= MSTL_LLT;
 // 0 ~ 2^64 - 1
-using mathul_t	= unsigned MSTL_LONG_LONG_TYPE;
+using mathul_t	= unsigned MSTL_LLT;
 // 2.3E - 308 ~ 1.7E + 308
 using mathd_t	= double;
 // 3.4E - 4932 ~ 1.1E + 4932

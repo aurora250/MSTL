@@ -170,10 +170,16 @@
     <ClInclude Include="bitmap.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="basic_string.h">
+    <ClInclude Include="basic_string.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="string.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="variant.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stringstream.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -41,7 +41,7 @@ public:
 
     Output& operator <<(Output& out);
 
-    template <typename Manipulator> 
+    template <typename Manipulator>
         requires(OutputManipulator<Manipulator>)
     Output& operator <<(Manipulator& func) {
         return func(*this);
@@ -67,18 +67,18 @@ public:
             queue_.push(buffer_.str());
             buffer_.str(""); buffer_.clear();
         }
-        cv_.notify_one();
+        cv_.notify_all();
         return *this;
     };
 
     ThreadsafeOutput& operator <<(Output& str);
 
-    template <typename Manipulator> 
-    requires(ThreadsafeOutputManipulator<Manipulator>)
+    template <typename Manipulator>
+        requires(ThreadsafeOutputManipulator<Manipulator>)
     ThreadsafeOutput& operator <<(Manipulator& func) {
         return func(*this);
     }
-    
+
     ThreadsafeOutput(const ThreadsafeOutput&) = delete;
     ThreadsafeOutput(ThreadsafeOutput&&) = delete;
 private:
@@ -115,7 +115,7 @@ inline void show_data_only(const Container& c, Output& _out) {
     }
     _out << ']';
 }
-template <typename Container> 
+template <typename Container>
     requires(is_detailable<Container>)
 void detailof_safe(const Container& c, ThreadsafeOutput& out = sout) {
     Output _out;

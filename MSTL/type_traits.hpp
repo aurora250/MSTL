@@ -323,7 +323,7 @@ struct is_character : bool_constant<is_character_v<T>> {};
 
 template <typename T>
 constexpr bool is_integral_v = is_any_of_v<remove_cv_t<T>, short, unsigned short, int, unsigned int, long,
-    unsigned long, long long, unsigned long long> || is_character_v<T>;
+    unsigned long, long long, unsigned long long, unsigned char, char>;
 template <typename T>
 struct is_integral : bool_constant<is_integral_v<T>> {};
 
@@ -949,7 +949,7 @@ struct sign_byte_aux<1> {
 TEMNULL__
 struct sign_byte_aux<2> {
     template <typename>
-    using signed_t = short;
+    using signed_t = signed short;
     template <typename>
     using unsigned_t = unsigned short;
 };
@@ -957,18 +957,18 @@ TEMNULL__
 struct sign_byte_aux<4> {
     template <typename T>
     using signed_t = 
-        conditional_t<is_same_v<T, long> || is_same_v<T, unsigned long>, long, int>;
+        conditional_t<is_same_v<T, signed long> || is_same_v<T, unsigned long>, signed long, signed int>;
 
     template <typename T>
     using unsigned_t = 
-        conditional_t<is_same_v<T, long> || is_same_v<T, unsigned long>, unsigned long, unsigned int>;
+        conditional_t<is_same_v<T, signed long> || is_same_v<T, unsigned long>, unsigned long, unsigned int>;
 };
 TEMNULL__
 struct sign_byte_aux<8> {
     template <typename>
-    using signed_t = long long;
+    using signed_t = signed MSTL_LLT;
     template <typename>
-    using unsigned_t = unsigned long long;
+    using unsigned_t = unsigned MSTL_LLT;
 };
 
 template <typename T>
@@ -981,8 +981,8 @@ struct set_signed {
     static_assert(is_nonbool_integral<T> || is_enum_v<T>,
         "make signed only support non bool integral types and enum types");
 
-    using signed_type = typename remove_cv<T>::template apply_t<set_signed_byte>;
-    using unsigned_type = typename remove_cv<T>::template apply_t<set_unsigned_byte>;
+    using signed_type   = copy_cv_t<T, set_signed_byte<T>>;
+    using unsigned_type = copy_cv_t<T, set_unsigned_byte<T>>;
 };
 template <typename T>
 using make_signed_t = typename set_signed<T>::signed_type;
@@ -1517,7 +1517,7 @@ struct hash<T*> {
         MSTL_NODISCARD constexpr size_t operator ()(OPT x) const noexcept { return static_cast<size_t>(x); } \
     };
 MSTL_MACRO_RANGE_CHARS(INT_HASH_STRUCT__)
-MSTL_MACRO_RANGE_INTEGRAL(INT_HASH_STRUCT__)
+MSTL_MACRO_RANGE_INT(INT_HASH_STRUCT__)
 
 
 #if defined(MSTL_PLATFORM_WIN64__) || defined(MSTL_PLATFORM_LINUX64__)

@@ -32,7 +32,7 @@ WINDOWS MSVC C++20
 
 文件：
 
-- [basiclib.hpp](basiclib.hpp)
+- [basiclib.hpp](/MSTL/basiclib.hpp)
 
 使用操作系统平台、托管平台、总线宽度和C++版本的宏来实现多编译环境适配。
 
@@ -40,6 +40,6 @@ WINDOWS MSVC C++20
 
 文件：
 
-- [type_traits.hpp](type_traits.hpp)
+- [type_traits.hpp](/MSTL/type_traits.hpp)
 
 使用模板元技术，在编译期推断类型信息。

@@ -18,7 +18,7 @@ ThreadsafeOutput::~ThreadsafeOutput() {
         std::lock_guard<std::mutex> lock(mutex_);
         done_ = true;
     }
-    cv_.notify_one();
+    cv_.notify_all();
     output_thread_.join();
 }
 ThreadsafeOutput& ThreadsafeOutput::operator <<(Output& str) { // throwaway output
@@ -29,7 +29,7 @@ ThreadsafeOutput& ThreadsafeOutput::operator <<(Output& str) { // throwaway outp
         queue_.push(buffer_.str());
         buffer_.str(""); buffer_.clear();
     }
-    cv_.notify_one();
+    cv_.notify_all();
     return *this;
 }
 void ThreadsafeOutput::output_loop() {

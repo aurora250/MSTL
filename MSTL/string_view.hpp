@@ -82,9 +82,9 @@ struct base_char_traits {
         return nullptr;
     }
 
-    static MSTL_CONSTEXPR char_type* assign(char_type* const str, size_t count, const char_type target) noexcept {
+    static MSTL_CONSTEXPR char_type* assign(char_type* const str, size_t count, const char_type chr) noexcept {
         for (char_type* next = str; count > 0; --count, ++next) {
-            *next = target;
+            *next = chr;
         }
         return str;
     }

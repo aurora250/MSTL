@@ -151,9 +151,10 @@
     <ClInclude Include="algo.hpp" />
     <ClInclude Include="algobase.hpp" />
     <ClInclude Include="algorithm.hpp" />
-    <ClInclude Include="basic_string.h" />
+    <ClInclude Include="basic_string.hpp" />
     <ClInclude Include="bitmap.hpp" />
     <ClInclude Include="string.hpp" />
+    <ClInclude Include="stringstream.hpp" />
     <ClInclude Include="string_view.hpp" />
     <ClInclude Include="container.h" />
     <ClInclude Include="logging.h" />
@@ -190,6 +191,7 @@
     <ClInclude Include="tuple.hpp" />
     <ClInclude Include="type_traits.hpp" />
     <ClInclude Include="utility.hpp" />
+    <ClInclude Include="variant.h" />
     <ClInclude Include="vector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -46,13 +46,8 @@ struct ValueError : public Error {   // 函数的参数非法
 	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(ValueError);
 };
 
-inline void show_data_only(const Error& e, std::ostream& _out) {
-	_out << "Exception : (" << e._type << ") " << e._info << std::flush;
-}
-inline std::ostream& operator <<(const Error& err, std::ostream& _out) {
-	show_data_only(err, _out);
-	return _out;
-}
+void show_data_only(const Error& e, std::ostream& _out);
+std::ostream& operator <<(const Error& err, std::ostream& _out);
 
 void Exception(const Error& _err);
 inline void Exception(bool _boolean, const Error& _err = Error()) {
