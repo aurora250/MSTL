@@ -70,17 +70,9 @@ void ThreadPool::thread_function(int threadid) {
 		Task task;
 		{
 			std::unique_lock<std::mutex> lock(task_queue_mtx_);
-#ifdef MSTL_STATE_DEBUG__
-			aux_output_ << "thread id (" << std::this_thread::get_id() << ") try to get Task..." << endl;
-			sout << aux_output_;
-#endif
 			while (task_queue_.empty()) {
 				if (not is_running_) {  // unlock deadlock after finish every mission 
 					threads_.erase(threadid);
-#ifdef MSTL_STATE_DEBUG__
-					aux_output_ << "thread (" << std::this_thread::get_id() << ") exit" << endl;
-					sout << aux_output_;
-#endif
 					exit_cond_.notify_all();
 					return;
 				}
@@ -91,10 +83,6 @@ void ThreadPool::thread_function(int threadid) {
 						if (sub.count() >= MSTL_THREAD_MAX_IDLE_SECONDS__ && threads_.size() > init_thread_size_) {
 							threads_.erase(threadid);
 							idle_thread_size_--;
-#ifdef MSTL_STATE_DEBUG__
-							aux_output_ << "thread (" << std::this_thread::get_id() << ") exit" << endl;
-							sout << aux_output_;
-#endif
 							return;
 						}
 					}
@@ -105,10 +93,6 @@ void ThreadPool::thread_function(int threadid) {
 			} // free lock
 
 			idle_thread_size_--;
-#ifdef MSTL_STATE_DEBUG__ 
-			aux_output_ << "thread id (" << std::this_thread::get_id() << ") get Task!" << endl;
-			sout << aux_output_;
-#endif
 			task = task_queue_.front();
 			finished_queue_.push(task);
 			task_queue_.pop();

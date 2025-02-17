@@ -6,7 +6,7 @@
 #include "queue.hpp"
 #include "stack.hpp"
 #include "utility.hpp"
-#include "string.hpp"
+#include "basic_string.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Container>
@@ -43,10 +43,9 @@ std::ostream& operator <<(std::ostream& _out, const MSTL::pair<T1, T2>& _p) {
 template <typename CharT, typename Traits, typename Alloc>
 void show_data_only(const basic_string<CharT, Traits, Alloc>& _str, std::ostream& _out) {
 	auto raw_str = _str.c_str();
-	_out << "\"";
 	for (size_t idx = 0; idx < _str.size(); ++idx)
 		_out << *(raw_str + idx);
-	_out << "\"" << std::flush;
+	_out << std::flush;
 }
 template <typename CharT, typename Traits, typename Alloc>
 std::ostream& operator <<(std::ostream& _out, const basic_string<CharT, Traits, Alloc>& _str) {

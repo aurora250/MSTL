@@ -25,6 +25,10 @@ public:
 
 	basic_stringstream(const char_type* str) : buffer_(str) {}
 
+	explicit operator value_type() const {
+		return buffer_;
+	}
+
 	void str(value_type&& str) noexcept {
 		buffer_ = MSTL::move(str);
 	}
@@ -35,7 +39,7 @@ public:
 		buffer_ = str;
 	}
 
-	value_type str() { return buffer_; }
+	value_type str() const { return buffer_; }
 	void clear() {
 		buffer_.clear();
 	}
@@ -95,6 +99,16 @@ public:
 	self& operator <<(value_type&& x) {
 		buffer_.append(MSTL::move(x));
 		x.clear();
+		return *this;
+	}
+	template <typename T1, typename T2>
+	self& operator <<(const pair<T1, T2>& pir) {
+		(*this) << "{ " << pir.first << ", " << pir.second << " }";
+		return *this;
+	}
+	template <typename T, typename Deleter>
+	self& operator <<(const unique_ptr<T, Deleter>& ptr) {
+		(*this) << ptr.get();
 		return *this;
 	}
 };

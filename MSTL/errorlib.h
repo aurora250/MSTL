@@ -1,6 +1,5 @@
 #ifndef MSTL_ERRORLIB_H__
 #define MSTL_ERRORLIB_H__
-#include "basiclib.h"
 #include "logging.h"
 #include <assert.h>
 MSTL_BEGIN_NAMESPACE__

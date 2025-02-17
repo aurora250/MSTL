@@ -57,7 +57,7 @@ private:
 public:
 	DBConnect();
 	~DBConnect();
-	bool connect_to(const std::string& user, const std::string& password, 
+	bool connect_to(const std::string& user, const std::string& password,
 		const std::string& dbname, const std::string& ip = DEFAULT_IP, unsigned int port = DEFAULT_PORT);
 	bool exec(std::string sql);
 	MYSQL_RES* SELECT(std::string table, std::string selected, std::string cond);

@@ -1,5 +1,4 @@
 ﻿#include "mstlc++.hpp"
-#include "stringstream.hpp"
 
 void try_lls();
 void try_exc() {
@@ -15,24 +14,24 @@ void try_exc() {
 void try_lls() {
     using namespace MSTL;
     list<int> lls{ 1,2,3,4,5,6,7 };
-    detailof_safe(lls);
+    detailof(lls);
     lls.push_back(3);
     lls.push_back(4);
     lls.push_front(10);
-    detailof_safe(lls);
+    detailof(lls);
     lls.reverse();
-    detailof_safe(lls);
+    detailof(lls);
     lls.sort();
     lls.pop_back();
     lls.pop_front();
-    detailof_safe(lls);
+    detailof(lls);
     list<int> lls2 = { 5,3,2,1,1 };
-    detailof_safe(lls2);
+    detailof(lls2);
     lls2.remove(5);
     lls2.sort();
-    detailof_safe(lls2);
+    detailof(lls2);
     lls2.unique();
-    detailof_safe(lls2);
+    detailof(lls2);
     list<unique_ptr<int>> nocopy;
     // nocopy.emplace_back(2); not support in std
     Output out;
@@ -121,18 +120,18 @@ void try_deq() {
     a.push_back(6);
     a.insert(a.end(), 100);
     a.emplace(a.begin(), 0);
-    detailof_safe(a);
+    detailof(a);
     a.pop_back();
     a.pop_front();
-    detailof_safe(a);
+    detailof(a);
     a.assign(10, 5);
-    detailof_safe(a);
+    detailof(a);
     deque<int> b{ 1,2,3,4,5 };
     sout << b.front() << endl;
-    detailof_safe(b);
+    detailof(b);
     deque<int> c(std::move(b));
     c.resize(10, 6);
-    detailof_safe(c);
+    detailof(c);
     sout << c.at(5) << endl;
     deque<char> d{ 'a', 'b' };
 }
@@ -253,38 +252,38 @@ void try_hash() {
     m.insert(pair(3, 'c'));
     m.emplace(2, 'c');
     m.insert(pair(1, 'b'));
-    detailof_safe(m);
+    detailof(m);
     unordered_map<int, char> m2;
     m2.insert(m.begin(), m.end());
-    detailof_safe(m2);
+    detailof(m2);
     sout << *++m2.begin() << endl;
     unordered_multimap<string, int> mm;
     mm.emplace("a", 1);
     mm.emplace("a", 2);
     mm.insert(pair(string("a"), 1));
-    detailof_safe(mm);
+    detailof(mm);
     mm.clear();
-    detailof_safe(mm);
+    detailof(mm);
     unordered_map<int, unique_ptr<int>> uncopy;
     uncopy.emplace(1, make_unique<int>(1));
-    detailof_safe(uncopy);
+    detailof(uncopy);
     uncopy.erase(uncopy.begin());
 
     unordered_set<pair<int, char>> us;
     us.emplace(1, 'c');
     us.insert(pair(4, 'r'));
-    detailof_safe(us);
+    detailof(us);
     us.erase(pair(4, 'r'));
     us.erase(us.begin());
-    detailof_safe(us);
+    detailof(us);
 
     unordered_multiset<pair<int, const char*>> ms;
     ms.emplace(1, "234");
     ms.insert(make_pair(2, "345"));
     ms.emplace(1, "234");
-    detailof_safe(ms);
+    detailof(ms);
     ms.erase(ms.begin());
-    detailof_safe(ms);
+    detailof(ms);
 }
 
 void try_pool() {
@@ -337,8 +336,8 @@ void try_sql() {
             "ADM000009", "Hu", 'M', 5000);
         ptr->exec(sql);
     }
-    delete pool;
     std::cout << clock() - begin << std::endl;
+    delete pool;
 }
 void try_log() {
     MSTL_NAMESPACE__;
@@ -449,11 +448,11 @@ void try_ss() {
     stringstream ss;
     ss << "a" << 'b' << 333 << " " << 9.333 << string("hello") << false << MSTL::move(string("aaaa"));
     sout << ss.str() << endl;
-    ss.str("");
+    ss.str("wert"s);
     sout << ss.str() << endl;
 }
 int main() {
     MSTL_NAMESPACE__;
-    try_ss();
+    try_pool();
     return 0;
 }

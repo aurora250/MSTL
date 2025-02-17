@@ -2,6 +2,7 @@
 #define MSTL_THREADSAFE_PRINT_H__
 #include "queue.hpp"
 #include "concepts.hpp"
+#include "stringstream.hpp"
 #include <shared_mutex>
 #include <string>
 #include <thread>
@@ -15,8 +16,8 @@ class Output;
 class ThreadsafeOutput;
 
 template <typename T>
-concept SStreamOverloaded = requires(const T & t, std::stringstream & ss) {
-    { ss << t } -> convertible_to<std::stringstream&>;
+concept SStreamOverloaded = requires(const T & t, stringstream & ss) {
+    { ss << t } -> convertible_to<stringstream&>;
 };
 template <typename T>
 concept OutputManipulator = requires(T t, Output & out) {
@@ -46,12 +47,11 @@ public:
     Output& operator <<(Manipulator& func) {
         return func(*this);
     }
-    std::string str() const;
+    string str() const;
     void clear();
 private:
-    std::stringstream str_;
+    stringstream str_;
 };
-// static Output sout_aux;  // unsafe
 
 
 class ThreadsafeOutput {
@@ -84,8 +84,8 @@ public:
 private:
     void output_loop();
 
-    std::ostringstream buffer_;
-    queue<std::string> queue_;
+    stringstream buffer_;
+    queue<string> queue_;
     std::mutex mutex_;
     std::condition_variable cv_;
     std::atomic_bool done_;

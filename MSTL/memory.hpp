@@ -450,9 +450,6 @@ template <typename T>
 class standard_allocator {
     static_assert(is_allocable_v<T>, "allocator can`t alloc void, reference, function or const type.");
 
-private:
-    std::allocator<T> alloc_;
-
 public:
     using value_type = T;
     using pointer = T*;
@@ -475,21 +472,19 @@ public:
     MSTL_CONSTEXPR self& operator =(const self&) noexcept = default;
 
     MSTL_ALLOCNODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(const size_type n) {
-        //static constexpr size_t value_size = sizeof(value_type);
-        //static_assert(value_size > 0, "value type must be complete before allocation called.");
-        //const size_t alloc_size = value_size * n;
-        //MSTL_DEBUG_VERIFY__(alloc_size <= INT_MAX_SIZE, "allocation will cause memory overflow.");
-        //return static_cast<T*>(MSTL::allocate<FINAL_ALIGN_SIZE<T>>(alloc_size));
-        return alloc_.allocate(n);
+        static constexpr size_t value_size = sizeof(value_type);
+        static_assert(value_size > 0, "value type must be complete before allocation called.");
+        const size_t alloc_size = value_size * n;
+        MSTL_DEBUG_VERIFY__(alloc_size <= INT_MAX_SIZE, "allocation will cause memory overflow.");
+        return static_cast<T*>(MSTL::allocate<FINAL_ALIGN_SIZE<T>>(alloc_size));
     }
     MSTL_ALLOCNODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate() {
         return this->allocate(1);
     }
     MSTL_CONSTEXPR void deallocate(pointer p, const size_type n) noexcept {
-        //static constexpr size_t value_size = sizeof(value_type);
-        //MSTL_DEBUG_VERIFY__(p != nullptr || n == 0, "pointer invalid.");
-        //MSTL::deallocate<FINAL_ALIGN_SIZE<T>>(p, n * value_size);
-        alloc_.deallocate(p, n);
+        static constexpr size_t value_size = sizeof(value_type);
+        MSTL_DEBUG_VERIFY__(p != nullptr || n == 0, "pointer invalid.");
+        MSTL::deallocate<FINAL_ALIGN_SIZE<T>>(p, n * value_size);
     }
     MSTL_CONSTEXPR void deallocate(pointer p) noexcept {
         this->deallocate(p, 1);

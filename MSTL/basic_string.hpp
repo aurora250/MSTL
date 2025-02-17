@@ -125,13 +125,13 @@ private:
         requires(input_iterator<Iterator>)
     MSTL_CONSTEXPR void construct_from_iter(Iterator first, Iterator last) {
         size_type n = MSTL::distance(first, last);
-        const size_type init_size = MSTL::max(static_cast<size_type>(MEMORY_ALIGN_THRESHHOLD), n + 1);
+        const size_type init_size = MSTL::max(MEMORY_ALIGN_THRESHHOLD, n + 1);
         MSTL_TRY__{
             data_ = alloc_.allocate(init_size);
             size_ = n;
             alloc_size_ = init_size;
         }
-        MSTL_CATCH_UNWIND_THROW_M__(set_empty())
+        MSTL_CATCH_UNWIND_THROW_M__(destroy_buffer())
         for (; n > 0; --n, ++first) append(*first);
     }
 
@@ -146,7 +146,7 @@ private:
             alloc_size_ = init_size;
             MSTL::uninitialized_copy(first, last, data_);
         }
-        MSTL_CATCH_UNWIND_THROW_M__(set_empty())
+        MSTL_CATCH_UNWIND_THROW_M__(destroy_buffer())
     }
 
     MSTL_CONSTEXPR void construct_from_ptr(const_pointer str, size_type position, size_type n) {
@@ -216,7 +216,7 @@ private:
         const size_t new_cap = MSTL::max(alloc_size_ + n, alloc_size_ + (alloc_size_ >> 1));
         pointer new_buffer = alloc_.allocate(new_cap);
         traits_type::move(new_buffer, data_, size_);
-        alloc_.deallocate(data_);
+        alloc_.deallocate(data_, alloc_size_);
         data_ = new_buffer;
         alloc_size_ = new_cap;
     }
@@ -291,7 +291,7 @@ public:
 
     MSTL_CONSTEXPR basic_string(self&& str) noexcept
         : data_(MSTL::move(str.data_)), size_(str.size_), alloc_size_(str.alloc_size_) {
-        str.destroy_buffer();
+        str.set_empty();
     }
     MSTL_CONSTEXPR self& operator =(self&& str) noexcept {
         if (MSTL::addressof(str) == this) return *this;
@@ -961,6 +961,11 @@ MSTL_CONSTEXPR void swap(basic_string<CharT, Traits, Alloc>& lh,
     basic_string<CharT, Traits, Alloc>& rh) noexcept {
     lh.swap(rh);
 }
+
+template <typename CharT, typename Traits, typename Alloc>
+void show_data_only(const basic_string<CharT, Traits, Alloc>&, std::ostream&);
+template <typename CharT, typename Traits, typename Alloc>
+std::ostream& operator <<(std::ostream&, const basic_string<CharT, Traits, Alloc>&);
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_BASIC_STRING_H__

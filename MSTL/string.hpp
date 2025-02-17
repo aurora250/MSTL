@@ -16,9 +16,9 @@ TEMNULL__ struct hash<MSTL::string> {
         return string_hash(s.c_str(), MSTL::strlen(s.c_str()), 0);
     }
 };
-template <typename CharT, typename Alloc>
-struct hash<basic_string<CharT, char_traits<CharT>, Alloc>> {
-    MSTL_NODISCARD size_t operator ()(const basic_string<CharT, char_traits<CharT>, Alloc>& str) const noexcept {
+template <typename CharT, typename Traits, typename Alloc>
+struct hash<basic_string<CharT, Traits, Alloc>> {
+    MSTL_NODISCARD size_t operator ()(const basic_string<CharT, Traits, Alloc>& str) const noexcept {
         return FNV_hash(reinterpret_cast<const byte_t*>(str.c_str()), sizeof(CharT) * str.size());
     }
 };
@@ -175,7 +175,7 @@ MSTL_NODISCARD inline basic_string<CharT> __stream_to_string(T x) {
         return to_string(x);
     else if constexpr (is_same_v<CharT, wchar_t>)
         return to_wstring(x);
-    else static_assert(false, "to_string unsupport type.");
+    else static_assert(false, "to_string unsupport char type.");
 }
 
 MSTL_END_NAMESPACE__

@@ -1,8 +1,6 @@
 #ifndef MSTL_CHECK_TYPE_H__
 #define MSTL_CHECK_TYPE_H__
-#include <sstream>
-#include <string>
-#include "basiclib.h"
+#include "stringstream.hpp"
 #ifdef MSTL_COMPILE_GNUC__ 
 #include <memory>
 #include <cxxabi.h>
@@ -17,7 +15,7 @@ MSTL_BEGIN_NAMESPACE__
 class output {
 private:
     bool is_compact_;
-    std::string& sr_;
+    string& sr_;
 
     template <typename T>
     bool check_empty(const T&) { return false; }
@@ -27,17 +25,13 @@ private:
     void out(const T& val) {
         if (this->check_empty(val)) return;
         if (not this->is_compact_) sr_ += " ";
-        using ss_t = std::ostringstream;
-#ifdef MSTL_COMPILE_GCC__
-        this->sr_ += static_cast<ss_t&>(ss_t() << val).str();
-#else
+        using ss_t = stringstream;
         this->sr_ += static_cast<ss_t>(ss_t() << val).str();
-#endif
         this->is_compact_ = false;
     }
 public:
-    output(std::string& sr);
-    output& operator()(void);
+    output(string& sr);
+    output& operator ()(void);
     output& compact(void);
 
     template <typename T1, typename... T>
@@ -146,9 +140,9 @@ struct parameter<IsStart, P1, P...> {
 
 #define CHECK_TYPE_ARRAY__(CV_OPT, BOUND_OPT, ...) \
     template <typename T, bool IsBase __VA_ARGS__> \
-    struct check<T CV_OPT [BOUND_OPT], IsBase> : check<T CV_OPT, !std::is_array<T>::value> \
+    struct check<T CV_OPT [BOUND_OPT], IsBase> : check<T CV_OPT, !is_array_v<T>> \
     { \
-        using base_t = check<T CV_OPT, !std::is_array<T>::value>; \
+        using base_t = check<T CV_OPT, !is_array_v<T>>; \
         using base_t::out_; \
     \
         bound<BOUND_OPT> bound_; \
@@ -235,8 +229,8 @@ CHECK_TYPE_MEM_FUNC__(volatile)
 CHECK_TYPE_MEM_FUNC__(const volatile)
 
 template <typename T>
-MSTL_CONSTEXPR std::string check_type() {
-    std::string str;
+MSTL_CONSTEXPR string check_type() {
+    string str;
     check<T> { str };
     return str;
 }

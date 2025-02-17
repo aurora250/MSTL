@@ -12,7 +12,7 @@ DBConnect::~DBConnect() {
 }
 bool DBConnect::connect_to(const std::string& user, const std::string& password,
 	const std::string& dbname, const std::string& ip, unsigned int port) {
-	MYSQL* p = mysql_real_connect(mysql, ip.c_str(), user.c_str(), 
+	MYSQL* p = mysql_real_connect(mysql, ip.c_str(), user.c_str(),
 		password.c_str(), dbname.c_str(), port, nullptr, 0);
 	return p != nullptr;
 }
@@ -74,7 +74,7 @@ std::shared_ptr<DBConnect> DBConnectPool::get_connect() {
 	std::shared_ptr<DBConnect> ptr(connect_queue_.front(), [&](DBConnect* pcon) {
 		std::unique_lock<std::mutex> lock(queue_mtx_);
 		pcon->refresh_alive();
-		connect_queue_.push(pcon); 
+		connect_queue_.push(pcon);
 		});
 	connect_queue_.pop();
 	cv_.notify_all();
@@ -105,7 +105,7 @@ void DBConnectPool::scanner_connect_task() {
 				connect_queue_.pop();
 				delete ptr;
 			}
-			else 
+			else
 				break;
 		}
 	}

@@ -5,7 +5,7 @@ Output& Output::operator <<(Output& out) {
     str_ << out.str();
     return *this;
 }
-std::string Output::str() const { return str_.str(); }
+string Output::str() const { return str_.str(); }
 void Output::clear() { str_.str(""); }
 
 ThreadsafeOutput::ThreadsafeOutput()
