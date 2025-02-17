@@ -4,7 +4,9 @@
 本项目尽最大可能减少除并发库外的标准库的使用，尝试实现替代其的其简化版本。
 欢迎各位issue，star，fork。鄙人才疏学浅，如有不足，还望斧正。
 
-建议学习方式：按照下文的文件介绍顺序阅读和使用，在稍有不懂的地方咨询同学或AI。
+对初学者的建议学习方式：按照下文的文件介绍顺序阅读和使用，在稍有不懂的地方咨询同学或AI。
+
+本项目所有不涉及内存分配与虚表行为的函数都将尽可能保证noexcept。
 
 ## 通过阅读和使用MSTL，你能学到什么？
 
@@ -78,7 +80,7 @@ WINDOWS MSVC C++20
 
 - [mathlib.h](/MSTL/mathlib.h)
 
-定义常用的constexpr数学函数。
+定义常用的constexpr的数学函数。
 
 - [numeric.hpp](/MSTL/numeric.hpp)
 
@@ -86,7 +88,7 @@ WINDOWS MSVC C++20
 
 - [utility.hpp](/MSTL/utility.hpp)
 
-定义常用工具类型与函数，提供键值对pair的哈希函数。
+定义常用的constexpr的工具类型与函数，提供键值对pair的哈希函数。
 
 - [iterator.hpp](/MSTL/iterator.hpp)
 
@@ -94,7 +96,7 @@ WINDOWS MSVC C++20
 
 - [tuple.hpp](/MSTL/tuple.hpp)
 
-定义元组tuple类和其访问、构造函数，提供tuple的哈希函数。
+定义constexpr的元组tuple类和其辅助函数，提供tuple的哈希函数。
 
 - [algobase.hpp](/MSTL/algobase.hpp)
 
@@ -106,7 +108,7 @@ WINDOWS MSVC C++20
 
 - [string_view.hpp](/MSTL/string_view.hpp)
 
-定义字符串萃取类char_traits、辅助萃取函数与字符串视图类basic_string_view。
+定义constexpr的字符串萃取类char_traits、辅助萃取函数与constexpr的字符串视图类basic_string_view。
 
 - [functional.hpp](/MSTL/functional.hpp)
 
@@ -122,7 +124,7 @@ WINDOWS MSVC C++20
 
 - [vector.hpp](/MSTL/vector.hpp)
 
-定义向量类vector，本项目将在绝大部分场景用vector代替动态数组。
+定义constexpr的向量类vector。项目将在绝大部分场景用vector代替动态数组。
 
 - [algo.hpp](/MSTL/algo.hpp)
 
@@ -130,7 +132,7 @@ WINDOWS MSVC C++20
 
 - [basic_string.hpp](/MSTL/basic_string.hpp)
 
-定义基础字符串类basic_string。
+定义constexpr的基础字符串类basic_string。
 
 - [heap.hpp](/MSTL/heap.hpp)
 
