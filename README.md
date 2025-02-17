@@ -30,15 +30,15 @@ concept与requires；
 
 区分decltype、auto与template的类型推导退化规则；
 
-allocator与就地构造的配合使用；
+内存分配与就地构造的配合使用；
 
-实现绝大部分标准算法的实现(包括并发算法)与所有常用标准容器，并拓展部分教学用的非实用算法；
+实现绝大部分标准算法(包括并发算法)与所有常用标准容器，并拓展部分教学用的非实用算法；
 
 标准库的多线程接口(atomic/conditional_variable/thread/mutex等)的使用。
 
 ## 目前支持环境(持续拓展中)
 
-WINDOWS MSVC C++20
+WINDOWS X64 MSVC C++20
 
 ## 文件介绍
 
