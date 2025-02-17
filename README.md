@@ -11,16 +11,27 @@
 现代C++的实用特性，包括：
 
 constexpr与if constexpr；
+
 concept与requires；
+
 强化noexcept保证；
+
 使用可变参数模板、递归展开和模板特化等模板元技术实现类型萃取并编写功能性容器；
+
 通过enable_if实现SFINAF；
+
 用static_assert进行静态模板保证；
+
 使用alignof实现内存对位分配；
+
 使用attribute优化代码；
+
 区分decltype、auto与template的类型推导退化规则；
+
 allocator与就地构造的配合使用；
+
 实现绝大部分标准算法的实现(包括并发算法)与所有常用标准容器，并拓展部分教学用的非实用算法；
+
 标准库的多线程接口(atomic/conditional_variable/thread/mutex等)的使用。
 
 ## 目前支持环境(持续拓展中)

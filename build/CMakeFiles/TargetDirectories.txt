@@ -1,3 +1,0 @@
-/home/nullroot/MSTL_clang/MSTL/build/CMakeFiles/MSTL.dir
-/home/nullroot/MSTL_clang/MSTL/build/CMakeFiles/edit_cache.dir
-/home/nullroot/MSTL_clang/MSTL/build/CMakeFiles/rebuild_cache.dir
