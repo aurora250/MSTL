@@ -10,6 +10,7 @@
 我们将着重学习C++11到20的特性，包括但不限于：
 
 使用编译器环境宏进行多平台与数据总线宽度适配；
+使用alignof实现内存对位的allocator；
 constexpr与if constexpr；
 concept与requires的使用；
 强化noexcept保证；
@@ -32,7 +33,7 @@ WINDOWS MSVC C++20
 
 文件：
 
-- [basiclib.hpp](/MSTL/basiclib.hpp)
+- [basiclib.hpp](/MSTL/basiclib.h)
 
 使用操作系统平台、托管平台、总线宽度和C++版本的宏来实现多编译环境适配。
 
@@ -42,4 +43,6 @@ WINDOWS MSVC C++20
 
 - [type_traits.hpp](/MSTL/type_traits.hpp)
 
-使用模板元技术，在编译期推断类型信息。
+使用模板元技术，在编译期推断类型信息，并提供基础数字类型的哈希函数。
+
+### 

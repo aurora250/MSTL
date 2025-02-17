@@ -1,12 +1,8 @@
 #ifndef MSTL_CONTAINER_H__
 #define MSTL_CONTAINER_H__
 #include "check_type.h"
-#include "concepts.hpp"
-#include "errorlib.h"
 #include "queue.hpp"
 #include "stack.hpp"
-#include "utility.hpp"
-#include "basic_string.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Container>

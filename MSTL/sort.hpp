@@ -2,7 +2,6 @@
 #define MSTL_SORT_HPP__
 #include "algo.hpp"
 #include "heap.hpp"
-#include "vector.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 // is sorted

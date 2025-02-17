@@ -1,7 +1,6 @@
 #ifndef MSTL_HASH_SET_HPP__
 #define MSTL_HASH_SET_HPP__
 #include "hashtable.hpp"
-#include "functor.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Value, typename HashFcn = hash<Value>, typename EqualKey = equal_to<Value>,

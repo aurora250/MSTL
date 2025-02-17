@@ -8,7 +8,6 @@
 #include <thread>
 #include <chrono>
 #include <future>
-#include "queue.hpp"
 #include "unordered_map.hpp"
 #include "threadsafe_print.h"
 MSTL_BEGIN_NAMESPACE__

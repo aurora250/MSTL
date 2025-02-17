@@ -2,9 +2,7 @@
 #define MSTL_DATABASE_H__
 #include "basiclib.h"
 #if MSTL_DLL_LINK__
-#include "errorlib.h"
 #include "threadsafe_print.h"
-#include "queue.hpp"
 #include "tuple.hpp"
 #include <winsock.h>
 #include <mysql.h>

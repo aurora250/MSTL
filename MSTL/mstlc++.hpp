@@ -1,21 +1,16 @@
 #ifndef MSTL_MSTLCPP_HPP__
 #define MSTL_MSTLCPP_HPP__
 
-#include "basemstlc++.hpp"
-
+#include "functional.hpp"
 #include "list.hpp"
-#include "deque.hpp"
-#include "stack.hpp"
-#include "queue.hpp"
+#include "algorithm.hpp"
+#include "unordered_set.hpp"
 #include "map.hpp"
 #include "set.hpp"
-#include "unordered_map.hpp"
-#include "unordered_set.hpp"
 
-#include "container.h"
+#include "detailof.hpp"
 #include "trace_memory.hpp"
-#include "jsonlib.h"
-#include "mysql_connect_pool.h"
 #include "thread_pool.h"
+#include "mysql_connect_pool.h"
 
 #endif // MSTL_MSTLCPP_HPP__

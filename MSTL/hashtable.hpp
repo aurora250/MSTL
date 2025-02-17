@@ -1,9 +1,8 @@
 #ifndef MSTL_HASHTABLE_HPP__
 #define MSTL_HASHTABLE_HPP__
 #include "algo.hpp"
+#include "functor.hpp"
 #include "vector.hpp"
-#include "concepts.hpp"
-#include "mathlib.h"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T>

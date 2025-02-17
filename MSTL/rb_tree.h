@@ -1,6 +1,5 @@
 #ifndef MSTL_RB_TREE_H__
 #define MSTL_RB_TREE_H__
-#include "memory.hpp"
 #include "functor.hpp"
 #include "algo.hpp"
 MSTL_BEGIN_NAMESPACE__

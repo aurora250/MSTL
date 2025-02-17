@@ -92,9 +92,6 @@
     <ClInclude Include="deque.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="basemstlc++.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="memory.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -143,7 +140,7 @@
     <ClInclude Include="thread_pool.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="container.h">
+    <ClInclude Include="detailof.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="threadsafe_print.h">

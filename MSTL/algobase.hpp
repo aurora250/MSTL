@@ -2,7 +2,6 @@
 #define MSTL_ALGOBASE_HPP__
 #include "iterator.hpp"
 #include "utility.hpp"
-#include "errorlib.h"
 MSTL_BEGIN_NAMESPACE__
 
 // equal

@@ -1,8 +1,7 @@
 #ifndef MSTL_THREADSAFE_PRINT_H__
 #define MSTL_THREADSAFE_PRINT_H__
 #include "queue.hpp"
-#include "concepts.hpp"
-#include "stringstream.hpp"
+#include "check_type.h"
 #include <shared_mutex>
 #include <string>
 #include <thread>

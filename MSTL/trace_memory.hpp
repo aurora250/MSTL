@@ -1,6 +1,7 @@
 #ifndef MSTL_TRACE_MEMORY_HPP__
 #define MSTL_TRACE_MEMORY_HPP__
 #include "unordered_map.hpp"
+#if MSTL_DLL_LINK__
 #include "boost/stacktrace.hpp"
 MSTL_BEGIN_NAMESPACE__
 
@@ -84,4 +85,5 @@ bool operator !=(const trace_allocator<T>&, const trace_allocator<U>&) noexcept 
 }
 
 MSTL_END_NAMESPACE__
+#endif // MSTL_DLL_LINK__
 #endif // MSTL_TRACE_MEMORY_HPP__

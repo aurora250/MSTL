@@ -156,7 +156,7 @@
     <ClInclude Include="string.hpp" />
     <ClInclude Include="stringstream.hpp" />
     <ClInclude Include="string_view.hpp" />
-    <ClInclude Include="container.h" />
+    <ClInclude Include="detailof.hpp" />
     <ClInclude Include="logging.h" />
     <ClInclude Include="macro_ranges.h" />
     <ClInclude Include="mysql_connect_pool.h" />
@@ -168,7 +168,6 @@
     <ClInclude Include="map.hpp" />
     <ClInclude Include="mathlib.h" />
     <ClInclude Include="memory.hpp" />
-    <ClInclude Include="basemstlc++.hpp" />
     <ClInclude Include="basiclib.h" />
     <ClInclude Include="concepts.hpp" />
     <ClInclude Include="check_type.h" />
