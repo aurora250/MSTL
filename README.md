@@ -206,10 +206,11 @@ WINDOWS X64 MSVC C++20
 
 定义线程池类ThreadPool。
 
-- [mysql_connect_pool](/MSTL/mysql_connect_pool.h)
+- [mysql_connect_pool.h](/MSTL/mysql_connect_pool.h)
 
 定义基于mysql的数据库连接池DBConnectPool。(未完成)
 
-## 开源声明
+## 开源协议
 
-本项目完全开源免费，可任意保存、修改、传播、使用，以供学习交流之用。
+本项目基于 [MIT 开源协议](LICENSE) 。
+
