@@ -38,7 +38,13 @@ concept与requires；
 
 ## 目前支持环境(持续拓展中)
 
-WINDOWS X64 MSVC C++20
+WINDOWS
+
+X64 X86
+
+MSVC
+
+C++14及以上
 
 ## 文件介绍
 
@@ -53,10 +59,6 @@ WINDOWS X64 MSVC C++20
 - [macro_ranges.h](/MSTL/macro_ranges.h)
 
 定义接受类型参数的宏的快速扩展宏，支持基础数据类型的多种组合。
-
-- [logging.h](/MSTL/logging.h)
-
-简单的日志库。
 
 - [type_traits.hpp](/MSTL/type_traits.hpp)
 
@@ -198,10 +200,6 @@ WINDOWS X64 MSVC C++20
 
 定义类型信息输出函数，快速获取工整的容器类与工具类的类型信息。
 
-- [threadsafe_print.hpp](/MSTL/threadsafe_print.h)
-
-定义线程安全的输出类ThreadsafeOutput与全局静态对象sout，使并发环境下控制台输出仍然整洁。
-
 - [thread_pool.h](/MSTL/thread_pool.h)
 
 定义线程池类ThreadPool。
@@ -209,6 +207,10 @@ WINDOWS X64 MSVC C++20
 - [mysql_connect_pool.h](/MSTL/mysql_connect_pool.h)
 
 定义基于mysql的数据库连接池DBConnectPool。(未完成)
+
+## 开源声明
+本项目基于MIT开源协议。
+
 
 ## 开源协议
 
