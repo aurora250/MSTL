@@ -2,7 +2,7 @@
 
 本项目旨在建立一套供C++初学者学习并使用的、阅读性强的、较为健全的简易STL库，同时提供多种功能性接口。
 本项目尽最大可能减少除并发库外的标准库的使用，尝试实现简化版本。
-欢迎各位issue，star，fork。鄙人才疏学浅，如有不足，还望斧正。
+欢迎各位issue，star。鄙人才疏学浅，如有不足，还望斧正。
 
 对初学者的建议学习方式：按照下文的文件介绍顺序阅读和使用，在稍有不懂的地方咨询同学或AI。
 
@@ -20,7 +20,7 @@ concept与requires；
 
 使用可变参数模板、递归展开和模板特化等模板元技术实现类型萃取并编写功能性容器；
 
-通过enable_if实现SFINAF；
+通过enable_if实现SFINAF(Substitution Failure Is Not An Error)；
 
 用static_assert进行静态模板保证；
 
@@ -34,9 +34,9 @@ concept与requires；
 
 实现绝大部分标准算法(包括并发算法)与所有常用标准容器，并拓展部分教学用的非实用算法；
 
-标准库的多线程接口(atomic/conditional_variable/thread/mutex等)的使用。
+标准库并发接口的使用(atomic/conditional_variable/thread/mutex/future/package_task等)。
 
-## 目前支持环境(持续拓展中)
+## 支持环境(拓展中)
 
 WINDOWS
 
@@ -44,7 +44,7 @@ X64 X86
 
 MSVC
 
-C++14及以上
+C++ 14 17 20
 
 ## 文件介绍
 
