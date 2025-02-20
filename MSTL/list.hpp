@@ -145,8 +145,8 @@ public:
         while (n--) push_back(x);
     };
 
-    template <typename Iterator> 
-        requires(input_iterator<Iterator>)
+    template <typename Iterator, enable_if_t<
+        is_input_iter_v<Iterator>, int> = 0>
     list(Iterator first, Iterator last) {
         empty_init();
         while (first != last) {
@@ -270,8 +270,8 @@ public:
         insert(begin(), count, value);
     }
 
-    template <typename Iterator>
-        requires(input_iterator<Iterator>)
+    template <typename Iterator, enable_if_t<
+        is_input_iter_v<Iterator>, int> = 0>
     void assign(Iterator first, Iterator last) {
         clear();
         insert(begin(), first, last);

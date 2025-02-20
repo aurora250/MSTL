@@ -503,43 +503,45 @@ public:
         return (emplace_equal)(MSTL::move(x));
     }
 
-    template <class Iterator>
-        requires(input_iterator<Iterator>)
+    template <typename Iterator, enable_if_t<
+        is_iter_v<Iterator>, int> = 0>
     void insert_unique(Iterator first, Iterator last) {
-        for (; first != last; ++first) 
-            insert_unique(*first);
-    }
-    template <class Iterator>
-        requires(forward_iterator<Iterator>)
-    void insert_unique(Iterator first, Iterator last) {
-        size_type n = 0;
-        MSTL::distance(first, last, n);
-        rehash(size_ + n);
-        for (; n > 0; --n, ++first) {
-            node_type* tmp = (new_node)(*first);
-            insert_unique_noresize(tmp);
+        if constexpr (is_fwd_iter_v<Iterator>) {
+            size_type n = MSTL::distance(first, last);
+            rehash(size_ + n);
+            for (; n > 0; --n, ++first) {
+                node_type* tmp = (new_node)(*first);
+                insert_unique_noresize(tmp);
+            }
+        }
+        else {
+            for (; first != last; ++first)
+                insert_unique(*first);
         }
     }
+
     void insert_unique(std::initializer_list<value_type> l) {
         insert_unique(l.begin(), l.end());
     }
 
-    template <class Iterator>
-        requires(input_iterator<Iterator>)
+    template <typename Iterator, enable_if_t<
+        is_iter_v<Iterator>, int> = 0>
     void insert_equal(Iterator first, Iterator last) {
-        for (; first != last; ++first) insert_equal(*first);
-    }
-    template <class Iterator>
-        requires(forward_iterator<Iterator>)
-    void insert_equal(Iterator first, Iterator last) {
-        size_type n = 0;
-        MSTL::distance(first, last, n);
-        rehash(size_ + n);
-        for (; n > 0; --n, ++first) {
-            node_type* tmp = (new_node)(*first);
-            insert_equal_noresize(tmp);
+        if constexpr (is_fwd_iter_v<Iterator>) {
+            size_type n = 0;
+            MSTL::distance(first, last, n);
+            rehash(size_ + n);
+            for (; n > 0; --n, ++first) {
+                node_type* tmp = (new_node)(*first);
+                insert_equal_noresize(tmp);
+            }
+        }
+        else {
+            for (; first != last; ++first)
+                insert_equal(*first);
         }
     }
+
     void insert_equal(std::initializer_list<value_type> l) {
         insert_equal(l.begin(), l.end());
     }

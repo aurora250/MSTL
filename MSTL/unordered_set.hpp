@@ -57,22 +57,18 @@ public:
     }
 
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     unordered_set(Iterator first, Iterator last) : ht_(100, hasher(), key_equal()) {
         ht_.insert_unique(first, last);
     }
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     unordered_set(Iterator first, Iterator list, size_type n) : ht_(n, hasher(), key_equal()) {
         ht_.insert_unique(first, list);
     }
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     unordered_set(Iterator first, Iterator last, size_type n, const hasher& hf) : ht_(n, hf, key_equal()) {
         ht_.insert_unique(first, last);
     }
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     unordered_set(Iterator first, Iterator last, size_type n, const hasher& hf, const key_equal& eql)
         : ht_(n, hf, eql) {
         ht_.insert_unique(first, last);
@@ -127,7 +123,6 @@ public:
         return ht_.insert_unique(MSTL::forward<value_type>(obj));
     }
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     void insert(Iterator first, Iterator last) { ht_.insert_unique(first, last); }
 
     size_type erase(const key_type& key) noexcept { return ht_.erase(key); }
@@ -246,22 +241,18 @@ public:
     }
 
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     unordered_multiset(Iterator first, Iterator last) : ht_(100, hasher(), key_equal()) {
         ht_.insert_equal(first, last);
     }
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     unordered_multiset(Iterator first, Iterator list, size_type n) : ht_(n, hasher(), key_equal()) {
         ht_.insert_equal(first, list);
     }
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     unordered_multiset(Iterator first, Iterator last, size_type n, const hasher& hf) : ht_(n, hf, key_equal()) {
         ht_.insert_equal(first, last);
     }
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     unordered_multiset(Iterator first, Iterator last, size_type n, const hasher& hf, const key_equal& eql)
         : ht_(n, hf, eql) {
         ht_.insert_equal(first, last);
@@ -316,7 +307,6 @@ public:
         return ht_.insert_equal(MSTL::forward<value_type>(obj));
     }
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     void insert(Iterator first, Iterator last) { ht_.insert_equal(first, last); }
 
     size_type erase(const key_type& key) noexcept { return ht_.erase(key); }

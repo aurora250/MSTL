@@ -34,11 +34,6 @@ void try_lls() {
     detailof(lls2);
     list<unique_ptr<int>> nocopy;
     // nocopy.emplace_back(2); not support in std
-    Output out;
-    out << lls.at(0) << ':' << lls[0] << endl;
-    sout << out;
-    out << lls.front() << ':' << lls.back() << endl;
-    sout << out;
     lls.clear();
 }
 
@@ -110,6 +105,7 @@ void try_copy() {
     ////此处会出现错误，原因在于copy算法不再使用memcove()执行实际的复制操作 但是实际没有出现错误
     //std::cout << std::endl;
 }
+#include <deque>
 void try_deq() {
     using namespace MSTL;
     deque<int> a;
@@ -127,12 +123,10 @@ void try_deq() {
     a.assign(10, 5);
     detailof(a);
     deque<int> b{ 1,2,3,4,5 };
-    sout << b.front() << endl;
     detailof(b);
-    deque<int> c(std::move(b));
+    deque<int> c(MSTL::move(b));
     c.resize(10, 6);
     detailof(c);
-    sout << c.at(5) << endl;
     deque<char> d{ 'a', 'b' };
 }
 void try_stack() {
@@ -203,64 +197,60 @@ void try_pque() {
 void try_rb() {
     MSTL_NAMESPACE__;
     map<int, char> m;
-    m.insert(pair(1, 'c'));
+    m.insert(pair<int, char>(1, 'c'));
     m.emplace(3, 'c');
     m.emplace_hint(m.end(), 4, 'd');
     m[1] = 'a';
     m[100] = 'x';
     m[2] = 'b';
-    detailof_safe(m);
+    detailof(m);
     m.erase(m.begin());
-    detailof_safe(m);
-    sout << m[100] << " ," << m.at(2) << endl;
+    detailof(m);
     m.clear();
-    sout << m.empty() << endl;
 
     multimap<int, const char*> mm;
     mm.emplace(1, "c");
     mm.emplace(2, "b");
     mm.emplace(1, "a");
-    detailof_safe(mm);
+    detailof(mm);
     mm.erase(mm.begin());
-    mm.insert(mm.begin(), pair(1, "a"));
-    detailof_safe(mm);
+    mm.insert(mm.begin(), pair<int, const char*>(1, "a"));
+    detailof(mm);
     mm.clear();
-    sout << mm.empty() << endl;
 
     set<int> s{ 1,2,3,4,5 };
     s.insert(s.begin(), 1);
     s.emplace(2);
-    detailof_safe(s);
+    detailof(s);
 
     multiset<int> ms{ 4,5,6,7,8,8 };
     ms.insert(ms.begin(), 9);
     ms.emplace(10);
-    detailof_safe(ms);
+    detailof(ms);
 }
 void try_tup() {
     MSTL_NAMESPACE__;
     tuple<int, char, const char*> t(1, 't', "MSTL");
     auto a = get<0>(t);
     std::cout << get<1>(t) << std::endl;
-    auto forw = make_tuple(9, 0);
+    auto forw = MSTL::make_tuple(9, 0);
 }
 void try_hash() {
     MSTL_NAMESPACE__;
     unordered_map<int, char> m;
     m[1] = 'a';
     m[2] = 'b';
-    m.insert(pair(3, 'c'));
+    m.insert(pair<int, char>(3, 'c'));
     m.emplace(2, 'c');
-    m.insert(pair(1, 'b'));
+    m.insert(pair<int, char>(1, 'b'));
     detailof(m);
     unordered_map<int, char> m2;
     m2.insert(m.begin(), m.end());
     detailof(m2);
-    sout << *++m2.begin() << endl;
     unordered_multimap<string, int> mm;
     mm.emplace("a", 1);
     mm.emplace("a", 2);
-    mm.insert(pair(string("a"), 1));
+    mm.insert(pair<string, int>(string("a"), 1));
     detailof(mm);
     mm.clear();
     detailof(mm);
@@ -271,9 +261,9 @@ void try_hash() {
 
     unordered_set<pair<int, char>> us;
     us.emplace(1, 'c');
-    us.insert(pair(4, 'r'));
+    us.insert(pair<int, char>(4, 'r'));
     detailof(us);
-    us.erase(pair(4, 'r'));
+    us.erase(pair<int, char>(4, 'r'));
     us.erase(us.begin());
     detailof(us);
 
@@ -315,16 +305,15 @@ void try_math() {
     std::cout << arccosine(0.62) << std::endl;
     //std::cout << tangent(PI / 2) << std::endl;  // MathError
     std::cout << around_pi(constants::PI * 2 + 0.00000001) << " : " << around_pi(6.28) << std::endl;
-    sout << sum_n(1, 2, 3, 4, 5) << endl << gcd(5, 10) << endl << lcm(10, 25) << endl;
     int a = 2, b = 3;
     int* p1 = &a;
     int* p2 = &b;
     iter_swap(p1, p2);
-    sout << *p1 << ' ' << *p2 << endl;
     //int fib[fibonacci(4)];
     //int len[leonardo(4)];
 }
 void try_sql() {
+#if MSTL_DLL_LINK__
     MSTL_NAMESPACE__;
 
     clock_t begin = clock();
@@ -338,21 +327,7 @@ void try_sql() {
     }
     std::cout << clock() - begin << std::endl;
     delete pool;
-}
-void try_log() {
-    MSTL_NAMESPACE__;
-    set_log_level(LOG_LEVEL_VERBOSE);
-    LOG_VERBOSE("test log v");
-    TIMERLOG_START(task);
-    std::thread t1([]() {
-        for (int i = 0; i < 5; i++) { LOG_DEBUG("i: %d", i); }
-        });
-    std::thread t2([]() {
-        for (char c = 'a'; c < 'f'; c++) { LOG_DEBUG("c: %c", c); }
-        });
-    t1.join();
-    t2.join();
-    TIMERLOG_END(task);
+#endif // MSTL_DLL_LINK__
 }
 struct Person {
     std::string name;
@@ -447,9 +422,9 @@ void try_ss() {
     MSTL_NAMESPACE__;
     stringstream ss;
     ss << "a" << 'b' << 333 << " " << 9.333 << string("hello") << false << MSTL::move(string("aaaa"));
-    sout << ss.str() << endl;
-    ss.str("wert"s);
-    sout << ss.str() << endl;
+    std::cout << ss.str() << std::endl;
+    ss.str("wert");
+    std::cout << ss.str() << std::endl;
 }
 int main() {
     MSTL_NAMESPACE__;

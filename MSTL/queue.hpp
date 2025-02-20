@@ -89,8 +89,8 @@ MSTL_NODISCARD bool operator >=(const queue<T, Sequence>& x, const queue<T, Sequ
 noexcept(noexcept(x.get_container() >= y.get_container())) {
     return x.get_container() >= y.get_container();
 } 
-template <typename T, typename Sequence>
-    requires(is_swappable_v<Sequence>)
+template <typename T, typename Sequence, enable_if_t<
+    is_swappable_v<Sequence>, int> = 0>
 void swap(queue<T, Sequence>& lh, queue<T, Sequence>& rh) noexcept(noexcept(lh.swap(rh))) {
     lh.swap(rh);
 }
@@ -138,27 +138,23 @@ public:
     }
 
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     priority_queue(Iterator first, Iterator last, const Sequence& seq) : seq_(seq) {
         seq_.insert(seq_.end(), first, last);
         make_heap_inside();
     }
 
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     priority_queue(Iterator first, Iterator last) : seq_(first, last) {
         make_heap_inside();
     }
 
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     priority_queue(Iterator first, Iterator last, const Compare& comp) :
         seq_(first, last), comp_(comp) {
         make_heap_inside();
     }
 
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     priority_queue(Iterator first, Iterator last, const Compare& comp, const Sequence& seq) :
         seq_(seq), comp_(comp) {
         seq_.insert(seq_.end(), first, last);
@@ -166,7 +162,6 @@ public:
     }
 
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     priority_queue(Iterator first, Iterator last, const Compare& comp, Sequence&& seq) :
         seq_(MSTL::move(seq)), comp_(comp) {
         seq_.insert(seq_.end(), first, last);
@@ -213,8 +208,8 @@ priority_queue(Iterator, Iterator, Compare = Compare(), Sequence = Sequence())
 -> priority_queue<iter_val_t<Iterator>, Sequence, Compare>;
 #endif
 
-template <typename T, typename Sequence, typename Compare>
-    requires(is_swappable_v<Sequence> && is_swappable_v<Compare>)
+template <typename T, typename Sequence, typename Compare, enable_if_t<
+    is_swappable_v<Sequence>, int> = 0>
 void swap(priority_queue<T, Sequence, Compare>& lh, priority_queue<T, Sequence, Compare>& rh)
     noexcept(noexcept(lh.swap(rh))) {
     lh.swap(rh);

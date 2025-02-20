@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MSTL_STRINGSTREAM_HPP__
+#define MSTL_STRINGSTREAM_HPP__
 #include "string.hpp"
 MSTL_BEGIN_NAMESPACE__
 
@@ -7,6 +8,7 @@ class basic_stringstream {
 public:
 	using char_type			= CharT;
 	using value_type		= basic_string<CharT>;
+	using view_type			= basic_string_view<CharT>;
 	using traits_type		= typename value_type::traits_type;
 	using allocator_type	= typename value_type::allocator_type;
 	using self				= basic_stringstream<CharT>;
@@ -40,6 +42,8 @@ public:
 	}
 
 	value_type str() const { return buffer_; }
+	view_type view() const { return view_type(buffer_.c_str()); }
+
 	void clear() {
 		buffer_.clear();
 	}
@@ -117,3 +121,4 @@ using stringstream = basic_stringstream<char>;
 using wstringstream = basic_stringstream<wchar_t>;
 
 MSTL_END_NAMESPACE__
+#endif // MSTL_STRINGSTREAM_HPP__

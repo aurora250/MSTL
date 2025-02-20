@@ -48,8 +48,8 @@ public:
     function() = default;
     function(nullptr_t) noexcept : function() {}
     
-    template <class Fcn, enable_if_t<std::is_invocable_r_v<Ret, decay_t<Fcn>, Args...> 
-    && is_copy_constructible_v<Fcn> && !is_same_v<decay_t<Fcn>, function<Ret(Args...)>>, int> = 0>
+    template <class Fcn, enable_if_t<
+        is_copy_constructible_v<Fcn> && !is_same_v<decay_t<Fcn>, function<Ret(Args...)>>, int> = 0>
     function(Fcn&& func) : base_(MSTL::move(std::make_unique<
         __func_impl<decay_t<Fcn>>>(inplace_construct_t, MSTL::forward<Fcn>(func)))) {}
 

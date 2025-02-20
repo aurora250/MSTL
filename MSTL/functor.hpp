@@ -24,6 +24,15 @@ struct plus : public binary_function<T, T, T> {
 		return x + y;
 	}
 };
+TEMNULL__ 
+struct plus<void> {
+	template <typename T1, typename T2>
+	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
+	noexcept(noexcept(static_cast<T1&&>(x) + static_cast<T2&&>(y))){
+		return static_cast<T1&&>(x) + static_cast<T2&&>(y);
+	}
+};
+
 template <typename T = void>
 struct minus : public binary_function<T, T, T> {
 	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const 
@@ -31,6 +40,15 @@ struct minus : public binary_function<T, T, T> {
 		return x - y;
 	}
 };
+TEMNULL__
+struct minus<void> {
+	template <typename T1, typename T2>
+	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
+		noexcept(noexcept(static_cast<T1&&>(x) - static_cast<T2&&>(y))) {
+		return static_cast<T1&&>(x) - static_cast<T2&&>(y);
+	}
+};
+
 template <typename T = void>
 struct multiplies : public binary_function<T, T, T> {
 	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const 
@@ -38,6 +56,15 @@ struct multiplies : public binary_function<T, T, T> {
 		return x * y;
 	}
 };
+TEMNULL__
+struct multiplies<void> {
+	template <typename T1, typename T2>
+	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
+		noexcept(noexcept(static_cast<T1&&>(x) * static_cast<T2&&>(y))) {
+		return static_cast<T1&&>(x) * static_cast<T2&&>(y);
+	}
+};
+
 template <typename T = void>
 struct divides : public binary_function<T, T, T> {
 	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const
@@ -45,6 +72,15 @@ struct divides : public binary_function<T, T, T> {
 		return x / y;
 	}
 };
+TEMNULL__
+struct divides<void> {
+	template <typename T1, typename T2>
+	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
+		noexcept(noexcept(static_cast<T1&&>(x) / static_cast<T2&&>(y))) {
+		return static_cast<T1&&>(x) / static_cast<T2&&>(y);
+	}
+};
+
 template <typename T = void>
 struct modulus : public binary_function<T, T, T> {
 	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const
@@ -52,11 +88,28 @@ struct modulus : public binary_function<T, T, T> {
 		return x % y;
 	}
 };
+TEMNULL__
+struct modulus<void> {
+	template <typename T1, typename T2>
+	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
+		noexcept(noexcept(static_cast<T1&&>(x) % static_cast<T2&&>(y))) {
+		return static_cast<T1&&>(x) % static_cast<T2&&>(y);
+	}
+};
+
 template <typename T = void>
 struct negate : public unary_function<T, T> {
 	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x) const
 		noexcept(noexcept(MSTL::declcopy<T>(-x))) {
 		return -x;
+	}
+};
+TEMNULL__
+struct negate<void> {
+	template <typename T1>
+	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x) const
+		noexcept(noexcept(-static_cast<T1&&>(x))) {
+		return -static_cast<T1&&>(x);
 	}
 };
 
@@ -69,7 +122,7 @@ struct equal_to : public binary_function<T, T, bool> {
 		return x == y;
 	}
 };
-template <>
+TEMNULL__
 struct equal_to<void> {
 	template <typename T1, typename T2>
 	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
@@ -85,7 +138,7 @@ struct not_equal_to : public binary_function<T, T, bool> {
 		return x != y;
 	}
 };
-template <>
+TEMNULL__
 struct not_equal_to<void> {
 	template <typename T1, typename T2>
 	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
@@ -101,7 +154,7 @@ struct greater : public binary_function<T, T, bool> {
 		return x > y;
 	}
 };
-template <>
+TEMNULL__
 struct greater<void> {
 	template <typename T1, typename T2>
 	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
@@ -117,7 +170,7 @@ struct less : public binary_function<T, T, bool> {
 		return x < y;
 	}
 };
-template <>
+TEMNULL__
 struct less<void> {
 	template <typename T1, typename T2>
 	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
@@ -133,7 +186,7 @@ struct greater_equal : public binary_function<T, T, bool> {
 		return x >= y;
 	}
 };
-template <>
+TEMNULL__
 struct greater_equal<void> {
 	template <typename T1, typename T2>
 	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
@@ -149,7 +202,7 @@ struct less_equal : public binary_function<T, T, bool> {
 		return x <= y;
 	}
 };
-template <>
+TEMNULL__
 struct less_equal<void> {
 	template <typename T1, typename T2>
 	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
@@ -170,7 +223,9 @@ struct identity : public unary_function<T, T> {
 
 template <typename Pair>
 struct select1st : public unary_function<Pair, typename Pair::first_type> {
+#ifdef MSTL_VERSION_20__
 	static_assert(is_pair_v<Pair>, "select1st requires pair type.");
+#endif // MSTL_VERSION_20__
 
 	MSTL_NODISCARD MSTL_CONSTEXPR const typename Pair::first_type& 
 		operator()(const Pair& x) const noexcept {
@@ -180,7 +235,9 @@ struct select1st : public unary_function<Pair, typename Pair::first_type> {
 
 template <typename Pair>
 struct select2nd : public unary_function<Pair, typename Pair::second_type> {
+#ifdef MSTL_VERSION_20__
 	static_assert(is_pair_v<Pair>, "select2nd requires pair type.");
+#endif // MSTL_VERSION_20__
 
 	MSTL_NODISCARD MSTL_CONSTEXPR const typename Pair::second_type&
 		operator()(const Pair& x) const noexcept {

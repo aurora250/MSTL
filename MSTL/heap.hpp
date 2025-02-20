@@ -5,8 +5,8 @@
 MSTL_BEGIN_NAMESPACE__
 
 // is heap
-template <typename Iterator>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 bool is_heap(Iterator first, Iterator last) {
 	using Distance = iter_dif_t<Iterator>;
 	Distance n = MSTL::distance(first, last);
@@ -19,8 +19,8 @@ bool is_heap(Iterator first, Iterator last) {
 	return true;
 }
 
-template <typename Iterator, typename Compare>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, typename Compare, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 bool is_heap(Iterator first, Iterator last, Compare comp) {
 	using Distance = iter_dif_t<Iterator>;
 	Distance n = MSTL::distance(first, last);
@@ -34,8 +34,8 @@ bool is_heap(Iterator first, Iterator last, Compare comp) {
 }
 
 // is heap until
-template <typename Iterator>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 Iterator is_heap_until(Iterator first, Iterator last) {
 	using Distance = iter_dif_t<Iterator>;
 	Distance n = MSTL::distance(first, last);
@@ -49,8 +49,8 @@ Iterator is_heap_until(Iterator first, Iterator last) {
 	return last;
 }
 
-template <typename Iterator, typename Compare>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, typename Compare, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 Iterator is_heap_until(Iterator first, Iterator last, Compare comp) {
 	using Distance = iter_dif_t<Iterator>;
 	Distance n = MSTL::distance(first, last);
@@ -65,8 +65,8 @@ Iterator is_heap_until(Iterator first, Iterator last, Compare comp) {
 }
 
 // push heap
-template <typename Iterator, typename Distance, typename T>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, typename Distance, typename T, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 void push_heap_aux(Iterator first, Distance hole_index, Distance top_index, T value) {
 	Distance parent = (hole_index - 1) / 2;
 	while (hole_index > top_index && *(first + parent) < value) {
@@ -77,15 +77,15 @@ void push_heap_aux(Iterator first, Distance hole_index, Distance top_index, T va
 	*(first + hole_index) = value;
 }
 
-template <typename Iterator>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 inline void push_heap(Iterator first, Iterator last) {
-	using Distance = iterator_traits<Iterator>::difference_type;
+	using Distance = iter_dif_t<Iterator>;
 	MSTL::push_heap_aux(first, Distance((last - first) - 1), Distance(0), *(last - 1));
 }
 
-template <typename Iterator, typename Distance, typename T, typename Compare>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, typename Distance, typename T, typename Compare, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 void push_heap_aux(Iterator first, Distance hole_index, Distance top_index, T value, Compare comp) {
 	Distance parent = (hole_index - 1) / 2;
 	while (hole_index > top_index && comp(*(first + parent), value)) {
@@ -96,16 +96,16 @@ void push_heap_aux(Iterator first, Distance hole_index, Distance top_index, T va
 	*(first + hole_index) = value;
 }
 
-template <typename Iterator, typename Compare>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, typename Compare, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 inline void push_heap(Iterator first, Iterator last, Compare comp) {
-	using Distance = iterator_traits<Iterator>::difference_type;
-	using T = iterator_traits<Iterator>::value_type;
+	using Distance = iter_dif_t<Iterator>;
+	using T = iter_val_t<Iterator>;
 	MSTL::push_heap_aux(first, Distance((last - first) - 1), Distance(0), *(last - 1), comp);
 }
 // adjust heap
-template <typename Iterator, typename Distance, typename T>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, typename Distance, typename T, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 void adjust_heap(Iterator first, Distance hole_index, Distance len, T value) {
 	Distance top_index = hole_index;
 	Distance second_child = 2 * hole_index + 2;
@@ -122,8 +122,8 @@ void adjust_heap(Iterator first, Distance hole_index, Distance len, T value) {
 	MSTL::push_heap_aux(first, hole_index, top_index, value);
 }
 
-template <typename Iterator, typename Distance, typename T, typename Compare>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, typename Distance, typename T, typename Compare, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 void adjust_heap(Iterator first, Distance holeIndex, Distance len, T value, Compare comp) {
 	Distance topIndex = holeIndex;
 	Distance secondChild = 2 * holeIndex + 2;
@@ -141,55 +141,55 @@ void adjust_heap(Iterator first, Distance holeIndex, Distance len, T value, Comp
 	MSTL::push_heap_aux(first, holeIndex, topIndex, value, comp);
 }
 // pop heap
-template <typename Iterator, typename T>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, typename T, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 void pop_heap_aux(Iterator first, Iterator last, Iterator result, T value) {
-	using Distance = iterator_traits<Iterator>::difference_type;
+	using Distance = iter_dif_t<Iterator>;
 	*result = *first;
 	MSTL::adjust_heap(first, Distance(0), Distance(last - first), value);
 }
 
-template <typename Iterator>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 inline void pop_heap(Iterator first, Iterator last) {
 	--last;
 	MSTL::pop_heap_aux(first, last, last, *last);
 }
 
-template <typename Iterator, typename T, typename Compare>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, typename T, typename Compare, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 void pop_heap_aux(Iterator first, Iterator last, Iterator result, T value, Compare comp) {
-	using Distance = iterator_traits<Iterator>::difference_type;
+	using Distance = iter_dif_t<Iterator>;
 	*result = *first;
 	MSTL::adjust_heap(first, Distance(0), Distance(last - first), value, comp);
 }
 
-template <typename Iterator, typename Compare>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, typename Compare, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 inline void pop_heap(Iterator first, Iterator last, Compare comp) {
 	--last;
 	MSTL::pop_heap_aux(first, last, last, *last, comp);
 }
 // sort heap
-template <typename Iterator>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 void sort_heap(Iterator first, Iterator last) {
 	while (last - first > 1) 
 		MSTL::pop_heap(first, last--);
 }
 
-template <typename Iterator, typename Compare>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, typename Compare, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 void sort_heap(Iterator first, Iterator last, Compare comp) {
 	while (last - first > 1)
 		MSTL::pop_heap(first, last--, comp);
 }
 // make heap
-template <typename Iterator>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 void make_heap(Iterator first, Iterator last) {
 	if (last - first < 2) return;
-	using Distance = iterator_traits<Iterator>::difference_type;
+	using Distance = iter_dif_t<Iterator>;
 	Distance len = last - first;
 	Distance parent = (len - 2) / 2;
 	while (true) {
@@ -199,11 +199,11 @@ void make_heap(Iterator first, Iterator last) {
 	}
 }
 
-template <typename Iterator, typename Compare>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, typename Compare, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 void make_heap(Iterator first, Iterator last, Compare comp) {
 	if (last - first < 2) return;
-	using Distance = iterator_traits<Iterator>::difference_type;
+	using Distance = iter_dif_t<Iterator>;
 	Distance len = last - first;
 	Distance parent = (len - 2) / 2;
 	while (true) {
@@ -214,8 +214,8 @@ void make_heap(Iterator first, Iterator last, Compare comp) {
 }
 
 
-template <typename Iterator>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 void adjust_leonardo_heap(Iterator first, size_t current_heap, int level_index, vector<int>& levels) {
 	size_t child_heap1;
 	size_t child_heap2;
@@ -261,8 +261,8 @@ void adjust_leonardo_heap(Iterator first, size_t current_heap, int level_index, 
 	}
 }
 
-template <typename Iterator>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 void push_leonardo_heap(Iterator first, Iterator last) {
 	if (first == last) return;
 	size_t size = MSTL::distance(first, last);
@@ -297,8 +297,8 @@ void push_leonardo_heap(Iterator first, Iterator last) {
 	MSTL::adjust_leonardo_heap(first, size - 1, toplevel, levels);
 }
 
-template <typename Iterator>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 void pop_leonardo_heap(Iterator first, Iterator last) {
 	if (first == last) return;
 	size_t size = MSTL::distance(first, last);
@@ -331,8 +331,8 @@ void pop_leonardo_heap(Iterator first, Iterator last) {
 	}
 }
 
-template <typename Iterator>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 void sort_leonardo_heap(Iterator first, Iterator last) {
 	if (first == last) return;
 	size_t size = MSTL::distance(first, last);
@@ -368,8 +368,8 @@ void sort_leonardo_heap(Iterator first, Iterator last) {
 	}
 }
 
-template <typename Iterator>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, enable_if_t<
+	is_rnd_iter_v<Iterator>, int> = 0>
 void make_leonardo_heap(Iterator first, Iterator last) {
 	if (first == last) return;
 	size_t size = MSTL::distance(first, last);

@@ -1,4 +1,5 @@
 #include "mysql_connect_pool.h"
+#if MSTL_DLL_LINK__
 MSTL_BEGIN_NAMESPACE__
 
 const std::string DEFAULT_IP = "127.0.0.1";
@@ -112,3 +113,4 @@ void DBConnectPool::scanner_connect_task() {
 }
 
 MSTL_END_NAMESPACE__
+#endif // MSTL_DLL_LINK__

@@ -8,8 +8,8 @@
 #include <thread>
 #include <chrono>
 #include <future>
+#include "queue.hpp"
 #include "unordered_map.hpp"
-#include "threadsafe_print.h"
 MSTL_BEGIN_NAMESPACE__
 
 static const size_t MSTL_TASK_MAX_THRESHHOLD__ = INT32_MAX;
@@ -61,9 +61,6 @@ public:
 		std::unique_lock<std::mutex> lock(task_queue_mtx_);
 		if (not not_full_.wait_for(lock, std::chrono::seconds(1),
 			[&]()->bool { return task_queue_.size() < task_queue_max_thresh_hold_; })) {
-#ifdef MSTL_STATE_DEBUG__
-			sout << "Task queue is full, submit failed\n";
-#endif
 			auto task = std::make_shared<std::packaged_task<Result()>>([]() -> Result { return Result(); });
 			(*task)();
 			return task->get_future();
@@ -74,9 +71,6 @@ public:
 		if (pool_mode_ == POOL_MODE::MODE_CACHED
 			&& task_size_ > idle_thread_size_
 			&& threads_.size() < thread_size_thresh_hold_) {
-#ifdef MSTL_STATE_DEBUG__
-			sout << ">>> creat new thread\n";
-#endif
 			auto ptr = std::make_unique<Thread__>(std::bind(&ThreadPool::thread_function, this, std::placeholders::_1));
 			int threadid = ptr->get_id();
 			threads_.emplace(threadid, std::move(ptr));
@@ -109,8 +103,6 @@ private:
 
 	POOL_MODE pool_mode_;
 	std::atomic_bool is_running_;
-
-	Output aux_output_;
 };
 
 MSTL_END_NAMESPACE__

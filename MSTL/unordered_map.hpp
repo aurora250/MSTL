@@ -57,22 +57,18 @@ public:
     }
 
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     unordered_map(Iterator first, Iterator last) : ht_(100, hasher(), key_equal()) {
         ht_.insert_unique(first, last);
     }
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     unordered_map(Iterator first, Iterator list, size_type n) : ht_(n, hasher(), key_equal()) {
         ht_.insert_unique(first, list);
     }
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     unordered_map(Iterator first, Iterator last, size_type n, const hasher& hf) : ht_(n, hf, key_equal()) {
         ht_.insert_unique(first, last);
     }
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     unordered_map(Iterator first, Iterator last, size_type n, const hasher& hf, const key_equal& eql) 
         : ht_(n, hf, eql) {
         ht_.insert_unique(first, last);
@@ -127,7 +123,6 @@ public:
         return ht_.insert_unique(MSTL::forward<value_type>(obj));
     }
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     void insert(Iterator first, Iterator last) { ht_.insert_unique(first, last); }
 
     size_type erase(const key_type& key) noexcept { return ht_.erase(key); }
@@ -209,7 +204,6 @@ void swap(const unordered_map<Key, T, HashFcn, EqualKey, Alloc>& lh,
 
 template <typename Key, typename T, typename HashFcn = hash<Key>, typename EqualKey = equal_to<Key>,
     typename Alloc = standard_allocator<__hashtable_node<pair<const Key, T>>>>
-    requires(is_hash_v<HashFcn, Key>)
 class unordered_multimap {
 #ifdef MSTL_VERSION_20__
     static_assert(is_hash_v<HashFcn, Key>, "unordered multimap requires valid hash function.");
@@ -262,22 +256,18 @@ public:
     }
 
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     unordered_multimap(Iterator first, Iterator last) : ht_(100, hasher(), key_equal()) {
         ht_.insert_equal(first, last);
     }
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     unordered_multimap(Iterator first, Iterator list, size_type n) : ht_(n, hasher(), key_equal()) {
         ht_.insert_equal(first, list);
     }
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     unordered_multimap(Iterator first, Iterator last, size_type n, const hasher& hf) : ht_(n, hf, key_equal()) {
         ht_.insert_equal(first, last);
     }
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     unordered_multimap(Iterator first, Iterator last, size_type n, const hasher& hf, const key_equal& eql)
         : ht_(n, hf, eql) {
         ht_.insert_equal(first, last);
@@ -332,7 +322,6 @@ public:
         return ht_.insert_equal(MSTL::move(obj));
     }
     template <typename Iterator>
-        requires(input_iterator<Iterator>)
     void insert(Iterator first, Iterator last) { ht_.insert_equal(first, last); }
 
     size_type erase(const key_type& key) noexcept { return ht_.erase(key); }

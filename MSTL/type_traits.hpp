@@ -26,35 +26,6 @@ using true_type = bool_constant<true>;
 using false_type = bool_constant<false>;
 
 
-template <typename T>
-struct negation : bool_constant<!static_cast<bool>(T::value)> {};
-template <typename T>
-constexpr bool negation_v = negation<T>::value;
-
-
-template <typename, typename>
-constexpr bool is_same_v = false;
-template <typename T>
-constexpr bool is_same_v<T, T> = true;
-
-template <typename T1, typename T2>
-struct is_same : bool_constant<is_same_v<T1, T2>> {};
-
-
-template <typename T>
-struct type_identity {
-    using type = T;
-};
-template <typename T>
-using type_identity_t = typename type_identity<T>::type;
-
-
-template <typename T, typename... Types>
-constexpr bool is_any_of_v = (is_same_v<T, Types> || ...);
-template <typename T, typename... Types>
-struct is_any_of : bool_constant<is_any_of_v<T, Types...>> {};
-
-
 // Test is false, SFINAF
 template <bool Test, typename T = void>
 struct enable_if {};
@@ -79,6 +50,48 @@ struct conditional<false, T1, T2> {
 };
 template <bool Test, typename T1, typename T2>
 using conditional_t = typename conditional<Test, T1, T2>::type;
+
+
+template <typename T>
+struct negation : bool_constant<!static_cast<bool>(T::value)> {};
+template <typename T>
+constexpr bool negation_v = negation<T>::value;
+
+
+template <typename, typename>
+constexpr bool is_same_v = false;
+template <typename T>
+constexpr bool is_same_v<T, T> = true;
+
+template <typename T1, typename T2>
+struct is_same : bool_constant<is_same_v<T1, T2>> {};
+
+
+template <typename T>
+struct type_identity {
+    using type = T;
+};
+template <typename T>
+using type_identity_t = typename type_identity<T>::type;
+
+
+#ifdef MSTL_VERSION_17__
+template <typename T, typename... Types>
+constexpr bool is_any_of_v = (is_same_v<T, Types> || ...);
+template <typename T, typename... Types>
+struct is_any_of : bool_constant<is_any_of_v<T, Types...>> {};
+#else
+template <typename T, typename... Types>
+struct is_any_of : false_type {};
+template <typename T, typename U>
+struct is_any_of<T, U> : is_same<T, U> {};
+
+template <typename T, typename U, typename... Types>
+struct is_any_of<T, U, Types...> 
+    : conditional<is_same_v<T, U>, true_type, is_any_of<T, Types...>>::type {};
+template <typename T, typename... Types>
+constexpr bool is_any_of_v = is_any_of<T, Types...>::value;
+#endif // MSTL_VERSION_17__
 
 
 // Test is true, stop recursion and set type
@@ -1099,6 +1112,7 @@ template <typename T1, typename T2, typename... Rest>
 struct common_type<T1, T2, Rest...> : common_type<common_type_t<T1, T2>, Rest...> {};
 
 
+#ifdef MSTL_VERSION_20__
 template <typename, typename, template <typename> typename, template <typename> typename>
 struct basic_common_reference {};
 template <typename T1>
@@ -1198,6 +1212,7 @@ struct common_reference<T1, T2, T3, Rest...> {};
 template <typename T1, typename T2, typename T3, typename... Rest>
     requires requires { typename common_reference_t<T1, T2>; }
 struct common_reference<T1, T2, T3, Rest...> : common_reference<common_reference_t<T1, T2>, T3, Rest...> {};
+#endif // MSTL_VERSION_20__
 
 
 template <typename T, template <typename...> typename Template>
@@ -1263,8 +1278,8 @@ public:
 
     using type = T;
 
-    template <typename U> requires(conjunction_v<negation<is_same<remove_cvref_t<U>,
-        reference_wrapper>>, ref_wrapper_constructable_from<T, U>>)
+    template <typename U, enable_if_t<conjunction_v<negation<is_same<remove_cvref_t<U>,
+        reference_wrapper>>, ref_wrapper_constructable_from<T, U>>, int> = 0>
     MSTL_CONSTEXPR reference_wrapper(U&& x) 
         noexcept(noexcept(MSTL::ref_wrapper_construct_aux<T>(MSTL::declval<U>()))) {
         T& ref = static_cast<U&&>(x);
@@ -1326,7 +1341,7 @@ struct unwrap_reference<reference_wrapper<T>> {
     using type = T&;
 };
 template <typename T>
-using unwrap_reference_t = unwrap_reference<T>::type;
+using unwrap_reference_t = typename unwrap_reference<T>::type;
 
 
 template <typename T>
@@ -1377,12 +1392,14 @@ template <typename T, typename U>
 using get_rebind_type_t = typename get_rebind_type<T, U>::type;
 
 
+#ifdef MSTL_VERSION_20__
 template <typename T>
 concept is_allocator_v = requires(T& alloc) {
     alloc.deallocate(alloc.allocate(size_t{ 1 }), size_t{ 1 });
 };
 template <typename T>
 struct is_allocator : bool_constant<is_allocator_v<T>> {};
+#endif // MSTL_VERSION_20__
 
 
 template <typename Alloc1, typename Alloc2>
@@ -1398,12 +1415,11 @@ struct is_swappable;
 template <typename>
 struct is_nothrow_swappable;
 
-template <typename T>
-    requires(conjunction_v<is_move_constructible<T>, is_move_assignable<T>>)
+template <typename T, enable_if_t<conjunction_v<is_move_constructible<T>, is_move_assignable<T>>, int> = 0>
 MSTL_CONSTEXPR void swap(T&, T&) 
 noexcept(is_nothrow_move_constructible_v<T> && is_nothrow_move_assignable_v<T>);
 
-template <typename T, size_t Size> requires(is_swappable<T>::value)
+template <typename T, size_t Size, enable_if_t<is_swappable<T>::value, int> = 0>
 MSTL_CONSTEXPR void swap(T(&)[Size], T(&)[Size]) noexcept(is_nothrow_swappable<T>::value);
 
 void swap() = delete;
@@ -1463,12 +1479,13 @@ template <typename T>
 constexpr bool is_trivially_swappable_v = conjunction_v<is_trivially_destructible<T>,
     is_trivially_move_constructible<T>, is_trivially_move_assignable<T>, negation<ADL_swappable<T>>>;
 TEMNULL__
-inline constexpr bool is_trivially_swappable_v<byte_t> = true;
+MSTL_INLINECSP constexpr bool is_trivially_swappable_v<byte_t> = true;
 
 template <typename T>
 struct is_trivially_swappable : bool_constant<is_trivially_swappable_v<T>> {};
 
 
+#ifdef MSTL_VERSION_20__
 #if defined(MSTL_COMPILE_CLANG__)
 template <typename From, typename To>
 concept convertible_to = is_convertible_v<From, To>&& requires { static_cast<To>(MSTL::declval<From>()); };
@@ -1493,6 +1510,7 @@ template <typename From, typename To>
 struct is_convertible_to : bool_constant<convertible_to<From, To>> {};
 template <typename From, typename To>
 constexpr bool is_convertible_to_v = is_convertible_to<From, To>::value;
+#endif // MSTL_VERSION_20__
 
 
 template <typename Iterator, typename Ptr, bool = is_pointer_v<remove_cvref_t<Iterator>>>
@@ -1558,6 +1576,22 @@ template <typename Key>
 constexpr bool is_nothrow_hashable_v = is_nothrow_hashable<Key>::value;
 
 
+#ifdef MSTL_VERSION_20__
+template <typename Func, typename Arg>
+concept is_hash_v = requires(Func f, Arg a) {
+    { f(a) } -> convertible_to<size_t>;
+};
+
+template <typename T>
+concept is_pair_v = requires(T p) {
+    typename T::first_type;
+    typename T::second_type;
+    p.first;
+    p.second;
+};
+#endif // MSTL_VERSION_20__
+
+
 template <typename, typename = void>
 struct iterator_traits_base {};
 
@@ -1577,13 +1611,25 @@ template <typename Iterator>
 struct iterator_traits : public iterator_traits_base<Iterator> {};
 
 template <typename T>
-    requires(is_object_v<T>)
 struct iterator_traits<T*> {
+    static_assert(is_object_v<T>, "iterator traits requires object types.");
+
     using iterator_category = std::random_access_iterator_tag;
     using value_type        = remove_cv_t<T>;
     using difference_type   = ptrdiff_t;
     using pointer           = T*;
     using reference         = T&;
+};
+
+template <typename T>
+struct iterator_traits<const T*> {
+    static_assert(is_object_v<T>, "iterator traits requires object types.");
+
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type = remove_cv_t<T>;
+    using difference_type = ptrdiff_t;
+    using pointer = T*;
+    using reference = T&;
 };
 
 template <typename Iterator>

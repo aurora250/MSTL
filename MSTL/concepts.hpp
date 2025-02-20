@@ -3,6 +3,7 @@
 #include "type_traits.hpp"
 MSTL_BEGIN_NAMESPACE__
 
+#ifdef MSTL_VERSION_20__
 template <typename T1, typename T2>
 concept same_as = is_same_v<T1, T2> && is_same_v<T2, T1>;
 
@@ -164,7 +165,6 @@ concept is_detailable = requires(const T & c) {
 };
 
 
-#ifdef MSTL_VERSION_20__
 template <typename T>
 concept iterator_typedef = requires() {
 	typename iterator_traits<T>::iterator_category;
@@ -207,71 +207,68 @@ concept random_access_iterator = bidirectional_iterator<Iterator> &&
 	{ it2 - it1 } -> convertible_to<typename iterator_traits<Iterator>::difference_type>;
 	{ it1[n] } -> convertible_to<typename iterator_traits<Iterator>::value_type>;
 };
-#endif
-template <typename T, typename = void>
-constexpr bool is_iterator_v = false;
-template <typename T>
-constexpr bool is_iterator_v<T, void_t<iter_cat_t<T>>> = true;
-template <typename T>
-struct is_iterator : bool_constant<is_iterator_v<T>> {};
+#endif // MSTL_VERSION_20__
+
+
+template <typename, typename = void>
+constexpr bool is_iterator_with_cate_v = false;
+template <typename Iterator>
+constexpr bool is_iterator_with_cate_v<Iterator, void_t<iter_cat_t<Iterator>>> = true;
 
 
 template <typename Iterator>
-constexpr bool is_input_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::input_iterator_tag>;
+constexpr bool is_ranges_iter_v = is_iterator_with_cate_v<Iterator>;
 
 template <typename Iterator>
-constexpr bool is_ranges_input_iter_v =
+constexpr bool is_iter_v =
 #ifdef MSTL_VERSION_20__
-input_iterator<Iterator> ||
+iterator_typedef<Iterator> &&
 #endif
-is_input_iter_v<Iterator>;
+is_ranges_iter_v<Iterator>;
 
 
 template <typename Iterator>
-constexpr bool is_fwd_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::forward_iterator_tag>;
+constexpr bool is_ranges_input_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::input_iterator_tag>;
 
 template <typename Iterator>
-constexpr bool is_ranges_fwd_iter_v =
+constexpr bool is_input_iter_v =
 #ifdef MSTL_VERSION_20__
-forward_iterator<Iterator> ||
+input_iterator<Iterator> &&
 #endif
-is_fwd_iter_v<Iterator>;
+is_ranges_input_iter_v<Iterator>;
 
 
 template <typename Iterator>
-constexpr bool is_bid_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::bidirectional_iterator_tag>;
+constexpr bool is_ranges_fwd_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::forward_iterator_tag>;
 
 template <typename Iterator>
-constexpr bool is_ranges_bid_iter_v =
+constexpr bool is_fwd_iter_v = 
 #ifdef MSTL_VERSION_20__
-bidirectional_iterator<Iterator> ||
+forward_iterator<Iterator> &&
 #endif
-is_bid_iter_v<Iterator>;
+is_ranges_fwd_iter_v<Iterator>;
 
 
 template <typename Iterator>
-constexpr bool is_rnd_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::random_access_iterator_tag>;
+constexpr bool is_ranges_bid_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::bidirectional_iterator_tag>;
 
 template <typename Iterator>
-constexpr bool is_ranges_rnd_iter_v =
+constexpr bool is_bid_iter_v =
 #ifdef MSTL_VERSION_20__
-random_access_iterator<Iterator> ||
+bidirectional_iterator<Iterator> &&
 #endif
-is_rnd_iter_v<Iterator>;
+is_ranges_bid_iter_v<Iterator>;
 
 
-template <typename T>
-concept is_pair_v = requires(T p) {
-	typename T::first_type;
-	typename T::second_type;
-	p.first;
-	p.second;
-};
+template <typename Iterator>
+constexpr bool is_ranges_rnd_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::random_access_iterator_tag>;
 
-template <typename Func, typename Arg>
-concept is_hash_v = requires(Func f, Arg a) {
-	{ f(a) } -> convertible_to<size_t>;
-};
+template <typename Iterator>
+constexpr bool is_rnd_iter_v =
+#ifdef MSTL_VERSION_20__
+random_access_iterator<Iterator> &&
+#endif
+is_ranges_rnd_iter_v<Iterator>;
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_CONCEPTS_HPP__

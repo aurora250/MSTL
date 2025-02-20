@@ -4,37 +4,35 @@
 #include <atomic>
 MSTL_BEGIN_NAMESPACE__
 
-template <typename Iterator1, typename Iterator2>
-    requires(input_iterator<Iterator1> && forward_iterator<Iterator2> && trivially_copy_assignable<
-        typename iterator_traits<Iterator1>::value_type>)
+template <typename Iterator1, typename Iterator2, enable_if_t<
+    is_input_iter_v<Iterator1> && is_fwd_iter_v<Iterator2> 
+    && is_trivially_copy_assignable_v<iter_val_t<Iterator1>>, int> = 0>
 MSTL_CONSTEXPR Iterator2 uninitialized_copy(Iterator1 first, Iterator1 last, Iterator2 result) {
     return MSTL::copy(first, last, result);
 }
 
-template <typename Iterator1, typename Iterator2>
-    requires(input_iterator<Iterator1>&& forward_iterator<Iterator2> && (!trivially_copy_assignable<
-        typename iterator_traits<Iterator1>::value_type>))
+template <typename Iterator1, typename Iterator2, enable_if_t<
+    is_input_iter_v<Iterator1>&& is_fwd_iter_v<Iterator2>
+    && !is_trivially_copy_assignable_v<iter_val_t<Iterator1>>, int> = 0>
 MSTL_CONSTEXPR Iterator2 uninitialized_copy(Iterator1 first, Iterator1 last, Iterator2 result) {
     Iterator2 cur = result;
     MSTL_TRY__{
     for (; first != last; ++first, ++cur)
-        MSTL::construct(&*cur, *first); 
+        MSTL::construct(&*cur, *first);
     }
     MSTL_CATCH_UNWIND_THROW_M__(for (; result != cur; --cur) MSTL::destroy(&*cur); )
     return cur;
 }
 
-#define UNINITCOPY_CHAR_FUNCTION__(OPT) \
-inline OPT* uninitialized_copy(const OPT* first, const OPT* last, OPT* result) { \
-    memmove(result, first, (int)(sizeof(OPT) * (last - first))); \
-    return result + (last - first); \
+inline byte_t* uninitialized_copy(const byte_t* first, const byte_t* last, byte_t* result) {
+    memmove(result, first, last - first);
+    return result + (last - first);
 }
-MSTL_MACRO_RANGE_CHARS(UNINITCOPY_CHAR_FUNCTION__)
 
 
-template <typename Iterator1, typename Iterator2>
-    requires(input_iterator<Iterator1> && forward_iterator<Iterator2>)
-pair<Iterator1, Iterator2> 
+template <typename Iterator1, typename Iterator2, enable_if_t<
+    is_input_iter_v<Iterator1> && is_fwd_iter_v<Iterator2> && !is_rnd_iter_v<Iterator1>, int> = 0>
+pair<Iterator1, Iterator2>
 MSTL_CONSTEXPR uninitialized_copy_n(Iterator1 first, size_t count, Iterator2 result) {
     Iterator2 cur = result;
     MSTL_TRY__{
@@ -45,23 +43,23 @@ MSTL_CONSTEXPR uninitialized_copy_n(Iterator1 first, size_t count, Iterator2 res
     return pair<Iterator1, Iterator2>(first, cur);
 }
 
-template <typename Iterator1, typename Iterator2>
-    requires(random_access_iterator<Iterator1>&& forward_iterator<Iterator2>)
-inline pair<Iterator1, Iterator2>
+template <typename Iterator1, typename Iterator2, enable_if_t<
+    is_rnd_iter_v<Iterator1> && is_fwd_iter_v<Iterator2>, int> = 0>
+pair<Iterator1, Iterator2>
 MSTL_CONSTEXPR uninitialized_copy_n(Iterator1 first, size_t count, Iterator2 result) {
     Iterator1 last = first + count;
     return MSTL::make_pair(last, MSTL::uninitialized_copy(first, last, result));
 }
 
 
-template <typename Iterator, typename T>
-    requires(forward_iterator<Iterator> && trivially_assignable<typename iterator_traits<Iterator>::value_type>)
+template <typename Iterator, typename T, enable_if_t<
+    is_fwd_iter_v<Iterator> && is_trivially_copy_assignable_v<iter_val_t<Iterator>>, int> = 0>
 MSTL_CONSTEXPR void uninitialized_fill(Iterator first, Iterator last, const T& x) {
     MSTL::fill(first, last, x);
 }
 
-template <typename Iterator, typename T>
-    requires(forward_iterator<Iterator> && (!trivially_assignable<typename iterator_traits<Iterator>::value_type>))
+template <typename Iterator, typename T, enable_if_t<
+    is_fwd_iter_v<Iterator> && !is_trivially_copy_assignable_v<iter_val_t<Iterator>>, int> = 0>
 MSTL_CONSTEXPR void uninitialized_fill(Iterator first, Iterator last, const T& x) {
     Iterator cur = first;
     for (; cur != last; ++cur)
@@ -69,14 +67,14 @@ MSTL_CONSTEXPR void uninitialized_fill(Iterator first, Iterator last, const T& x
 }
 
 
-template <typename Iterator, typename T>
-    requires(forward_iterator<Iterator> && trivially_assignable<typename iterator_traits<Iterator>::value_type>)
+template <typename Iterator, typename T, enable_if_t<
+    is_fwd_iter_v<Iterator> && is_trivially_copy_assignable_v<iter_val_t<Iterator>>, int> = 0>
 MSTL_CONSTEXPR Iterator uninitialized_fill_n(Iterator first, size_t n, const T& x) {
     return MSTL::fill_n(first, n, x);
 }
 
-template <typename Iterator, typename T>
-    requires(forward_iterator<Iterator> && (!trivially_assignable<typename iterator_traits<Iterator>::value_type>))
+template <typename Iterator, typename T, enable_if_t<
+    is_fwd_iter_v<Iterator> && !is_trivially_copy_assignable_v<iter_val_t<Iterator>>, int> = 0>
 MSTL_CONSTEXPR Iterator uninitialized_fill_n(Iterator first, size_t n, const T& x) {
     Iterator cur = first;
     for (; n > 0; --n, ++cur) 
@@ -85,16 +83,16 @@ MSTL_CONSTEXPR Iterator uninitialized_fill_n(Iterator first, size_t n, const T& 
 }
 
 
-template <typename Iterator1, typename Iterator2>
-    requires input_iterator<Iterator1>&& forward_iterator<Iterator2>&&
-is_trivially_move_assignable_v<typename iterator_traits<Iterator1>::value_type>
+template <typename Iterator1, typename Iterator2, enable_if_t<
+    is_input_iter_v<Iterator1> && is_fwd_iter_v<Iterator2>
+    && is_trivially_move_assignable_v<iter_val_t<Iterator1>>, int> = 0>
 MSTL_CONSTEXPR Iterator2 uninitialized_move(Iterator1 first, Iterator1 last, Iterator2 result) {
     return MSTL::move(first, last, result);
 }
 
-template <typename Iterator1, typename Iterator2>
-    requires input_iterator<Iterator1>&& forward_iterator<Iterator2> &&
-(!is_trivially_move_assignable_v<typename iterator_traits<Iterator1>::value_type>)
+template <typename Iterator1, typename Iterator2, enable_if_t<
+    is_input_iter_v<Iterator1>&& is_fwd_iter_v<Iterator2>
+    && !is_trivially_move_assignable_v<iter_val_t<Iterator1>>, int> = 0>
 MSTL_CONSTEXPR Iterator2 uninitialized_move(Iterator1 first, Iterator1 last, Iterator2 result) {
     Iterator2 cur = result;
     MSTL_TRY__{
@@ -105,16 +103,14 @@ MSTL_CONSTEXPR Iterator2 uninitialized_move(Iterator1 first, Iterator1 last, Ite
     return cur;
 }
 
-#define UNINITMOVE_CHAR_FUNCTION__(OPT) \
-inline OPT* uninitialized_move(const OPT* first, const OPT* last, OPT* result) { \
-    MSTL::memmove(result, first, (int)(sizeof(OPT) * (last - first))); \
-    return result + (last - first); \
+inline byte_t* uninitialized_move(const byte_t* first, const byte_t* last, byte_t* result) {
+    MSTL::memmove(result, first, last - first);
+    return result + (last - first);
 }
-MSTL_MACRO_RANGE_CHARS(UNINITMOVE_CHAR_FUNCTION__)
 
 
-template <typename Iterator1, typename Iterator2>
-    requires input_iterator<Iterator1>&& forward_iterator<Iterator2>
+template <typename Iterator1, typename Iterator2, enable_if_t<
+    is_input_iter_v<Iterator1> && is_fwd_iter_v<Iterator2> && !is_rnd_iter_v<Iterator1>, int> = 0>
 pair<Iterator1, Iterator2>
 MSTL_CONSTEXPR uninitialized_move_n(Iterator1 first, size_t count, Iterator2 result) {
     Iterator2 cur = result;
@@ -126,8 +122,8 @@ MSTL_CONSTEXPR uninitialized_move_n(Iterator1 first, size_t count, Iterator2 res
     return pair<Iterator1, Iterator2>(first, cur);
 }
 
-template <typename Iterator1, typename Iterator2>
-    requires random_access_iterator<Iterator1>&& forward_iterator<Iterator2>
+template <typename Iterator1, typename Iterator2, enable_if_t<
+    is_rnd_iter_v<Iterator1> && is_fwd_iter_v<Iterator2>, int> = 0>
 inline pair<Iterator1, Iterator2>
 MSTL_CONSTEXPR uninitialized_move_n(Iterator1 first, size_t count, Iterator2 result) {
     Iterator1 last = first + count;
@@ -135,7 +131,7 @@ MSTL_CONSTEXPR uninitialized_move_n(Iterator1 first, size_t count, Iterator2 res
 }
 
 
-template <typename Iterator, typename T = typename iterator_traits<Iterator>::value_type>
+template <typename Iterator, typename T = iter_val_t<Iterator>>
 class temporary_buffer {
     static_assert(is_ranges_fwd_iter_v<Iterator>, "temporary buffer requires forward iterator type.");
 
@@ -154,9 +150,9 @@ private:
             len_ /= 2;
         }
     }
-    void initialize_buffer(const T&) requires(is_trivially_copy_assignable_v<T>) {}
-    void initialize_buffer(const T& val) requires(!is_trivially_copy_assignable_v<T>) {
-        MSTL::uninitialized_fill_n(buffer_, len_, val);
+    void initialize_buffer(const T& val) {
+        if constexpr (!is_trivially_copy_assignable_v<T>)
+            MSTL::uninitialized_fill_n(buffer_, len_, val);
     }
 
 public:
@@ -243,67 +239,6 @@ decltype(auto) ptr_const_cast(T* ptr) noexcept {
 }
 
 
-template <typename T>
-concept support_ptr_address = requires(const T & x) {
-    typename pointer_traits<T>;
-    pointer_traits<T>::to_address(x);
-};
-
-template <typename T>
-MSTL_NODISCARD constexpr T* to_address(T* const x) noexcept {
-    static_assert(!is_function_v<T>, "to address don`t support function types.");
-    return x;
-}
-
-template <typename Ptr>
-MSTL_NODISCARD constexpr decltype(auto) to_address(const Ptr& x) noexcept {
-    if constexpr (support_ptr_address<Ptr>)
-        return pointer_traits<Ptr>::to_address(x);
-    else
-        return MSTL::to_address(x.operator->());
-}
-
-
-
-template <typename Ptr>
-MSTL_NODISCARD constexpr auto unfancy(Ptr p) noexcept {
-    return MSTL::addressof(*p);
-}
-template <typename T>
-MSTL_NODISCARD constexpr T* unfancy(T* p) noexcept {
-    return p;
-}
-template <typename Ptr>
-constexpr decltype(auto) unfancy_maybe_null(Ptr p) noexcept {
-    return p ? MSTL::addressof(*p) : nullptr;
-}
-template <typename T>
-constexpr T* unfancy_maybe_null(T* p) noexcept {
-    return p;
-}
-
-
-template <typename Ptr, typename T>
-using rebind_pointer_t = typename pointer_traits<Ptr>::template rebind<T>;
-
-template <typename Ptr, enable_if_t<!is_pointer_v<Ptr>, int> = 0>
-MSTL_CONSTEXPR Ptr refancy(typename pointer_traits<Ptr>::element_type* p) noexcept {
-    return pointer_traits<Ptr>::pointer_to(*p);
-}
-template <typename Ptr, enable_if_t<is_pointer_v<Ptr>, int> = 0>
-MSTL_CONSTEXPR Ptr refancy(Ptr p) noexcept {
-    return p;
-}
-template <typename Ptr, enable_if_t<!is_pointer_v<Ptr>, int> = 0>
-MSTL_CONSTEXPR Ptr refancy_maybe_null(typename pointer_traits<Ptr>::element_type* p) noexcept {
-    return p == nullptr ? Ptr() : pointer_traits<Ptr>::pointer_to(*p);
-}
-template <typename Ptr, enable_if_t<is_pointer_v<Ptr>, int> = 0>
-MSTL_CONSTEXPR Ptr refancy_maybe_null(Ptr p) noexcept {
-    return p;
-}
-
-
 template <typename T, typename = void>
 struct get_pointer_type {
     using type = typename T::value_type*;
@@ -354,17 +289,18 @@ struct allocator_traits {
     template <class U>
     using rebind_traits = allocator_traits<rebind_alloc<U>>;
 
-    MSTL_ALLOCNODISCARD static MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(Alloc& alloc, const size_type n) {
+    MSTL_ALLOCNODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(
+        Alloc& alloc, const size_type n) {
         return alloc.allocate(n);
     }
-    static _CONSTEXPR20 void deallocate(Alloc& alloc, pointer ptr, size_type n) {
+    static MSTL_CONSTEXPR20 void deallocate(Alloc& alloc, pointer ptr, size_type n) {
         alloc.deallocate(ptr, n);
     }
 };
 
 
 template <size_t Align>
-MSTL_DECLALLOC MSTL_CONSTEXPR void* allocate(const size_t bytes) {
+MSTL_DECLALLOC MSTL_CONSTEXPR20 void* allocate(const size_t bytes) {
     if (bytes == 0) return nullptr;
 #if MSTL_VERSION_20__
     if (MSTL::is_constant_evaluated()) {
@@ -407,7 +343,7 @@ MSTL_DECLALLOC MSTL_CONSTEXPR void* allocate(const size_t bytes) {
 }
 
 template <size_t Align>
-MSTL_CONSTEXPR void deallocate(void* ptr, size_t bytes) noexcept {
+MSTL_CONSTEXPR20 void deallocate(void* ptr, size_t bytes) noexcept {
 #if MSTL_VERSION_20__
     if (MSTL::is_constant_evaluated()) {
         ::operator delete(ptr);
@@ -467,36 +403,36 @@ public:
 
     static constexpr size_t value_size = sizeof(value_type);
 
-    MSTL_CONSTEXPR standard_allocator() noexcept = default;
+    MSTL_CONSTEXPR20 standard_allocator() noexcept = default;
     template <typename U>
-    MSTL_CONSTEXPR standard_allocator(const standard_allocator<U>&) noexcept {}
-    MSTL_CONSTEXPR ~standard_allocator() noexcept = default;
-    MSTL_CONSTEXPR self& operator =(const self&) noexcept = default;
+    MSTL_CONSTEXPR20 standard_allocator(const standard_allocator<U>&) noexcept {}
+    MSTL_CONSTEXPR20 ~standard_allocator() noexcept = default;
+    MSTL_CONSTEXPR20 self& operator =(const self&) noexcept = default;
 
-    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(const size_type n) {
+    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(const size_type n) {
         static_assert(value_size > 0, "value type must be complete before allocation called.");
         const size_t alloc_size = value_size * n;
         MSTL_DEBUG_VERIFY__(alloc_size <= INT_MAX_SIZE, "allocation will cause memory overflow.");
         return static_cast<T*>(MSTL::allocate<FINAL_ALIGN_SIZE<T>>(alloc_size));
     }
-    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate() {
+    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate() {
         return this->allocate(1);
     }
-    MSTL_CONSTEXPR void deallocate(pointer p, const size_type n) noexcept {
+    MSTL_CONSTEXPR20 void deallocate(pointer p, const size_type n) noexcept {
         MSTL_DEBUG_VERIFY__(p != nullptr || n == 0, "pointer invalid.");
         MSTL::deallocate<FINAL_ALIGN_SIZE<T>>(p, n * value_size);
     }
-    MSTL_CONSTEXPR void deallocate(pointer p) noexcept {
+    MSTL_CONSTEXPR20 void deallocate(pointer p) noexcept {
         this->deallocate(p, 1);
     }
 };
 template <typename T, typename U>
-MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(
+MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator ==(
     const standard_allocator<T>& lh, const standard_allocator<U>& rh) noexcept {
     return true;
 }
 template <typename T, typename U>
-MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(
+MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator !=(
     const standard_allocator<T>& lh, const standard_allocator<U>& rh) noexcept {
     return false;
 }
@@ -520,31 +456,31 @@ public:
         using other = ctype_allocator<U>;
     };
 
-    MSTL_CONSTEXPR ctype_allocator() noexcept = default;
+    MSTL_CONSTEXPR20 ctype_allocator() noexcept = default;
     template <typename U>
-    MSTL_CONSTEXPR ctype_allocator(const ctype_allocator<U>&) noexcept {}
-    MSTL_CONSTEXPR ~ctype_allocator() noexcept = default;
-    MSTL_CONSTEXPR self& operator =(const self&) noexcept = default;
+    MSTL_CONSTEXPR20 ctype_allocator(const ctype_allocator<U>&) noexcept {}
+    MSTL_CONSTEXPR20 ~ctype_allocator() noexcept = default;
+    MSTL_CONSTEXPR20 self& operator =(const self&) noexcept = default;
 
-    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(const size_type n) {
+    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(const size_type n) {
         return 0 == n ? 0 : static_cast<pointer>(std::malloc(n * sizeof(T)));
     }
-    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(void) {
+    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(void) {
         return static_cast<pointer>(std::malloc(sizeof(T)));
     }
-    MSTL_CONSTEXPR void deallocate(pointer p) noexcept {
+    MSTL_CONSTEXPR20 void deallocate(pointer p) noexcept {
         std::free(p);
     }
-    MSTL_CONSTEXPR void deallocate(pointer p, const size_type) noexcept {
+    MSTL_CONSTEXPR20 void deallocate(pointer p, const size_type) noexcept {
         std::free(p);
     }
 };
 template <typename T, typename U>
-MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(const ctype_allocator<T>&, const ctype_allocator<U>&) noexcept {
+MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator ==(const ctype_allocator<T>&, const ctype_allocator<U>&) noexcept {
     return true;
 }
 template <typename T, typename U>
-MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(const ctype_allocator<T>&, const ctype_allocator<U>&) noexcept {
+MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator !=(const ctype_allocator<T>&, const ctype_allocator<U>&) noexcept {
     return false;
 }
 
@@ -567,31 +503,31 @@ public:
         using other = new_allocator<U>;
     };
 
-    MSTL_CONSTEXPR new_allocator() noexcept = default;
+    MSTL_CONSTEXPR20 new_allocator() noexcept = default;
     template <typename U>
-    MSTL_CONSTEXPR new_allocator(const new_allocator<U>&) noexcept {}
-    MSTL_CONSTEXPR ~new_allocator() noexcept = default;
-    MSTL_CONSTEXPR self& operator =(const self&) noexcept = default;
+    MSTL_CONSTEXPR20 new_allocator(const new_allocator<U>&) noexcept {}
+    MSTL_CONSTEXPR20 ~new_allocator() noexcept = default;
+    MSTL_CONSTEXPR20 self& operator =(const self&) noexcept = default;
 
-    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(size_type n) {
+    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(size_type n) {
         return 0 == n ? 0 : static_cast<pointer>(::operator new(n * sizeof(T)));
     }
-    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR MSTL_DECLALLOC pointer allocate(void) {
+    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(void) {
         return static_cast<pointer>(::operator new(sizeof(T)));
     }
-    MSTL_CONSTEXPR void deallocate(pointer p) noexcept {
+    MSTL_CONSTEXPR20 void deallocate(pointer p) noexcept {
         ::operator delete(p);
     }
-    MSTL_CONSTEXPR void deallocate(pointer p, const size_type) noexcept {
+    MSTL_CONSTEXPR20 void deallocate(pointer p, const size_type) noexcept {
         ::operator delete(p);
     }
 };
 template <typename T, typename U>
-MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(const new_allocator<T>&, const new_allocator<U>&) noexcept {
+MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator ==(const new_allocator<T>&, const new_allocator<U>&) noexcept {
     return true;
 }
 template <typename T, typename U>
-MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(const new_allocator<T>&, const new_allocator<U>&) noexcept {
+MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator !=(const new_allocator<T>&, const new_allocator<U>&) noexcept {
     return false;
 }
 
@@ -612,26 +548,6 @@ MSTL_CONSTEXPR void delete_internal(Alloc& alloc, typename Alloc::value_type* co
         allocator_traits<Alloc>::deallocate(alloc, pointer::pointer_to(*ptr), 1);
     }
 }
-
-
-template <typename, typename...>
-struct map_key_extract {
-    static constexpr bool extractable = false;
-};
-template <typename Key, typename Next>
-struct map_key_extract<Key, Key, Next> {
-    static constexpr bool extractable = true;
-    static const Key& extract(const Key& key, const Next&) noexcept {
-        return key;
-    }
-};
-template <typename Key, typename First, typename Second>
-struct map_key_extract<Key, pair<First, Second>> {
-    static constexpr bool extractable = is_same_v<Key, remove_cvref_t<First>>;
-    static const Key& extract(const pair<First, Second>& pir) {
-        return pir.first;
-    }
-};
 
 
 template <class T>
@@ -768,15 +684,15 @@ struct smart_ptr_counter {
     virtual ~smart_ptr_counter() = default;
 
     void incref() noexcept {
-        count_.fetch_add(1, std::memory_order::relaxed);
+        count_.fetch_add(1, std::memory_order_relaxed);
     }
     void decref() noexcept {
-        if (count_.fetch_sub(1, std::memory_order::relaxed) == 1) {
+        if (count_.fetch_sub(1, std::memory_order_relaxed) == 1) {
             delete this;
         }
     }
     long countref() const noexcept {
-        return count_.load(std::memory_order::relaxed);
+        return count_.load(std::memory_order_relaxed);
     }
 };
 

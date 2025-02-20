@@ -68,8 +68,7 @@ MSTL_CONSTEXPR mathld_t radian2angular(mathld_t radians) noexcept {
 	return radians * (constants::SEMI_CIRCLE / constants::PI);
 }
 
-template <typename T> 
-	requires(is_signed_v<T>)
+template <typename T, enable_if_t<is_signed_v<T>, int> = 0>
 MSTL_CONSTEXPR T opposite(T x) noexcept {
 	return -x;
 }
@@ -77,19 +76,16 @@ template <typename T>
 MSTL_CONSTEXPR decltype(auto) sum_n(T x) noexcept {
 	return x;
 }
-template <typename First, typename... Rests>
-	requires(sizeof...(Rests) > 0)
+template <typename First, typename... Rests, enable_if_t<(sizeof...(Rests) > 0), int> = 0>
 MSTL_CONSTEXPR decltype(auto) sum_n(First first, Rests... args) noexcept {
 	return first + sum_n(args...);
 }
-template <typename T> 
-	requires(is_signed_v<T>)
+template <typename T, enable_if_t<is_signed_v<T>, int> = 0>
 MSTL_CONSTEXPR T absolute(T x) noexcept {
 	return (x > 0) ? x : (-x);
 }
 
-template <typename T>
-	requires(is_integral_v<T>)
+template <typename T, enable_if_t<is_integral_v<T>, int> = 0>
 MSTL_CONSTEXPR T gcd(T m, T n) noexcept { // greatest common divisor
 	while (n != 0) {
 		T t = m % n;
@@ -98,8 +94,7 @@ MSTL_CONSTEXPR T gcd(T m, T n) noexcept { // greatest common divisor
 	}
 	return m;
 }
-template <typename T>
-	requires(is_integral_v<T>)
+template <typename T, enable_if_t<is_integral_v<T>, int> = 0>
 MSTL_CONSTEXPR T lcm(T m, T n) noexcept { // least common multiple
 	return MSTL::absolute(m * n) / MSTL::gcd(m, n);
 }
@@ -108,8 +103,7 @@ template <typename T>
 MSTL_CONSTEXPR T square(T x) noexcept { return x * x; }
 template <typename T>
 MSTL_CONSTEXPR T cube(T x) noexcept { return MSTL::square(x) * x; }
-template <typename T>
-	requires (is_integral_v<T>)
+template <typename T, enable_if_t<is_integral_v<T>, int> = 0>
 MSTL_CONSTEXPR mathl_t power(T x, mathui_t n) noexcept {
 	if (n == 0) return mathl_t(1);
 	mathl_t result = 1;
@@ -123,8 +117,7 @@ MSTL_CONSTEXPR mathl_t power(T x, mathui_t n) noexcept {
 	}
 	return result;
 }
-template <typename T>
-	requires (is_floating_point_v<T>)
+template <typename T, enable_if_t<is_floating_point_v<T>, int> = 0>
 MSTL_CONSTEXPR mathld_t power(T x, mathui_t n) noexcept {
 	if (n == 0) return mathld_t(1);
 	mathld_t result = 1.0;
@@ -169,7 +162,7 @@ MSTL_CONSTEXPR mathul_t cursory_lg2(mathul_t x) noexcept {
 	return k;
 }
 
-MSTL_CONSTEXPR mathld_t square_root(mathld_t x, mathld_t precise) noexcept {
+MSTL_CONSTEXPR mathld_t square_root(mathld_t x, mathld_t precise = constants::PRECISE_TOLERANCE) noexcept {
 	mathld_t t = 0.0;
 	mathld_t result = x;
 	while (absolute(result - t) > precise) {
@@ -271,7 +264,7 @@ MSTL_CONSTEXPR mathld_t divided_float(mathld_t x, mathl_t* int_ptr) noexcept {
 MSTL_CONSTEXPR mathld_t sine(mathld_t x) noexcept {
 	mathul_t i = 1;
 	mathi_t neg = 1;
-	mathld_t sum;
+	mathld_t sum = 0;
 	mathld_t idx = x;
 	mathld_t fac = 1;
 	mathld_t taylor = x;

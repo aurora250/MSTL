@@ -231,8 +231,8 @@ private:
         finish_.change_buff(new_start + old_num_nodes - 1);
     }
 
-    template <typename Iterator>
-        requires(input_iterator<Iterator>)
+    template <typename Iterator, enable_if_t<
+        is_input_iter_v<Iterator>, int> = 0>
     iterator range_insert(iterator position, Iterator first, Iterator last) {
         difference_type n = last - first;
         difference_type index = position - start_;
@@ -394,8 +394,8 @@ public:
         (fill_initialize)(n, MSTL::forward<T>(x));
     }
 
-    template <typename Iterator>
-        requires(input_iterator<Iterator>)
+    template <typename Iterator, enable_if_t<
+        is_input_iter_v<Iterator>, int> = 0>
     deque(Iterator first, Iterator last) :
         data_alloc_(), map_alloc_(), map_(nullptr), map_size_(0), start_(nullptr), finish_(nullptr) {
         Exception(MSTL::distance(first, last) >= 0,
@@ -576,8 +576,8 @@ public:
         insert(begin(), count, value);
     }
 
-    template <typename Iterator>
-        requires(input_iterator<Iterator>)
+    template <typename Iterator, enable_if_t<
+        is_iter_v<Iterator>, int> = 0>
     void assign(Iterator first, Iterator last) {
         clear();
         insert(begin(), first, last);
@@ -597,8 +597,8 @@ public:
         return (emplace)(position, T());
     }
 
-    template <typename Iterator>
-        requires(input_iterator<Iterator>)
+    template <typename Iterator, enable_if_t<
+        is_input_iter_v<Iterator>, int> = 0>
     iterator insert(iterator position, Iterator first, Iterator last) {
         range_check(position);
         Exception(MSTL::distance(first, last) >= 0, StopIterator("deque insert out of ranges."));

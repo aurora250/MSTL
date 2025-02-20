@@ -382,8 +382,8 @@ public:
     iterator insert_unique(iterator position, value_type&& v) {
         return (emplace_unique_hint)(position, MSTL::move(v));
     }
-    template <typename Iterator> 
-        requires(input_iterator<Iterator>)
+    template <typename Iterator, enable_if_t<
+        is_input_iter_v<Iterator>, int> = 0>
     void insert_unique(Iterator first, Iterator last) {
         for (; first != last; ++first) insert_unique(*first);
     }
@@ -434,8 +434,8 @@ public:
     iterator insert_equal(iterator position, value_type&& v) {
         return (emplace_equal_hint)(position, MSTL::move(v));
     }
-    template <typename Iterator>
-        requires(input_iterator<Iterator>)
+    template <typename Iterator, enable_if_t<
+        is_input_iter_v<Iterator>, int> = 0>
     void insert_equal(Iterator first, Iterator last) {
         for (; first != last; ++first) insert_equal(*first);
     }

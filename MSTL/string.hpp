@@ -29,6 +29,7 @@ TEMNULL__ struct hash<std::string> {
 };
 
 
+#ifdef MSTL_VERSION_17__
 #pragma warning(push)
 #pragma warning(disable: 4455)
 inline namespace string_operator {
@@ -51,6 +52,7 @@ inline namespace string_operator {
     }
 }
 #pragma warning(pop)
+#endif // MSTL_VERSION_17__
 
 
 template <typename CharT, typename UT>
@@ -61,10 +63,10 @@ MSTL_NODISCARD CharT* uint_to_buff(CharT* riter, UT ux) {
 #else
     if constexpr (sizeof(UT) > 4) {
         while (ux > 0xFFFFFFFFU) {
-            auto chunk = static_cast<unsigned long>(_UVal % 1000000000);
+            auto chunk = static_cast<unsigned long>(ux % 1000000000);
             ux /= 1000000000;
             for (int idx = 0; idx != 9; ++idx) {
-                *--rnext = static_cast<CharT>('0' + chunk % 10);
+                *--riter = static_cast<CharT>('0' + chunk % 10);
                 chunk /= 10;
             }
         }

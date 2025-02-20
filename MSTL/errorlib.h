@@ -1,6 +1,6 @@
 #ifndef MSTL_ERRORLIB_H__
 #define MSTL_ERRORLIB_H__
-#include "logging.h"
+#include "basiclib.h"
 #include <assert.h>
 MSTL_BEGIN_NAMESPACE__
 
@@ -73,7 +73,7 @@ MSTL_NORETURN void Exit(bool _abort = false, void(*_func)(void) = nullptr);
 
 
 #define MSTL_REPORT_ERROR__(MESG) \
-    { LOG_ERROR(MESG); } assert(false);
+    { std::cerr << MESG << std::endl; } assert(false);
 
 #ifdef MSTL_STATE_DEBUG__
 #define MSTL_DEBUG_VERIFY__(CON, MESG) \

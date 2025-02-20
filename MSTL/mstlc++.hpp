@@ -2,6 +2,7 @@
 #define MSTL_MSTLCPP_HPP__
 
 #include "functional.hpp"
+#include "tuple.hpp"
 #include "list.hpp"
 #include "algorithm.hpp"
 #include "unordered_set.hpp"

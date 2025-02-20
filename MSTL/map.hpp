@@ -74,12 +74,10 @@ public:
 	}
 
 	template <typename Iterator>
-		requires(input_iterator<Iterator>)
 	map(Iterator first, Iterator last) : tree_(Compare()) {
 		tree_.insert_unique(first, last);
 	}
 	template <typename Iterator>
-		requires(input_iterator<Iterator>)
 	map(Iterator first, Iterator last, const key_compare& comp) : tree_(comp) {
 		tree_.insert_unique(first, last);
 	}
@@ -315,12 +313,10 @@ public:
 	}
 
 	template <typename Iterator>
-		requires(input_iterator<Iterator>)
 	multimap(Iterator first, Iterator last) : tree_(Compare()) {
 		tree_.insert_equal(first, last);
 	}
 	template <typename Iterator>
-		requires(input_iterator<Iterator>)
 	multimap(Iterator first, Iterator last, const key_compare& comp) : tree_(comp) {
 		tree_.insert_equal(first, last);
 	}

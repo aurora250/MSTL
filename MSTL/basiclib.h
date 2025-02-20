@@ -64,19 +64,19 @@
 #define MSTL_ MSTL::
 
 
-#if defined(_HAS_CXX20) || (__cplusplus >= 202002L)
+#if _HAS_CXX20 || (__cplusplus >= 202002L) || (_MSVC_LANG >= 202002L)
 	#define MSTL_VERSION_20__	1
 #endif
-#if defined(_HAS_CXX17) || (__cplusplus >= 201703L) || defined(MSTL_VERSION_20__)
+#if _HAS_CXX17 || (__cplusplus >= 201703L) || defined(MSTL_VERSION_20__) || (_MSVC_LANG >= 201703L)
 	#define MSTL_VERSION_17__	1
 #endif
-#if (__cplusplus >= 201402L) || defined(MSTL_VERSION_17__)
+#if (__cplusplus >= 201402L) || defined(MSTL_VERSION_17__) || (_MSVC_LANG >= 201402L)
 	#define MSTL_VERSION_14__	1
 #endif
-#if (__cplusplus >= 201103L) || defined(MSTL_VERSION_14__)
+#if (__cplusplus >= 201103L) || defined(MSTL_VERSION_14__) || (_MSVC_LANG >= 201103L)
 	#define MSTL_VERSION_11__	1
 #endif
-#if (__cplusplus >= 199711L) || defined(MSTL_VERSION_11__)
+#if (__cplusplus >= 199711L) || defined(MSTL_VERSION_11__) || (_MSVC_LANG >= 199711L)
 	#define MSTL_VERSION_98__	1
 #endif
 
@@ -99,7 +99,7 @@
 #if defined(MSTL_VERSION_17__)
 	#define MSTL_SUPPORT_NODISCARD__		1
 #endif
-#if defined(MSTL_VERSION_17__)
+#if defined(MSTL_VERSION_20__)
 	#define MSTL_SUPPORT_NO_UNIQUE_ADS__	1
 #endif
 #if defined(MSTL_VERSION_20__)
@@ -124,7 +124,7 @@
 
 
 // to libraries : boost / mysql
-#define MSTL_DLL_LINK__	1
+#define MSTL_DLL_LINK__	0
 
 
 #define TO_STRING(VALUE) #VALUE
@@ -144,6 +144,16 @@
 
 #ifdef MSTL_SUPPORT_CONSTEXPR__
 	#define MSTL_CONSTEXPR constexpr
+#ifdef MSTL_VERSION_20__
+		#define MSTL_CONSTEXPR20 MSTL_CONSTEXPR
+#else
+		#define MSTL_CONSTEXPR20 
+#endif
+#ifdef MSTL_VERSION_17__
+	#define MSTL_INLINECSP inline 
+#else
+	#define MSTL_INLINECSP
+#endif
 #else
 	#define MSTL_CONSTEXPR
 #endif
@@ -210,9 +220,6 @@
 MSTL_BEGIN_NAMESPACE__
 
 using byte_t	= unsigned char;
-using size_t	= unsigned MSTL_LLT;
-using ptrdiff_t = MSTL_LLT;
-using intptr_t	= MSTL_LLT;
 
 using int8_t	= signed char;
 using int16_t	= short;
@@ -225,30 +232,36 @@ using uint64_t	= unsigned MSTL_LLT;
 
 #ifdef MSTL_DATA_BUS_WIDTH_64__
 using uintptr_t = unsigned MSTL_LLT;
+using size_t	= unsigned MSTL_LLT;
+using ptrdiff_t = MSTL_LLT;
+using intptr_t	= MSTL_LLT;
 #else
 using uintptr_t = unsigned int;
+using size_t	= unsigned int;
+using ptrdiff_t = int;
+using intptr_t	= int;
 #endif
 
 using cstring_t = const char*;
 using ccstring_t = const char* const;
 
 
-inline constexpr size_t INT_MAX_SIZE = static_cast<size_t>(-1);
-inline constexpr uint32_t MSTL_SPLIT_LENGTH = 15U;
+MSTL_INLINECSP constexpr size_t INT_MAX_SIZE = static_cast<size_t>(-1);
+MSTL_INLINECSP constexpr uint32_t MSTL_SPLIT_LENGTH = 15U;
 
 
-inline constexpr size_t MEMORY_ALIGN_THRESHHOLD = 16ULL;
-inline constexpr size_t MEMORY_BIG_ALLOC_ALIGN = 32ULL;
-inline constexpr size_t MEMORY_BIG_ALLOC_THRESHHOLD = 4096ULL;
+MSTL_INLINECSP constexpr size_t MEMORY_ALIGN_THRESHHOLD = 16ULL;
+MSTL_INLINECSP constexpr size_t MEMORY_BIG_ALLOC_ALIGN = 32ULL;
+MSTL_INLINECSP constexpr size_t MEMORY_BIG_ALLOC_THRESHHOLD = 4096ULL;
 #ifdef MSTL_STATE_DEBUG__
-inline constexpr size_t MEMORY_NO_USER_SIZE = 2 * sizeof(void*) + MEMORY_BIG_ALLOC_ALIGN - 1;
+MSTL_INLINECSP constexpr size_t MEMORY_NO_USER_SIZE = 2 * sizeof(void*) + MEMORY_BIG_ALLOC_ALIGN - 1;
 #else
-inline constexpr size_t NO_USER_SIZE = sizeof(void*) + MEMORY_BIG_ALLOC_ALIGN_THRESHHOLD - 1;
+MSTL_INLINECSP constexpr size_t NO_USER_SIZE = sizeof(void*) + MEMORY_BIG_ALLOC_ALIGN_THRESHHOLD - 1;
 #endif
 #ifdef MSTL_DATA_BUS_WIDTH_64__
-inline constexpr size_t MEMORY_BIG_ALLOC_SENTINEL = 0xFAFAFAFAFAFAFAFAULL;
+MSTL_INLINECSP constexpr size_t MEMORY_BIG_ALLOC_SENTINEL = 0xFAFAFAFAFAFAFAFAULL;
 #else
-inline constexpr size_t MEMORY_BIG_ALLOC_SENTINEL = 0xFAFAFAFAUL;
+MSTL_INLINECSP constexpr size_t MEMORY_BIG_ALLOC_SENTINEL = 0xFAFAFAFAUL;
 #endif
 
 

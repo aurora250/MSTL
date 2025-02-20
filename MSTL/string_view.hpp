@@ -963,6 +963,7 @@ using u16string_view = basic_string_view<char16_t>;
 using u32string_view = basic_string_view<char32_t>;
 
 
+#ifdef MSTL_VERSION_17__
 #pragma warning(push)
 #pragma warning(disable: 4455)
 inline namespace string_operator {
@@ -985,6 +986,7 @@ inline namespace string_operator {
     }
 }
 #pragma warning(pop)
+#endif // MSTL_VERSION_17__
 
 
 // DJB2 is a non-cryptographic hash algorithm

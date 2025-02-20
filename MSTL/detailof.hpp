@@ -6,7 +6,9 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Container>
+#ifdef MSTL_VERSION_20__
 	requires(is_detailable<Container>)
+#endif // MSTL_VERSION_20__
 void show_data_only(const Container& c, std::ostream& _out) {
 	_out << '[';
 	for (auto iter = c.cbegin(); iter != c.cend();) {
@@ -26,7 +28,9 @@ inline std::ostream& operator <<(std::ostream& _out, const Error& err) {
 }
 
 template <typename T1, typename T2>
+#ifdef MSTL_VERSION_20__
 	requires(is_printable<T1> && is_printable<T2>)
+#endif // MSTL_VERSION_20__
 void show_data_only(const MSTL::pair<T1, T2>& p, std::ostream& _out) {
 	_out << "{ " << p.first << ", " << p.second << " }" << std::flush;
 }
@@ -70,7 +74,9 @@ std::ostream& operator <<(std::ostream& out, const shared_ptr<T>& ptr) {
 }
 
 template <typename Container>
+#ifdef MSTL_VERSION_20__
 	requires(is_detailable<Container>)
+#endif
 void detailof(const Container& c, std::ostream& _out = std::cout) {
 	split_line(_out);
 	_out << "type: " << MSTL::check_type<Container>() << '\n';
