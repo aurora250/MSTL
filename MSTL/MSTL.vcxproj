@@ -138,13 +138,11 @@
   <ItemGroup>
     <ClCompile Include="basiclib.cpp" />
     <ClCompile Include="check_type.cpp" />
-    <ClCompile Include="logging.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="errorlib.cpp" />
     <ClCompile Include="mathlib.cpp" />
     <ClCompile Include="mysql_connect_pool.cpp" />
     <ClCompile Include="rb_tree.cpp" />
-    <ClCompile Include="threadsafe_print.cpp" />
     <ClCompile Include="thread_pool.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -157,7 +155,6 @@
     <ClInclude Include="stringstream.hpp" />
     <ClInclude Include="string_view.hpp" />
     <ClInclude Include="detailof.hpp" />
-    <ClInclude Include="logging.h" />
     <ClInclude Include="macro_ranges.h" />
     <ClInclude Include="mysql_connect_pool.h" />
     <ClInclude Include="hashtable.hpp" />
@@ -184,7 +181,6 @@
     <ClInclude Include="set.hpp" />
     <ClInclude Include="sort.hpp" />
     <ClInclude Include="stack.hpp" />
-    <ClInclude Include="threadsafe_print.h" />
     <ClInclude Include="thread_pool.h" />
     <ClInclude Include="trace_memory.hpp" />
     <ClInclude Include="tuple.hpp" />
