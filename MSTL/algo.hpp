@@ -116,8 +116,7 @@ Iterator3 set_symmetric_difference(Iterator1 first1, Iterator1 last1,
 }
 
 // adjacent_find
-template <typename Iterator>
-	requires(input_iterator<Iterator>)
+template <typename Iterator, enable_if_t<is_input_iter<Iterator>, int> = 0>
 Iterator adjacent_find(Iterator first, Iterator last) {
 	if (first == last) return last;
 	Iterator next = first;
@@ -127,8 +126,7 @@ Iterator adjacent_find(Iterator first, Iterator last) {
 	}
 	return last;
 }
-template <typename Iterator, typename BinaryPredicate>
-	requires(forward_iterator<Iterator>)
+template <typename Iterator, typename BinaryPredicate, enable_if_t<is_fwd_iter<Iterator>, int> = 0>
 Iterator adjacent_find(Iterator first, Iterator last, BinaryPredicate binary_pred) {
 	if (first == last) return last;
 	Iterator next = first;
@@ -140,8 +138,7 @@ Iterator adjacent_find(Iterator first, Iterator last, BinaryPredicate binary_pre
 }
 
 // count
-template <typename Iterator, typename T>
-	requires(input_iterator<Iterator>)
+template <typename Iterator, typename T, enable_if_t<is_input_iter<Iterator>, int> = 0>
 iter_dif_t<Iterator> count(Iterator first, Iterator last, const T& value) {
 	iter_dif_t n = 0;
 	for (; first != last; ++first) {
@@ -150,8 +147,7 @@ iter_dif_t<Iterator> count(Iterator first, Iterator last, const T& value) {
 	return n;
 }
 
-template <typename Iterator, typename T, typename BinaryPredicate>
-	requires(input_iterator<Iterator>)
+template <typename Iterator, typename T, typename BinaryPredicate, enable_if_t<is_input_iter<Iterator>, int> = 0>
 iter_dif_t<Iterator> count_if(Iterator first, Iterator last, const T& value, BinaryPredicate pred) {
 	iter_dif_t<Iterator> n = 0;
 	for (; first != last; ++first) {
@@ -161,29 +157,25 @@ iter_dif_t<Iterator> count_if(Iterator first, Iterator last, const T& value, Bin
 }
 
 // find
-template <typename Iterator, typename T>
-	requires(input_iterator<Iterator>)
+template <typename Iterator, typename T, enable_if_t<is_input_iter<Iterator>, int> = 0>
 Iterator find(Iterator first, Iterator last, const T& value) {
 	while (first != last && *first != value) ++first;
 	return first;
 }
 
-template <typename Iterator, typename T>
-	requires(input_iterator<Iterator>)
+template <typename Iterator, typename T, enable_if_t<is_input_iter<Iterator>, int> = 0>
 Iterator find_if(Iterator first, Iterator last, const T& value) {
 	while (first != last && *first != value) ++first;
 	return first;
 }
 
-template <typename Iterator, typename Predicate>
-	requires(input_iterator<Iterator>)
+template <typename Iterator, typename Predicate, enable_if_t<is_input_iter<Iterator>, int> = 0>
 Iterator find_if(Iterator first, Iterator last, Predicate pred) {
 	while (first != last && !pred(*first)) ++first;
 	return first;
 }
 
-template <typename Iterator, typename Predicate>
-	requires(input_iterator<Iterator>)
+template <typename Iterator, typename Predicate, enable_if_t<is_input_iter<Iterator>, int> = 0>
 Iterator find_if_not(Iterator first, Iterator last, Predicate pred) {
 	while (first != last && pred(*first))
 		++first;
@@ -241,8 +233,7 @@ Iterator1 search(Iterator1 first1, Iterator1 last1, Iterator2 first2,
 	return first1;
 }
 
-template <typename Iterator, typename T>
-	requires(forward_iterator<Iterator>)
+template <typename Iterator, typename T, enable_if_t<is_fwd_iter<Iterator>, int> = 0>
 Iterator search_n(Iterator first, Iterator last, size_t count, const T& value) {
 	first = MSTL::find(first, last, value);
 	while (first != last) {
@@ -261,8 +252,7 @@ Iterator search_n(Iterator first, Iterator last, size_t count, const T& value) {
 	return last;
 }
 
-template <typename Iterator, typename T, typename BinaryPredicate>
-	requires(forward_iterator<Iterator>)
+template <typename Iterator, typename T, typename BinaryPredicate, enable_if_t<is_input_iter<Iterator>, int> = 0>
 Iterator search_n(Iterator first, Iterator last, size_t count,
 	const T& value, BinaryPredicate binary_pred) {
 	while (first != last) {
@@ -339,15 +329,13 @@ Iterator1 find_first_of(Iterator1 first1, Iterator1 last1,
 }
 
 // for each
-template <typename Iterator, typename Function>
-	requires(input_iterator<Iterator>)
+template <typename Iterator, typename Function, enable_if_t<is_input_iter<Iterator>, int> = 0>
 Function for_each(Iterator first, Iterator last, Function f) {
 	for (; first != last; ++first) f(*first);
 	return f;
 }
 
-template<typename Iterator, typename Function>
-	requires(input_iterator<Iterator>)
+template<typename Iterator, typename Function, enable_if_t<is_input_iter<Iterator>, int> = 0>
 Iterator for_each_n(Iterator first, size_t n, Function f) {
 	for (size_t i = 0; i < n; i++) {
 		f(*first);
@@ -357,15 +345,13 @@ Iterator for_each_n(Iterator first, size_t n, Function f) {
 }
 
 // generate
-template <typename Iterator, typename Generator>
-	requires(input_iterator<Iterator>)
+template <typename Iterator, typename Generator, enable_if_t<is_input_iter<Iterator>, int> = 0>
 void generate(Iterator first, Iterator last, Generator gen) {
 	for (; first != last; ++first)
 		*first = gen();
 }
 
-template <typename Iterator, typename Generator>
-	requires(input_iterator<Iterator>)
+template <typename Iterator, typename Generator, enable_if_t<is_input_iter<Iterator>, int> = 0>
 Iterator generate_n(Iterator first, size_t n, Generator gen) {
 	for (; n > 0; --n, ++first)
 		*first = gen();
@@ -437,8 +423,7 @@ Iterator3 merge(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 l
 }
 
 // unstable partition
-template <typename Iterator, typename Predicate>
-	requires(bidirectional_iterator<Iterator>)
+template <typename Iterator, typename Predicate, enable_if_t<is_bid_iter<Iterator>, int> = 0>
 Iterator partition(Iterator first, Iterator last, Predicate pred) {
 	while (true) {
 		while (true)
@@ -484,16 +469,14 @@ Iterator2 remove_copy_if(Iterator1 first, Iterator1 last, Iterator2 result, Pred
 	return result;
 }
 
-template <typename Iterator, typename T>
-	requires(forward_iterator<Iterator>)
+template <typename Iterator, typename T, enable_if_t<is_fwd_iter<Iterator>, int> = 0>
 Iterator remove(Iterator first, Iterator last, const T& value) {
 	first = MSTL::find(first, last, value);
 	Iterator next = first;
 	return first == last ? first : MSTL::remove_copy(++next, last, first, value);
 }
 
-template <typename Iterator, typename Predicate>
-	requires(forward_iterator<Iterator>)
+template <typename Iterator, typename Predicate, enable_if_t<is_fwd_iter<Iterator>, int> = 0>
 Iterator remove_if(Iterator first, Iterator last, Predicate pred) {
 	first = MSTL::find_if(first, last, pred);
 	Iterator next = first;
@@ -519,23 +502,20 @@ Iterator2 replace_copy_if(Iterator1 first, Iterator1 last,
 	return result;
 }
 
-template <typename Iterator, typename T>
-	requires(forward_iterator<Iterator>)
+template <typename Iterator, typename T, enable_if_t<is_fwd_iter<Iterator>, int> = 0>
 void replace(Iterator first, Iterator last, const T& old_value, const T& new_value) {
 	for (; first != last; ++first)
 		if (*first == old_value) *first = new_value;
 }
 
-template <typename Iterator, typename Predicate, typename T>
-	requires(forward_iterator<Iterator>)
+template <typename Iterator, typename Predicate, typename T, enable_if_t<is_fwd_iter<Iterator>, int> = 0>
 void replace_if(Iterator first, Iterator last, Predicate pred, const T& new_value) {
 	for (; first != last; ++first)
 		if (pred(*first)) *first = new_value;
 }
 
 // reserve
-template <typename Iterator>
-	requires(bidirectional_iterator<Iterator>)
+template <typename Iterator, enable_if_t<is_bid_iter<Iterator>, int> = 0>
 void reverse(Iterator first, Iterator last) {
 	while (true)
 		if (first == last || first == --last) return;
@@ -546,8 +526,7 @@ void reverse(Iterator first, Iterator last) {
 		}
 }
 
-template <typename Iterator>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, enable_if_t<is_rnd_iter<Iterator>, int> = 0>
 void reverse(Iterator first, Iterator last) {
 	while (first < last) {
 		--last;
@@ -557,8 +536,7 @@ void reverse(Iterator first, Iterator last) {
 }
 
 // rotate
-template <typename Iterator>
-	requires(forward_iterator<Iterator>)
+template <typename Iterator, enable_if_t<is_fwd_iter<Iterator>, int> = 0>
 void rotate(Iterator first, Iterator middle, Iterator last) {
 	if (first == middle || middle == last) return;
 	for (Iterator i = middle; ;) {
@@ -574,8 +552,7 @@ void rotate(Iterator first, Iterator middle, Iterator last) {
 	}
 }
 
-template <typename Iterator>
-	requires(bidirectional_iterator<Iterator>)
+template <typename Iterator, enable_if_t<is_bid_iter<Iterator>, int> = 0>
 void rotate(Iterator first, Iterator middle, Iterator last) {
 	if (first == middle || middle == last) return;
 	MSTL::reverse(first, middle);
@@ -583,8 +560,7 @@ void rotate(Iterator first, Iterator middle, Iterator last) {
 	MSTL::reverse(first, last);
 }
 
-template <typename Iterator, typename Distance>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, typename Distance, enable_if_t<is_rnd_iter<Iterator>, int> = 0>
 void rotate_cycle_aux(Iterator first, Iterator last, Iterator initial, Distance shift) {
 	iter_val_t<Iterator> value = *initial;
 	Iterator ptr1 = initial;
@@ -600,8 +576,7 @@ void rotate_cycle_aux(Iterator first, Iterator last, Iterator initial, Distance 
 	*ptr1 = value;
 }
 
-template <typename Iterator, typename Distance>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, typename Distance, enable_if_t<is_rnd_iter<Iterator>, int> = 0>
 void rotate(Iterator first, Iterator middle, Iterator last) {
 	if (first == middle || middle == last) return;
 	iter_dif_t<Iterator> n = MSTL::gcd(last - first, middle - first);
@@ -664,23 +639,20 @@ Iterator2 unique_copy(Iterator1 first, Iterator1 last,
 	return ++result;
 }
 
-template <typename Iterator>
-	requires(forward_iterator<Iterator>)
+template <typename Iterator, enable_if_t<is_fwd_iter<Iterator>, int> = 0>
 Iterator unique(Iterator first, Iterator last) {
 	first = MSTL::adjacent_find(first, last);
 	return MSTL::unique_copy(first, last, first);
 }
 
-template <typename Iterator, typename BinaryPredicate>
-	requires(forward_iterator<Iterator>)
+template <typename Iterator, typename BinaryPredicate, enable_if_t<is_fwd_iter<Iterator>, int> = 0>
 Iterator unique(Iterator first, Iterator last, BinaryPredicate binary_pred) {
 	first = MSTL::adjacent_find(first, last, binary_pred);
 	return MSTL::unique_copy(first, last, first, binary_pred);
 }
 
 // lower bound
-template <typename Iterator, typename T>
-	requires(forward_iterator<Iterator>)
+template <typename Iterator, typename T, enable_if_t<is_fwd_iter<Iterator>, int> = 0>
 Iterator lower_bound(Iterator first, Iterator last, const T& value) noexcept {
 	using Distance = iter_dif_t<Iterator>;
 	Distance len = MSTL::distance(first, last);
@@ -700,8 +672,7 @@ Iterator lower_bound(Iterator first, Iterator last, const T& value) noexcept {
 	return first;
 }
 
-template <typename Iterator, typename T>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, typename T, enable_if_t<is_rnd_iter<Iterator>, int> = 0>
 Iterator lower_bound(Iterator first, Iterator last, const T& value) {
 	using Distance = iter_dif_t<Iterator>;
 	Distance len = last - first;
@@ -719,8 +690,7 @@ Iterator lower_bound(Iterator first, Iterator last, const T& value) {
 	return first;
 }
 
-template <typename Iterator, typename T, typename Compare>
-	requires(forward_iterator<Iterator>)
+template <typename Iterator, typename T, typename Compare, enable_if_t<is_fwd_iter<Iterator>, int> = 0>
 Iterator lower_bound(Iterator first, Iterator last, const T& value, Compare comp) {
 	using Distance = iter_dif_t<Iterator>;
 	Distance len = MSTL::distance(first, last);
@@ -740,8 +710,7 @@ Iterator lower_bound(Iterator first, Iterator last, const T& value, Compare comp
 	return first;
 }
 
-template <typename Iterator, typename T, typename Compare>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, typename T, typename Compare, enable_if_t<is_rnd_iter<Iterator>, int> = 0>
 Iterator lower_bound(Iterator first, Iterator last, const T& value, Compare comp) {
 	using Distance = iter_dif_t<Iterator>;
 	Distance len = last - first;
@@ -760,8 +729,7 @@ Iterator lower_bound(Iterator first, Iterator last, const T& value, Compare comp
 }
 
 // upper bound
-template <typename Iterator, typename T>
-	requires(forward_iterator<Iterator>)
+template <typename Iterator, typename T, enable_if_t<is_fwd_iter<Iterator>, int> = 0>
 Iterator upper_bound(Iterator first, Iterator last, const T& value) {
 	using Distance = iter_dif_t<Iterator>;
 	Distance len = MSTL::distance(first, last);
@@ -782,8 +750,7 @@ Iterator upper_bound(Iterator first, Iterator last, const T& value) {
 	return first;
 }
 
-template <typename Iterator, typename T>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, typename T, enable_if_t<is_fwd_iter<Iterator>, int> = 0>
 Iterator upper_bound(Iterator first, Iterator last, const T& value) {
 	using Distance = iter_dif_t<Iterator>;
 	Distance len = last - first;
@@ -802,8 +769,7 @@ Iterator upper_bound(Iterator first, Iterator last, const T& value) {
 	return first;
 }
 
-template <typename Iterator, typename T, typename Compare>
-	requires(forward_iterator<Iterator>)
+template <typename Iterator, typename T, typename Compare, enable_if_t<is_fwd_iter<Iterator>, int> = 0>
 Iterator upper_bound(Iterator first, Iterator last, const T& value, Compare comp) {
 	using Distance = iter_dif_t<Iterator>;
 	Distance len = distance(first, last);
@@ -824,8 +790,7 @@ Iterator upper_bound(Iterator first, Iterator last, const T& value, Compare comp
 	return first;
 }
 
-template <typename Iterator, typename T, typename Compare>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, typename T, typename Compare, enable_if_t<is_rnd_iter<Iterator>, int> = 0>
 Iterator upper_bound(Iterator first, Iterator last, const T& value, Compare comp) {
 	using Distance = iter_dif_t<Iterator>;
 	Distance len = last - first;
@@ -845,15 +810,13 @@ Iterator upper_bound(Iterator first, Iterator last, const T& value, Compare comp
 }
 
 // binary search
-template <typename Iterator, typename T>
-	requires(forward_iterator<Iterator>)
+template <typename Iterator, typename T, enable_if_t<is_fwd_iter<Iterator>, int> = 0>
 bool binary_search(Iterator first, Iterator last, const T& value) {
 	Iterator i = MSTL::lower_bound(first, last, value);
 	return i != last && !(value < *i);
 }
 
-template <typename Iterator, typename T, typename Compare>
-	requires(forward_iterator<Iterator>)
+template <typename Iterator, typename T, typename Compare, enable_if_t<is_fwd_iter<Iterator>, int> = 0>
 bool binary_search(Iterator first, Iterator last, const T& value, Compare comp) {
 	Iterator i = MSTL::lower_bound(first, last, value, comp);
 	return i != last && !comp(value, *i);
@@ -945,8 +908,7 @@ bool is_permutation(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterato
 }
 
 // next permutation
-template <typename Iterator>
-	requires(bidirectional_iterator<Iterator>)
+template <typename Iterator, enable_if_t<is_bid_iter<Iterator>, int> = 0>
 bool next_permutation(Iterator first, Iterator last) {
 	if (first == last) return false;
 	Iterator i = first;
@@ -971,8 +933,7 @@ bool next_permutation(Iterator first, Iterator last) {
 	}
 }
 
-template <typename Iterator, typename Compare>
-	requires(bidirectional_iterator<Iterator>)
+template <typename Iterator, typename Compare, enable_if_t<is_bid_iter<Iterator>, int> = 0>
 bool next_permutation(Iterator first, Iterator last, Compare comp) {
 	if (first == last) return false;
 	Iterator i = first;
@@ -998,8 +959,7 @@ bool next_permutation(Iterator first, Iterator last, Compare comp) {
 }
 
 // prev permutation
-template <typename Iterator>
-	requires(bidirectional_iterator<Iterator>)
+template <typename Iterator, enable_if_t<is_bid_iter<Iterator>, int> = 0>
 bool prev_permutation(Iterator first, Iterator last) {
 	if (first == last) return false;
 	Iterator i = first;
@@ -1024,8 +984,7 @@ bool prev_permutation(Iterator first, Iterator last) {
 	}
 }
 
-template <typename Iterator, typename Compare>
-	requires(bidirectional_iterator<Iterator>)
+template <typename Iterator, typename Compare, enable_if_t<is_bid_iter<Iterator>, int> = 0>
 bool prev_permutation(Iterator first, Iterator last, Compare comp) {
 	if (first == last) return false;
 	Iterator i = first;
@@ -1051,8 +1010,7 @@ bool prev_permutation(Iterator first, Iterator last, Compare comp) {
 }
 
 // shuffle
-template <typename Iterator>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, enable_if_t<is_rnd_iter<Iterator>, int> = 0>
 void shuffle(Iterator first, Iterator last) {
 	if (first == last) return;
 	for (Iterator i = MSTL::next(first); i != last; ++i) {
@@ -1061,8 +1019,7 @@ void shuffle(Iterator first, Iterator last) {
 	}
 }
 
-template <typename Iterator, typename Generator>
-	requires(random_access_iterator<Iterator>)
+template <typename Iterator, typename Generator, enable_if_t<is_rnd_iter<Iterator>, int> = 0>
 void shuffle(Iterator first, Iterator last, Generator& rand) {
 	if (first == last) return;
 	for (Iterator i = MSTL::next(first); i != last; ++i) {
@@ -1072,8 +1029,7 @@ void shuffle(Iterator first, Iterator last, Generator& rand) {
 }
 
 // equal range
-template <typename Iterator, typename T>
-	requires(forward_iterator<Iterator>)
+template <typename Iterator, typename T, enable_if_t<is_fwd_iter<Iterator>, int> = 0>
 pair<Iterator, Iterator> equal_range(Iterator first, Iterator last, const T& value) {
 	using Distance = iter_dif_t<Iterator>;
 	Distance len = distance(first, last);
