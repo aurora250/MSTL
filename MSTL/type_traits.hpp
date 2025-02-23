@@ -7,8 +7,8 @@ template <typename T, T Value>
 struct integral_constant {
     static constexpr T value = Value;
 
-    using value_type = T;
-    using type = integral_constant;
+    using value_type    = T;
+    using type          = integral_constant;
 
     constexpr operator value_type() const noexcept {
         return value;
@@ -1614,7 +1614,11 @@ template <typename T>
 struct iterator_traits<T*> {
     static_assert(is_object_v<T>, "iterator traits requires object types.");
 
+#ifdef MSTL_VERSION_20__
+    using iterator_category = std::contiguous_iterator_tag;
+#else
     using iterator_category = std::random_access_iterator_tag;
+#endif // MSTL_VERSION_20__
     using value_type        = remove_cv_t<T>;
     using difference_type   = ptrdiff_t;
     using pointer           = T*;
@@ -1625,11 +1629,15 @@ template <typename T>
 struct iterator_traits<const T*> {
     static_assert(is_object_v<T>, "iterator traits requires object types.");
 
+#ifdef MSTL_VERSION_20__
+    using iterator_category = std::contiguous_iterator_tag;
+#else
     using iterator_category = std::random_access_iterator_tag;
-    using value_type = remove_cv_t<T>;
-    using difference_type = ptrdiff_t;
-    using pointer = T*;
-    using reference = T&;
+#endif // MSTL_VERSION_20__
+    using value_type        = remove_cv_t<T>;
+    using difference_type   = ptrdiff_t;
+    using pointer           = T*;
+    using reference         = T&;
 };
 
 template <typename Iterator>

@@ -1,7 +1,6 @@
 #ifndef MSTL_ERRORLIB_H__
 #define MSTL_ERRORLIB_H__
 #include "basiclib.h"
-#include <assert.h>
 MSTL_BEGIN_NAMESPACE__
 
 static MSTL_CONSTEXPR ccstring_t MSTL_ASSERT_ERROR__ = "Assert Error!";

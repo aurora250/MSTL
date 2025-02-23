@@ -58,7 +58,7 @@
 #endif
 
 
-#define MSTL_NAMESPACE__ using namespace MSTL;
+#define USE_MSTL using namespace MSTL;
 #define MSTL_BEGIN_NAMESPACE__ namespace MSTL {
 #define MSTL_END_NAMESPACE__ }
 #define MSTL_ MSTL::
@@ -98,6 +98,9 @@
 #endif
 #if defined(MSTL_VERSION_17__)
 	#define MSTL_SUPPORT_NODISCARD__		1
+#endif
+#if defined(MSTL_VERSION_17__)
+	#define MSTL_SUPPORT_IFCONSTEXPR__		1
 #endif
 #if defined(MSTL_VERSION_20__)
 	#define MSTL_SUPPORT_NO_UNIQUE_ADS__	1
@@ -147,7 +150,12 @@
 #ifdef MSTL_VERSION_20__
 		#define MSTL_CONSTEXPR20 MSTL_CONSTEXPR
 #else
-		#define MSTL_CONSTEXPR20 
+		#define MSTL_CONSTEXPR20 inline
+#endif
+#ifdef MSTL_VERSION_17__
+	#define MSTL_CONSTEXPR17 MSTL_CONSTEXPR
+#else
+	#define MSTL_CONSTEXPR17 inline
 #endif
 #ifdef MSTL_VERSION_17__
 	#define MSTL_INLINECSP inline 
@@ -156,6 +164,13 @@
 #endif
 #else
 	#define MSTL_CONSTEXPR
+#endif
+
+#ifdef MSTL_SUPPORT_IFCONSTEXPR__
+	// this macro will be used with caution, as it will break static overload.
+	#define MSTL_IF_CONSTEXPR if constexpr
+#else
+	#define MSTL_IF_CONSTEXPR if
 #endif
 
 #ifdef MSTL_SUPPORT_NODISCARD__
@@ -183,10 +198,14 @@
 	#define MSTL_DEPRECATED [[deprecated]]
 	// after C++ 11, we can use lambda expressions to quickly build closures 
 	// instead of using functor adapters.
-	#define MSTL_FADEPRECATED [[deprecated("C++ 11 and later versions no longer use functor adapters.")]]
+	#define MSTL_FUNCADP_DEPRE \
+		[[deprecated("C++ 11 and later versions no longer use functor adapters.")]]
+	#define MSTL_TRAITS_DEPRE \
+		[[deprecated("C++ 11 and later versions no longer use iterator traits functions.")]]
 #else 
 	#define MSTL_DEPRECATED
-	#define MSTL_FADEPRECATED
+	#define MSTL_FUNCADP_DEPRE
+	#define MSTL_TRAITS_DEPRE
 #endif
 
 #ifdef MSTL_SUPPORT_DECLSPEC__

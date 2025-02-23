@@ -25,14 +25,6 @@ bool DBConnect::exec(std::string sql) {
 	return true;
 }
 
-MYSQL_RES* DBConnect::SELECT(std::string table, std::string selected, std::string cond) {
-	ss << "SELECT " << selected << " FROM " << table << " WHERE " << cond;
-	if (mysql_query(mysql, ss.str().c_str())) {
-		//SIMPLE_LOG("SELECT Failed : " + sql);
-		return nullptr;
-	}
-	return mysql_use_result(mysql);
-}
 bool DBConnect::close() {
 	if (mysql != nullptr) {
 		mysql_close(mysql);
@@ -48,7 +40,7 @@ clock_t DBConnect::get_alive() {
 }
 
 DBConnectPool::DBConnectPool(const std::string& user, const std::string& password,
-	const std::string& dbname, const std::string& ip, unsigned int port)
+	const std::string& dbname, const std::string& ip, uint32_t port)
 	: ip_(ip), port_(port), username_(user), passwd_(password), dbname_(dbname), init_size_(10),
 	max_size_(1024), max_idle_time_(60), connect_timeout_(100) {
 	for (size_t i = 0; i < init_size_; i++) {

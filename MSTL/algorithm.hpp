@@ -1,6 +1,45 @@
-#ifndef MSTL_ALGORITHM_HPP__
+﻿#ifndef MSTL_ALGORITHM_HPP__
 #define MSTL_ALGORITHM_HPP__
 #include "numeric.hpp"
 #include "sort.hpp"
+MSTL_BEGIN_NAMESPACE__
 
+template <typename Iterator, typename BinaryOperation, typename Result,
+    size_t Threshhold = 10, enable_if_t<is_input_iter_v<Iterator>, int> = 0>
+void reduce(Iterator first, Iterator last, BinaryOperation op, Result& res) {
+    size_t dist = MSTL::distance(first, last);
+    if (dist <= Threshhold) {
+        for (Iterator it = first; it != last; ++it)
+            res = op(res, *it);
+    }
+    else {
+        Iterator mid = next(first, dist / 2);
+        Result l_res = res, r_res = res;
+        std::thread r_thd(reduce<Iterator, BinaryOperation, Result, Threshhold>, mid, last, op, MSTL::ref(r_res));
+        MSTL::reduce(first, mid, op, l_res);
+        r_thd.join();
+        res = op(l_res, r_res);
+    }
+}
+
+template <typename Iterator, typename UnaryOperation, typename BinaryOp, typename Result,
+    size_t Threshhold = 10, enable_if_t<is_input_iter_v<Iterator>, int> = 0>
+void transform_reduce(Iterator first, Iterator last, UnaryOperation transform, BinaryOp reduce, Result& res) {
+    size_t dist = MSTL::distance(first, last);
+    if (dist <= Threshhold) {
+        for (Iterator it = first; it != last; ++it)
+            res = reduce(res, transform(*it));
+    }
+    else {
+        Iterator mid = MSTL::next(first, dist / 2);
+        Result l_res = MSTL::initialize<Result>(), r_res = MSTL::initialize<Result>();
+        std::thread r_thd(transform_reduce<Iterator, UnaryOperation, BinaryOp, Result, Threshhold>,
+            mid, last, transform, reduce, MSTL::ref(r_res));
+        MSTL::transform_reduce(first, mid, transform, reduce, l_res);
+        r_thd.join();
+        res = reduce(res, reduce(l_res, r_res));
+    }
+}
+
+MSTL_END_NAMESPACE__
 #endif // MSTL_ALGORITHM_HPP__

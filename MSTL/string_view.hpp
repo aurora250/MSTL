@@ -132,7 +132,7 @@ public:
         const char_type* const rh, const size_t n) noexcept {
 #if MSTL_VERSION_20__
         if (MSTL::is_constant_evaluated()) {
-            if constexpr (is_same_v<char_type, wchar_t>) {
+            MSTL_IF_CONSTEXPR (is_same_v<char_type, wchar_t>) {
                 return __builtin_wmemcmp(lh, rh, n);
             }
             else {
@@ -147,7 +147,7 @@ public:
     MSTL_NODISCARD static MSTL_CONSTEXPR size_t length(const char_type* str) noexcept {
 #if MSTL_VERSION_20__
         if (MSTL::is_constant_evaluated()) {
-            if constexpr (is_same_v<char_type, wchar_t>) {
+            MSTL_IF_CONSTEXPR (is_same_v<char_type, wchar_t>) {
                 return __builtin_wcslen(str);
             }
             else {
@@ -162,7 +162,7 @@ public:
         const char_type* str, const size_t n, const char_type& chr) noexcept {
 #if MSTL_VERSION_20__
         if (MSTL::is_constant_evaluated()) {
-            if constexpr (is_same_v<char_type, wchar_t>) {
+            MSTL_IF_CONSTEXPR (is_same_v<char_type, wchar_t>) {
                 return __builtin_wmemchr(str, chr, n);
             }
             else {
@@ -240,7 +240,7 @@ public:
     MSTL_NODISCARD static MSTL_CONSTEXPR size_t length(const char_type* const str) noexcept {
 #ifdef MSTL_VERSION_17__
 #ifdef MSTL_VERSION_20__
-        if constexpr (is_same_v<char_type, char8_t>) {
+        MSTL_IF_CONSTEXPR (is_same_v<char_type, char8_t>) {
 #ifdef MSTL_SUPPORT_U8_INTRINSICS__
             return __builtin_u8strlen(str);
 #else
@@ -261,7 +261,7 @@ public:
         const size_t n, const char_type& chr) noexcept {
 #ifdef MSTL_VERSION_17__
 #ifdef MSTL_VERSION_20__
-        if constexpr (is_same_v<char_type, char8_t>) {
+        MSTL_IF_CONSTEXPR (is_same_v<char_type, char8_t>) {
 #ifdef MSTL_SUPPORT_U8_INTRINSICS__
             return __builtin_u8memchr(str, chr, n);
 #else
@@ -413,84 +413,96 @@ constexpr size_t char_traits_rfind_char(const char_traits_ptr_t<Traits> dest, co
     return static_cast<size_t>(-1);
 }
 
-template <typename Traits, bool Special = is_specialization_v<Traits, char_traits>>
+template <typename Traits, enable_if_t<is_specialization_v<Traits, char_traits>, int> = 0>
+constexpr size_t char_traits_find_first_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
+    const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
+    if (rsc_size != 0 && start < dest_size) {
+        MSTL::string_bitmap<char_traits_char_t<Traits>> match;
+        if (!match.mark(rsc, rsc + rsc_size)) {
+            return (char_traits_find_first_of<Traits, false>)
+                (dest, dest_size, start, rsc, rsc_size);
+        }
+        const auto end = dest + dest_size;
+        for (auto if_match = dest + start; if_match < end; ++if_match) {
+            if (match.match(*if_match))
+                return static_cast<size_t>(if_match - dest);
+        }
+    }
+    return static_cast<size_t>(-1);
+}
+
+template <typename Traits, enable_if_t<!is_specialization_v<Traits, char_traits>, int> = 0>
 constexpr size_t char_traits_find_first_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size, 
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (rsc_size != 0 && start < dest_size) {
-        if constexpr (Special) {
-            MSTL::string_bitmap<char_traits_char_t<Traits>> match;
-            if (!match.mark(rsc, rsc + rsc_size)) {
-                return (char_traits_find_first_of<Traits, false>)
-                    (dest, dest_size, start, rsc, rsc_size);
-            }
-            const auto end = dest + dest_size;
-            for (auto if_match = dest + start; if_match < end; ++if_match) {
-                if (match.match(*if_match))
-                    return static_cast<size_t>(if_match - dest);
-            }
-        }
-        else {
-            const auto end = dest + dest_size;
-            for (auto if_match = dest + start; if_match < end; ++if_match) {
-                if (Traits::find(rsc, rsc_size, *if_match)) 
-                    return static_cast<size_t>(if_match - dest);
-            }
+        const auto end = dest + dest_size;
+        for (auto if_match = dest + start; if_match < end; ++if_match) {
+            if (Traits::find(rsc, rsc_size, *if_match))
+                return static_cast<size_t>(if_match - dest);
         }
     }
     return static_cast<size_t>(-1);
 }
 
-template <typename Traits, bool Special = is_specialization_v<Traits, char_traits>>
+template <typename Traits, enable_if_t<is_specialization_v<Traits, char_traits>, int> = 0>
+constexpr size_t char_traits_find_last_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
+    const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
+    if (rsc_size != 0 && dest_size != 0) {
+        MSTL::string_bitmap<char_traits_char_t<Traits>> match;
+        if (!match.mark(rsc, rsc + rsc_size))
+            return (char_traits_find_last_of<Traits, false>)
+            (dest, dest_size, start, rsc, rsc_size);
+
+        for (auto if_match = dest + MSTL::min(start, dest_size - 1);; --if_match) {
+            if (match.match(*if_match))
+                return static_cast<size_t>(if_match - dest);
+
+            if (if_match == dest) break;
+        }
+    }
+    return static_cast<size_t>(-1);
+}
+
+template <typename Traits, enable_if_t<!is_specialization_v<Traits, char_traits>, int> = 0>
 constexpr size_t char_traits_find_last_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size, 
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (rsc_size != 0 && dest_size != 0) {
-        if constexpr (Special) {
-            MSTL::string_bitmap<char_traits_char_t<Traits>> match;
-            if (!match.mark(rsc, rsc + rsc_size)) 
-                return (char_traits_find_last_of<Traits, false>)
-                    (dest, dest_size, start, rsc, rsc_size);
-            
-            for (auto if_match = dest + MSTL::min(start, dest_size - 1);; --if_match) {
-                if (match.match(*if_match)) 
-                    return static_cast<size_t>(if_match - dest);
-                
-                if (if_match == dest) break;
-            }
-        }
-        else {
-            for (auto if_match = dest + MSTL::min(start, dest_size - 1);; --if_match) {
-                if (Traits::find(rsc, rsc_size, *if_match)) 
-                    return static_cast<size_t>(if_match - dest);
+        for (auto if_match = dest + MSTL::min(start, dest_size - 1);; --if_match) {
+            if (Traits::find(rsc, rsc_size, *if_match))
+                return static_cast<size_t>(if_match - dest);
 
-                if (if_match == dest) break;
-            }
+            if (if_match == dest) break;
         }
     }
     return static_cast<size_t>(-1);
 }
 
-template <typename Traits, bool Special = is_specialization_v<Traits, char_traits>>
+template <typename Traits, enable_if_t<is_specialization_v<Traits, char_traits>, int> = 0>
 constexpr size_t char_traits_find_first_not_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (start < dest_size) {
-        if constexpr (Special) {
-            MSTL::string_bitmap<char_traits_char_t<Traits>> match;
-            if (!match.mark(rsc, rsc + rsc_size)) 
-                return (char_traits_find_first_not_of<Traits, false>)
-                    (dest, dest_size, start, rsc, rsc_size);
-            
-            const auto end = dest + dest_size;
-            for (auto if_match = dest + start; if_match < end; ++if_match) {
-                if (!match.match(*if_match)) 
-                    return static_cast<size_t>(if_match - dest);
-            }
+        MSTL::string_bitmap<char_traits_char_t<Traits>> match;
+        if (!match.mark(rsc, rsc + rsc_size))
+            return (char_traits_find_first_not_of<Traits, false>)
+            (dest, dest_size, start, rsc, rsc_size);
+
+        const auto end = dest + dest_size;
+        for (auto if_match = dest + start; if_match < end; ++if_match) {
+            if (!match.match(*if_match))
+                return static_cast<size_t>(if_match - dest);
         }
-        else {
-            const auto end = dest + dest_size;
-            for (auto if_match = dest + start; if_match < end; ++if_match) {
-                if (!Traits::find(rsc, rsc_size, *if_match)) 
-                    return static_cast<size_t>(if_match - dest);
-            }
+    }
+    return static_cast<size_t>(-1);
+}
+
+template <typename Traits, enable_if_t<!is_specialization_v<Traits, char_traits>, int> = 0>
+constexpr size_t char_traits_find_first_not_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
+    const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
+    if (start < dest_size) {
+        const auto end = dest + dest_size;
+        for (auto if_match = dest + start; if_match < end; ++if_match) {
+            if (!Traits::find(rsc, rsc_size, *if_match))
+                return static_cast<size_t>(if_match - dest);
         }
     }
     return static_cast<size_t>(-1);
@@ -509,30 +521,34 @@ constexpr size_t char_traits_find_not_char(const char_traits_ptr_t<Traits> dest,
     return static_cast<size_t>(-1);
 }
 
-template <typename Traits, bool Special = is_specialization_v<Traits, char_traits>>
+template <typename Traits, enable_if_t<is_specialization_v<Traits, char_traits>, int> = 0>
+constexpr size_t char_traits_find_last_not_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
+    const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
+    if (dest_size != 0) {
+        MSTL::string_bitmap<char_traits_char_t<Traits>> match;
+        if (!match.mark(rsc, rsc + rsc_size))
+            return (char_traits_find_last_not_of<Traits, false>)
+            (dest, dest_size, start, rsc, rsc_size);
+
+        for (auto if_match = dest + MSTL::min(start, dest_size - 1);; --if_match) {
+            if (!match.match(*if_match))
+                return static_cast<size_t>(if_match - dest);
+
+            if (if_match == dest) break;
+        }
+    }
+    return static_cast<size_t>(-1);
+}
+
+template <typename Traits, enable_if_t<!is_specialization_v<Traits, char_traits>, int> = 0>
 constexpr size_t char_traits_find_last_not_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size, 
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (dest_size != 0) {
-        if constexpr (Special) {
-            MSTL::string_bitmap<char_traits_char_t<Traits>> match;
-            if (!match.mark(rsc, rsc + rsc_size)) 
-                return (char_traits_find_last_not_of<Traits, false>)
-                    (dest, dest_size, start, rsc, rsc_size);
-            
-            for (auto if_match = dest + MSTL::min(start, dest_size - 1);; --if_match) {
-                if (!match.match(*if_match)) 
-                    return static_cast<size_t>(if_match - dest);
-                
-                if (if_match == dest) break;
-            }
-        }
-        else {
-            for (auto if_match = dest + MSTL::min(start, dest_size - 1);; --if_match) {
-                if (!Traits::find(rsc, rsc_size, *if_match)) 
-                    return static_cast<size_t>(if_match - dest);
-                
-                if (if_match == dest) break;
-            }
+        for (auto if_match = dest + MSTL::min(start, dest_size - 1);; --if_match) {
+            if (!Traits::find(rsc, rsc_size, *if_match))
+                return static_cast<size_t>(if_match - dest);
+
+            if (if_match == dest) break;
         }
     }
     return static_cast<size_t>(-1);
@@ -560,7 +576,11 @@ class basic_string_view;
 template <typename Traits>
 class string_view_iterator {
 public:
+#ifdef MSTL_VERSION_20__
+    using iterator_category = std::contiguous_iterator_tag;
+#else
     using iterator_category = std::random_access_iterator_tag;
+#endif // MSTL_VERSION_20__
     using value_type        = typename Traits::char_type;
     using difference_type   = ptrdiff_t;
     using pointer           = const value_type*;
@@ -742,8 +762,7 @@ public:
     constexpr basic_string_view& operator =(const self&) noexcept = default;
 
     constexpr basic_string_view(const const_pointer str) noexcept
-        : data_(str), size_(Traits::length(str)) {
-    }
+        : data_(str), size_(Traits::length(str)) {}
     constexpr basic_string_view(const const_pointer str, const size_type n) noexcept
         : data_(str), size_(n) {}
 
@@ -1187,23 +1206,23 @@ TEMNULL__ struct hash<const char*> {
     }
 };
 TEMNULL__ struct hash<wchar_t*> {
-    MSTL_NODISCARD size_t operator ()(const wchar_t* str) const noexcept {
+    MSTL_NODISCARD MSTL_CONSTEXPR size_t operator ()(const wchar_t* str) const noexcept {
         return FNV_hash(reinterpret_cast<const byte_t*>(str), sizeof(wchar_t) * char_traits<wchar_t>::length(str));
     }
 };
 TEMNULL__ struct hash<const wchar_t*> {
-    MSTL_NODISCARD size_t operator ()(const wchar_t* str) const noexcept {
+    MSTL_NODISCARD MSTL_CONSTEXPR size_t operator ()(const wchar_t* str) const noexcept {
         return FNV_hash(reinterpret_cast<const byte_t*>(str), sizeof(wchar_t) * char_traits<wchar_t>::length(str));
     }
 };
 #define CHAR_PTR_HASH_STRUCTS__(OPT) \
 TEMNULL__ struct hash<OPT*> { \
-    MSTL_NODISCARD size_t operator ()(const OPT* str) const noexcept { \
+    MSTL_NODISCARD MSTL_CONSTEXPR size_t operator ()(const OPT* str) const noexcept { \
         return FNV_hash(reinterpret_cast<const byte_t*>(str), sizeof(OPT) * char_traits<OPT>::length(str)); \
     } \
 }; \
 TEMNULL__ struct hash<const OPT*> { \
-    MSTL_NODISCARD size_t operator ()(const OPT* str) const noexcept { \
+    MSTL_NODISCARD MSTL_CONSTEXPR size_t operator ()(const OPT* str) const noexcept { \
         return FNV_hash(reinterpret_cast<const byte_t*>(str), sizeof(OPT) * char_traits<OPT>::length(str)); \
     } \
 };
@@ -1216,7 +1235,8 @@ TEMNULL__ struct hash<MSTL::string_view> {
 };
 template <typename CharT, typename Traits>
 struct hash<basic_string_view<CharT, Traits>> {
-    MSTL_NODISCARD size_t operator ()(const basic_string_view<CharT, Traits> str) const noexcept {
+    MSTL_NODISCARD MSTL_CONSTEXPR size_t operator ()(
+        const basic_string_view<CharT, Traits> str) const noexcept {
         return FNV_hash(reinterpret_cast<const byte_t*>(str.data()), sizeof(CharT) * str.size());
     }
 };

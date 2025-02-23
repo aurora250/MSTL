@@ -5,50 +5,118 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator>
-MSTL_NODISCARD MSTL_CONSTEXPR iter_cat_t<Iterator> iterator_category(const Iterator&) noexcept {
+MSTL_TRAITS_DEPRE MSTL_NODISCARD MSTL_CONSTEXPR iter_cat_t<Iterator>
+iterator_category(const Iterator&) noexcept {
     return iter_cat_t<Iterator>();
 }
 template <typename Iterator>
-MSTL_NODISCARD MSTL_CONSTEXPR iter_dif_t<Iterator>* distance_type(const Iterator&) noexcept {
+MSTL_TRAITS_DEPRE MSTL_NODISCARD MSTL_CONSTEXPR iter_dif_t<Iterator>*
+distance_type(const Iterator&) noexcept {
     return static_cast<iter_dif_t<Iterator>*>(0);
 }
 template <typename Iterator>
-MSTL_NODISCARD MSTL_CONSTEXPR iter_val_t<Iterator>* value_type(const Iterator&) noexcept {
+MSTL_TRAITS_DEPRE MSTL_NODISCARD MSTL_CONSTEXPR
+iter_val_t<Iterator>* value_type(const Iterator&) noexcept {
     return static_cast<iter_val_t<Iterator>*>(0);
 }
 
-template <typename Iterator, typename Distance, enable_if_t<is_ranges_iter_v<Iterator>, int> = 0>
-MSTL_CONSTEXPR void advance(Iterator& i, Distance n) {
-    if constexpr (is_ranges_rnd_iter_v<Iterator>) {
+
+#ifndef MSTL_VERSION_17__
+template <typename Ptr, enable_if_t<is_pointer_v<Ptr>, int> = 0>
+MSTL_CONSTEXPR iter_ptr_t<Ptr> __to_pointer_aux(Ptr iter) {
+    return iter;
+}
+template <typename Iterator, enable_if_t<!is_pointer_v<Iterator>, int> = 0>
+MSTL_CONSTEXPR iter_ptr_t<Iterator> __to_pointer_aux(Iterator iter) {
+    return iter.operator->();
+}
+template <typename Iterator>
+MSTL_CONSTEXPR iter_ptr_t<Iterator> to_pointer(Iterator iter) {
+    return MSTL::__to_pointer_aux(iter);
+}
+#else
+template <typename Iterator>
+MSTL_CONSTEXPR iter_ptr_t<Iterator> to_pointer(Iterator tmp) {
+    if constexpr (is_pointer_v<Iterator>)
+        return tmp;
+    else
+        return tmp.operator->();
+}
+#endif // MSTL_VERSION_17__
+
+
+#ifndef MSTL_VERSION_17__
+template <typename Iterator, typename Distance>
+MSTL_CONSTEXPR17 void __advance_aux(Iterator& i, Distance n, std::random_access_iterator_tag) {
+    i += n;
+}
+template <typename Iterator, typename Distance>
+MSTL_CONSTEXPR17 void __advance_aux(Iterator& i, Distance n, std::bidirectional_iterator_tag) {
+    for (; n < 0; ++n) --i;
+    for (; 0 < n; --n) ++i;
+}
+template <typename Iterator, typename Distance>
+MSTL_CONSTEXPR17 void __advance_aux(Iterator& i, Distance n, std::input_iterator_tag) {
+    MSTL_DEBUG_VERIFY__(is_signed_v<Distance> && n >= 0, "negative advance of non-bidirectional iterator");
+    for (; 0 < n; --n) ++i;
+}
+template <typename Iterator, typename Distance, enable_if_t<is_iter_v<Iterator>, int> = 0>
+MSTL_CONSTEXPR17 void advance(Iterator& i, Distance n) {
+    MSTL::__advance_aux(i, n, iter_cat_t<Iterator>());
+}
+#else
+template <typename Iterator, typename Distance, enable_if_t<is_iter_v<Iterator>, int> = 0>
+MSTL_CONSTEXPR17 void advance(Iterator& i, Distance n) {
+    if constexpr (is_rnd_iter_v<Iterator>) {
         i += n;
     }
     else {
-        if constexpr (is_signed_v<Distance> && !is_ranges_bid_iter_v<Iterator>) {
+        if constexpr (is_signed_v<Distance> && !is_bid_iter_v<Iterator>) {
             MSTL_DEBUG_VERIFY__(n >= 0, "negative advance of non-bidirectional iterator");
         }
-        if constexpr (is_signed_v<Distance> && is_ranges_bid_iter_v<Iterator>) {
-            for (; n < 0; ++n) 
+        if constexpr (is_signed_v<Distance> && is_bid_iter_v<Iterator>) {
+            for (; n < 0; ++n)
                 --i;
         }
-        for (; 0 < n; --n) 
+        for (; 0 < n; --n)
             ++i;
     }
 }
+#endif // MSTL_VERSION_17__
 
 template <typename Iterator>
-MSTL_CONSTEXPR Iterator prev(Iterator iter, iter_dif_t<Iterator> n = -1) {
+MSTL_CONSTEXPR17 Iterator prev(Iterator iter, iter_dif_t<Iterator> n = -1) {
     MSTL::advance(iter, n);
     return iter;
 }
 template <typename Iterator>
-MSTL_CONSTEXPR Iterator next(Iterator iter, iter_dif_t<Iterator> n = 1) {
+MSTL_CONSTEXPR17 Iterator next(Iterator iter, iter_dif_t<Iterator> n = 1) {
     MSTL::advance(iter, n);
     return iter;
 }
 
-template <typename Iterator, enable_if_t<is_ranges_iter_v<Iterator>, int> = 0>
-MSTL_CONSTEXPR iter_dif_t<Iterator> distance(Iterator first, Iterator last) {
-    if constexpr (is_ranges_rnd_iter_v<Iterator>)
+
+#ifndef MSTL_VERSION_17__
+template <typename Iterator>
+MSTL_CONSTEXPR17 iter_dif_t<Iterator> __distance_aux(
+    Iterator first, Iterator last, std::random_access_iterator_tag) {
+    return last - first;
+}
+template <typename Iterator>
+MSTL_CONSTEXPR17 iter_dif_t<Iterator> __distance_aux(
+    Iterator first, Iterator last, std::input_iterator_tag) {
+    iter_dif_t<Iterator> n = 0;
+    while (first != last) { ++first; ++n; }
+    return n;
+}
+template <typename Iterator, enable_if_t<is_iter_v<Iterator>, int> = 0>
+MSTL_CONSTEXPR17 iter_dif_t<Iterator> distance(Iterator first, Iterator last) {
+    return MSTL::__distance_aux(first, last, iter_cat_t<Iterator>());
+}
+#else
+template <typename Iterator, enable_if_t<is_iter_v<Iterator>, int> = 0>
+MSTL_CONSTEXPR17 iter_dif_t<Iterator> distance(Iterator first, Iterator last) {
+    if constexpr (is_rnd_iter_v<Iterator>)
         return last - first;
     else {
         iter_dif_t<Iterator> n = 0;
@@ -56,6 +124,7 @@ MSTL_CONSTEXPR iter_dif_t<Iterator> distance(Iterator first, Iterator last) {
         return n;
     }
 }
+#endif // MSTL_VERSION_17__
 
 
 template <typename Container>
@@ -215,10 +284,7 @@ public:
     {
         Iterator tmp = current;
         --tmp;
-        if constexpr (is_pointer_v<Iterator>)
-            return tmp;
-        else
-            return tmp.operator->();
+        return MSTL::to_pointer(tmp);
     }
 
     MSTL_CONSTEXPR self& operator ++()

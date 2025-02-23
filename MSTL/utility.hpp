@@ -71,18 +71,27 @@ MSTL_MACRO_RANGE_FLOAT(INITIALIZE_BASIC_FUNCTION__)
 MSTL_MACRO_RANGE_INT(INITIALIZE_BASIC_FUNCTION__)
 
 
-struct piecewise_construct_tag {
-	constexpr explicit piecewise_construct_tag() = default;
-};
-MSTL_INLINECSP constexpr piecewise_construct_tag pair_piecewise_construct_t;
-
-struct inplace_construct_tag {
-	constexpr explicit inplace_construct_tag() = default;
-};
-MSTL_INLINECSP constexpr inplace_construct_tag inplace_construct_t;
+inline namespace tag {
+	// construct without arguments
+	struct default_construct_tag {
+		constexpr explicit default_construct_tag() = default;
+	};
+	// construct by arguments
+	struct exact_arg_construct_tag {
+		constexpr explicit exact_arg_construct_tag() = default;
+	};
+	// construct by multiple tuples or pairs
+	struct piecewise_construct_tag {
+		constexpr explicit piecewise_construct_tag() = default;
+	};
+	// construct by unpacking a tuple or pair
+	struct unpack_tuple_construct_tag {
+		constexpr explicit unpack_tuple_construct_tag() = default;
+	};
+}
 
 template <typename...>
-class tuple;
+struct tuple;
 
 template <typename>
 struct tuple_size;
@@ -374,6 +383,51 @@ struct tuple_element<Index, pair<T1, T2>> {
 };
 
 
+#ifndef MSTL_VERSION_17__
+template <size_t Index, typename T1, typename T2>
+struct __pair_get_helper;
+template <typename T1, typename T2>
+struct __pair_get_helper<0, T1, T2> {
+	MSTL_NODISCARD MSTL_CONSTEXPR static tuple_element_t<0, pair<T1, T2>>& 
+		get(pair<T1, T2>& pir) noexcept {
+		return pir.first;
+	}
+	MSTL_NODISCARD MSTL_CONSTEXPR static const tuple_element_t<0, pair<T1, T2>>& 
+		get(const pair<T1, T2>& pir) noexcept {
+		return pir.first;
+	}
+	MSTL_NODISCARD MSTL_CONSTEXPR static tuple_element_t<0, pair<T1, T2>>&&
+		get(pair<T1, T2>&& pir) noexcept {
+		return MSTL::forward<T1>(pir.first);
+	}
+	MSTL_NODISCARD MSTL_CONSTEXPR static const tuple_element_t<0, pair<T1, T2>>&&
+		get(const pair<T1, T2>&& pir) noexcept {
+		return MSTL::forward<const T1>(pir.first);
+	}
+};
+template <typename T1, typename T2>
+struct __pair_get_helper<1, T1, T2> {
+	MSTL_NODISCARD MSTL_CONSTEXPR static tuple_element_t<1, pair<T1, T2>>&
+		get(pair<T1, T2>& pir) noexcept {
+		return pir.second;
+	}
+	MSTL_NODISCARD MSTL_CONSTEXPR static const tuple_element_t<1, pair<T1, T2>>&
+		get(const pair<T1, T2>& pir) noexcept {
+		return pir.second;
+	}
+	MSTL_NODISCARD MSTL_CONSTEXPR static tuple_element_t<1, pair<T1, T2>>&&
+		get(pair<T1, T2>&& pir) noexcept {
+		return MSTL::forward<T2>(pir.second);
+	}
+	MSTL_NODISCARD MSTL_CONSTEXPR static const tuple_element_t<1, pair<T1, T2>>&&
+		get(const pair<T1, T2>&& pir) noexcept {
+		return MSTL::forward<const T2>(pir.second);
+	}
+};
+#endif // !MSTL_VERSION_17__
+
+
+#ifdef MSTL_VERSION_17__
 template <size_t Index, typename T1, typename T2>
 MSTL_NODISCARD MSTL_CONSTEXPR tuple_element_t<Index, pair<T1, T2>>& get(pair<T1, T2>& pir) noexcept {
 	if constexpr (Index == 0) 
@@ -381,6 +435,13 @@ MSTL_NODISCARD MSTL_CONSTEXPR tuple_element_t<Index, pair<T1, T2>>& get(pair<T1,
 	else 
 		return pir.second;
 }
+#else
+template <size_t Index, typename T1, typename T2>
+MSTL_NODISCARD MSTL_CONSTEXPR tuple_element_t<Index, pair<T1, T2>>&
+get(pair<T1, T2>& pir) noexcept {
+	return __pair_get_helper<Index, T1, T2>::get(pir);
+}
+#endif // MSTL_VERSION_17__
 template <typename T1, typename T2>
 MSTL_NODISCARD MSTL_CONSTEXPR T1& get(pair<T1, T2>& pir) noexcept {
 	return pir.first;
@@ -391,6 +452,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR T2& get(pair<T1, T2>& pir) noexcept {
 }
 
 
+#ifdef MSTL_VERSION_17__
 template <size_t Index, typename T1, typename T2>
 MSTL_NODISCARD MSTL_CONSTEXPR const tuple_element_t<Index, pair<T1, T2>>&
 get(const pair<T1, T2>& pir) noexcept {
@@ -399,6 +461,13 @@ get(const pair<T1, T2>& pir) noexcept {
 	else 
 		return pir.second;
 }
+#else
+template <size_t Index, typename T1, typename T2>
+MSTL_NODISCARD MSTL_CONSTEXPR const tuple_element_t<Index, pair<T1, T2>>& 
+get(const pair<T1, T2>& pir) noexcept {
+	return __pair_get_helper<Index, T1, T2>::get(pir);
+}
+#endif // MSTL_VERSION_17__
 template <typename T1, typename T2>
 MSTL_NODISCARD MSTL_CONSTEXPR const T1& get(const pair<T1, T2>& pir) noexcept {
 	return pir.first;
@@ -409,6 +478,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR const T2& get(const pair<T1, T2>& pir) noexcept {
 }
 
 
+#ifdef MSTL_VERSION_17__
 template <size_t Index, typename T1, typename T2>
 MSTL_NODISCARD MSTL_CONSTEXPR tuple_element_t<Index, pair<T1, T2>>&&
 get(pair<T1, T2>&& pir) noexcept {
@@ -417,6 +487,14 @@ get(pair<T1, T2>&& pir) noexcept {
 	else 
 		return MSTL::forward<T2>(pir.second);
 }
+#else
+template <size_t Index, typename T1, typename T2>
+MSTL_NODISCARD MSTL_CONSTEXPR tuple_element_t<Index, pair<T1, T2>>&& 
+get(pair<T1, T2>&& pir) noexcept {
+	return MSTL::forward<tuple_element_t<Index, pair<T1, T2>>>(
+		__pair_get_helper<Index, T1, T2>::get(MSTL::forward<pair<T1, T2>>(pir)));
+}
+#endif // MSTL_VERSION_17__
 template <typename T1, typename T2>
 MSTL_NODISCARD MSTL_CONSTEXPR T1&& get(pair<T1, T2>&& pir) noexcept {
 	return MSTL::forward<T1>(pir.first);
@@ -427,6 +505,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR T2&& get(pair<T1, T2>&& pir) noexcept {
 }
 
 
+#ifdef MSTL_VERSION_17__
 template <size_t Index, typename T1, typename T2>
 MSTL_NODISCARD MSTL_CONSTEXPR const tuple_element_t<Index, pair<T1, T2>>&&
 get(const pair<T1, T2>&& pir) noexcept {
@@ -435,6 +514,14 @@ get(const pair<T1, T2>&& pir) noexcept {
 	else 
 		return MSTL::forward<const T2>(pir.second);
 }
+#else
+template <size_t Index, typename T1, typename T2>
+MSTL_NODISCARD MSTL_CONSTEXPR const tuple_element_t<Index, pair<T1, T2>>&&
+get(const pair<T1, T2>&& pir) noexcept {
+	return MSTL::forward<const tuple_element_t<Index, pair<T1, T2>>>(
+		__pair_get_helper<Index, T1, T2>::get(MSTL::forward<const pair<T1, T2>>(pir)));
+}
+#endif // MSTL_VERSION_17__
 template <typename T1, typename T2>
 MSTL_NODISCARD MSTL_CONSTEXPR const T1&& get(const pair<T1, T2>&& pir) noexcept {
 	return MSTL::forward<const T1>(pir.first);
@@ -446,30 +533,30 @@ MSTL_NODISCARD MSTL_CONSTEXPR const T2&& get(const pair<T1, T2>&& pir) noexcept 
 
 
 template <typename T, typename... Args>
-MSTL_CONSTEXPR void construct(T* const ptr, Args&&... args)
+MSTL_CONSTEXPR20 void construct(T* const ptr, Args&&... args)
 noexcept(is_nothrow_constructible_v<T, Args...>) {
 	::new (static_cast<void*>(ptr)) T(MSTL::forward<Args>(args)...);
 }
 
 
 template <typename T>
-MSTL_CONSTEXPR void destroy(T* pointer) noexcept(is_nothrow_destructible_v<T>) {
+MSTL_CONSTEXPR20 void destroy(T* pointer) noexcept(is_nothrow_destructible_v<T>) {
 	pointer->~T();
 }
 
 template <typename Iterator, enable_if_t<
 	is_ranges_fwd_iter_v<Iterator> && !is_trivially_destructible_v<iter_val_t<Iterator>>, int> = 0>
-MSTL_CONSTEXPR void destroy(Iterator first, Iterator last)
+MSTL_CONSTEXPR20 void destroy(Iterator first, Iterator last)
 noexcept(is_nothrow_destructible_v<typename iterator_traits<Iterator>::value_type>) {
 	for (; first < last; ++first) MSTL::destroy(&*first);
 }
 
 template <typename Iterator, enable_if_t<
 	is_ranges_fwd_iter_v<Iterator> && is_trivially_destructible_v<iter_val_t<Iterator>>, int> = 0>
-MSTL_CONSTEXPR void destroy(Iterator, Iterator) noexcept {}
+MSTL_CONSTEXPR20 void destroy(Iterator, Iterator) noexcept {}
 
 #define DESTORY_CHAR_FUNCTION__(OPT) \
-    inline void destroy(OPT*, OPT*) noexcept {}
+    MSTL_CONSTEXPR20 void destroy(OPT*, OPT*) noexcept {}
 MSTL_MACRO_RANGE_CHARS(DESTORY_CHAR_FUNCTION__)
 
 

@@ -73,7 +73,7 @@ public:
 
 private:
     unordered_map<T*, boost::stacktrace::stacktrace> traces_;
-    std::allocator<T> alloc_;
+    standard_allocator<T> alloc_;
 };
 template <typename T, typename U>
 bool operator ==(const trace_allocator<T>&, const trace_allocator<U>&) noexcept {

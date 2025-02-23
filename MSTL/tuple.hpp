@@ -99,16 +99,6 @@ template <typename Dest, typename... Srcs>
 struct tuple_nothrow_assignable : bool_constant<tuple_nothrow_assignable_v<Dest, Srcs...>> {};
 
 
-// construct by arguments
-struct exact_arg_construct_tag {
-	MSTL_CONSTEXPR explicit exact_arg_construct_tag() = default;
-};
-// construct by unpacking a tuple or pair
-struct unpack_tuple_construct_tag {
-	MSTL_CONSTEXPR explicit unpack_tuple_construct_tag() = default;
-};
-
-
 TEMNULL__ struct tuple<> {
 	MSTL_CONSTEXPR tuple() noexcept = default;
 	MSTL_CONSTEXPR tuple(const tuple&) noexcept = default;

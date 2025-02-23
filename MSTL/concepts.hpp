@@ -30,20 +30,8 @@ concept derived_from = is_base_of_v<Base, Derived>
 && is_convertible_to_v<const volatile Derived*, const volatile Base*>;
 
 
-template <typename T>
-concept trivially_destructible = is_trivially_destructible_v<T>;
-template <typename T>
-concept nothrow_destructible = is_nothrow_destructible_v<T>;
-template <typename T>
-concept destructible = is_destructible_v<T>;
-
-
 template<typename T, typename... Args>
 concept constructible_from = is_constructible_v<T, Args...>;
-template<typename T>
-concept default_constructible = is_default_constructible_v<T>;
-template<typename T>
-concept implicit_constructible = is_implicitly_default_constructible_v<T>;
 template <typename T>
 concept move_constructible = is_move_constructible_v<T>;
 template<typename T>
@@ -51,14 +39,6 @@ concept copy_constructible = move_constructible<T>
 && constructible_from<T, T&>&& convertible_to<T&, T>
 && constructible_from<T, const T&>&& convertible_to<const T&, T>
 && constructible_from<T, const T>&& convertible_to<const T, T>;
-template<typename T>
-concept nothrow_default_constructible = is_nothrow_default_constructible_v<T>;
-template<typename T>
-concept nothrow_copy_constructible = is_nothrow_copy_constructible_v<T>;
-template<typename T>
-concept nothrow_move_constructible = is_nothrow_move_constructible_v<T>;
-template<typename T, typename... Args>
-concept nothrow_constructible_from = is_nothrow_constructible_v<T, Args...>;
 
 
 template <typename T>
@@ -66,12 +46,6 @@ concept default_initializable = constructible_from<T> && requires {
 	T{};
 	::new (static_cast<void*>(nullptr)) T;
 };
-
-
-template <typename T>
-concept swappable = is_swappable_v<T>;
-template <typename T>
-concept nothrow_swappable = is_nothrow_swappable_v<T>;
 
 
 template <typename To, typename From>
@@ -92,7 +66,7 @@ template <typename T>
 concept movable = is_object_v<T>
 && move_constructible<T>
 && assignable_from<T&, T>
-&& swappable<T>;
+&& is_swappable_v<T>;
 
 template <typename T>
 concept copyable = copy_constructible<T>
@@ -175,19 +149,15 @@ concept iterator_typedef = requires() {
 };
 
 template<typename Iterator>
-concept input_iterator = iterator_typedef<Iterator> && requires(Iterator it1, Iterator it2) {
+concept input_iterator = both_equality_comparable<Iterator, Iterator> && iterator_typedef<Iterator> 
+&& requires(Iterator it1, Iterator it2) {
 	{ *it1 } -> convertible_to<typename iterator_traits<Iterator>::value_type>;
 	{ ++it1 } -> same_as<Iterator&>;
 	{ it1++ } -> same_as<Iterator>;
-	{ it1 != it2 } -> convertible_to<bool>;
-	{ it1 == it2 } -> convertible_to<bool>;
 };
 template<typename Iterator>
-concept forward_iterator = input_iterator<Iterator> && requires(Iterator it1, Iterator it2) {
-	{ it1 < it2 } -> convertible_to<bool>;
-	{ it1 <= it2 } -> convertible_to<bool>;
-	{ it1 > it2 } -> convertible_to<bool>;
-	{ it1 >= it2 } -> convertible_to<bool>;
+concept forward_iterator = both_ordered_with<Iterator, Iterator> && semiregular<Iterator> && 
+input_iterator<Iterator> && requires(Iterator it1, Iterator it2) {
 	{ (it1 - it2) } -> convertible_to<typename iterator_traits<Iterator>::difference_type>;
 };
 template<typename Iterator>
@@ -269,6 +239,23 @@ constexpr bool is_rnd_iter_v =
 random_access_iterator<Iterator> &&
 #endif
 is_ranges_rnd_iter_v<Iterator>;
+
+
+template <typename Iterator>
+constexpr bool is_ranges_cot_iter_v = 
+#ifdef MSTL_VERSION_20__
+is_convertible_v<iter_cat_t<Iterator>, std::contiguous_iterator_tag>;
+#else
+is_pointer_v<Iterator>;
+#endif // MSTL_VERSION_20__
+
+template <typename Iterator>
+constexpr bool is_cot_iter_v = 
+#ifdef MSTL_VERSION_20__
+random_access_iterator<Iterator> && 
+#endif // MSTL_VERSION_20__
+is_lvalue_reference_v<decltype(*MSTL::declval<Iterator&>())> && is_same_v<remove_cv_t<Iterator>, Iterator>
+&& is_ranges_cot_iter_v<Iterator>;
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_CONCEPTS_HPP__

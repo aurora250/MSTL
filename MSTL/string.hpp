@@ -18,7 +18,8 @@ TEMNULL__ struct hash<MSTL::string> {
 };
 template <typename CharT, typename Traits, typename Alloc>
 struct hash<basic_string<CharT, Traits, Alloc>> {
-    MSTL_NODISCARD size_t operator ()(const basic_string<CharT, Traits, Alloc>& str) const noexcept {
+    MSTL_NODISCARD MSTL_CONSTEXPR size_t operator ()(
+        const basic_string<CharT, Traits, Alloc>& str) const noexcept {
         return FNV_hash(reinterpret_cast<const byte_t*>(str.c_str()), sizeof(CharT) * str.size());
     }
 };
@@ -33,21 +34,21 @@ TEMNULL__ struct hash<std::string> {
 #pragma warning(push)
 #pragma warning(disable: 4455)
 inline namespace string_operator {
-    inline MSTL_NODISCARD string operator ""s(const char* str, size_t len) noexcept {
+    MSTL_NODISCARD MSTL_CONSTEXPR20 string operator ""s(const char* str, size_t len) noexcept {
         return string(str, len);
     }
-    inline MSTL_NODISCARD wstring operator ""s(const wchar_t* str, size_t len) noexcept {
+    MSTL_NODISCARD MSTL_CONSTEXPR20 wstring operator ""s(const wchar_t* str, size_t len) noexcept {
         return wstring(str, len);
     }
 #ifdef MSTL_VERSION_20__
-    inline MSTL_NODISCARD u8string operator ""s(const char8_t* str, size_t len) noexcept {
+    MSTL_NODISCARD MSTL_CONSTEXPR20 u8string operator ""s(const char8_t* str, size_t len) noexcept {
         return u8string(str, len);
     }
 #endif // MSTL_VERSION_20__
-    inline MSTL_NODISCARD u16string operator ""s(const char16_t* str, size_t len) noexcept {
+    MSTL_NODISCARD MSTL_CONSTEXPR20 u16string operator ""s(const char16_t* str, size_t len) noexcept {
         return u16string(str, len);
     }
-    inline MSTL_NODISCARD u32string operator ""s(const char32_t* str, size_t len) noexcept {
+    MSTL_NODISCARD MSTL_CONSTEXPR20 u32string operator ""s(const char32_t* str, size_t len) noexcept {
         return u32string(str, len);
     }
 }
@@ -55,22 +56,27 @@ inline namespace string_operator {
 #endif // MSTL_VERSION_17__
 
 
+template <typename CharT, typename UT, enable_if_t<(sizeof(UT) > 4), int> = 0>
+inline void __uint_to_buff_aux(CharT* riter, UT ux) {
+    while (ux > 0xFFFFFFFFU) {
+        auto chunk = static_cast<unsigned long>(ux % 1000000000);
+        ux /= 1000000000;
+        for (int idx = 0; idx != 9; ++idx) {
+            *--riter = static_cast<CharT>('0' + chunk % 10);
+            chunk /= 10;
+        }
+    }
+}
+template <typename CharT, typename UT, enable_if_t<!(sizeof(UT) > 4), int> = 0>
+MSTL_NODISCARD inline void __uint_to_buff_aux(CharT* riter, UT ux) {}
+
 template <typename CharT, typename UT>
 MSTL_NODISCARD CharT* uint_to_buff(CharT* riter, UT ux) {
     static_assert(is_unsigned_v<UT>, "UT must be unsigned types.");
 #ifdef MSTL_DATA_BUS_WIDTH_64__
     auto holder = ux;
 #else
-    if constexpr (sizeof(UT) > 4) {
-        while (ux > 0xFFFFFFFFU) {
-            auto chunk = static_cast<unsigned long>(ux % 1000000000);
-            ux /= 1000000000;
-            for (int idx = 0; idx != 9; ++idx) {
-                *--riter = static_cast<CharT>('0' + chunk % 10);
-                chunk /= 10;
-            }
-        }
-    }
+    MSTL::__uint_to_buff_aux(riter, ux);
     auto holder = static_cast<unsigned long>(ux);
 #endif
     do {
@@ -99,6 +105,7 @@ MSTL_NODISCARD basic_string<CharT> int_to_string(const T x) {
 template <typename CharT, typename T>
 MSTL_NODISCARD basic_string<CharT> uint_to_string(const T x) {
     static_assert(is_integral_v<T> && is_unsigned_v<T>, "T must be unsigned integral types.");
+
     CharT buffer[21];
     CharT* const buffer_end = buffer + 21;
     CharT* const rnext = (uint_to_buff)(buffer_end, x);
@@ -171,13 +178,13 @@ MSTL_NODISCARD inline wstring to_wstring(long double x) {
 }
 
 
-template <typename CharT, typename T>
+template <typename CharT, typename T, enable_if_t<is_same_v<CharT, char>, int> = 0>
 MSTL_NODISCARD inline basic_string<CharT> __stream_to_string(T x) {
-    if constexpr (is_same_v<CharT, char>)
-        return to_string(x);
-    else if constexpr (is_same_v<CharT, wchar_t>)
-        return to_wstring(x);
-    else static_assert(false, "to_string unsupport char type.");
+    return MSTL::to_string(x);
+}
+template <typename CharT, typename T, enable_if_t<is_same_v<CharT, wchar_t>, int> = 0>
+MSTL_NODISCARD inline basic_string<CharT> __stream_to_string(T x) {
+    return MSTL::to_wstring(x);
 }
 
 MSTL_END_NAMESPACE__

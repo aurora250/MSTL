@@ -2,7 +2,7 @@
 
 void try_lls();
 void try_exc() {
-	MSTL_NAMESPACE__;
+	USE_MSTL;
     try {
         MSTL_EXEC_MEMORY__;
     }
@@ -39,7 +39,7 @@ void try_lls() {
 
 class Foo {};
 void try_check() {
-    MSTL_NAMESPACE__;
+    USE_MSTL;
     std::cout << check_type<string>() << std::endl;
     std::cout << check_type<const volatile void* const*&>() << std::endl;
     std::cout << check_type<int(*)[]>() << std::endl;
@@ -73,20 +73,21 @@ void try_copy() {
     //std::for_each(ia, ia + 9, display<int>()); //0 1 2 3 2 3 4 5 6
     //std::cout << std::endl;
     ////本例结果正确 因为调用的copy算法使用memmove()执行实际复制操作
-    MSTL_NAMESPACE__;
+    USE_MSTL;
     int ia[] = { 0,1,2,3,4,5,6,7,8 };
-    deque<int>id(ia, ia + 9);
-    deque<int>::iterator first = id.begin();
-    deque<int>::iterator last = id.end();
+    vector<int>id(ia, ia + 9);
+    vector<int>::iterator first = id.begin();
+    vector<int>::iterator last = id.end();
     ++++first;  //advance(first,2)  2
     std::cout << *++first << std::endl;
     ----last;  //advance(last,-2) 7
     std::cout << *last << std::endl;
-    deque<int>::iterator result = id.begin();
+    vector<int>::iterator result = id.begin();
     std::cout << *result << std::endl; //0
     //输出区间的终点和输入区间重叠 没有问题
-    MSTL::copy(first, last, result);
-    std::cout << std::endl;
+    vector<int> fin(9, 1);
+    MSTL::copy(ia, ia+9, fin.begin());
+    detailof(fin);
 
     //int ia[] = { 0,1,2,3,4,5,6,7,8 };
     //std::deque<int>id(ia, ia + 9);
@@ -141,9 +142,9 @@ void try_stack() {
     detailof(s);
 }
 void try_vec() {
-    MSTL_NAMESPACE__;
+    USE_MSTL;
     MSTL_TRY__{
-        vector<int> v{ 1,2,3,4 };
+        vector<int> v{ 1,2,3,4 }; std::vector<int> a;
         v.push_back(3);
         v.push_back(4);
         detailof(v);
@@ -184,7 +185,7 @@ void try_vec() {
     }
 }
 void try_pque() {
-    MSTL_NAMESPACE__;
+    USE_MSTL;
     priority_queue<int> q;
     std::cout << typeid(priority_queue<int*>).name() << std::endl;
     q.push(6); q.push(9); q.push(1); q.push(5);
@@ -195,7 +196,7 @@ void try_pque() {
 }
 
 void try_rb() {
-    MSTL_NAMESPACE__;
+    USE_MSTL;
     map<int, char> m;
     m.insert(pair<int, char>(1, 'c'));
     m.emplace(3, 'c');
@@ -229,14 +230,14 @@ void try_rb() {
     detailof(ms);
 }
 void try_tup() {
-    MSTL_NAMESPACE__;
+    USE_MSTL;
     tuple<int, char, const char*> t(1, 't', "MSTL");
     auto a = get<0>(t);
     std::cout << get<1>(t) << std::endl;
     auto forw = MSTL::make_tuple(9, 0);
 }
 void try_hash() {
-    MSTL_NAMESPACE__;
+    USE_MSTL;
     unordered_map<int, char> m;
     m[1] = 'a';
     m[2] = 'b';
@@ -277,7 +278,7 @@ void try_hash() {
 }
 
 void try_pool() {
-    MSTL_NAMESPACE__;
+    USE_MSTL;
     {
         ThreadPool pool;
         pool.start();
@@ -288,7 +289,7 @@ void try_pool() {
 }
 
 void try_math() {
-    MSTL_NAMESPACE__;
+    USE_MSTL;
     std::cout << power(2, 10) << std::endl;
     std::cout << (factorial(10)) << std::endl;
     std::cout << sine(1) << std::endl;
@@ -314,7 +315,7 @@ void try_math() {
 }
 void try_sql() {
 #if MSTL_DLL_LINK__
-    MSTL_NAMESPACE__;
+    USE_MSTL;
 
     clock_t begin = clock();
     DBConnectPool* pool = new DBConnectPool("root", "147258hu", "book");
@@ -338,7 +339,7 @@ inline std::ostream& operator <<(std::ostream& out, const Person& p) {
     return out;
 }
 void try_sort() {
-    MSTL_NAMESPACE__;
+    USE_MSTL;
     vector<int> vec{ 6,9,1,5,8,4,7 };
     //insertion_sort(vec.begin(), vec.end());
     //bubble_sort(vec.begin(), vec.end());
@@ -371,7 +372,7 @@ void try_sort() {
 }
 
 void try_algo() {
-    MSTL_NAMESPACE__;
+    USE_MSTL;
     vector<int> v1 = { 1, 3, 5 };
     vector<int> v2 = { 2, 4, 6 };
     vector<int> result(v1.size() + v2.size());
@@ -400,7 +401,7 @@ void repeat(const MSTL::function<void(int)>& func) {
 }
 
 void try_func() {
-    MSTL_NAMESPACE__;
+    USE_MSTL;
     int x = 4;
     int y = 2;
     repeat([=](int i) {
@@ -419,15 +420,16 @@ void try_func() {
     ff(3);
 }
 void try_ss() {
-    MSTL_NAMESPACE__;
+    USE_MSTL;
     stringstream ss;
     ss << "a" << 'b' << 333 << " " << 9.333 << string("hello") << false << MSTL::move(string("aaaa"));
     std::cout << ss.str() << std::endl;
     ss.str("wert");
     std::cout << ss.str() << std::endl;
 }
+
 int main() {
-    MSTL_NAMESPACE__;
-    try_pool();
+    USE_MSTL;
+    try_vec();
     return 0;
 }

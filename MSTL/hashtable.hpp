@@ -343,6 +343,42 @@ private:
         return iterator(x, this);
     }
 
+    template <typename Iterator, enable_if_t<
+        is_input_iter_v<Iterator> && !is_fwd_iter_v<Iterator>, int> = 0>
+    void insert_unique_aux(Iterator first, Iterator last) {
+        for (; first != last; ++first)
+            insert_unique(*first);
+    }
+
+    template <typename Iterator, enable_if_t<
+        is_fwd_iter_v<Iterator>, int> = 0>
+    void insert_unique_aux(Iterator first, Iterator last) {
+        size_type n = MSTL::distance(first, last);
+        rehash(size_ + n);
+        for (; n > 0; --n, ++first) {
+            node_type* tmp = (new_node)(*first);
+            insert_unique_noresize(tmp);
+        }
+    }
+
+    template <typename Iterator, enable_if_t<
+        is_input_iter_v<Iterator> && !is_fwd_iter_v<Iterator>, int> = 0>
+    void insert_equal_aux(Iterator first, Iterator last) {
+        for (; first != last; ++first)
+            insert_equal(*first);
+    }
+
+    template <typename Iterator, enable_if_t<
+        is_fwd_iter_v<Iterator>, int> = 0>
+    void insert_equal_aux(Iterator first, Iterator last) {
+        size_type n = MSTL::distance(first, last);
+        rehash(size_ + n);
+        for (; n > 0; --n, ++first) {
+            node_type* tmp = (new_node)(*first);
+            insert_equal_noresize(tmp);
+        }
+    }
+
 public:
     explicit hashtable(size_type n) 
         : hasher_(HashFcn()), equals_(EqualKey()), extracter_(ExtractKey()), size_(0), factor_(1.0f) {}
@@ -503,43 +539,18 @@ public:
         return (emplace_equal)(MSTL::move(x));
     }
 
-    template <typename Iterator, enable_if_t<
-        is_iter_v<Iterator>, int> = 0>
+    template <typename Iterator, enable_if_t<is_iter_v<Iterator>, int> = 0>
     void insert_unique(Iterator first, Iterator last) {
-        if constexpr (is_fwd_iter_v<Iterator>) {
-            size_type n = MSTL::distance(first, last);
-            rehash(size_ + n);
-            for (; n > 0; --n, ++first) {
-                node_type* tmp = (new_node)(*first);
-                insert_unique_noresize(tmp);
-            }
-        }
-        else {
-            for (; first != last; ++first)
-                insert_unique(*first);
-        }
+        insert_unique_aux(first, last);
     }
 
     void insert_unique(std::initializer_list<value_type> l) {
         insert_unique(l.begin(), l.end());
     }
 
-    template <typename Iterator, enable_if_t<
-        is_iter_v<Iterator>, int> = 0>
+    template <typename Iterator, enable_if_t<is_iter_v<Iterator>, int> = 0>
     void insert_equal(Iterator first, Iterator last) {
-        if constexpr (is_fwd_iter_v<Iterator>) {
-            size_type n = 0;
-            MSTL::distance(first, last, n);
-            rehash(size_ + n);
-            for (; n > 0; --n, ++first) {
-                node_type* tmp = (new_node)(*first);
-                insert_equal_noresize(tmp);
-            }
-        }
-        else {
-            for (; first != last; ++first)
-                insert_equal(*first);
-        }
+        insert_unique_aux(first, last);
     }
 
     void insert_equal(std::initializer_list<value_type> l) {
