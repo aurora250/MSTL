@@ -71,7 +71,7 @@ MSTL_MACRO_RANGE_FLOAT(INITIALIZE_BASIC_FUNCTION__)
 MSTL_MACRO_RANGE_INT(INITIALIZE_BASIC_FUNCTION__)
 
 
-inline namespace tag {
+inline namespace tags {
 	// construct without arguments
 	struct default_construct_tag {
 		constexpr explicit default_construct_tag() = default;
@@ -89,6 +89,98 @@ inline namespace tag {
 		constexpr explicit unpack_tuple_construct_tag() = default;
 	};
 }
+
+
+// compressed_pair saves memory with EBCO(Empty Base Class Optimization).
+// it`s an optimization strategy that reduces the align size of an object
+// by using empty class as the base class.
+template <typename T1, typename T2, bool = is_empty_v<T1> && !is_final_v<T1>>
+class compressed_pair final : private T1 {
+public:
+	using base_type = T1;
+
+	T2 value;
+
+	constexpr compressed_pair(const compressed_pair& pir) : value(pir.value) {}
+	constexpr compressed_pair(compressed_pair&& pir) : value(MSTL::move(pir.value)) {}
+
+	template <typename... Args>
+	constexpr compressed_pair(default_construct_tag, Args&&... args)
+		noexcept(conjunction_v<is_nothrow_default_constructible<T1>, is_nothrow_constructible<T2, Args...>>)
+		: T1(), value(MSTL::forward<Args>(args)...) {
+	}
+
+	template <typename U1, typename... U2>
+	constexpr compressed_pair(exact_arg_construct_tag, U1&& first, U2&&... args)
+		noexcept(conjunction_v<is_nothrow_constructible<T1, U1>, is_nothrow_constructible<T2, U2...>>)
+		: T1(MSTL::forward<U1>(first)), value(MSTL::forward<U2>(args)...) {
+	}
+
+	constexpr T1& get_base() noexcept {
+		return *this;
+	}
+	constexpr const T1& get_base() const noexcept {
+		return *this;
+	}
+
+	constexpr void swap(compressed_pair& rh)
+		noexcept(is_nothrow_swappable_v<T2>) {
+		MSTL::swap(value, rh.value);
+	};
+};
+
+template <typename T1, typename T2, enable_if_t<is_swappable_v<T2>, int> = 0>
+constexpr void swap(compressed_pair<T1, T2, true>& lh, compressed_pair<T1, T2, true>& rh)
+noexcept(noexcept(lh.swap(rh))) {
+	lh.swap(rh);
+}
+
+template <typename T1, typename T2>
+class compressed_pair<T1, T2, false> final {
+public:
+	T1 no_compressed;
+	T2 value;
+
+	constexpr compressed_pair(const compressed_pair& pir)
+		: no_compressed(pir.no_compressed), value(pir.value) {
+	}
+	constexpr compressed_pair(compressed_pair&& pir)
+		: no_compressed(MSTL::move(pir.no_compressed)), value(MSTL::move(pir.value)) {
+	}
+
+	template <typename... Args>
+	constexpr compressed_pair(default_construct_tag, Args&&... args)
+		noexcept(conjunction_v<is_nothrow_default_constructible<T1>, is_nothrow_constructible<T2, Args>>)
+		: no_compressed(), value(MSTL::forward<Args>(args)...) {
+	}
+
+	template <typename U1, typename... U2>
+	constexpr compressed_pair(exact_arg_construct_tag, U1&& first, U2&&... args)
+		noexcept(conjunction_v<is_nothrow_constructible<T1, U1>, is_nothrow_constructible<T2, U2...>>)
+		: no_compressed(MSTL::forward<U1>(first)), value(MSTL::forward<U2>(args)...) {
+	}
+
+	constexpr T1& get_base() noexcept {
+		return no_compressed;
+	}
+	constexpr const T1& get_base() const noexcept {
+		return no_compressed;
+	}
+
+	constexpr void swap(compressed_pair& rh)
+		noexcept(conjunction_v<is_nothrow_swappable<T1>, is_nothrow_swappable<T2>>) {
+		MSTL::swap(value, rh.value);
+		MSTL::swap(no_compressed, rh.no_compressed);
+	};
+};
+
+template <typename T1, typename T2, enable_if_t<
+	is_swappable_v<T1> && is_swappable_v<T2>, int> = 0>
+constexpr void swap(compressed_pair<T1, T2, false>& lh, compressed_pair<T1, T2, false>& rh)
+noexcept(noexcept(lh.swap(rh))) {
+	lh.swap(rh);
+}
+
 
 template <typename...>
 struct tuple;
@@ -545,14 +637,14 @@ MSTL_CONSTEXPR20 void destroy(T* pointer) noexcept(is_nothrow_destructible_v<T>)
 }
 
 template <typename Iterator, enable_if_t<
-	is_ranges_fwd_iter_v<Iterator> && !is_trivially_destructible_v<iter_val_t<Iterator>>, int> = 0>
+	is_fwd_iter_v<Iterator> && !is_trivially_destructible_v<iter_val_t<Iterator>>, int> = 0>
 MSTL_CONSTEXPR20 void destroy(Iterator first, Iterator last)
 noexcept(is_nothrow_destructible_v<typename iterator_traits<Iterator>::value_type>) {
 	for (; first < last; ++first) MSTL::destroy(&*first);
 }
 
 template <typename Iterator, enable_if_t<
-	is_ranges_fwd_iter_v<Iterator> && is_trivially_destructible_v<iter_val_t<Iterator>>, int> = 0>
+	is_fwd_iter_v<Iterator> && is_trivially_destructible_v<iter_val_t<Iterator>>, int> = 0>
 MSTL_CONSTEXPR20 void destroy(Iterator, Iterator) noexcept {}
 
 #define DESTORY_CHAR_FUNCTION__(OPT) \

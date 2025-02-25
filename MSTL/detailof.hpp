@@ -115,7 +115,7 @@ void detailof(const priority_queue<T, Sequence, Compare>& pq, std::ostream& _out
 	_out << "type: " << check_type<priority_queue<T, Sequence, Compare>>() << '\n';
 	_out << "size: " << pq.size() << '\n';
 	_out << "data: ";
-	show_data_only(pq.seq_, _out);
+	show_data_only(pq.pair_.value, _out);
 	_out << std::endl;
 	split_line(_out);
 }

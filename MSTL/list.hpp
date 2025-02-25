@@ -4,22 +4,35 @@
 #include "functor.hpp"
 MSTL_BEGIN_NAMESPACE__
 
+template <typename T, typename Alloc>
+class list;
+template <typename T, typename Ref, typename Ptr>
+struct list_iterator;
+
 template <typename T>
 struct __list_node {
+public:
     using value_type    = T;
-    using reference     = const T&;
     using self          = __list_node<value_type>;
 
-    __list_node(reference _val = value_type(), self* _prev = nullptr, self* _next = nullptr) noexcept
-        : data_(_val), prev_(_prev), next_(_next) {}
+    friend list;
+    friend list_iterator;
 
-    value_type data_;
-    self* prev_;
-    self* next_;
+private:
+
+    value_type data_{};
+    self* prev_ = nullptr;
+    self* next_ = nullptr;
+
+public:
+    __list_node() noexcept = default;
+    __list_node(const T& val, self* prev, self* next) noexcept 
+        : data_(val), prev_(prev), next_(next) {}
 };
 
 template <typename T, typename Ref = T&, typename Ptr = T*>
 struct list_iterator {
+public:
     using iterator_category = std::bidirectional_iterator_tag;
     using difference_type   = ptrdiff_t;
     using value_type        = T;
@@ -27,27 +40,34 @@ struct list_iterator {
     using reference         = Ref;
     using self              = list_iterator<T, Ref, Ptr>;
     using iterator          = list_iterator<T, T&, T*>;
+    using const_iterator    = list_iterator<T, const T&, const T*>;
     using link_type         = __list_node<T>*;
 
-    link_type node_;
+    friend list;
+    friend iterator;
+    friend const_iterator;
 
-    list_iterator(link_type x = nullptr) noexcept : node_(x) {}
+private:
+    link_type node_ = nullptr;
 
+public:
+    list_iterator() noexcept = default;
+    list_iterator(link_type x) noexcept : node_(x) {}
     list_iterator(const iterator& x) noexcept : node_(x.node_) {}
 
     self& operator =(const iterator& rh) noexcept {
     	if(*this == rh) return *this;
-		this->node_ = rh.node_; 
+		node_ = rh.node_; 
 		return *this;
 	}
 
     ~list_iterator() = default;
 
-    MSTL_NODISCARD reference operator *() const noexcept { return this->node_->data_; }
+    MSTL_NODISCARD reference operator *() const noexcept { return node_->data_; }
     MSTL_NODISCARD pointer operator->() const noexcept { return &(operator*()); }
 
     self& operator ++() noexcept {
-        this->node_ = this->node_->next_;
+        node_ = node_->next_;
         return *this;
     }
     self operator ++(int) noexcept {
@@ -57,7 +77,7 @@ struct list_iterator {
     }
 
     self& operator --() noexcept {
-        this->node_ = this->node_->prev_;
+        node_ = node_->prev_;
         return *this;
     }
     self operator --(int) noexcept {
@@ -65,17 +85,14 @@ struct list_iterator {
         --(*this);
         return _old;
     }
+
+    friend MSTL_NODISCARD bool operator ==(const self& lh, const self& rh) noexcept {
+        return lh.node_ == rh.node_;
+    }
+    friend MSTL_NODISCARD bool operator !=(const self& lh, const self& rh) noexcept {
+        return rh.node_ != rh.node_;
+    }
 };
-template <typename T, typename Ref, typename Ptr>
-MSTL_NODISCARD bool operator ==(const list_iterator<T, Ref, Ptr>& x,
-    const list_iterator<T, Ref, Ptr>& y) noexcept {
-    return x.node_ == y.node_;
-}
-template <typename T, typename Ref, typename Ptr>
-MSTL_NODISCARD bool operator !=(const list_iterator<T, Ref, Ptr>& x,
-    const list_iterator<T, Ref, Ptr>& y) noexcept {
-    return x.node_ != y.node_;
-}
 
 
 template <typename T, typename Alloc = standard_allocator<__list_node<T>>>
@@ -102,12 +119,11 @@ public:
     using self              = list<T, Alloc>;
 
 private:
-    link_type node_;
-    size_type size_;
-    MSTL_NO_UNIADS allocator_type alloc_;
+    link_type node_ = nullptr;
+    compressed_pair<allocator_type, size_type> pair_{ default_construct_tag{}, 0 };
 
     inline void range_check(size_type position) const noexcept {
-        MSTL_DEBUG_VERIFY__(position < size_, "list index out of ranges.");
+        MSTL_DEBUG_VERIFY__(position < pair_.value, "list index out of ranges.");
     }
     inline void range_check(iterator position) const noexcept {
         MSTL_DEBUG_VERIFY__(MSTL::distance(static_cast<const_iterator>(position), cend()) >= 0, 
@@ -117,13 +133,13 @@ private:
 
     template <typename... Args>
     link_type create_node(Args&&... args) {
-        link_type p = alloc_.allocate();
+        link_type p = pair_.get_base().allocate();
         MSTL::construct(&(p->data_), MSTL::forward<Args>(args)...);
         return p;
     }
     void destroy_node(link_type p) noexcept {
         MSTL::destroy(p);
-        alloc_.deallocate(p);
+        pair_.get_base().deallocate(p);
     }
 
     void empty_init() {
@@ -177,7 +193,7 @@ public:
             node_->prev_ = q;
             p = p->next_;
         }
-        this->size_ = x.size_;
+        pair_.value = x.pair_.value;
         return *this;
     }
 
@@ -211,7 +227,7 @@ public:
     MSTL_NODISCARD const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cend()); }
     MSTL_NODISCARD const_reverse_iterator crend() const noexcept { return const_reverse_iterator(cbegin()); }
 
-    MSTL_NODISCARD size_type size() const noexcept { return size_; }
+    MSTL_NODISCARD size_type size() const noexcept { return pair_.value; }
     MSTL_NODISCARD size_type max_size() const noexcept { return static_cast<size_type>(-1); }
     MSTL_NODISCARD bool empty() const noexcept {
         return this->node_->next_ == this->node_ || link_type(this->node_->next_)->next_ == this->node_;
@@ -244,7 +260,7 @@ public:
         temp->prev_ = position.node_->prev_;
         position.node_->prev_->next_ = temp;
         position.node_->prev_ = temp;
-        ++size_;
+        ++pair_.value;
         return temp;
     }
 
@@ -311,7 +327,7 @@ public:
             cur->prev_->next_ = temp;
             cur->prev_ = temp;
             cur = temp;
-            ++size_;
+            ++pair_.value;
         }
     }
 
@@ -322,7 +338,7 @@ public:
         position.node_->prev_->next_ = position.node_->next_;
         position.node_->next_->prev_ = position.node_->prev_;
         destroy_node(position.node_);
-        --size_;
+        --pair_.value;
         return ret;
     }
     iterator erase(iterator first, iterator last) noexcept {
@@ -337,15 +353,15 @@ public:
             link_type temp = cur;
             cur = cur->next_;
             destroy_node(temp);
-            --size_;
+            --pair_.value;
         }
         node_->prev_ = node_;
         node_->next_ = node_;
     }
 
     void swap(self& x) noexcept {
-        MSTL::swap(x.node_, this->node_);
-        MSTL::swap(x.size_, this->size_);
+        MSTL::swap(x.node_, node_);
+        MSTL::swap(x.pair_, pair_);
     }
 
     void transfer(iterator position, iterator first, iterator last) {

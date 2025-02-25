@@ -155,7 +155,6 @@
     <ClInclude Include="stringstream.hpp" />
     <ClInclude Include="string_view.hpp" />
     <ClInclude Include="detailof.hpp" />
-    <ClInclude Include="macro_ranges.h" />
     <ClInclude Include="mysql_connect_pool.h" />
     <ClInclude Include="hashtable.hpp" />
     <ClInclude Include="unordered_map.hpp" />

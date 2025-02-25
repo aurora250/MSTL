@@ -297,7 +297,7 @@ inline mathld_t arccosine(mathld_t x) {
 	return constants::PI / 2.0 - arcsine(x);
 }
 
-MSTL_CONSTEXPR mathld_t arctangent_taylor(mathld_t x) noexcept {
+MSTL_CONSTEXPR mathld_t __arctangent_taylor(mathld_t x) noexcept {
 	mathld_t y = 0.0;
 	mathld_t tmp = x;
 	mathul_t N = 1;
@@ -311,11 +311,11 @@ MSTL_CONSTEXPR mathld_t arctangent_taylor(mathld_t x) noexcept {
 
 MSTL_CONSTEXPR mathld_t arctangent(mathld_t x) noexcept {
 	if (x > 1)
-		return constants::PI / 2 - arctangent_taylor(1 / x);
+		return constants::PI / 2 - __arctangent_taylor(1 / x);
 	else if (x < -1)
-		return -constants::PI / 2 - arctangent_taylor(1 / x);
+		return -constants::PI / 2 - __arctangent_taylor(1 / x);
 	else
-		return arctangent_taylor(x);
+		return __arctangent_taylor(x);
 }
 
 MSTL_END_NAMESPACE__

@@ -110,14 +110,13 @@ public:
     static_assert(is_same_v<T, value_type>, "priority queue require consistent types.");
 
 private:
-    Sequence seq_;
-    Compare comp_;
+    compressed_pair<Compare, Sequence> pair_{ default_construct_tag{} };
 
     template <typename T1, typename Sequence1, typename Compare1>
     friend void detailof(const priority_queue<T1, Sequence1, Compare1>&, std::ostream&);
 
     void make_heap_inside() {
-        MSTL::make_heap(seq_.begin(), seq_.end(), comp_);
+        MSTL::make_heap(pair_.value.begin(), pair_.value.end(), pair_.get_base());
     }
 
 public:
@@ -125,77 +124,79 @@ public:
 
     explicit priority_queue(const Compare& comp) 
         noexcept(is_nothrow_default_constructible_v<Sequence> && is_nothrow_copy_constructible_v<Compare>) 
-        : seq_(), comp_(comp) {}
+        : pair_(exact_arg_construct_tag{}, comp) {}
 
-    priority_queue(const Compare& comp, const Sequence& seq) : seq_(seq), comp_(comp) {
+    priority_queue(const Compare& comp, const Sequence& seq)
+        : pair_(exact_arg_construct_tag{}, comp, seq) {
         make_heap_inside();
     }
 
     priority_queue(const Compare& comp, Sequence&& seq)
         noexcept(is_nothrow_move_constructible_v<Sequence> && is_nothrow_copy_constructible_v<Compare>)
-        : seq_(MSTL::move(seq)), comp_(comp) {
+        : pair_(exact_arg_construct_tag{}, comp, MSTL::move(seq)) {
         make_heap_inside();
     }
 
     template <typename Iterator>
-    priority_queue(Iterator first, Iterator last, const Sequence& seq) : seq_(seq) {
-        seq_.insert(seq_.end(), first, last);
+    priority_queue(Iterator first, Iterator last, const Sequence& seq)
+        : pair_(default_construct_tag{}, seq) {
+        pair_.value.insert(pair_.value.end(), first, last);
         make_heap_inside();
     }
 
     template <typename Iterator>
-    priority_queue(Iterator first, Iterator last) : seq_(first, last) {
+    priority_queue(Iterator first, Iterator last) 
+        : pair_(default_construct_tag{}, first, last) {
         make_heap_inside();
     }
 
     template <typename Iterator>
-    priority_queue(Iterator first, Iterator last, const Compare& comp) :
-        seq_(first, last), comp_(comp) {
+    priority_queue(Iterator first, Iterator last, const Compare& comp) 
+        : pair_(exact_arg_construct_tag{}, comp, first, last) {
         make_heap_inside();
     }
 
     template <typename Iterator>
-    priority_queue(Iterator first, Iterator last, const Compare& comp, const Sequence& seq) :
-        seq_(seq), comp_(comp) {
-        seq_.insert(seq_.end(), first, last);
+    priority_queue(Iterator first, Iterator last, const Compare& comp, const Sequence& seq)
+        : pair_(exact_arg_construct_tag{}, comp, seq) {
+        pair_.value.insert(pair_.value.end(), first, last);
         make_heap_inside();
     }
 
     template <typename Iterator>
-    priority_queue(Iterator first, Iterator last, const Compare& comp, Sequence&& seq) :
-        seq_(MSTL::move(seq)), comp_(comp) {
-        seq_.insert(seq_.end(), first, last);
+    priority_queue(Iterator first, Iterator last, const Compare& comp, Sequence&& seq) 
+        : pair_(exact_arg_construct_tag{}, comp, MSTL::move(seq)) {
+        pair_.value.insert(pair_.value.end(), first, last);
         make_heap_inside();
     }
 
-    MSTL_NODISCARD bool empty() const noexcept(noexcept(seq_.empty())) { return seq_.empty(); }
-    MSTL_NODISCARD size_type size() const noexcept(noexcept(seq_.size())) { return seq_.size(); }
+    MSTL_NODISCARD bool empty() const noexcept(noexcept(pair_.value.empty())) { return pair_.value.empty(); }
+    MSTL_NODISCARD size_type size() const noexcept(noexcept(pair_.value.size())) { return pair_.value.size(); }
 
-    MSTL_NODISCARD const_reference top() const noexcept(seq_.front()) { return seq_.front(); }
+    MSTL_NODISCARD const_reference top() const noexcept(pair_.value.front()) { return pair_.value.front(); }
 
     void push(const value_type& x) {
-        seq_.push_back(x);
-        MSTL::push_heap(seq_.begin(), seq_.end(), comp_);
+        pair_.value.push_back(x);
+        MSTL::push_heap(pair_.value.begin(), pair_.value.end(), pair_.get_base());
     }
     void push(value_type&& x) {
-        seq_.push_back(MSTL::move(x));
-        MSTL::push_heap(seq_.begin(), seq_.end(), comp_);
+        pair_.value.push_back(MSTL::move(x));
+        MSTL::push_heap(pair_.value.begin(), pair_.value.end(), pair_.get_base());
     }
 
     void pop() {
-        MSTL::pop_heap(seq_.begin(), seq_.end(), comp_);
-        seq_.pop_back();
+        MSTL::pop_heap(pair_.value.begin(), pair_.value.end(), pair_.get_base());
+        pair_.value.pop_back();
     }
 
     template <typename... Args>
     void emplace(Args&&... args) {
-        seq_.emplace_back(MSTL::forward<Args>(args)...);
-        MSTL::push_heap(seq_.begin(), seq_.end(), comp_);
+        pair_.value.emplace_back(MSTL::forward<Args>(args)...);
+        MSTL::push_heap(pair_.value.begin(), pair_.value.end(), pair_.get_base());
     }
 
     void swap(self& x) noexcept(is_nothrow_swappable_v<Sequence> && is_nothrow_swappable_v<Compare>) {
-        MSTL::swap(seq_, x.seq_);
-        MSTL::swap(comp_, x.comp_);
+        MSTL::swap(pair_, x.pair_);
     }
 };
 #ifdef MSTL_SUPPORT_DEDUCTION_GUIDES__

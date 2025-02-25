@@ -21,10 +21,10 @@ struct vector_iterator {
 	using const_iterator	= vector_iterator<T, const T&, const T*>;
 
 private:
-	pointer ptr_;
+	pointer ptr_ = nullptr;
 
 public:
-	MSTL_CONSTEXPR20 vector_iterator() : ptr_(nullptr) {}
+	MSTL_CONSTEXPR20 vector_iterator() = default;
 
 	explicit MSTL_CONSTEXPR20 vector_iterator(pointer ptr) : ptr_(ptr) {}
 	MSTL_CONSTEXPR20 vector_iterator(const iterator& x) noexcept : ptr_(x.ptr_) {}
@@ -35,7 +35,7 @@ public:
 		return *this;
 	}
 
-	~vector_iterator() noexcept = default;
+	MSTL_CONSTEXPR20 ~vector_iterator() noexcept = default;
 
 	MSTL_NODISCARD MSTL_CONSTEXPR20 reference operator *() const noexcept { return *ptr_; }
 	MSTL_NODISCARD MSTL_CONSTEXPR20 pointer operator ->() const noexcept { return ptr_; }
@@ -130,8 +130,7 @@ public:
 private:
 	pointer start_ = nullptr;
 	pointer finish_ = nullptr;
-	pointer end_of_storage_ = nullptr;
-	allocator_type alloc_{};
+	compressed_pair<allocator_type, pointer> pair_{ default_construct_tag{}, nullptr };
 
 	MSTL_CONSTEXPR20 void range_check(size_type position) const noexcept {
 		MSTL_DEBUG_VERIFY__(
@@ -145,7 +144,7 @@ private:
 	}
 
 	MSTL_CONSTEXPR20 pointer allocate_and_fill(size_type n, const T& x) {
-		pointer result = alloc_.allocate(n);
+		pointer result = pair_.get_base().allocate(n);
 		MSTL::uninitialized_fill_n(result, n, x);
 		return result;
 	}
@@ -153,12 +152,12 @@ private:
 	MSTL_CONSTEXPR20 void fill_initialize(size_type n, const T& x) {
 		start_ = (allocate_and_fill)(n, x);
 		finish_ = start_ + n;
-		end_of_storage_ = finish_;
+		pair_.value = finish_;
 	}
 
 	template <typename Iterator>
 	MSTL_CONSTEXPR20 pointer allocate_and_copy(size_type n, Iterator first, Iterator last) {
-		pointer result = alloc_.allocate(n);
+		pointer result = pair_.get_base().allocate(n);
 		MSTL::uninitialized_copy(first, last, result);
 		return result;
 	}
@@ -174,11 +173,11 @@ private:
 		size_type n = MSTL::distance(first, last);
 		start_ = (allocate_and_copy)(n, first, last);
 		finish_ = start_ + n;
-		end_of_storage_ = finish_;
+		pair_.value = finish_;
 	}
 
 	MSTL_CONSTEXPR20 void deallocate() {
-		if (start_) alloc_.deallocate(start_, end_of_storage_ - start_);
+		if (start_) pair_.get_base().deallocate(start_, pair_.value - start_);
 	}
 
 	template <typename Iterator>
@@ -186,7 +185,7 @@ private:
 		range_check(position);
 		if (first == last) return;
 		size_t n = MSTL::distance(first, last);
-		if (size_t(end_of_storage_ - finish_) >= n) {
+		if (size_t(pair_.value - finish_) >= n) {
 			const size_t elems_after = size_t(end() - position);
 			iterator old_finish = end();
 			if (elems_after > n) {
@@ -208,7 +207,7 @@ private:
 		else {
 			const size_type old_size = size();
 			const size_type len = old_size + MSTL::max(old_size, n);
-			pointer new_start = alloc_.allocate(len);
+			pointer new_start = pair_.get_base().allocate(len);
 			pointer new_finish = new_start;
 			new_finish = MSTL::uninitialized_copy(begin(), position, new_start);
 			new_finish = MSTL::uninitialized_copy(first, last, new_finish);
@@ -217,7 +216,7 @@ private:
 			deallocate();
 			start_ = new_start;
 			finish_ = new_finish;
-			end_of_storage_ = new_start + len;
+			pair_.value = new_start + len;
 		}
 	}
 
@@ -256,47 +255,38 @@ private:
 
 public:
 	MSTL_CONSTEXPR20 vector() 
-		noexcept(is_nothrow_default_constructible_v<T>)
-		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
+		noexcept(is_nothrow_default_constructible_v<T>) {
 		(fill_initialize)(1, T());
 		finish_ = start_;
-		end_of_storage_ = finish_;
+		pair_.value = finish_;
 	}
 
-	MSTL_CONSTEXPR20 explicit vector(size_type n) 
-		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
+	MSTL_CONSTEXPR20 explicit vector(size_type n) {
 		(fill_initialize)(n, T());
 	}
-	MSTL_CONSTEXPR20 explicit vector(size_type n, const T& value)
-		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
+	MSTL_CONSTEXPR20 explicit vector(size_type n, const T& value) {
 		(fill_initialize)(n, value);
 	}
-	MSTL_CONSTEXPR20 explicit vector(int n, const T& value)
-		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
+	MSTL_CONSTEXPR20 explicit vector(int n, const T& value) {
 		(fill_initialize)(n, value);
 	}
-	MSTL_CONSTEXPR20 explicit vector(long n, const T& value)
-		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
+	MSTL_CONSTEXPR20 explicit vector(long n, const T& value) {
 		(fill_initialize)(n, value);
 	}
-	MSTL_CONSTEXPR20 explicit vector(size_type n, T&& value)
-		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
+	MSTL_CONSTEXPR20 explicit vector(size_type n, T&& value) {
 		(fill_initialize)(n, MSTL::forward<T>(value));
 	}
-	MSTL_CONSTEXPR20 explicit vector(int n, T&& value)
-		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
+	MSTL_CONSTEXPR20 explicit vector(int n, T&& value) {
 		(fill_initialize)(n, MSTL::forward<T>(value));
 	}
-	MSTL_CONSTEXPR20 explicit vector(long n, T&& value)
-		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
+	MSTL_CONSTEXPR20 explicit vector(long n, T&& value) {
 		(fill_initialize)(n, MSTL::forward<T>(value));
 	}
 
-	MSTL_CONSTEXPR20 vector(const self& x)
-		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
+	MSTL_CONSTEXPR20 vector(const self& x) {
 		start_ = (allocate_and_copy)(x.cend() - x.cbegin(), x.cbegin(), x.cend());
 		finish_ = start_ + (x.cend() - x.cbegin());
-		end_of_storage_ = finish_;
+		pair_.value = finish_;
 	}
 
 	MSTL_CONSTEXPR20 self& operator =(const self& x) {
@@ -305,8 +295,7 @@ public:
 		insert(end(), x.cbegin(), x.cend());
 	}
 
-	MSTL_CONSTEXPR20 vector(self&& x) noexcept
-		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
+	MSTL_CONSTEXPR20 vector(self&& x) noexcept {
 		swap(x);
 	}
 
@@ -318,8 +307,7 @@ public:
 	}
 
 	template <typename Iterator>
-	MSTL_CONSTEXPR20 vector(Iterator first, Iterator last)
-		: start_(nullptr), finish_(nullptr), end_of_storage_(nullptr), alloc_() {
+	MSTL_CONSTEXPR20 vector(Iterator first, Iterator last) {
 		MSTL_DEBUG_VERIFY__(first <= last, "vector iterator-constructor out of ranges.");
 		range_initialize(first, last);
 	}
@@ -333,7 +321,7 @@ public:
 			MSTL::destroy(start_, finish_);
 			deallocate();
 			start_ = new_;
-			end_of_storage_ = start_ + (x.end() - x.begin());
+			pair_.value = start_ + (x.end() - x.begin());
 		}
 		else if (size() >= x.size()) {
 			iterator i = MSTL::copy(x.begin(), x.end(), begin());
@@ -380,7 +368,7 @@ public:
 		return static_cast<size_type>(-1) / sizeof(T);
 	}
 	MSTL_NODISCARD MSTL_CONSTEXPR20 size_type capacity() const noexcept {
-		return static_cast<size_type>(end_of_storage_ - start_);
+		return static_cast<size_type>(pair_.value - start_);
 	}
 	MSTL_NODISCARD MSTL_CONSTEXPR20 bool empty() const noexcept {
 		return start_ == finish_;
@@ -424,7 +412,7 @@ public:
 		deallocate();
 		start_ = tmp;
 		finish_ = tmp + old_size;
-		end_of_storage_ = start_ + new_capacity;
+		pair_.value = start_ + new_capacity;
 	}
 
 	MSTL_CONSTEXPR20 void resize(size_type new_size, const T& x) {
@@ -438,7 +426,7 @@ public:
 	template <typename... U>
 	MSTL_CONSTEXPR20 void emplace(iterator position, U&&... args) {
 		range_check(position);
-		if (finish_ != end_of_storage_) {
+		if (finish_ != pair_.value) {
 			MSTL::construct(finish_, *(finish_ - 1));
 			++finish_;
 			MSTL::copy_backward(&*position, finish_ - 2, finish_ - 1);
@@ -447,7 +435,7 @@ public:
 		}
 		const size_type old_size = size();
 		const size_type len = old_size != 0 ? 2 * old_size : 1;
-		pointer new_start = alloc_.allocate(len);
+		pointer new_start = pair_.get_base().allocate(len);
 		pointer new_finish = new_start;
 		new_finish = MSTL::uninitialized_copy(start_, &*position, new_start);
 		MSTL::construct(new_finish, MSTL::forward<U>(args)...);
@@ -457,12 +445,12 @@ public:
 		deallocate();
 		start_ = new_start;
 		finish_ = new_finish;
-		end_of_storage_ = new_start + len;
+		pair_.value = new_start + len;
 	}
 
 	template <typename... U>
 	MSTL_CONSTEXPR20 void emplace_back(U&&... args) {
-		if (finish_ != end_of_storage_) {
+		if (finish_ != pair_.value) {
 			MSTL::construct(finish_, MSTL::forward<U>(args)...);
 			++finish_;
 		}
@@ -534,7 +522,7 @@ public:
 	MSTL_CONSTEXPR20 void insert(iterator position, size_type n, const T& x) {
 		range_check(position);
 		if (n == 0) return;
-		if (size_type(end_of_storage_ - finish_) >= n) {
+		if (size_type(pair_.value - finish_) >= n) {
 			const size_type elems_after = finish_ - (&*position);
 			pointer old_finish = finish_;
 			if (elems_after > n) {
@@ -554,7 +542,7 @@ public:
 		else {
 			const size_type old_size = size();
 			const size_type len = old_size + MSTL::max(old_size, n);
-			pointer new_start = alloc_.allocate(len);
+			pointer new_start = pair_.get_base().allocate(len);
 			pointer new_finish = new_start;
 			new_finish = MSTL::uninitialized_copy(start_, &*position, new_start);
 			new_finish = MSTL::uninitialized_fill_n(new_finish, n, x);
@@ -563,7 +551,7 @@ public:
 			deallocate();
 			start_ = new_start;
 			finish_ = new_finish;
-			end_of_storage_ = new_start + len;
+			pair_.value = new_start + len;
 		}
 	}
 
@@ -592,7 +580,7 @@ public:
 		if (MSTL::addressof(x) == this) return;
 		MSTL::swap(start_, x.start_);
 		MSTL::swap(finish_, x.finish_);
-		MSTL::swap(end_of_storage_, x.end_of_storage_);
+		MSTL::swap(pair_, x.pair_);
 	}
 
 	MSTL_NODISCARD MSTL_CONSTEXPR20 const_reference at(size_type position) const {

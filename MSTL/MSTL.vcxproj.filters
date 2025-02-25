@@ -33,13 +33,7 @@
     <ClCompile Include="thread_pool.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="threadsafe_print.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="mysql_connect_pool.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="logging.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="mathlib.cpp">
@@ -143,12 +137,6 @@
     <ClInclude Include="detailof.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="threadsafe_print.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="logging.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="type_traits.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -156,9 +144,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="trace_memory.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="macro_ranges.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="string_view.hpp">

@@ -56,8 +56,9 @@ inline namespace string_operator {
 #endif // MSTL_VERSION_17__
 
 
+#ifndef MSTL_DATA_BUS_WIDTH_64__
 template <typename CharT, typename UT, enable_if_t<(sizeof(UT) > 4), int> = 0>
-inline void __uint_to_buff_aux(CharT* riter, UT ux) {
+inline void __uint_to_buff_aux(CharT* riter, UT& ux) {
     while (ux > 0xFFFFFFFFU) {
         auto chunk = static_cast<unsigned long>(ux % 1000000000);
         ux /= 1000000000;
@@ -68,7 +69,8 @@ inline void __uint_to_buff_aux(CharT* riter, UT ux) {
     }
 }
 template <typename CharT, typename UT, enable_if_t<!(sizeof(UT) > 4), int> = 0>
-MSTL_NODISCARD inline void __uint_to_buff_aux(CharT* riter, UT ux) {}
+MSTL_NODISCARD inline void __uint_to_buff_aux(CharT* riter, UT& ux) {}
+#endif // MSTL_DATA_BUS_WIDTH_64__
 
 template <typename CharT, typename UT>
 MSTL_NODISCARD CharT* uint_to_buff(CharT* riter, UT ux) {

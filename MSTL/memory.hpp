@@ -2,6 +2,7 @@
 #define MSTL_MEMORY_HPP__
 #include "algobase.hpp"
 #include <atomic>
+
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator1, typename Iterator2, enable_if_t<
@@ -153,56 +154,6 @@ MSTL_CONSTEXPR20 pair<Iterator1, Iterator2> uninitialized_move_n(
     Iterator1 first, size_t count, Iterator2 result) {
     return MSTL::__uninitialized_move_n_aux(first, count, result);
 }
-
-
-template <typename T1, typename T2, bool = is_empty_v<T1> && !is_final_v<T1>>
-class compressed_internal final : private T1 {
-public:
-    using base_type = T1;
-
-    T2 value;
-
-    template <typename... Args>
-    constexpr compressed_internal(default_construct_tag, Args&&... args) 
-        noexcept(conjunction_v<is_nothrow_default_constructible<T1>, is_nothrow_constructible<T2, Args...>>) 
-        : T1(), value(MSTL::forward<Args>(args)...) {}
-
-    template <typename U1, typename... U2>
-    constexpr compressed_internal(exact_arg_construct_tag, U1&& first, U2&&... args)
-        noexcept(conjunction_v<is_nothrow_constructible<T1, U1>, is_nothrow_constructible<T2, U2...>>)
-        : T1(MSTL::forward<U1>(first)), value(MSTL::forward<U2>(args)...) {}
-
-    constexpr T1& get_base() noexcept {
-        return *this;
-    }
-    constexpr const T1& get_base() const noexcept {
-        return *this;
-    }
-};
-
-template <typename T1, typename T2>
-class compressed_internal<T1, T2, false> final {
-public:
-    T1 no_compressed;
-    T2 value;
-
-    template <typename... Args>
-    constexpr compressed_internal(default_construct_tag, Args&&... args)
-        noexcept(conjunction_v<is_nothrow_default_constructible<T1>, is_nothrow_constructible<T2, Args>>)
-        : no_compressed(), value(MSTL::forward<Args>(args)...) {}
-
-    template <typename U1, typename... U2>
-    constexpr compressed_internal(exact_arg_construct_tag, U1&& first, U2&&... args)
-        noexcept(conjunction_v<is_nothrow_constructible<T1, U1>, is_nothrow_constructible<T2, U2...>>)
-        : no_compressed(MSTL::forward<U1>(first)), value(MSTL::forward<U2>(args)...) {}
-
-    constexpr T1& get_base() noexcept {
-        return no_compressed;
-    }
-    constexpr const T1& get_base() const noexcept {
-        return no_compressed;
-    }
-};
 
 
 template <typename Iterator, typename T = iter_val_t<Iterator>>
@@ -683,8 +634,8 @@ struct default_deleter<T[]> {
 template <class T, class Deleter = default_deleter<T>>
 class unique_ptr {
 private:
-    T* ptr_;
-    MSTL_NO_UNIADS Deleter deleter_;
+    T* ptr_ = nullptr;
+    MSTL_NO_UNIADS Deleter deleter_{};
 
 public:
     using element_type  = T;
@@ -692,7 +643,7 @@ public:
     using deleter_type  = Deleter;
     using self          = unique_ptr<T, Deleter>;
 
-    unique_ptr(nullptr_t = nullptr) noexcept : ptr_(nullptr) {}
+    unique_ptr(nullptr_t = nullptr) noexcept {};
     explicit unique_ptr(T* p) noexcept : ptr_(p) {}
 
     template <class U, enable_if_t<is_convertible_v<U*, T*>, int> = 0>

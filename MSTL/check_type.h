@@ -67,7 +67,7 @@ struct bound {   // [N]
 };
 
 template <bool, typename... P>
-struct parameter;   // 变参
+struct parameter;   // parameter
 
 template <bool IsStart>
 struct parameter<IsStart> {
@@ -100,7 +100,7 @@ struct check {
 };
 
 template <typename T, bool IsBase>
-struct check<T[], IsBase> : check<T, true> {   // 数组
+struct check<T[], IsBase> : check<T, true> {   // array
     using base_t = check<T, true>;
     using base_t::out_;
     bound<>         bound_;
@@ -168,7 +168,7 @@ CHECK_TYPE_ARRAY__(volatile, , )
 CHECK_TYPE_ARRAY__(const volatile, , )
 
 template <typename T, bool IsBase, typename... P>
-struct check<T(P...), IsBase> : check<T, true> {   // 函数
+struct check<T(P...), IsBase> : check<T, true> {   // function
     using base_t = check<T, true>;
     using base_t::out_;
     parameter<true, P...> parameter_;
@@ -177,7 +177,7 @@ struct check<T(P...), IsBase> : check<T, true> {   // 函数
     check(const output& out) : base_t(out), parameter_(out_), bracket_(out_) {}
 };
 template <typename T, bool IsBase, typename C>
-struct check<T C::*, IsBase> : check<T, true> {   // 类成员指针
+struct check<T C::*, IsBase> : check<T, true> {   // member function
     using base_t = check<T, true>;
     using base_t::out_;
 
@@ -187,7 +187,7 @@ struct check<T C::*, IsBase> : check<T, true> {   // 类成员指针
     }
 };
 template <typename T, bool IsBase, typename C, typename... P>
-struct check<T(C::*)(P...), IsBase> : check<T(P...), true> {   // 类成员函数指针
+struct check<T(C::*)(P...), IsBase> : check<T(P...), true> {   // member object function
     using base_t = check<T(P...), true>;
     using base_t::out_;
 

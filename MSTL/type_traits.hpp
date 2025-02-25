@@ -1,6 +1,6 @@
 #ifndef MSTL_TYPE_TRAITS_HPP__
 #define MSTL_TYPE_TRAITS_HPP__
-#include "macro_ranges.h"
+#include "basiclib.h"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T, T Value>

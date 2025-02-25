@@ -1,5 +1,4 @@
 #include "mysql_connect_pool.h"
-#if MSTL_DLL_LINK__
 MSTL_BEGIN_NAMESPACE__
 
 const std::string DEFAULT_IP = "127.0.0.1";
@@ -13,7 +12,7 @@ DBConnect::~DBConnect() {
 }
 bool DBConnect::connect_to(const std::string& user, const std::string& password,
 	const std::string& dbname, const std::string& ip, unsigned int port) {
-	MYSQL* p = mysql_real_connect(mysql, ip.c_str(), user.c_str(),
+	MYSQL* p = mysql_real_connect(mysql, ip.c_str(), user.c_str(), 
 		password.c_str(), dbname.c_str(), port, nullptr, 0);
 	return p != nullptr;
 }
@@ -25,6 +24,14 @@ bool DBConnect::exec(std::string sql) {
 	return true;
 }
 
+MYSQL_RES* DBConnect::SELECT(std::string table, std::string selected, std::string cond) {
+	ss << "SELECT " << selected << " FROM " << table << " WHERE " << cond;
+	if (mysql_query(mysql, ss.str().c_str())) {
+		//SIMPLE_LOG("SELECT Failed : " + sql);
+		return nullptr;
+	}
+	return mysql_use_result(mysql);
+}
 bool DBConnect::close() {
 	if (mysql != nullptr) {
 		mysql_close(mysql);
@@ -40,7 +47,7 @@ clock_t DBConnect::get_alive() {
 }
 
 DBConnectPool::DBConnectPool(const std::string& user, const std::string& password,
-	const std::string& dbname, const std::string& ip, uint32_t port)
+	const std::string& dbname, const std::string& ip, unsigned int port)
 	: ip_(ip), port_(port), username_(user), passwd_(password), dbname_(dbname), init_size_(10),
 	max_size_(1024), max_idle_time_(60), connect_timeout_(100) {
 	for (size_t i = 0; i < init_size_; i++) {
@@ -67,7 +74,7 @@ std::shared_ptr<DBConnect> DBConnectPool::get_connect() {
 	std::shared_ptr<DBConnect> ptr(connect_queue_.front(), [&](DBConnect* pcon) {
 		std::unique_lock<std::mutex> lock(queue_mtx_);
 		pcon->refresh_alive();
-		connect_queue_.push(pcon);
+		connect_queue_.push(pcon); 
 		});
 	connect_queue_.pop();
 	cv_.notify_all();
@@ -98,11 +105,10 @@ void DBConnectPool::scanner_connect_task() {
 				connect_queue_.pop();
 				delete ptr;
 			}
-			else
+			else 
 				break;
 		}
 	}
 }
 
 MSTL_END_NAMESPACE__
-#endif // MSTL_DLL_LINK__

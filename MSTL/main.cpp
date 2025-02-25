@@ -45,26 +45,23 @@ void try_check() {
     std::cout << check_type<int(*)[]>() << std::endl;
     std::cout << check_type<const volatile void* (&)[10]>() << std::endl; // void const volatile * (&) [10]
     std::cout << check_type<int[1][2][3]>() << std::endl;              // int [1] [2] [3]
-    std::cout << check_type<char(*(* const)(const int(&)[10]))[10]>() << std::endl;   // 常函数指针，参数是一个常int数组的引用，
-                                                                                      // 返回char数组指针
-    std::cout << check_type<int (Foo::* const)[3]>() << std::endl;   // 常类成员指针，指向Foo里的int[3]成员
-    std::cout << check_type<int (Foo::* const)(int, Foo&&, int) volatile>() << std::endl;   // 常类成员函数指针，指向Foo里的volatile成员函数
+    std::cout << check_type<char(*(* const)(const int(&)[10]))[10]>() << std::endl;
+    std::cout << check_type<int (Foo::* const)[3]>() << std::endl;
+    std::cout << check_type<int (Foo::* const)(int, Foo&&, int) volatile>() << std::endl;
     string cstr("const string");
     const string* sr = new string("hai");
     split_line();
     std::cout << check_type<decltype(*(& cstr))>() << std::endl;
-    std::cout << check_type<decltype(std::move(cstr))>() << std::endl;
+    std::cout << check_type<decltype(MSTL::move(cstr))>() << std::endl;
     split_line();
-    // std::cout << check_type(sr) << std::endl;
     std::cout << check_type<decltype(sr)>() << std::endl;
     split_line();
 }
 
 void try_copy() {
     //int ia[] = { 0,1,2,3,4,5,6,7,8 };
-    ////输出区间的终点和输入区间出现重叠 没有问题
     //MSTL::copy(ia + 2, ia + 7, ia);
-    //std::for_each(ia, ia + 9, display<int>()); //2 3 4 5 6 5 6 7 8
+    //MSTL::for_each(ia, ia + 9, [](int x) { std::cout << x << std::endl; }); //2 3 4 5 6 5 6 7 8
     //std::cout << std::endl;
 
     //int ia[] = { 0,1,2,3,4,5,6,7,8 };
@@ -74,20 +71,20 @@ void try_copy() {
     //std::cout << std::endl;
     ////本例结果正确 因为调用的copy算法使用memmove()执行实际复制操作
     USE_MSTL;
-    int ia[] = { 0,1,2,3,4,5,6,7,8 };
-    vector<int>id(ia, ia + 9);
-    vector<int>::iterator first = id.begin();
-    vector<int>::iterator last = id.end();
-    ++++first;  //advance(first,2)  2
-    std::cout << *++first << std::endl;
-    ----last;  //advance(last,-2) 7
-    std::cout << *last << std::endl;
-    vector<int>::iterator result = id.begin();
-    std::cout << *result << std::endl; //0
-    //输出区间的终点和输入区间重叠 没有问题
-    vector<int> fin(9, 1);
-    MSTL::copy(ia, ia+9, fin.begin());
-    detailof(fin);
+    //int ia[] = { 0,1,2,3,4,5,6,7,8 };
+    //vector<int>id(ia, ia + 9);
+    //vector<int>::iterator first = id.begin();
+    //vector<int>::iterator last = id.end();
+    //++first;  //advance(first,2)  2
+    //std::cout << *++first << std::endl;
+    //--last;  //advance(last,-2) 7
+    //std::cout << *last << std::endl;
+    //vector<int>::iterator result = id.begin();
+    //std::cout << *result << std::endl; //0
+    ////输出区间的终点和输入区间重叠 没有问题
+    //vector<int> fin(9, 1);
+    //MSTL::copy(first, last, result);
+    //detailof(id);
 
     //int ia[] = { 0,1,2,3,4,5,6,7,8 };
     //std::deque<int>id(ia, ia + 9);
@@ -144,7 +141,7 @@ void try_stack() {
 void try_vec() {
     USE_MSTL;
     MSTL_TRY__{
-        vector<int> v{ 1,2,3,4 }; std::vector<int> a;
+        vector<int> v{ 1,2,3,4 };
         v.push_back(3);
         v.push_back(4);
         detailof(v);
@@ -189,7 +186,7 @@ void try_pque() {
     priority_queue<int> q;
     std::cout << typeid(priority_queue<int*>).name() << std::endl;
     q.push(6); q.push(9); q.push(1); q.push(5);
-    q.push(8); q.push(4); q.push(7);
+    q.push(8); q.push(4); q.emplace(7);
     detailof(q); // 9 8 7 5 6 1 4
     q.pop();
     detailof(q);
@@ -430,6 +427,6 @@ void try_ss() {
 
 int main() {
     USE_MSTL;
-    try_vec();
+    try_pool();
     return 0;
 }

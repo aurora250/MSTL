@@ -226,14 +226,4 @@ __rb_tree_node_base* rb_tree_rebalance_for_erase(
     return y;
 }
 
-uint32_t rbtree_black_count(__rb_tree_node_base* node, __rb_tree_node_base* root) noexcept {
-    if (node == nullptr) return 0;
-    else {
-        uint32_t bc = node->color_ == RB_TREE_BLACK__ ? 1 : 0;
-        if (node == root) return bc;
-        else 
-            return bc + rbtree_black_count(node->parent_, root);
-    }
-}
-
 MSTL_END_NAMESPACE__

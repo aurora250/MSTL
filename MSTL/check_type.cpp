@@ -1,5 +1,4 @@
 #include "check_type.h"
-
 MSTL_BEGIN_NAMESPACE__
 
 bool output::check_empty(const char* val) {
