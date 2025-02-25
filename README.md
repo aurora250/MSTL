@@ -22,6 +22,8 @@ concept与requires；
 
 通过enable_if实现SFINAF(Substitution Failure Is Not An Error)；
 
+借由EBCO(Empty Base Class Optimization)去除空类内存占用；
+
 用static_assert进行静态模板保证；
 
 使用alignof实现内存对位分配；
