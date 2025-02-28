@@ -366,8 +366,8 @@ public:
 
     MSTL_CONSTEXPR20 iterator begin() noexcept { return data_; }
     MSTL_CONSTEXPR20 iterator end() noexcept { return data_ + size_; }
-    MSTL_CONSTEXPR20 const_iterator cbegin() noexcept { return data_; }
-    MSTL_CONSTEXPR20 const_iterator cend() noexcept { return data_ + size_; }
+    MSTL_CONSTEXPR20 const_iterator cbegin() const noexcept { return data_; }
+    MSTL_CONSTEXPR20 const_iterator cend() const noexcept { return data_ + size_; }
     MSTL_CONSTEXPR20 reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
     MSTL_CONSTEXPR20 reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
     MSTL_CONSTEXPR20 const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cend()); }
@@ -484,7 +484,7 @@ public:
         size_ += n;
         return *this;
     }
-    MSTL_CONSTEXPR20 self& append(value_type chr) { append(1, chr); }
+    MSTL_CONSTEXPR20 self& append(value_type chr) { return append(1, chr); }
 
     MSTL_CONSTEXPR20 self& append(const self& str, size_type position, size_type n) {
         MSTL_DEBUG_VERIFY__(size_ + n < max_size(), "");

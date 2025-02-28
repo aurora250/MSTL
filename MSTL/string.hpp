@@ -56,6 +56,17 @@ inline namespace string_operator {
 #endif // MSTL_VERSION_17__
 
 
+MSTL_NODISCARD inline int stoi(const string& str, size_t* idx = nullptr, int base = 10) {
+    const char* raw = str.c_str();
+    char* err;
+    const long num = ::strtol(raw, &err, base);
+    MSTL_DEBUG_VERIFY__(raw != err, "invalid argument.");
+    if (idx) 
+        *idx = static_cast<size_t>(err - raw);
+    return static_cast<int>(num);
+}
+
+
 #ifndef MSTL_DATA_BUS_WIDTH_64__
 template <typename CharT, typename UT, enable_if_t<(sizeof(UT) > 4), int> = 0>
 inline void __uint_to_buff_aux(CharT* riter, UT& ux) {

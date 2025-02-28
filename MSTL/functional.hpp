@@ -1,6 +1,5 @@
 #ifndef MSTL_FUNCTION_HPP__
 #define MSTL_FUNCTION_HPP__
-#include "functor.hpp"
 #include "memory.hpp"
 MSTL_BEGIN_NAMESPACE__
 

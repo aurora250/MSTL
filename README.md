@@ -6,8 +6,6 @@
 
 对初学者的建议学习方式：按照下文的文件介绍顺序阅读和使用，在稍有不懂的地方咨询同学或AI。
 
-本项目所有不涉及内存分配与虚表行为的函数都将尽可能保证noexcept。
-
 ## 通过阅读和使用MSTL，你能学到什么？
 
 现代C++的实用特性，包括：
@@ -22,7 +20,7 @@ concept与requires；
 
 通过enable_if实现SFINAF(Substitution Failure Is Not An Error)；
 
-借由EBCO(Empty Base Class Optimization)去除空类内存占用；
+通过compressed_pair实现EBCO(Empty Base Class Optimization)；
 
 用static_assert进行静态模板保证；
 
@@ -58,10 +56,6 @@ C++ 14 17 20
 
 使用操作系统平台、托管平台、总线宽度和C++版本的宏实现多编译环境适配。
 
-- [macro_ranges.h](/MSTL/macro_ranges.h)
-
-定义接受类型参数的宏的快速扩展宏，支持基础数据类型的多种组合。
-
 - [type_traits.hpp](/MSTL/type_traits.hpp)
 
 使用模板元技术，在编译期推断类型信息，并提供基础数字类型的哈希函数和迭代器萃取器。
@@ -88,11 +82,11 @@ C++ 14 17 20
 
 - [numeric.hpp](/MSTL/numeric.hpp)
 
-定义数学算法与并发算法。
+定义数学算法。
 
 - [utility.hpp](/MSTL/utility.hpp)
 
-定义常用的constexpr的工具类型与函数，提供键值对pair的哈希函数。
+定义常用的constexpr的工具类型与函数，提供键值对pair及其哈希函数。
 
 - [iterator.hpp](/MSTL/iterator.hpp)
 
@@ -188,7 +182,7 @@ C++ 14 17 20
 
 - [algorithm.hpp](/MSTL/algorithm.hpp)
 
-包装基础算法、排序算法与数学算法，方便使用者引入。
+包装基础算法、排序算法与数学算法，定义并发算法，方便使用者引入。
 
 - [trace_memory.hpp](/MSTL/trace_memory.hpp)
 
@@ -204,7 +198,7 @@ C++ 14 17 20
 
 - [thread_pool.h](/MSTL/thread_pool.h)
 
-定义线程池类ThreadPool。
+定义线程池ThreadPool。
 
 - [mysql_connect_pool.h](/MSTL/mysql_connect_pool.h)
 
@@ -213,4 +207,3 @@ C++ 14 17 20
 ## 开源协议
 
 本项目基于 [MIT 开源协议](LICENSE) 。
-

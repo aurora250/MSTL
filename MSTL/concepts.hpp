@@ -54,12 +54,6 @@ concept assignable_from = is_lvalue_reference_v<To>
 && requires(To x, From&& y) {
 	{ x = static_cast<From&&>(y) } -> same_as<To>;
 };
-template <typename T>
-concept trivially_copy_assignable = is_trivially_copy_assignable_v<T>;
-template <typename T>
-concept trivial_move_assignable = is_trivially_move_assignable_v<T>;
-template <typename T>
-concept trivially_assignable = trivially_copy_assignable<T> || trivial_move_assignable<T>;
 
 
 template <typename T>
@@ -82,7 +76,6 @@ concept one_way_equality_comparable =
 		{ x == y } -> convertible_to<bool>;
 		{ x != y } -> convertible_to<bool>;
 };
-
 
 template <typename T1, typename T2>
 concept both_equality_comparable =

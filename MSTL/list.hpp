@@ -1,7 +1,6 @@
 #ifndef MSTL_LIST_HPP__
 #define MSTL_LIST_HPP__
 #include "memory.hpp"
-#include "functor.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T, typename Alloc>

@@ -289,7 +289,7 @@ void try_math() {
     USE_MSTL;
     std::cout << power(2, 10) << std::endl;
     std::cout << (factorial(10)) << std::endl;
-    std::cout << sine(1) << std::endl;
+    std::cout << sine(1) << " : " << std::sin(1) << std::endl;
     std::cout << cosine(angular2radian(270)) << std::endl;
     //std::cout << remainder(73.263, 0.9973) << std::endl;
     std::cout << float_part(constants::PI) << std::endl;
@@ -303,10 +303,6 @@ void try_math() {
     std::cout << arccosine(0.62) << std::endl;
     //std::cout << tangent(PI / 2) << std::endl;  // MathError
     std::cout << around_pi(constants::PI * 2 + 0.00000001) << " : " << around_pi(6.28) << std::endl;
-    int a = 2, b = 3;
-    int* p1 = &a;
-    int* p2 = &b;
-    iter_swap(p1, p2);
     //int fib[fibonacci(4)];
     //int len[leonardo(4)];
 }
@@ -427,6 +423,6 @@ void try_ss() {
 
 int main() {
     USE_MSTL;
-    try_pool();
+    try_math();
     return 0;
 }

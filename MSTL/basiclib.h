@@ -151,20 +151,18 @@
 		#define MSTL_CONSTEXPR20 MSTL_CONSTEXPR
 #else
 		#define MSTL_CONSTEXPR20 inline
-#endif
+#endif // MSTL_VERSION_20__
 #ifdef MSTL_VERSION_17__
 	#define MSTL_CONSTEXPR17 MSTL_CONSTEXPR
-#else
-	#define MSTL_CONSTEXPR17 inline
-#endif
-#ifdef MSTL_VERSION_17__
 	#define MSTL_INLINECSP inline 
 #else
+	#define MSTL_CONSTEXPR17 inline
 	#define MSTL_INLINECSP
-#endif
+#endif // MSTL_VERSION_17__
 #else
 	#define MSTL_CONSTEXPR
-#endif
+#endif // MSTL_SUPPORT_CONSTEXPR__
+
 
 #ifdef MSTL_SUPPORT_IFCONSTEXPR__
 	// this macro will be used with caution, as it will break static overload.
@@ -172,6 +170,7 @@
 #else
 	#define MSTL_IF_CONSTEXPR if
 #endif
+
 
 #ifdef MSTL_SUPPORT_NODISCARD__
 	#define MSTL_NODISCARD [[nodiscard]]
@@ -225,7 +224,7 @@
 #if defined(MSTL_COMPILE_MSVC__)
 	#define MSTL_LLT __int64
 #else
-	#define MSTL_LONG_LONG_TYPE long long
+	#define MSTL_LLT long long
 #endif
 
 #if defined(MSTL_SUPPORT_STATIC_ASSERT__)

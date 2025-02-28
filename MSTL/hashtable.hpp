@@ -1,7 +1,6 @@
 #ifndef MSTL_HASHTABLE_HPP__
 #define MSTL_HASHTABLE_HPP__
 #include "algo.hpp"
-#include "functor.hpp"
 #include "vector.hpp"
 MSTL_BEGIN_NAMESPACE__
 
