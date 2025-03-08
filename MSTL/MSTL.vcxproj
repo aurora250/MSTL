@@ -141,7 +141,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="errorlib.cpp" />
     <ClCompile Include="mathlib.cpp" />
-    <ClCompile Include="mysql_connect_pool.cpp" />
     <ClCompile Include="rb_tree.cpp" />
     <ClCompile Include="thread_pool.cpp" />
   </ItemGroup>
@@ -155,7 +154,6 @@
     <ClInclude Include="stringstream.hpp" />
     <ClInclude Include="string_view.hpp" />
     <ClInclude Include="detailof.hpp" />
-    <ClInclude Include="mysql_connect_pool.h" />
     <ClInclude Include="hashtable.hpp" />
     <ClInclude Include="unordered_map.hpp" />
     <ClInclude Include="unordered_set.hpp" />
@@ -185,7 +183,7 @@
     <ClInclude Include="tuple.hpp" />
     <ClInclude Include="type_traits.hpp" />
     <ClInclude Include="utility.hpp" />
-    <ClInclude Include="variant.h" />
+    <ClInclude Include="variant.hpp" />
     <ClInclude Include="vector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

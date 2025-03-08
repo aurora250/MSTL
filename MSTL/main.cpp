@@ -310,17 +310,18 @@ void try_sql() {
 #if MSTL_DLL_LINK__
     USE_MSTL;
 
-    clock_t begin = clock();
-    DBConnectPool* pool = new DBConnectPool("root", "147258hu", "book");
-    for (int i = 0; i < 5000; i++) {
-        std::shared_ptr<DBConnect> ptr = pool->get_connect();
-        char sql[power(2, 10)] = { 0 };
-        sprintf_s(sql, "INSERT INTO Manager VALUES('%s', '%s', '%c', %d)",
-            "ADM000009", "Hu", 'M', 5000);
-        ptr->exec(sql);
-    }
-    std::cout << clock() - begin << std::endl;
-    delete pool;
+    //clock_t begin = clock();
+    //DBConnectPool* pool = new DBConnectPool("root", "147258hu", "book");
+    //for (int i = 0; i < 5000; i++) {
+    //    std::shared_ptr<DBConnect> ptr = pool->get_connect();
+    //    char sql[power(2, 10)] = { 0 };
+    //    sprintf_s(sql, "INSERT INTO Manager VALUES('%s', '%s', '%c', %d)",
+    //        "ADM000009", "Hu", 'M', 5000);
+    //    ptr->exec(sql);
+    //}
+    //std::cout << clock() - begin << std::endl;
+    //delete pool;
+    //getchar();
 #endif // MSTL_DLL_LINK__
 }
 struct Person {
@@ -351,67 +352,19 @@ void try_sort() {
     //smooth_sort(vec.begin(), vec.end());
     //cocktail_sort(vec.begin(), vec.end());
     detailof(vec);
-    /*vector<Person> people = {
-    {"Alice", 25},
-    {"Bob", 20},
-    {"Charlie", 30},
-    {"David", 20}
-    };
-    counting_sort(people.begin(), people.end(),
-        [](const Person& a, const Person& b) -> bool { return a.age < b.age; },
-        [](const Person& p) -> int { return p.age; });
-    radix_sort_greater(people.begin(), people.end(), [](const Person& x) -> int { return x.age; });
-    detailof(people);*/
+    //vector<Person> people = {
+    //{"Alice", 25},
+    //{"Bob", 20},
+    //{"Charlie", 30},
+    //{"David", 20}
+    //};
+    //counting_sort(people.begin(), people.end(),
+    //    [](const Person& a, const Person& b) -> bool { return a.age < b.age; },
+    //    [](const Person& p) -> int { return p.age; });
+    //radix_sort_greater(people.begin(), people.end(), [](const Person& x) -> int { return x.age; });
+    //detailof(people);
 }
 
-void try_algo() {
-    USE_MSTL;
-    vector<int> v1 = { 1, 3, 5 };
-    vector<int> v2 = { 2, 4, 6 };
-    vector<int> result(v1.size() + v2.size());
-    merge(v1.begin(), v1.end(), v2.begin(), v2.end(), result.begin());
-    detailof(result);
-    vector<int> v3 = { 1, 3, 5, 2, 4, 6 };
-    auto middle = v3.begin() + 3;
-    inplace_merge(v3.begin(), middle, v3.end());
-    detailof(v3);
-}
-void func_hello(int i) {
-    printf("#%d Hello\n", i);
-}
-
-struct func_printnum_t {
-    void operator()(int i) const {
-        printf("#%d Numbers are: %d, %d\n", i, x, y);
-    }
-    int x;
-    int y;
-};
-
-void repeat(const MSTL::function<void(int)>& func) {
-    func(1);
-    func(2);
-}
-
-void try_func() {
-    USE_MSTL;
-    int x = 4;
-    int y = 2;
-    repeat([=](int i) {
-        printf("#%d Numbers are: %d, %d\n", i, x, y);
-        });
-    func_printnum_t func_printnum{ x, y };
-    repeat(func_printnum);
-    repeat(func_hello);
-
-    function<void(int)> f{ [](int i) {
-        printf("i = %d\n", i);
-    } };
-
-    f(2);
-    auto ff = f;
-    ff(3);
-}
 void try_ss() {
     USE_MSTL;
     stringstream ss;
@@ -421,8 +374,13 @@ void try_ss() {
     std::cout << ss.str() << std::endl;
 }
 
+void try_var() {
+    USE_MSTL;
+    variant<int, char, string> var;
+}
+
 int main() {
     USE_MSTL;
-    try_math();
+    try_sql();
     return 0;
 }

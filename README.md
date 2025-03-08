@@ -98,7 +98,7 @@ C++ 14 17 20
 
 - [algobase.hpp](/MSTL/algobase.hpp)
 
-定义比较、复制和移动算法，提供constexpr与noexcept保证。
+定义比较、复制和移动算法。
 
 - [memory.hpp](/MSTL/memory.hpp)
 
@@ -110,7 +110,7 @@ C++ 14 17 20
 
 - [functional.hpp](/MSTL/functional.hpp)
 
-定义托管函数指针的函数类function。
+定义托管函数指针和类函数类型的函数类function。
 
 - [list.hpp](/MSTL/list.hpp)
 
@@ -190,7 +190,7 @@ C++ 14 17 20
 
 - [check_type.h](MSTL/check_type.h)
 
-自定义的类型信息分析类，使类型信息更整洁。
+定义类型信息分析类，使类型信息更整洁。
 
 - [detailof.hpp](/MSTL/detailof.hpp)
 
@@ -200,10 +200,214 @@ C++ 14 17 20
 
 定义线程池ThreadPool。
 
-- [mysql_connect_pool.h](/MSTL/mysql_connect_pool.h)
-
-定义基于mysql的数据库连接池DBConnectPool。(未完成)
-
 ## 开源协议
 
 本项目基于 [MIT 开源协议](LICENSE) 。
+
+
+
+# MSTL
+
+The purpose of this project is to build a set of simple STL library which is readable and relatively sound for C++ beginners to learn and use, and provide a variety of functional interfaces.
+This project tries to reduce the use of standard libraries as much as possible, and tries to implement a simplified version.
+Welcome everyone to issue or star. Contemptible talents, if there is a deficiency, but also hope to correct.
+
+Suggested learning style for beginners: Read and use the documents in the following order, and consult with classmates or AI if you don't understand any points.
+
+## What can you learn by reading and using MSTL?
+
+Practical features of modern C++, include:
+
+Constexpr and if constexpr;
+
+Concept and requires;
+
+Strengthen noexcept guarantee;
+
+Use meta programming technologies such as variable argument templates, recursion expansion and template specializations to implement type traits and edit utility containers;
+
+Through enable_if to implement SFINAF(Substitution Failure Is Not An Error)；
+
+Through compressed_pair to implement EBCO(Empty Base Class Optimization)；
+
+Use static_assert to ensure actions of template arguments;
+
+Use alignof to implement memory align aallocations;
+
+Use attribute to optimize code actions;
+
+Distinguish the decay rules of arguments with decltype, auto and template;
+
+Cooperation of memory allocation and placement new;
+
+Implement the vast majority of standard algorithms (including concurrency algorithms) and every commonly used standard containers. And broaden parts of impractical algorithms for teaching purposes only;
+
+Use of standard concurrency interfaces (including atomic/conditional_variable/thread/mutex/future/package_task).
+
+## Supporting Environments (Expanding)
+
+WINDOWS
+
+X64 X86
+
+MSVC
+
+C++ 14 17 20
+
+## File Introduction
+
+![File Structure](including_structure.png)
+
+I`ll introduce files with the level of the file structure as follows.
+
+- [basiclib.hpp](/MSTL/basiclib.h)
+
+Use macros of Operation System, Hosting Platform, Data Bus Width and C++ Versions to implement multi-environment adaption.
+
+- [type_traits.hpp](/MSTL/type_traits.hpp)
+
+Use template-meta technology to assert type informations in compilation period, support hash functions of basic number type and iterator adapters.
+
+- [errorlib.h](/MSTL/errorlib.h)
+
+Define error types and quick-invocation macros. All the error types in MSTL are types in this file.
+
+- [functor.hpp](/MSTL/functor.hpp)
+
+Define functors and functor adapters (Deprecated).
+
+- [concepts.hpp](/MSTL/concepts.hpp)
+
+Define commonly used concepts.
+
+- [bitmap.hpp](/MSTL/bitmap.hpp)
+
+Define bitmap (Unfinished).
+
+- [mathlib.h](/MSTL/mathlib.h)
+
+Define commonly used math functions with constexpr property.
+
+- [numeric.hpp](/MSTL/numeric.hpp)
+
+Define math algorithms.
+
+- [utility.hpp](/MSTL/utility.hpp)
+
+Define commonly used utility types and functions with constexpr property. Support pair type and its hash function.
+
+- [iterator.hpp](/MSTL/iterator.hpp)
+
+Define auxiliary iterator functions and iterator adapters.
+
+- [tuple.hpp](/MSTL/tuple.hpp)
+
+Define tuple type with constexpr property, its auxility functions and its hash function.
+
+- [algobase.hpp](/MSTL/algobase.hpp)
+
+Define comparison, range-copy and range-move algorithms.
+
+- [memory.hpp](/MSTL/memory.hpp)
+
+Define memory operation functions, temporary buffer type, allocators and smart pointer types.
+
+- [string_view.hpp](/MSTL/string_view.hpp)
+
+Define char_traits types with constexpr property, auxility extractive functions and basic_string_view type with constexpr property.
+
+- [functional.hpp](/MSTL/functional.hpp)
+
+Define function type which hosting function pointers and function-like types.
+
+- [list.hpp](/MSTL/list.hpp)
+
+Define list type.
+
+- [deque.hpp](/MSTL/deque.hpp)
+
+Define deque type.
+
+- [vector.hpp](/MSTL/vector.hpp)
+
+Define vector with constexpr property. MSTL will use vector instead of variable array.
+
+- [algo.hpp](/MSTL/algo.hpp)
+
+Define judgement, set, find, merge, remove, transformation, bound algorithms and so on.
+
+- [basic_string.hpp](/MSTL/basic_string.hpp)
+
+Define basic_string type with constexpr property.
+
+- [heap.hpp](/MSTL/heap.hpp)
+
+Define ordinary heap algorithms and leonardo heap algorithms.
+
+- [queue.hpp](/MSTL/queue.hpp)
+
+Define queue type, which is the adapter of deque. Define priority_queue type, which based on ordinary heap algorithms.
+
+- [stack.hpp](/MSTL/stack.hpp)
+
+Define stack type, which is the adapter of deque.
+
+- [hashtable.hpp](MSTL/hashtable.hpp)
+
+Define hashtable type as the proxy type of unordered containers.
+
+- [rb_tree.h](/MSTL/rb_tree.h)
+
+Define rb_tree type as the proxy type of ordered containers.
+
+- [string.hpp](/MSTL/string.hpp)
+
+Define string type with multiple char types and support their hash functions. Support transformation functions from basic types to string types.
+
+- [sort.hpp](/MSTL/sort.hpp)
+
+Define bubble, cocktail, select, shell, count, bucket, index, merge, partial, quick, introspective, tim, monkey sort algorithms.
+
+- [unordered_map.hpp](/MSTL/unordered_map.hpp)
+
+Define unordered_map and unordered_multimap.
+
+- [unordered_set.hpp](/MSTL/unordered_set.hpp)
+
+Define unordered_set and unordered_multiset.
+
+- [map.hpp](/MSTL/map.hpp)
+
+Define map and multimap.
+
+- [set.hpp](/MSTL/set.hpp)
+
+Define set and multiset.
+
+- [stringstream.hpp](/MSTL/stringstream.hpp)
+
+Define basic_stringstream type. Its not based on standard IO stream, but only a string type act like a stream.
+
+- [algorithm.hpp](/MSTL/algorithm.hpp)
+
+Include basic algorithms, sort algorithms and math algorithms. Define concurrency algorithms. Easy for user to include.
+
+- [trace_memory.hpp](/MSTL/trace_memory.hpp)
+
+Define trace_allocator type which based on boost library.
+
+- [check_type.h](MSTL/check_type.h)
+
+Defined type-info analysing type, which makes type informations cleaner.
+
+- [detailof.hpp](/MSTL/detailof.hpp)
+
+Define type-info printing functions, which can quickly get clear container and utility type informations.
+
+- [thread_pool.h](/MSTL/thread_pool.h)
+
+Define ThreadPool type.
+
+## Open-Source License
+
+MSTL is based on [MIT Open-Source License](LICENSE) 。

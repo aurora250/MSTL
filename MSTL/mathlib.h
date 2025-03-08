@@ -33,8 +33,8 @@ namespace constants {
 	static constexpr mathui_t TAYLOR_CONVERGENCE = 10000U;
 	static constexpr mathld_t PRECISE_TOLERANCE = TAYLOR_CONVERGENCE * EPSILON;
 	static constexpr mathld_t LOW_PRECISE_TOLERANCE = TAYLOR_CONVERGENCE * PRECISE_TOLERANCE;
-	static constexpr mathul_t INFINITY_ULL = 18446744073709551615ULL;
-	static constexpr mathld_t INFINITY_LD = 1.7976931348623158e+308L;
+	static constexpr mathul_t INFINITY_INT = 18446744073709551615ULL;
+	static constexpr mathld_t INFINITY_FLT = 1.7976931348623158e+308L;
 };
 
 static constexpr mathus_t LEONARDO_COUNT__ = 46;
@@ -103,6 +103,13 @@ constexpr T gcd(T m, T n) noexcept { // greatest common divisor
 template <typename T, enable_if_t<is_integral_v<T> && is_unsigned_v<T>, int> = 0>
 constexpr T lcm(T m, T n) noexcept { // least common multiple
 	return m * n / MSTL::gcd(m, n);
+}
+
+inline mathld_t float_mod(mathld_t x, mathld_t y) {
+	if (y == 0) Exception(ValueError("zero can not be dividend."));
+	mathld_t qut = static_cast<int>(x / y);
+	mathld_t result = x - qut * y;
+	return result;
 }
 
 template <typename T>

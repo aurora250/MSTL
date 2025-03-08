@@ -33,9 +33,6 @@
     <ClCompile Include="thread_pool.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="mysql_connect_pool.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="mathlib.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -98,9 +95,6 @@
     <ClInclude Include="rb_tree.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="mysql_connect_pool.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="heap.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -158,13 +152,10 @@
     <ClInclude Include="string.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="variant.h">
+    <ClInclude Include="variant.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="stringstream.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="expressions.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
