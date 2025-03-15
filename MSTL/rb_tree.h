@@ -45,13 +45,15 @@ public:
     static base_ptr maximum(base_ptr x) noexcept;
 };
 template <typename T>
-struct __rb_tree_node : public __rb_tree_node_base {
+struct __rb_tree_node : __rb_tree_node_base {
 public:
     using link_type = __rb_tree_node<T>*;
     using value_type = T;
 
-    friend rb_tree;
-    friend rb_tree_iterator;
+    template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
+    friend class rb_tree;
+    template<typename T1, typename Ref, typename Ptr>
+    friend struct rb_tree_iterator;
 
 private:
     T data_{};
@@ -70,17 +72,17 @@ public:
     using difference_type   = ptrdiff_t;
 
 protected:
-    base_ptr node_;
+    base_ptr node_ = nullptr;
 
 public:
     void increment() noexcept;
     void decrement() noexcept;
 
-    friend inline MSTL_NODISCARD bool operator ==(
+    MSTL_NODISCARD friend bool operator ==(
         const __rb_tree_base_iterator& x, const __rb_tree_base_iterator& y) noexcept {
         return x.node_ == y.node_;
     }
-    friend inline MSTL_NODISCARD bool operator !=(
+    MSTL_NODISCARD friend bool operator !=(
         const __rb_tree_base_iterator& x, const __rb_tree_base_iterator& y) noexcept {
         return x.node_ != y.node_;
     }
@@ -98,11 +100,48 @@ public:
     using link_type         = __rb_tree_node<T>*;
     using self              = rb_tree_iterator<T, Ref, Ptr>;
 
-    friend rb_tree;
+    template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
+    friend class rb_tree;
 
-    rb_tree_iterator() : node_(nullptr) {}
+    rb_tree_iterator() = default;
     rb_tree_iterator(link_type x) { node_ = x; }
+
     rb_tree_iterator(const iterator& it) { node_ = it.node_; }
+    self& operator =(const iterator& it) {
+        if(MSTL::addressof(it) == this) return *this;
+        node_ = it.node_;
+        return *this;
+    }
+
+    rb_tree_iterator(iterator&& it) {
+        node_ = it.node_;
+        it.node_ = nullptr;
+    }
+    self& operator =(iterator&& it) {
+        if(MSTL::addressof(it) == this) return *this;
+        node_ = it.node_;
+        it.node_ = nullptr;
+        return *this;
+    }
+
+    rb_tree_iterator(const const_iterator& it) { node_ = it.node_; }
+    self& operator =(const const_iterator& it) {
+        if(MSTL::addressof(it) == this) return *this;
+        node_ = it.node_;
+        return *this;
+    }
+
+    rb_tree_iterator(const_iterator&& it) {
+        node_ = it.node_;
+        it.node_ = nullptr;
+    }
+    self& operator =(const_iterator&& it) {
+        if(MSTL::addressof(it) == this) return *this;
+        node_ = it.node_;
+        it.node_ = nullptr;
+        return *this;
+    }
+
     ~rb_tree_iterator() = default;
 
     MSTL_NODISCARD reference operator *() const noexcept { return link_type(node_)->data_; }
@@ -154,9 +193,9 @@ public:
     using const_reverse_iterator = MSTL::reverse_iterator<const_iterator>;
 
 private:
-    link_type header_;
-    Compare key_compare_;
-    KeyOfValue extracter_;
+    link_type header_ = nullptr;
+    Compare key_compare_{};
+    KeyOfValue extracter_{};
     compressed_pair<allocator_type, size_t> size_pair_{ default_construct_tag{}, 0 };
 
     template <typename... Args>
@@ -181,26 +220,26 @@ private:
         size_pair_.get_base().deallocate(p);
     }
 
-    link_type& root() const noexcept { return (link_type&)header_->parent_; }
-    link_type& leftmost() const noexcept { return (link_type&)header_->left_; }
-    link_type& rightmost() const noexcept { return (link_type&)header_->right_; }
+    link_type& root() const noexcept { return (link_type &)header_->parent_; }
+    link_type& leftmost() const noexcept { return (link_type &)(header_->left_); }
+    link_type& rightmost() const noexcept { return (link_type &)(header_->right_); }
 
-    static link_type& left(link_type x) noexcept { return (link_type&)(x->left_); }
-    static link_type& right(link_type x) noexcept { return (link_type&)(x->right_); }
-    static link_type& parent(link_type x) noexcept { return (link_type&)(x->parent_); }
+    static link_type& left(link_type x) noexcept { return (link_type &)(x->left_); }
+    static link_type& right(link_type x) noexcept { return (link_type &)(x->right_); }
+    static link_type& parent(link_type x) noexcept { return (link_type &)(x->parent_); }
     static const Key& key(link_type x) noexcept { return KeyOfValue()(x->data_); }
     static const Key& key(base_ptr x) noexcept { return KeyOfValue()(link_type(x)->data_); }
 
     static link_type minimum(link_type x) noexcept {
-        return (link_type)__rb_tree_node_base::minimum(x);
+        return static_cast<link_type>(__rb_tree_node_base::minimum(x));
     }
     static link_type maximum(link_type x) noexcept {
-        return (link_type)__rb_tree_node_base::maximum(x);
+        return static_cast<link_type>(__rb_tree_node_base::maximum(x));
     }
 
     iterator insert_node_into(base_ptr bx, base_ptr by, link_type p) {
-        link_type x = (link_type)bx;
-        link_type y = (link_type)by;
+        auto x = static_cast<link_type>(bx);
+        auto y = static_cast<link_type>(by);
         if (y == header_ || x != nullptr || key_compare_(key(p), key(y))) {
             left(y) = p;
             if (y == header_) {
@@ -288,7 +327,7 @@ private:
         if (comp) {
             if (j == begin())
                 return pair<iterator, bool>(insert_node_into(x, y, p), true);
-            else --j;
+            --j;
         }
         if (key_compare_(key(link_type(j.node_)), key(p)))
             return pair<iterator, bool>(insert_node_into(x, y, p), true);
@@ -305,14 +344,16 @@ private:
     }
 
 public:
-    rb_tree() {}
+    rb_tree() {
+        header_init();
+    }
 
     explicit rb_tree(const Compare& comp) : key_compare_(comp) {
         header_init();
     }
 
     rb_tree(const self& x) 
-        : size_pair_(x.size_pair_), key_compare_(x.key_compare_), extracter_(x.extracter_) {
+        : key_compare_(x.key_compare_), extracter_(x.extracter_), size_pair_(x.size_pair_) {
         header_init();
         copy_from(x);
     }
@@ -325,8 +366,8 @@ public:
 
     rb_tree(self&& x) 
         noexcept(is_nothrow_move_constructible_v<Compare> && is_nothrow_move_constructible_v<KeyOfValue>)
-        : size_pair_(x.size_pair_), header_(MSTL::move(x.header_)), key_compare_(MSTL::move(x.key_compare_)),
-        extracter_(MSTL::move(x.extracter_)) {}
+        : header_(MSTL::move(x.header_)), key_compare_(MSTL::move(x.key_compare_)), extracter_(MSTL::move(x.extracter_)),
+        size_pair_(x.size_pair_) {}
 
     self& operator =(self&& x) noexcept(noexcept(swap(x))) {
         if (MSTL::addressof(x) == this) return *this;
@@ -361,7 +402,7 @@ public:
 
     template <typename... Args>
     pair<iterator, bool> emplace_unique(Args&&... args) {
-        link_type tmp = (create_node)(MSTL::forward<Args>(args)...);
+        const link_type tmp = (create_node)(MSTL::forward<Args>(args)...);
         return (insert_unique_node)(tmp);
     }
     pair<iterator, bool> insert_unique(const value_type& v) {
@@ -376,27 +417,22 @@ public:
         if (position.node_ == header_->left_) {
             if (size() > 0 && key_compare_(key(tmp), key(position.node_)))
                 return insert_node_into(position.node_, position.node_, tmp);
-            else
-                return insert_unique_node(tmp).first;
+            return insert_unique_node(tmp).first;
         }
-        else if (position.node_ == header_) {
+        if (position.node_ == header_) {
             if (key_compare_(key(rightmost()), key(tmp)))
                 return insert_node_into(nullptr, rightmost(), tmp);
-            else
-                return insert_unique_node(tmp).first;
+            return insert_unique_node(tmp).first;
         }
-        else {
-            iterator before = position;
-            --before;
-            if (key_compare_(key(before.node_), key(tmp)) &&
-                key_compare_(key(tmp), key(position.node_)))
-                if (right(link_type(before.node_)) == nullptr)
-                    return insert_node_into(nullptr, before.node_, tmp);
-                else
-                    return insert_node_into(position.node_, position.node_, tmp);
-            else
-                return insert_unique_node(tmp).first;
+        iterator before = position;
+        --before;
+        if (key_compare_(key(before.node_), key(tmp)) &&
+            key_compare_(key(tmp), key(position.node_))) {
+            if (right(link_type(before.node_)) == nullptr)
+                return insert_node_into(nullptr, before.node_, tmp);
+            return insert_node_into(position.node_, position.node_, tmp);
         }
+        return insert_unique_node(tmp).first;
     }
     iterator insert_unique(iterator position, const value_type& v) {
         return (emplace_unique_hint)(position, v);
@@ -427,28 +463,22 @@ public:
         if (position.node_ == header_->left_) {
             if (size() > 0 && key_compare_(key(tmp), key(position.node_)))
                 return insert_node_into(position.node_, position.node_, tmp);
-            else
-                return insert_equal_node(tmp);
-
+            return insert_equal_node(tmp);
         }
-        else if (position.node_ == header_) {
+        if (position.node_ == header_) {
             if (!key_compare_(key(tmp), key(rightmost())))
                 return insert_node_into(nullptr, rightmost(), tmp);
-            else
-                return insert_equal_node(tmp);
+            return insert_equal_node(tmp);
         }
-        else {
-            iterator before = position;
-            --before;
-            if (!key_compare_(key(tmp), key(before.node_)) &&
-                !key_compare_(key(position.node_), key(tmp)))
-                if (right(link_type(before.node_)) == nullptr)
-                    return insert_node_into(nullptr, before.node_, tmp);
-                else
-                    return insert_node_into(position.node_, position.node_, tmp);
-            else
-                return insert_equal_node(tmp);
+        iterator before = position;
+        --before;
+        if (!key_compare_(key(tmp), key(before.node_)) &&
+            !key_compare_(key(position.node_), key(tmp))) {
+            if (right(link_type(before.node_)) == nullptr)
+                return insert_node_into(nullptr, before.node_, tmp);
+            return insert_node_into(position.node_, position.node_, tmp);
         }
+        return insert_equal_node(tmp);
     }
     iterator insert_equal(iterator position, const value_type& v) {
         return (emplace_equal_hint)(position, v);
@@ -469,8 +499,8 @@ public:
         return n;
     }
     void erase(iterator position) noexcept {
-        link_type y = (link_type)
-            rb_tree_rebalance_for_erase(position.node_, header_->parent_, header_->left_, header_->right_);
+        auto y = static_cast<link_type>(
+            rb_tree_rebalance_for_erase(position.node_, header_->parent_, header_->left_, header_->right_));
         destroy_node(y);
         --size_pair_.value;
     }
@@ -492,7 +522,7 @@ public:
 
     void swap(self& x) noexcept(is_nothrow_swappable_v<Compare> && is_nothrow_swappable_v<KeyOfValue>) {
         MSTL::swap(header_, x.header_);
-        MSTL::swap(size_pair_, x.size_pair_);
+        size_pair_.swap(x.size_pair_);
         MSTL::swap(key_compare_, x.key_compare_);
         MSTL::swap(extracter_, x.extracter_);
     }
@@ -508,7 +538,7 @@ public:
             else x = right(x);
         }
         iterator j(y);
-        return (j == end() || key_compare_(k, key(y))) ? end() : j;
+        return j == end() || key_compare_(k, key(y)) ? end() : j;
     }
     MSTL_NODISCARD const_iterator find(const key_type& k) const {
         link_type y = header_;
@@ -521,12 +551,12 @@ public:
             else x = right(x);
         }
         const_iterator j(y);
-        return (j == cend() || key_compare_(k, key(y))) ? cend() : j;
+        return j == cend() || key_compare_(k, key(y)) ? cend() : j;
     }
 
     MSTL_NODISCARD size_type count(const key_type& k) const {
         pair<const_iterator, const_iterator> p = equal_range(k);
-        size_type n = MSTL::distance(p.first, p.second);
+        const size_type n = MSTL::distance(p.first, p.second);
         return n;
     }
 

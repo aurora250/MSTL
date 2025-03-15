@@ -100,8 +100,7 @@ template <typename Iterator, typename Compare, enable_if_t<
 	is_rnd_iter_v<Iterator>, int> = 0>
 inline void push_heap(Iterator first, Iterator last, Compare comp) {
 	using Distance = iter_dif_t<Iterator>;
-	using T = iter_val_t<Iterator>;
-	MSTL::push_heap_aux(first, Distance((last - first) - 1), Distance(0), *(last - 1), comp);
+	MSTL::push_heap_aux(first, Distance(last - first - 1), Distance(0), *(last - 1), comp);
 }
 // adjust heap
 template <typename Iterator, typename Distance, typename T, enable_if_t<
@@ -129,7 +128,7 @@ void adjust_heap(Iterator first, Distance holeIndex, Distance len, T value, Comp
 	Distance secondChild = 2 * holeIndex + 2;
 	while (secondChild < len) {
 		if (comp(*(first + secondChild), *(first + (secondChild - 1))))
-			secondChild--;
+			--secondChild;
 		*(first + holeIndex) = *(first + secondChild);
 		holeIndex = secondChild;
 		secondChild = 2 * (secondChild + 1);
@@ -151,7 +150,7 @@ void pop_heap_aux(Iterator first, Iterator last, Iterator result, T value) {
 
 template <typename Iterator, enable_if_t<
 	is_rnd_iter_v<Iterator>, int> = 0>
-inline void pop_heap(Iterator first, Iterator last) {
+void pop_heap(Iterator first, Iterator last) {
 	--last;
 	MSTL::pop_heap_aux(first, last, last, *last);
 }
@@ -166,7 +165,7 @@ void pop_heap_aux(Iterator first, Iterator last, Iterator result, T value, Compa
 
 template <typename Iterator, typename Compare, enable_if_t<
 	is_rnd_iter_v<Iterator>, int> = 0>
-inline void pop_heap(Iterator first, Iterator last, Compare comp) {
+void pop_heap(Iterator first, Iterator last, Compare comp) {
 	--last;
 	MSTL::pop_heap_aux(first, last, last, *last, comp);
 }
@@ -265,7 +264,7 @@ template <typename Iterator, enable_if_t<
 	is_rnd_iter_v<Iterator>, int> = 0>
 void push_leonardo_heap(Iterator first, Iterator last) {
 	if (first == last) return;
-	size_t size = MSTL::distance(first, last);
+	const size_t size = MSTL::distance(first, last);
 	vector<int> levels = { 1 };
 	int toplevel = 0;
 	for (size_t i = 1; i < size - 1; ++i) {
@@ -301,7 +300,7 @@ template <typename Iterator, enable_if_t<
 	is_rnd_iter_v<Iterator>, int> = 0>
 void pop_leonardo_heap(Iterator first, Iterator last) {
 	if (first == last) return;
-	size_t size = MSTL::distance(first, last);
+	const size_t size = MSTL::distance(first, last);
 	vector<int> levels = { 1 };
 	int toplevel = 0;
 	for (size_t i = 1; i < size; ++i) {
@@ -335,7 +334,7 @@ template <typename Iterator, enable_if_t<
 	is_rnd_iter_v<Iterator>, int> = 0>
 void sort_leonardo_heap(Iterator first, Iterator last) {
 	if (first == last) return;
-	size_t size = MSTL::distance(first, last);
+	const size_t size = MSTL::distance(first, last);
 	vector<int> levels = { 1 };
 	int toplevel = 0;
 	for (size_t i = 1; i < size; ++i) {
@@ -372,7 +371,7 @@ template <typename Iterator, enable_if_t<
 	is_rnd_iter_v<Iterator>, int> = 0>
 void make_leonardo_heap(Iterator first, Iterator last) {
 	if (first == last) return;
-	size_t size = MSTL::distance(first, last);
+	const size_t size = MSTL::distance(first, last);
 	vector<int> levels = { 1 };
 	int toplevel = 0;
 
@@ -394,5 +393,4 @@ void make_leonardo_heap(Iterator first, Iterator last) {
 }
 
 MSTL_END_NAMESPACE__
-
 #endif // HEAP_HPP__

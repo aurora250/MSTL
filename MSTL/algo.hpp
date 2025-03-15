@@ -2,6 +2,7 @@
 #define MSTL_ALGO_HPP__
 #include "mathlib.h"
 #include "memory.hpp"
+#include <random>
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator, typename Predicate, enable_if_t<
@@ -290,8 +291,8 @@ template <typename Iterator1, typename Iterator2, enable_if_t<
 Iterator1 find_end(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2) {
 	if (first2 == last2) return last1;
 	if constexpr (is_bid_iter_v<Iterator1> && is_bid_iter_v<Iterator2>) {
-		using reviter1 = typename MSTL::reverse_iterator<Iterator1>;
-		using reviter2 = typename MSTL::reverse_iterator<Iterator2>;
+		using reviter1 = MSTL::reverse_iterator<Iterator1>;
+		using reviter2 = MSTL::reverse_iterator<Iterator2>;
 		reviter1 rlast1(first1);
 		reviter2 rlast2(first2);
 		reviter1 rresult = MSTL::search(reviter1(last1), rlast1, reviter2(last2), rlast2);
@@ -823,7 +824,7 @@ bool next_permutation(Iterator first, Iterator last, Compare comp) {
 		--i;
 		if (comp(*i, *ii)) {
 			Iterator j = last;
-			while (!comp(*i, *--j));
+			while (!comp(*i, *--j)) {}
 			MSTL::iter_swap(i, j);
 			MSTL::reverse(ii, last);
 			return true;
@@ -854,7 +855,7 @@ bool prev_permutation(Iterator first, Iterator last, Compare comp) {
 		--i;
 		if (comp(*ii, *i)) {
 			Iterator j = last;
-			while (!comp(*--j, *i));
+			while (!comp(*--j, *i)) {}
 			MSTL::iter_swap(i, j);
 			MSTL::reverse(ii, last);
 			return true;
@@ -875,8 +876,11 @@ template <typename Iterator, enable_if_t<
 	is_rnd_iter_v<Iterator>, int> = 0>
 void shuffle(Iterator first, Iterator last) {
 	if (first == last) return;
+	std::random_device rd;
+	std::mt19937 gen(rd());
 	for (Iterator i = MSTL::next(first); i != last; ++i) {
-		Iterator j = MSTL::next(first, std::rand() % ((i - first) + 1));
+		auto dist = std::uniform_int_distribution<decltype(i - first)>(0, i - first);
+		Iterator j = MSTL::next(first, dist(gen));
 		MSTL::iter_swap(i, j);
 	}
 }

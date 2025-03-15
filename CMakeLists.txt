@@ -1,11 +1,12 @@
-cmake_minimum_required(VERSION 3.15.0)
+cmake_minimum_required(VERSION 3.15)
 project(MSTL)
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_executable(${CMAKE_PROJECT_NAME} main.cpp algo.hpp algobase.cpp algobase.h algorithm.hpp array.hpp basemstlc++.hpp
-    basiclib.cpp basiclib.h check_type.cpp check_type.h concepts.hpp container.cpp container.h database.h depositary.h
-    depositary.cpp deque.hpp errorlib.cpp errorlib.h functional.hpp functor.hpp hashtable.h heap.hpp iterator.hpp jsonlib.h 
-    list.hpp map.hpp mathlib.h memory.hpp mstlc++.hpp numeric.hpp object.cpp object.h pair.hpp priority_queue.hpp queue.hpp
-    rb_tree.cpp rb_tree.h set.hpp stack.hpp string.cpp string.h type_traits.hpp vector.hpp)
+add_executable(${CMAKE_PROJECT_NAME} "main.cpp" "MSTL/algo.hpp" "MSTL/algobase.hpp" "MSTL/algorithm.hpp" "MSTL/basic_string.hpp"
+        "MSTL/basiclib.cpp" "MSTL/basiclib.h" "MSTL/bitmap.hpp" "MSTL/check_type.cpp" "MSTL/check_type.h" "MSTL/concepts.hpp" "MSTL/deque.hpp" "MSTL/detailof.hpp"
+        "MSTL/errorlib.h" "MSTL/functional.hpp" "MSTL/functor.hpp" "MSTL/hashtable.hpp" "MSTL/heap.hpp" "MSTL/iterator.hpp" "MSTL/list.hpp" "MSTL/map.hpp"
+        "MSTL/mathlib.h" "MSTL/mathlib.cpp" "MSTL/memory.hpp" "MSTL/mstlc++.hpp" "MSTL/numeric.hpp" "MSTL/queue.hpp" "MSTL/rb_tree.cpp" "MSTL/rb_tree.h"
+        "MSTL/set.hpp" "MSTL/sort.hpp" "MSTL/stack.hpp" "MSTL/string.hpp" "MSTL/string_view.hpp" "MSTL/stringstream.hpp" "MSTL/thread_pool.cpp" "MSTL/thread_pool.h"
+        "MSTL/trace_memory.hpp" "MSTL/tuple.hpp" "MSTL/type_traits.hpp" "MSTL/unordered_map.hpp" "MSTL/unordered_set.hpp" "MSTL/utility.hpp"
+        "MSTL/variant.hpp" "MSTL/vector.hpp")

@@ -227,6 +227,7 @@ inserter(Container& x, typename Container::iterator it) noexcept {
     return insert_iterator<Container>(x, it);
 }
 
+
 template <typename Iterator>
 class reverse_iterator {
     static_assert(is_bid_iter_v<Iterator>, "reverse iterator requires bidirectional iterator.");
@@ -238,6 +239,9 @@ public:
     using pointer           = iter_ptr_t<Iterator>;
     using reference         = iter_ref_t<Iterator>;
     using self              = reverse_iterator<Iterator>;
+
+private:
+    Iterator current;
 
 public:
     MSTL_CONSTEXPR reverse_iterator() = default;
@@ -330,16 +334,13 @@ public:
     }
 
     MSTL_CONSTEXPR reference operator[](const difference_type n) const
-        noexcept(noexcept(MSTL::declcopy<reference>(*(*this + n)))) {
+        noexcept(noexcept(MSTL::declcopy<reference>(self(current - n)))) {
         return *(*this + n);
     }
 
     MSTL_NODISCARD MSTL_CONSTEXPR const Iterator& get_current() const noexcept {
         return current;
     }
-
-private:
-    Iterator current;
 };
 template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(

@@ -36,8 +36,12 @@ public:
 private:
 	base_type tree_;
 
-	friend inline bool operator ==(const set&, const set&);
-	friend inline bool operator <(const set&, const set&);
+	template <typename Key1, typename Compare1, typename Alloc1>
+	friend bool operator ==(const set<Key1, Compare1, Alloc1>&,
+		const set<Key1, Compare1, Alloc1>&) noexcept;
+	template <typename Key1, typename Compare1, typename Alloc1>
+	friend bool operator <(const set<Key1, Compare1, Alloc1>&,
+		const set<Key1, Compare1, Alloc1>&) noexcept;
 
 public:
 	set() : tree_(Compare()) {}
@@ -45,10 +49,7 @@ public:
 
 	set(const self& x) : tree_(x.tree_) {}
 
-	self& operator =(const self& x) {
-		tree_ = x.tree_;
-		return *this;
-	}
+	self& operator =(const self& x) = default;
 
 	set(self&& x) noexcept(is_nothrow_move_constructible_v<base_type>)
 		: tree_(MSTL::move(x.tree_)) {}
@@ -160,37 +161,37 @@ set(std::initializer_list<Key>, Alloc) -> set<Key, less<Key>, Alloc>;
 #endif
 
 template <typename Key, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator ==(
+MSTL_NODISCARD bool operator ==(
 	const set<Key, Compare, Alloc>& lh,
 	const set<Key, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ == rh.tree_;
 }
 template <typename Key, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator !=(
+MSTL_NODISCARD bool operator !=(
 	const set<Key, Compare, Alloc>& lh,
 	const set<Key, Compare, Alloc>& rh) noexcept {
-	return !(lh.tree_ = rh.tree_);
+	return !(lh.tree_ == rh.tree_);
 }
 template <typename Key, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator <(
+MSTL_NODISCARD bool operator <(
 	const set<Key, Compare, Alloc>& lh,
 	const set<Key, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ < rh.tree_;
 }
 template <typename Key, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator >(
+MSTL_NODISCARD bool operator >(
 	const set<Key, Compare, Alloc>& lh,
 	const set<Key, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ > rh.tree_;
 }
 template <typename Key, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator <=(
+MSTL_NODISCARD bool operator <=(
 	const set<Key, Compare, Alloc>& lh,
 	const set<Key, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ <= rh.tree_;
 }
 template <typename Key, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator >=(
+MSTL_NODISCARD bool operator >=(
 	const set<Key, Compare, Alloc>& lh,
 	const set<Key, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ >= rh.tree_;
@@ -235,8 +236,12 @@ public:
 private:
 	base_type tree_;
 
-	friend inline bool operator ==(const multiset&, const multiset&);
-	friend inline bool operator <(const multiset&, const multiset&);
+	template <typename Key1, typename Compare1, typename Alloc1>
+	friend bool operator ==(const multiset<Key1, Compare1, Alloc1>&,
+		const multiset<Key1, Compare1, Alloc1>&) noexcept;
+	template <typename Key1, typename Compare1, typename Alloc1>
+	friend bool operator <(const multiset<Key1, Compare1, Alloc1>&,
+		const multiset<Key1, Compare1, Alloc1>&) noexcept;
 
 public:
 	multiset() : tree_(Compare()) {}
@@ -244,10 +249,7 @@ public:
 
 	multiset(const self& x) : tree_(x.tree_) {}
 
-	self& operator =(const self& x) {
-		tree_ = x.tree_;
-		return *this;
-	}
+	self& operator =(const self& x) = default;
 
 	multiset(self&& x) noexcept(is_nothrow_move_constructible_v<base_type>)
 		: tree_(MSTL::move(x.tree_)) {
@@ -361,37 +363,37 @@ multiset(std::initializer_list<Key>, Alloc) -> multiset<Key, less<Key>, Alloc>;
 #endif
 
 template <typename Key, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator ==(
+MSTL_NODISCARD bool operator ==(
 	const multiset<Key, Compare, Alloc>& lh,
 	const multiset<Key, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ == rh.tree_;
 }
 template <typename Key, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator !=(
+MSTL_NODISCARD bool operator !=(
 	const multiset<Key, Compare, Alloc>& lh,
 	const multiset<Key, Compare, Alloc>& rh) noexcept {
-	return !(lh.tree_ = rh.tree_);
+	return !(lh.tree_ == rh.tree_);
 }
 template <typename Key, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator <(
+MSTL_NODISCARD bool operator <(
 	const multiset<Key, Compare, Alloc>& lh,
 	const multiset<Key, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ < rh.tree_;
 }
 template <typename Key, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator >(
+MSTL_NODISCARD bool operator >(
 	const multiset<Key, Compare, Alloc>& lh,
 	const multiset<Key, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ > rh.tree_;
 }
 template <typename Key, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator <=(
+MSTL_NODISCARD bool operator <=(
 	const multiset<Key, Compare, Alloc>& lh,
 	const multiset<Key, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ <= rh.tree_;
 }
 template <typename Key, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator >=(
+MSTL_NODISCARD bool operator >=(
 	const multiset<Key, Compare, Alloc>& lh,
 	const multiset<Key, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ >= rh.tree_;
@@ -403,5 +405,4 @@ noexcept(noexcept(lh.swap(rh))) {
 }
 
 MSTL_END_NAMESPACE__
-
 #endif // MSTL_SET_HPP__

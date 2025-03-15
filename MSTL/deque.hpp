@@ -7,11 +7,16 @@ constexpr size_t deque_buf_size(size_t n, size_t sz) noexcept {
     return n != 0 ? n : (sz < size_t(256) ? size_t(256 / sz) : 1);
 }
 
-template<typename T, typename Alloc, size_t BufSize>
+template <typename T, typename Alloc, size_t BufSize>
 class deque;
 
 template <typename T, typename Ref = T&, typename Ptr = T*, size_t BufSize = 0>
 struct deque_iterator {
+    template <typename T1, typename Alloc1, size_t BufSize1>
+    friend class deque;
+    template <typename T1, typename Ref1, typename Ptr1, size_t BufSize1>
+    friend struct deque_iterator;
+
 public:
     using iterator_category = std::random_access_iterator_tag;
     using value_type        = T;
@@ -26,10 +31,6 @@ public:
     using iterator          = deque_iterator<T, T&, T*, BufSize>;
     using const_iterator    = deque_iterator<T, const T&, const T*, BufSize>;
 
-    friend deque;
-    friend iterator;
-    friend const_iterator;
-
 private:
     link_type cur_ = nullptr;
     link_type first_ = nullptr;
@@ -43,22 +44,20 @@ private:
     void change_buff(map_pointer new_node) noexcept {
         node_ = new_node;
         first_ = *new_node;
-        last_ = first_ + difference_type(buff_size());
+        last_ = first_ + static_cast<difference_type>(buff_size());
     }
 
 public:
     deque_iterator() noexcept = default;
 
     deque_iterator(link_type cur, link_type first, link_type last, map_pointer node) noexcept :
-        cur_(cur), first_(first), last_(last), node_(node) {
-    }
+        cur_(cur), first_(first), last_(last), node_(node) {}
 
     deque_iterator(const iterator& x) noexcept :
         cur_(x.cur_), first_(x.first_), last_(x.last_), node_(x.node_) {
     }
-
-    self& operator =(const self& x) noexcept {
-        if (*this == x) return *this;
+    self& operator =(const iterator& x) noexcept {
+        if (MSTL::addressof(x) == this) return *this;
         this->cur_ = x.cur_;
         this->first_ = x.first_;
         this->last_ = x.last_;
@@ -68,14 +67,60 @@ public:
 
     deque_iterator(iterator&& x) noexcept :
         cur_(x.cur_), first_(x.first_), last_(x.last_), node_(x.node_) {
-        x.cur_ = nullptr; x.first_ = nullptr;
-        x.last_ = nullptr; x.node_ = nullptr;
+        x.cur_ = nullptr;
+        x.first_ = nullptr;
+        x.last_ = nullptr;
+        x.node_ = nullptr;
+    }
+    self& operator =(iterator&& x) noexcept {
+        if (MSTL::addressof(x) == this) return *this;
+        this->cur_ = x.cur_;
+        this->first_ = x.first_;
+        this->last_ = x.last_;
+        this->node_ = x.node_;
+        x.cur_ = nullptr;
+        x.first_ = nullptr;
+        x.last_ = nullptr;
+        x.node_ = nullptr;
+        return *this;
+    }
+
+    deque_iterator(const const_iterator& x) noexcept :
+        cur_(x.cur_), first_(x.first_), last_(x.last_), node_(x.node_) {
+    }
+    self& operator =(const const_iterator& x) noexcept {
+        if (MSTL::addressof(x) == this) return *this;
+        this->cur_ = x.cur_;
+        this->first_ = x.first_;
+        this->last_ = x.last_;
+        this->node_ = x.node_;
+        return *this;
+    }
+
+    deque_iterator(const_iterator&& x) noexcept :
+        cur_(x.cur_), first_(x.first_), last_(x.last_), node_(x.node_) {
+        x.cur_ = nullptr;
+        x.first_ = nullptr;
+        x.last_ = nullptr;
+        x.node_ = nullptr;
+    }
+    self& operator =(const_iterator&& x) noexcept {
+        if (MSTL::addressof(x) == this) return *this;
+        this->cur_ = x.cur_;
+        this->first_ = x.first_;
+        this->last_ = x.last_;
+        this->node_ = x.node_;
+        x.cur_ = nullptr;
+        x.first_ = nullptr;
+        x.last_ = nullptr;
+        x.node_ = nullptr;
+        return *this;
     }
 
     ~deque_iterator() noexcept = default;
 
     MSTL_NODISCARD reference operator *() const noexcept { return *cur_; }
-    MSTL_NODISCARD pointer operator ->() const noexcept { return &(operator*()); }
+    MSTL_NODISCARD pointer operator ->() const noexcept { return &operator*(); }
 
     self& operator ++() noexcept {
         ++cur_;
@@ -106,28 +151,28 @@ public:
     }
 
     self& operator +=(difference_type n) noexcept {
-        difference_type offset = n + (cur_ - first_);
-        if (offset >= 0 && offset < difference_type(buff_size()))
+        if (const difference_type offset = n + (cur_ - first_);
+            offset >= 0 && offset < static_cast<difference_type>(buff_size()))
             cur_ += n;
         else {
             difference_type node_offset = offset > 0 ?
-                offset / difference_type(buff_size())
-                : -difference_type((-offset - 1) / buff_size()) - 1;
+                offset / static_cast<difference_type>(buff_size())
+                : -static_cast<difference_type>((-offset - 1) / buff_size()) - 1;
             change_buff(node_ + node_offset);
-            cur_ = first_ + (offset - node_offset * difference_type(buff_size()));
+            cur_ = first_ + (offset - node_offset * static_cast<difference_type>(buff_size()));
         }
         return *this;
     }
-    MSTL_NODISCARD self operator +(difference_type n) const noexcept {
+    MSTL_NODISCARD self operator +(const difference_type n) const noexcept {
         self temp = *this;
         return temp += n;
     }
-    MSTL_NODISCARD friend MSTL_CONSTEXPR self operator +(difference_type n, const self& it) {
+    MSTL_NODISCARD friend MSTL_CONSTEXPR self operator +(const difference_type n, const self& it) {
         return it + n;
     }
 
-    self& operator -=(difference_type n) noexcept { return *this += -n; }
-    MSTL_NODISCARD self operator -(difference_type n) const noexcept {
+    self& operator -=(const difference_type n) noexcept { return *this += -n; }
+    MSTL_NODISCARD self operator -(const difference_type n) const noexcept {
         self temp = *this;
         return temp -= n;
     }
@@ -135,7 +180,7 @@ public:
         return (node_ - x.node_ - 1) * buff_size() + (cur_ - first_) + (x.last_ - x.cur_);
     }
 
-    MSTL_NODISCARD reference operator [](difference_type n) noexcept { return *(*this + n); }
+    MSTL_NODISCARD reference operator [](const difference_type n) noexcept { return *(*this + n); }
 
     MSTL_NODISCARD bool operator ==(const self& x) const noexcept { return cur_ == x.cur_; }
     MSTL_NODISCARD bool operator !=(const self& x) const noexcept { return !(*this == x); }
@@ -179,11 +224,11 @@ private:
     compressed_pair<allocator_type, size_type> map_size_pair_{ default_construct_tag{}, 0 };
     compressed_pair<map_allocator, map_pointer> map_pair_{ default_construct_tag{}, nullptr };
 
-    inline void range_check(size_type position) const noexcept {
+    void range_check(const size_type position) const noexcept {
         MSTL_DEBUG_VERIFY__(position < static_cast<size_type>(MSTL::distance(start_, finish_)),
             "deque index out of ranges.");
     }
-    inline void range_check(iterator position) const noexcept {
+    void range_check(iterator position) const noexcept {
         MSTL_DEBUG_VERIFY__(position >= start_ && position <= finish_, "deque index out of ranges.");
     }
 
@@ -390,19 +435,18 @@ public:
         finish_.cur_ = finish_.first_;
     }
 
-    explicit deque(size_type n) {
+    explicit deque(const size_type n) {
         (fill_initialize)(n, T());
     }
 
-    deque(size_type n, const T& x) {
+    deque(const size_type n, const T& x) {
         (fill_initialize)(n, x);
     }
-    deque(size_type n, T&& x) {
+    deque(const size_type n, T&& x) {
         (fill_initialize)(n, MSTL::forward<T>(x));
     }
 
-    template <typename Iterator, enable_if_t<
-        is_input_iter_v<Iterator>, int> = 0>
+    template <typename Iterator, enable_if_t<is_iter_v<Iterator>, int> = 0>
     deque(Iterator first, Iterator last) {
         Exception(MSTL::distance(first, last) >= 0,
             StopIterator("deque iterator-constructor out of ranges."));
@@ -417,7 +461,6 @@ public:
     deque(std::initializer_list<T> l)
         : deque(l.begin(), l.end()) {
     }
-
     self& operator =(std::initializer_list<T> l) {
         clear();
         insert(end(), l.begin(), l.end());
@@ -493,21 +536,20 @@ public:
         if (new_size < size()) erase(start_ + new_size, finish_);
         else insert(finish_, new_size - size(), x);
     }
-    void resize(size_type new_size) { resize(new_size, T()); }
+    void resize(const size_type new_size) { resize(new_size, T()); }
 
     template <typename... Args>
-    typename iterator emplace(iterator position, Args&& ...args) {
+    iterator emplace(iterator position, Args&& ...args) {
         range_check(position);
         if (position.cur_ == start_.cur_) {
             (emplace_front)(MSTL::forward<Args>(args)...);
             return start_;
         }
-        else if (position.cur_ == finish_.cur_) {
+        if (position.cur_ == finish_.cur_) {
             (emplace_back)(MSTL::forward<Args>(args)...);
             return finish_ - 1;
         }
-        else
-            return (emplace_aux)(position, MSTL::forward<Args>(args)...);
+        return (emplace_aux)(position, MSTL::forward<Args>(args)...);
     }
 
     template <typename... Args>
@@ -614,16 +656,15 @@ public:
             (emplace_front)(*first);
             return start_;
         }
-        else if (position == finish_) {
+        if (position == finish_) {
             for (; first != last; ++first)
                 (emplace_back)(*first);
             return finish_ - 1;
         }
-        else
-            return range_insert(position, first, last);
+        return range_insert(position, first, last);
     }
     iterator insert(iterator position, std::initializer_list<T> l) {
-        insert(position, l.begin(), l.end());
+        return insert(position, l.begin(), l.end());
     }
     iterator insert(iterator position, size_t n, const T& x) {
         range_check(position);
@@ -632,14 +673,12 @@ public:
                 (emplace_front)(x);
             return start_;
         }
-        else if (position == finish_) {
+        if (position == finish_) {
             for (size_t i = 0; i < n; i++)
                 (emplace_back)(x);
             return finish_ - 1;
         }
-        else
-            return range_insert(position, size_type(n), x);
-
+        return range_insert(position, n, x);
     }
 
     iterator erase(iterator position) noexcept {
@@ -665,7 +704,7 @@ public:
         }
         difference_type len = last - first;
         difference_type n = first - start_;
-        if (n < difference_type((size() - len) / 2)) {
+        if (n < static_cast<difference_type>((size() - len) / 2)) {
             MSTL::copy_backward(start_, first, last);
             iterator new_start = start_ + len;
             MSTL::destroy(start_, new_start);
@@ -711,15 +750,13 @@ public:
         range_check(position);
         return const_iterator(start_)[position];
     }
-    MSTL_NODISCARD reference at(size_type position) {
-        return const_cast<reference>(
-            static_cast<const self*>(this)->at(position)
-            );
+    MSTL_NODISCARD reference at(const size_type position) {
+        return const_cast<reference>(static_cast<const self*>(this)->at(position));
     }
-    MSTL_NODISCARD const_reference operator [](size_type position) const {
+    MSTL_NODISCARD const_reference operator [](const size_type position) const {
         return this->at(position);
     }
-    MSTL_NODISCARD reference operator [](size_type position) {
+    MSTL_NODISCARD reference operator [](const size_type position) {
         return this->at(position);
     }
 };

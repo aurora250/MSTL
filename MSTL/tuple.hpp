@@ -104,7 +104,7 @@ TEMNULL__ struct tuple<> {
 	MSTL_CONSTEXPR tuple(const tuple&) noexcept = default;
 	template <typename Tag, enable_if_t<
 		is_same_v<Tag, exact_arg_construct_tag>, int> = 0>
-	MSTL_CONSTEXPR tuple(Tag) noexcept {}
+	MSTL_CONSTEXPR explicit tuple(Tag) noexcept {}
 
 	MSTL_CONSTEXPR tuple& operator =(const tuple&) noexcept = default;
 
@@ -125,13 +125,13 @@ public:
 		: base_type(exact_arg_construct_tag{}, MSTL::forward<U2>(rest_arg)...), data_(MSTL::forward<U1>(this_arg)) {}
 
 	template <typename Tag, typename Tuple, size_t... Index, enable_if_t<
-		is_same_v<Tag, unpack_tuple_construct_tag>, int> = 0>
+		is_same_v<Tag, unpack_utility_construct_tag>, int> = 0>
 	MSTL_CONSTEXPR tuple(Tag, Tuple&&, index_sequence<Index...>);
 
 	template <typename Tag, typename Tuple, enable_if_t<
-		is_same_v<Tag, unpack_tuple_construct_tag>, int> = 0>
+		is_same_v<Tag, unpack_utility_construct_tag>, int> = 0>
 	MSTL_CONSTEXPR tuple(Tag, Tuple&& tup) 
-		: tuple(unpack_tuple_construct_tag{}, MSTL::forward<Tuple>(tup), 
+		: tuple(unpack_utility_construct_tag{}, MSTL::forward<Tuple>(tup),
 		make_index_sequence<tuple_size_v<remove_reference_t<Tuple>>>{}) {}
 
 
@@ -161,24 +161,24 @@ public:
 		tuple_convertible<tuple, const tuple<U...>&, U...>>, int> = 0>
 	MSTL_CONSTEXPR explicit(tuple_explicitly_convertible_v<tuple, const U&...>)
 		tuple(const tuple<U...>& tup) noexcept(tuple_nothrow_constructible_v<tuple, const U&...>)
-		: tuple(unpack_tuple_construct_tag{}, tup) {}
+		: tuple(unpack_utility_construct_tag{}, tup) {}
 
 	template <typename... U, enable_if_t<conjunction_v<tuple_constructible<tuple, U...>, 
 		tuple_convertible<tuple, tuple<U...>, U...>>, int> = 0>
 	MSTL_CONSTEXPR explicit(tuple_explicitly_convertible_v<tuple, U...>)
 		tuple(tuple<U...>&& tup) noexcept(tuple_nothrow_constructible_v<tuple, U...>)
-		: tuple(unpack_tuple_construct_tag{}, MSTL::move(tup)) {}
+		: tuple(unpack_utility_construct_tag{}, MSTL::move(tup)) {}
 
 	template <typename T1, typename T2, enable_if_t<
 		tuple_constructible_v<tuple, const T1&, const T2&>, int> = 0>
 	MSTL_CONSTEXPR explicit(tuple_explicitly_convertible_v<tuple, const T1&, const T2&>)
         tuple(const pair<T1, T2>& pir) noexcept(tuple_nothrow_constructible_v<tuple, const T1&, const T2&>)
-        : tuple(unpack_tuple_construct_tag{}, pir) {}
+        : tuple(unpack_utility_construct_tag{}, pir) {}
 
     template <typename T1, typename T2, enable_if_t<tuple_constructible_v<tuple, T1, T2>, int> = 0>
 	MSTL_CONSTEXPR explicit(tuple_explicitly_convertible_v<tuple, T1, T2>)
 		tuple(pair<T1, T2>&& pir) noexcept(tuple_nothrow_constructible_v<tuple, T1, T2>)
-        : tuple(unpack_tuple_construct_tag{}, MSTL::move(pir)) {}
+        : tuple(unpack_utility_construct_tag{}, MSTL::move(pir)) {}
 #else
 	template <typename T = This, enable_if_t<
 		conjunction_v<is_default_constructible<T>, is_default_constructible<Rest>...>&&
@@ -224,45 +224,45 @@ public:
 		tuple_convertible<tuple, const tuple<U...>&, U...>> &&
 		tuple_explicitly_convertible_v<tuple, const U&...>, int> = 0>
 	explicit tuple(const tuple<U...>& tup) noexcept(tuple_nothrow_constructible_v<tuple, const U&...>)
-		: tuple(unpack_tuple_construct_tag{}, tup) {}
+		: tuple(unpack_utility_construct_tag{}, tup) {}
 
 	template <typename... U, enable_if_t<conjunction_v<tuple_constructible<tuple, const U&...>, 
 		tuple_convertible<tuple, const tuple<U...>&, U...>> &&
 		!tuple_explicitly_convertible_v<tuple, const U&...>, int> = 0>
 	tuple(const tuple<U...>& tup) noexcept(tuple_nothrow_constructible_v<tuple, const U&...>)
-		: tuple(unpack_tuple_construct_tag{}, tup) {}
+		: tuple(unpack_utility_construct_tag{}, tup) {}
 
 	template <typename... U, enable_if_t<
 		conjunction_v<tuple_constructible<tuple, U...>, tuple_convertible<tuple, tuple<U...>, U...>>&&
 		tuple_explicitly_convertible_v<tuple, U...>, int> = 0>
 	explicit tuple(tuple<U...>&& tup) noexcept(tuple_nothrow_constructible_v<tuple, U...>)
-		: tuple(unpack_tuple_construct_tag{}, MSTL::move(tup)) {}
+		: tuple(unpack_utility_construct_tag{}, MSTL::move(tup)) {}
 
 	template <typename... U, enable_if_t<
 		conjunction_v<tuple_constructible<tuple, U...>, tuple_convertible<tuple, tuple<U...>, U...>> &&
 		!tuple_explicitly_convertible_v<tuple, U...>, int> = 0>
 	tuple(tuple<U...>&& tup) noexcept(tuple_nothrow_constructible_v<tuple, U...>)
-		: tuple(unpack_tuple_construct_tag{}, MSTL::move(tup)) {}
+		: tuple(unpack_utility_construct_tag{}, MSTL::move(tup)) {}
 
 	template <typename T1, typename T2, enable_if_t<tuple_constructible_v<tuple, const T1&, const T2&>&&
 		tuple_explicitly_convertible_v<tuple, const T1&, const T2&>, int> = 0>
 	explicit tuple(const pair<T1, T2>& pir) noexcept(tuple_nothrow_constructible_v<tuple, const T1&, const T2&>)
-		: tuple(unpack_tuple_construct_tag{}, pir) {}
+		: tuple(unpack_utility_construct_tag{}, pir) {}
 
 	template <typename T1, typename T2, enable_if_t<tuple_constructible_v<tuple, const T1&, const T2&> && 
 		!tuple_explicitly_convertible_v<tuple, const T1&, const T2&>, int> = 0>
 	tuple(const pair<T1, T2>& pir) noexcept(tuple_nothrow_constructible_v<tuple, const T1&, const T2&>)
-		: tuple(unpack_tuple_construct_tag{}, pir) {}
+		: tuple(unpack_utility_construct_tag{}, pir) {}
 
 	template <typename T1, typename T2, enable_if_t<
 		tuple_constructible_v<tuple, T1, T2> && tuple_explicitly_convertible_v<tuple, T1, T2>, int> = 0>
 	explicit tuple(pair<T1, T2>&& pir) noexcept(tuple_nothrow_constructible_v<tuple, T1, T2>)
-		: tuple(unpack_tuple_construct_tag{}, MSTL::move(pir)) {}
+		: tuple(unpack_utility_construct_tag{}, MSTL::move(pir)) {}
 
 	template <typename T1, typename T2, enable_if_t<
 		tuple_constructible_v<tuple, T1, T2> && !tuple_explicitly_convertible_v<tuple, T1, T2>, int> = 0>
 	tuple(pair<T1, T2>&& pir) noexcept(tuple_nothrow_constructible_v<tuple, T1, T2>)
-		: tuple(unpack_tuple_construct_tag{}, MSTL::move(pir)) {}
+		: tuple(unpack_utility_construct_tag{}, MSTL::move(pir)) {}
 #endif
 
 	tuple(const tuple&) = default;
@@ -432,7 +432,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR tuple_element_t<Index, Types...>&& pair_get_from_t
 
 template <typename This, typename... Rest>
 template <typename Tag, typename Tuple, size_t... Index, enable_if_t<
-	is_same_v<Tag, unpack_tuple_construct_tag>, int>>
+	is_same_v<Tag, unpack_utility_construct_tag>, int>>
 MSTL_CONSTEXPR tuple<This, Rest...>::tuple(Tag, Tuple&& tup, index_sequence<Index...>)
 	: tuple(exact_arg_construct_tag{}, MSTL::get<Index>(MSTL::forward<Tuple>(tup))...) {}
 

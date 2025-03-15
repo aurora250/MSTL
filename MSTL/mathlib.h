@@ -37,8 +37,8 @@ namespace constants {
 	static constexpr mathld_t INFINITY_FLT = 1.7976931348623158e+308L;
 };
 
-static constexpr mathus_t LEONARDO_COUNT__ = 46;
-static constexpr mathui_t LEONARDO_LIST[LEONARDO_COUNT__] = {
+static constexpr mathus_t LEONARDO_COUNT = 46;
+static constexpr mathui_t LEONARDO_LIST[LEONARDO_COUNT] = {
 	1,			1,			3,			5,			9, 
 	15,			25,			41,			67,			109,
 	177,		287,		465,		753,		1219,
@@ -51,20 +51,20 @@ static constexpr mathui_t LEONARDO_LIST[LEONARDO_COUNT__] = {
 	3672623805u
 };
 
-constexpr size_t leonardo(mathus_t n) {
+constexpr size_t leonardo(const mathus_t n) {
 	if (n == 0 || n == 1) return 1;
 	return leonardo(n - 1) + leonardo(n - 2) + 1;
 }
 
-constexpr size_t fibonacci(mathus_t n) {
+constexpr size_t fibonacci(const mathus_t n) {
 	if (n == 0 || n == 1) return 1;
 	return fibonacci(n - 1) + fibonacci(n - 2);
 }
 
-constexpr mathld_t angular2radian(mathld_t angular) noexcept {
+constexpr mathld_t angular2radian(const mathld_t angular) noexcept {
 	return (angular * constants::PI / constants::SEMI_CIRCLE);
 }
-constexpr mathld_t radian2angular(mathld_t radians) noexcept {
+constexpr mathld_t radian2angular(const mathld_t radians) noexcept {
 	return radians * (constants::SEMI_CIRCLE / constants::PI);
 }
 
@@ -74,7 +74,7 @@ constexpr T opposite(T x) noexcept {
 }
 template <typename T, enable_if_t<is_signed_v<T>, int> = 0>
 constexpr T absolute(T x) noexcept {
-	return (x > 0) ? x : (-x);
+	return x > 0 ? x : -x;
 }
 
 template <typename T>
@@ -119,7 +119,7 @@ constexpr T cube(T x) noexcept { return MSTL::square(x) * x; }
 
 template <typename T, enable_if_t<is_integral_v<T>, int> = 0>
 constexpr mathl_t power(T x, mathui_t n) noexcept {
-	if (n == 0) return mathl_t(1);
+	if (n == 0) return 1;
 	mathl_t result = 1;
 	T base = x;
 	while (n > 0) {
@@ -133,7 +133,7 @@ constexpr mathl_t power(T x, mathui_t n) noexcept {
 }
 template <typename T, enable_if_t<is_floating_point_v<T>, int> = 0>
 constexpr mathld_t power(T x, mathui_t n) noexcept {
-	if (n == 0) return mathld_t(1);
+	if (n == 0) return 1;
 	mathld_t result = 1.0;
 	T base = x;
 	while (n > 0) {
@@ -146,15 +146,15 @@ constexpr mathld_t power(T x, mathui_t n) noexcept {
 	return result;
 }
 
-constexpr mathld_t exponential(mathui_t n) noexcept {
+constexpr mathld_t exponential(const mathui_t n) noexcept {
 	return power(constants::EULER, n);
 }
 
-constexpr mathld_t logarithm_e(mathld_t x) noexcept {
+constexpr mathld_t logarithm_e(const mathld_t x) noexcept {
 	mathui_t N = constants::TAYLOR_CONVERGENCE;
-	mathld_t a = (x - 1) / (x + 1);
-	mathld_t a_sqar = a * a;
-	mathl_t nk = 2 * N + 1;
+	const mathld_t a = (x - 1) / (x + 1);
+	const mathld_t a_sqar = a * a;
+	mathld_t nk = 2 * N + 1;
 	mathld_t y = 1.0 / nk;
 	while (N--) {
 		nk -= 2;
@@ -163,13 +163,13 @@ constexpr mathld_t logarithm_e(mathld_t x) noexcept {
 	return (2.0 * a * y);
 }
 
-constexpr mathld_t logarithm(mathld_t x, mathui_t base) noexcept {
+constexpr mathld_t logarithm(const mathld_t x, const mathui_t base) noexcept {
 	return logarithm_e(x) / logarithm_e(base);
 }
-constexpr mathld_t logarithm_2(mathld_t x) noexcept {
+constexpr mathld_t logarithm_2(const mathld_t x) noexcept {
 	return logarithm(x, 2);
 }
-constexpr mathld_t logarithm_10(mathld_t x) noexcept {
+constexpr mathld_t logarithm_10(const mathld_t x) noexcept {
 	return logarithm(x, 10);
 }
 constexpr mathul_t cursory_lg2(mathul_t x) noexcept {
@@ -178,7 +178,7 @@ constexpr mathul_t cursory_lg2(mathul_t x) noexcept {
 	return k;
 }
 
-constexpr mathld_t square_root(mathld_t x, mathld_t precise = constants::PRECISE_TOLERANCE) noexcept {
+constexpr mathld_t square_root(const mathld_t x, const mathld_t precise = constants::PRECISE_TOLERANCE) noexcept {
 	mathld_t t = 0.0;
 	mathld_t result = x;
 	while (absolute(result - t) > precise) {
@@ -187,7 +187,7 @@ constexpr mathld_t square_root(mathld_t x, mathld_t precise = constants::PRECISE
 	}
 	return result;
 }
-constexpr mathld_t cube_root(mathld_t x, mathld_t precise = constants::PRECISE_TOLERANCE) noexcept {
+constexpr mathld_t cube_root(const mathld_t x, const mathld_t precise = constants::PRECISE_TOLERANCE) noexcept {
 	mathld_t t = 0.0;
 	mathld_t result = x;
 	while (absolute(result - t) > precise) {
@@ -204,78 +204,74 @@ constexpr mathul_t factorial(mathui_t n) noexcept {
 	return h;
 }
 
-// bit down to the nearest digit, > 0 operates on decimal places, and ¡Ü 0 on integer places.
-constexpr mathld_t floor_bit(mathld_t x, mathui_t bit) noexcept {
-	mathld_t times = power(10.0, bit);
-	mathl_t int_part = (mathl_t)(x * times);
-	if (x < 0 && (mathl_t)(x * times * 10) / 10.0 != int_part) 
+// a bit down to the nearest digit, > 0 operates on decimal places, and ¡Ü 0 on integer places.
+constexpr mathld_t floor_bit(const mathld_t x, const mathui_t bit) noexcept {
+	const mathld_t times = power(10.0, bit);
+	if (const auto int_part = x * times; x < 0 && (x * times * 10) / 10.0 != int_part)
 		return (int_part - 1) / times;
 	else 
 		return int_part / times;
 }
-constexpr mathld_t ceil_bit(mathld_t x, mathui_t bit) noexcept {
-	mathld_t times = power(10.0, bit);
-	mathl_t int_part = (mathl_t)(x * times);
-	if (x > 0 && (mathl_t)(x * times * 10) / 10.0 != int_part) 
+constexpr mathld_t ceil_bit(const mathld_t x, const mathui_t bit) noexcept {
+	const mathld_t times = power(10.0, bit);
+	if (const auto int_part = x * times; x > 0 && (x * times * 10) / 10.0 != int_part)
 		return (int_part + 1) / times;
 	else 
 		return int_part / times;
 }
 
-constexpr mathld_t round_bit(mathld_t x, mathui_t bit) noexcept {
+constexpr mathld_t round_bit(const mathld_t x, const mathui_t bit) noexcept {
 	return x < 0 ? ceil_bit(x - 0.5 / power(10.0, bit), bit) 
 		: floor_bit(x + 0.5 / power(10.0, bit), bit);
 }
-constexpr mathld_t truncate_bit(mathld_t x, mathui_t bit) noexcept {
+constexpr mathld_t truncate_bit(const mathld_t x, const mathui_t bit) noexcept {
 	return x < 0 ? ceil_bit(x, bit) : floor_bit(x, bit);
 }
-constexpr mathld_t floor(mathld_t x, mathui_t bit) noexcept {
-	mathld_t times = power(10.0, bit);
-	mathl_t int_part = (mathl_t)(x * times);
-	if (x < 0 && x * times != int_part)
+constexpr mathld_t floor(const mathld_t x, const mathui_t bit) noexcept {
+	const mathld_t times = power(10.0, bit);
+	if (const auto int_part = x * times; x < 0 && x * times != int_part)
 		return (int_part - 1) / times;
 	else
 		return int_part / times;
 }
-constexpr mathld_t ceil(mathld_t x, mathui_t bit) noexcept {
-	mathld_t times = power(10.0, bit);
-	mathl_t int_part = (mathl_t)(x * times);
-	if (x > 0 && x * times != int_part)
+constexpr mathld_t ceil(const mathld_t x, const mathui_t bit) noexcept {
+	const mathld_t times = power(10.0, bit);
+	if (const auto int_part = x * times; x > 0 && x * times != int_part)
 		return (int_part + 1) / times;
 	else
 		return int_part / times;
 }
 
-constexpr mathld_t round(mathld_t x, mathui_t bit) noexcept {
+constexpr mathld_t round(const mathld_t x, const mathui_t bit) noexcept {
 	return x < 0 ? ceil(x - 0.5 / power(10.0, bit), bit)
 		: floor(x + 0.5 / power(10.0, bit), bit);
 }
-constexpr mathld_t truncate(mathld_t x, int bit) noexcept {
+constexpr mathld_t truncate(const mathld_t x, const int bit) noexcept {
 	return x < 0 ? ceil(x, bit) : floor(x, bit);
 }
 
 bool around_multiple(mathld_t x, mathld_t axis, mathld_t toler = constants::PRECISE_TOLERANCE);
 
-inline bool around_pi(mathld_t x, mathld_t toler = constants::LOW_PRECISE_TOLERANCE) {
+inline bool around_pi(const mathld_t x, const mathld_t toler = constants::LOW_PRECISE_TOLERANCE) {
 	return around_multiple(x, constants::PI, toler);
 }
-inline bool around_zero(mathld_t x, mathld_t toler = constants::PRECISE_TOLERANCE) {
-	return around_multiple(x, 0.0L, toler);
+inline bool around_zero(const mathld_t x, const mathld_t toler = constants::PRECISE_TOLERANCE) {
+	return around_multiple(x, 0, toler);
 }
 
-constexpr mathld_t remainder(mathld_t x, mathld_t y) noexcept {
+constexpr mathld_t remainder(const mathld_t x, const mathld_t y) noexcept {
 	return (x - y * (x / y));
 }
-constexpr mathld_t float_part(mathld_t x) noexcept {
-	return (x - mathl_t(x));
+constexpr mathld_t float_part(const mathld_t x) noexcept {
+	return x - static_cast<mathl_t>(x);
 }
 constexpr mathld_t divided_float(mathld_t x, mathl_t* int_ptr) noexcept {
-	*int_ptr = mathl_t(x);
+	*int_ptr = static_cast<mathl_t>(x);
 	x -= (*int_ptr);
 	return x;
 }
 
-constexpr mathld_t sine(mathld_t x) noexcept {
+constexpr mathld_t sine(const mathld_t x) noexcept {
 	mathul_t i = 1;
 	mathi_t neg = 1;
 	mathld_t sum = 0;
@@ -293,25 +289,25 @@ constexpr mathld_t sine(mathld_t x) noexcept {
 	return taylor;
 }
 
-constexpr mathld_t cosine(mathld_t x) noexcept {
+constexpr mathld_t cosine(const mathld_t x) noexcept {
 	return sine(constants::PI / 2.0 - x);
 }
-inline mathld_t tangent(mathld_t x) {
+inline mathld_t tangent(const mathld_t x) {
 	if (around_pi(x - constants::PI / 2.0)) Exception(ValueError("Tangent Range Exceeded"));
 	return (sine(x) / cosine(x));
 }
-inline mathld_t cotangent(mathld_t x) {
+inline mathld_t cotangent(const mathld_t x) {
 	return 1.0 / tangent(x);
 }
 
 mathld_t arcsine(mathld_t x);
 
-inline mathld_t arccosine(mathld_t x) {
+inline mathld_t arccosine(const mathld_t x) {
 	if (x > 1 || x < -1) Exception(ValueError("Arccosine Range Exceeded"));
 	return constants::PI / 2.0 - arcsine(x);
 }
 
-constexpr mathld_t __arctangent_taylor(mathld_t x) noexcept {
+constexpr mathld_t __arctangent_taylor(const mathld_t x) noexcept {
 	mathld_t y = 0.0;
 	mathld_t tmp = x;
 	mathul_t N = 1;
@@ -323,13 +319,12 @@ constexpr mathld_t __arctangent_taylor(mathld_t x) noexcept {
 	return y;
 }
 
-constexpr mathld_t arctangent(mathld_t x) noexcept {
+constexpr mathld_t arctangent(const mathld_t x) noexcept {
 	if (x > 1)
 		return constants::PI / 2 - __arctangent_taylor(1 / x);
-	else if (x < -1)
+	if (x < -1)
 		return -constants::PI / 2 - __arctangent_taylor(1 / x);
-	else
-		return __arctangent_taylor(x);
+	return __arctangent_taylor(x);
 }
 
 MSTL_END_NAMESPACE__

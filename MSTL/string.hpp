@@ -34,29 +34,29 @@ TEMNULL__ struct hash<std::string> {
 #pragma warning(push)
 #pragma warning(disable: 4455)
 inline namespace string_operator {
-    MSTL_NODISCARD MSTL_CONSTEXPR20 string operator ""s(const char* str, size_t len) noexcept {
-        return string(str, len);
+    MSTL_NODISCARD MSTL_CONSTEXPR20 string operator ""_s(const char* str, size_t len) noexcept {
+        return {str, len};
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR20 wstring operator ""s(const wchar_t* str, size_t len) noexcept {
-        return wstring(str, len);
+    MSTL_NODISCARD MSTL_CONSTEXPR20 wstring operator ""_s(const wchar_t* str, size_t len) noexcept {
+        return {str, len};
     }
 #ifdef MSTL_VERSION_20__
-    MSTL_NODISCARD MSTL_CONSTEXPR20 u8string operator ""s(const char8_t* str, size_t len) noexcept {
-        return u8string(str, len);
+    MSTL_NODISCARD MSTL_CONSTEXPR20 u8string operator ""_s(const char8_t* str, size_t len) noexcept {
+        return {str, len};
     }
 #endif // MSTL_VERSION_20__
-    MSTL_NODISCARD MSTL_CONSTEXPR20 u16string operator ""s(const char16_t* str, size_t len) noexcept {
-        return u16string(str, len);
+    MSTL_NODISCARD MSTL_CONSTEXPR20 u16string operator ""_s(const char16_t* str, size_t len) noexcept {
+        return {str, len};
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR20 u32string operator ""s(const char32_t* str, size_t len) noexcept {
-        return u32string(str, len);
+    MSTL_NODISCARD MSTL_CONSTEXPR20 u32string operator ""_s(const char32_t* str, size_t len) noexcept {
+        return {str, len};
     }
 }
 #pragma warning(pop)
 #endif // MSTL_VERSION_17__
 
 
-MSTL_NODISCARD inline int stoi(const string& str, size_t* idx = nullptr, int base = 10) {
+MSTL_NODISCARD inline int stoi(const string& str, size_t* idx = nullptr, const int base = 10) {
     const char* raw = str.c_str();
     char* err;
     const long num = ::strtol(raw, &err, base);
@@ -192,11 +192,11 @@ MSTL_NODISCARD inline wstring to_wstring(long double x) {
 
 
 template <typename CharT, typename T, enable_if_t<is_same_v<CharT, char>, int> = 0>
-MSTL_NODISCARD inline basic_string<CharT> __stream_to_string(T x) {
+MSTL_NODISCARD basic_string<CharT> __stream_to_string(T x) {
     return MSTL::to_string(x);
 }
 template <typename CharT, typename T, enable_if_t<is_same_v<CharT, wchar_t>, int> = 0>
-MSTL_NODISCARD inline basic_string<CharT> __stream_to_string(T x) {
+MSTL_NODISCARD basic_string<CharT> __stream_to_string(T x) {
     return MSTL::to_wstring(x);
 }
 

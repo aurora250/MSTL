@@ -2,7 +2,6 @@
 #define MSTL_MEMORY_HPP__
 #include "algobase.hpp"
 #include <atomic>
-
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator1, typename Iterator2, enable_if_t<
@@ -168,9 +167,9 @@ private:
     MSTL_CONSTEXPR20 void allocate_buffer() {
         original_len_ = len_;
         buffer_ = 0;
-        if (len_ > (ptrdiff_t)(INT_MAX / sizeof(T))) len_ = INT_MAX / sizeof(T);
+        if (len_ > static_cast<ptrdiff_t>((INT_MAX / sizeof(T)))) len_ = INT_MAX / sizeof(T);
         while (len_ > 0) {
-            buffer_ = (T*)std::malloc(len_ * sizeof(T));
+            buffer_ = static_cast<T *>(std::malloc(len_ * sizeof(T)));
             if (buffer_) break;
             len_ /= 2;
         }
@@ -331,9 +330,9 @@ template <size_t Align>
 MSTL_DECLALLOC MSTL_CONSTEXPR20 void* __allocate_aux(const size_t bytes) {
     if (bytes >= MEMORY_BIG_ALLOC_THRESHHOLD) {
         const void* raw_ptr = ::operator new(MEMORY_NO_USER_SIZE + bytes);
-        const uintptr_t holder = reinterpret_cast<uintptr_t>(raw_ptr);
+        const auto holder = reinterpret_cast<uintptr_t>(raw_ptr);
         MSTL_DEBUG_VERIFY__(holder != 0, "invalid argument");
-        void* const ptr = reinterpret_cast<void*>(
+        const auto ptr = reinterpret_cast<void*>(
             (holder + MEMORY_NO_USER_SIZE) & ~(MEMORY_BIG_ALLOC_ALIGN - 1)); // align the memory address
         static_cast<uintptr_t*>(ptr)[-1] = holder;
 #ifdef MSTL_STATE_DEBUG__
@@ -341,9 +340,7 @@ MSTL_DECLALLOC MSTL_CONSTEXPR20 void* __allocate_aux(const size_t bytes) {
 #endif
         return ptr;
     }
-    else {
-        return ::operator new(bytes);
-    }
+    return ::operator new(bytes);
 }
 #ifdef MSTL_VERSION_17__
 template <size_t Align, enable_if_t<(Align > MEMORY_ALIGN_THRESHHOLD) ,int> = 0>
@@ -359,7 +356,7 @@ MSTL_DECLALLOC MSTL_CONSTEXPR20 void* __allocate_dispatch(const size_t bytes) {
         return ::operator new(bytes, std::align_val_t{ align });
     }
 }
-template <size_t Align, enable_if_t<!(Align > MEMORY_ALIGN_THRESHHOLD), int> = 0>
+template <size_t Align, enable_if_t<Align <= MEMORY_ALIGN_THRESHHOLD, int> = 0>
 MSTL_DECLALLOC MSTL_CONSTEXPR20 void* __allocate_dispatch(const size_t bytes) {
     return MSTL::__allocate_aux<Align>(bytes);
 }
@@ -402,12 +399,12 @@ MSTL_CONSTEXPR20 void __deallocate_aux(void* ptr, size_t bytes) noexcept {
 }
 #ifdef MSTL_VERSION_17__
 template <size_t Align, enable_if_t<(Align > MEMORY_ALIGN_THRESHHOLD), int> = 0>
-MSTL_CONSTEXPR20 void __deallocate_dispatch(void* ptr, size_t bytes) noexcept {
+MSTL_CONSTEXPR20 void __deallocate_dispatch(void* ptr, const size_t bytes) noexcept {
     size_t align = MSTL::max(Align, MEMORY_BIG_ALLOC_ALIGN);
     ::operator delete(ptr, bytes, std::align_val_t{ align });
 }
-template <size_t Align, enable_if_t<!(Align > MEMORY_ALIGN_THRESHHOLD), int> = 0>
-MSTL_CONSTEXPR20 void __deallocate_dispatch(void* ptr, size_t bytes) noexcept {
+template <size_t Align, enable_if_t<Align <= MEMORY_ALIGN_THRESHHOLD, int> = 0>
+MSTL_CONSTEXPR20 void __deallocate_dispatch(void* ptr, const size_t bytes) noexcept {
     MSTL::__deallocate_aux<Align>(ptr, bytes);
 }
 #endif // MSTL_VERSION_17__
@@ -452,29 +449,29 @@ public:
         using other = standard_allocator<U>;
     };
 
-    static constexpr size_t value_size = sizeof(value_type);
-
     MSTL_CONSTEXPR20 standard_allocator() noexcept = default;
     template <typename U>
     MSTL_CONSTEXPR20 standard_allocator(const standard_allocator<U>&) noexcept {}
     MSTL_CONSTEXPR20 ~standard_allocator() noexcept = default;
     MSTL_CONSTEXPR20 self& operator =(const self&) noexcept = default;
 
-    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(const size_type n) {
+    MSTL_ALLOCNODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(const size_type n) {
+        constexpr size_t value_size = sizeof(value_type);
         static_assert(value_size > 0, "value type must be complete before allocation called.");
         const size_t alloc_size = value_size * n;
         MSTL_DEBUG_VERIFY__(alloc_size <= INT_MAX_SIZE, "allocation will cause memory overflow.");
         return static_cast<T*>(MSTL::allocate<FINAL_ALIGN_SIZE<T>>(alloc_size));
     }
-    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate() {
-        return this->allocate(1);
+    MSTL_ALLOCNODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate() {
+        return allocate(1);
     }
-    MSTL_CONSTEXPR20 void deallocate(pointer p, const size_type n) noexcept {
+    static MSTL_CONSTEXPR20 void deallocate(pointer p, const size_type n) noexcept {
+        constexpr size_t value_size = sizeof(value_type);
         MSTL_DEBUG_VERIFY__(p != nullptr || n == 0, "pointer invalid.");
         MSTL::deallocate<FINAL_ALIGN_SIZE<T>>(p, n * value_size);
     }
-    MSTL_CONSTEXPR20 void deallocate(pointer p) noexcept {
-        this->deallocate(p, 1);
+    static MSTL_CONSTEXPR20 void deallocate(pointer p) noexcept {
+        deallocate(p, 1);
     }
 };
 template <typename T, typename U>
@@ -513,16 +510,16 @@ public:
     MSTL_CONSTEXPR20 ~ctype_allocator() noexcept = default;
     MSTL_CONSTEXPR20 self& operator =(const self&) noexcept = default;
 
-    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(const size_type n) {
-        return 0 == n ? 0 : static_cast<pointer>(std::malloc(n * sizeof(T)));
+    MSTL_ALLOCNODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(const size_type n) {
+        return 0 == n ? nullptr : static_cast<pointer>(std::malloc(n * sizeof(T)));
     }
-    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(void) {
+    MSTL_ALLOCNODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate() {
         return static_cast<pointer>(std::malloc(sizeof(T)));
     }
-    MSTL_CONSTEXPR20 void deallocate(pointer p) noexcept {
+    static MSTL_CONSTEXPR20 void deallocate(pointer p) noexcept {
         std::free(p);
     }
-    MSTL_CONSTEXPR20 void deallocate(pointer p, const size_type) noexcept {
+    static MSTL_CONSTEXPR20 void deallocate(pointer p, const size_type) noexcept {
         std::free(p);
     }
 };
@@ -560,16 +557,16 @@ public:
     MSTL_CONSTEXPR20 ~new_allocator() noexcept = default;
     MSTL_CONSTEXPR20 self& operator =(const self&) noexcept = default;
 
-    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(size_type n) {
-        return 0 == n ? 0 : static_cast<pointer>(::operator new(n * sizeof(T)));
+    MSTL_ALLOCNODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(size_type n) {
+        return 0 == n ? nullptr : static_cast<pointer>(::operator new(n * sizeof(T)));
     }
-    MSTL_ALLOCNODISCARD MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(void) {
+    MSTL_ALLOCNODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(void) {
         return static_cast<pointer>(::operator new(sizeof(T)));
     }
-    MSTL_CONSTEXPR20 void deallocate(pointer p) noexcept {
+    static MSTL_CONSTEXPR20 void deallocate(pointer p) noexcept {
         ::operator delete(p);
     }
-    MSTL_CONSTEXPR20 void deallocate(pointer p, const size_type) noexcept {
+    static MSTL_CONSTEXPR20 void deallocate(pointer p, const size_type) noexcept {
         ::operator delete(p);
     }
 };
@@ -643,11 +640,11 @@ public:
     using deleter_type  = Deleter;
     using self          = unique_ptr<T, Deleter>;
 
-    unique_ptr(nullptr_t = nullptr) noexcept {};
+    unique_ptr() noexcept = default;
     explicit unique_ptr(T* p) noexcept : ptr_(p) {}
 
     template <class U, enable_if_t<is_convertible_v<U*, T*>, int> = 0>
-    unique_ptr(unique_ptr<U, Deleter>&& x) noexcept : ptr_(x.ptr_) {
+    explicit unique_ptr(unique_ptr<U, Deleter>&& x) noexcept : ptr_(x.ptr_) {
         x.ptr_ = nullptr;
     }
 
@@ -762,7 +759,7 @@ struct smart_ptr_counter {
             delete this;
         }
     }
-    long countref() const noexcept {
+    MSTL_NODISCARD uint64_t countref() const noexcept {
         return count_.load(std::memory_order_relaxed);
     }
 };
@@ -791,13 +788,13 @@ struct smart_ptr_counter_impl_fused final : smart_ptr_counter {
     explicit smart_ptr_counter_impl_fused(T* ptr, void* mem, Deleter deleter) noexcept
         : ptr_(ptr), mem_(mem), deleter_(MSTL::move(deleter)) {}
 
-    ~smart_ptr_counter_impl_fused() noexcept {
+    ~smart_ptr_counter_impl_fused() noexcept override {
         deleter_(ptr_);
     }
 
     void operator delete(void* mem) noexcept {
 #if MSTL_VERSION_17__
-        ::operator delete(mem, std::align_val_t(MSTL::max(alignof(T), alignof(smart_ptr_counter_impl_fused))));
+        ::operator delete(mem, static_cast<std::align_val_t>(MSTL::max(alignof(T), alignof(smart_ptr_counter_impl_fused))));
 #else
         ::operator delete(mem);
 #endif
@@ -819,8 +816,8 @@ shared_ptr<T> __make_shared_fused(T* ptr, smart_ptr_counter* owner) noexcept {
 template <class T>
 class shared_ptr {
 private:
-    T* ptr_;
-    smart_ptr_counter* owner_;
+    T* ptr_ = nullptr;
+    smart_ptr_counter* owner_ = nullptr;
 
     explicit shared_ptr(T* ptr, smart_ptr_counter* owner) noexcept : ptr_(ptr), owner_(owner) {}
 
@@ -835,18 +832,18 @@ public:
     using pointer       = T*;
     using self          = shared_ptr<T>;
 
-    shared_ptr(std::nullptr_t = nullptr) noexcept : owner_(nullptr) {}
+    explicit shared_ptr(nullptr_t) noexcept {}
 
     template <class U, enable_if_t<is_convertible_v<U*, T*>, int> = 0>
     explicit shared_ptr(U* ptr) 
         : ptr_(ptr), owner_(new smart_ptr_counter_impl<U, default_deleter<U>>(ptr)) {
-        MSTL::__setup_enable_shared_from(ptr_, owner_);
+        MSTL::__setup_enable_shared_from<T>(ptr_, owner_);
     }
 
     template <class U, class Deleter, enable_if_t<is_convertible_v<U*, T*>, int> = 0>
     explicit shared_ptr(U* ptr, Deleter deleter)
         : ptr_(ptr), owner_(new smart_ptr_counter_impl<U, Deleter>(ptr, MSTL::move(deleter))) {
-        MSTL::__setup_enable_shared_from(ptr_, owner_);
+        MSTL::__setup_enable_shared_from<T>(ptr_, owner_);
     }
 
     template <class U, class Deleter, enable_if_t<is_convertible_v<U*, T*>, int> = 0>
@@ -865,7 +862,7 @@ public:
         return *this;
     }
     template <class U, enable_if_t<is_convertible_v<U*, T*>, int> = 0>
-    shared_ptr(const shared_ptr<U>& x) noexcept : ptr_(x.ptr_), owner_(x.owner_) {
+    explicit shared_ptr(const shared_ptr<U>& x) noexcept : ptr_(x.ptr_), owner_(x.owner_) {
         if (owner_) owner_->incref();
     }
 
@@ -883,7 +880,7 @@ public:
         return *this;
     }
     template <class U, enable_if_t<is_convertible_v<U*, T*>, int> = 0>
-    shared_ptr(shared_ptr<U>&& x) noexcept : ptr_(x.ptr_), owner_(x.owner_) {
+    explicit shared_ptr(shared_ptr<U>&& x) noexcept : ptr_(x.ptr_), owner_(x.owner_) {
         x.ptr_ = nullptr;
         x.owner_ = nullptr;
     }
@@ -934,7 +931,7 @@ public:
         owner_ = nullptr;
         ptr_ = ptr;
         owner_ = new smart_ptr_counter_impl<U, default_deleter<U>>(ptr);
-        MSTL::__setup_enable_shared_from(ptr_, owner_);
+        MSTL::__setup_enable_shared_from<T>(ptr_, owner_);
     }
     template <class U, class Deleter>
     void reset(U* ptr, Deleter deleter) {
@@ -943,7 +940,7 @@ public:
         owner_ = nullptr;
         ptr_ = ptr;
         owner_ = new smart_ptr_counter_impl<U, Deleter>(ptr, MSTL::move(deleter));
-        MSTL::__setup_enable_shared_from(ptr_, owner_);
+        MSTL::__setup_enable_shared_from<T>(ptr_, owner_);
     }
 
     long use_count() noexcept {
@@ -982,35 +979,34 @@ public:
     }
 };
 template <typename T, typename U>
-inline MSTL_NODISCARD bool operator ==(const shared_ptr<T>& lh, const shared_ptr<U>& rh) noexcept {
+MSTL_NODISCARD bool operator ==(const shared_ptr<T>& lh, const shared_ptr<U>& rh) noexcept {
     return lh.owner_equal(rh);
 }
 template <typename T, typename U>
-inline MSTL_NODISCARD bool operator !=(const shared_ptr<T>& lh, const shared_ptr<U>& rh) noexcept {
+MSTL_NODISCARD bool operator !=(const shared_ptr<T>& lh, const shared_ptr<U>& rh) noexcept {
     return !(lh == rh);
 }
 template <typename T, typename U>
-inline MSTL_NODISCARD bool operator <(const shared_ptr<T>& lh, const shared_ptr<U>& rh) noexcept {
+MSTL_NODISCARD bool operator <(const shared_ptr<T>& lh, const shared_ptr<U>& rh) noexcept {
     return lh.owner_before(rh);
 }
 template <typename T, typename U>
-inline MSTL_NODISCARD bool operator >(const shared_ptr<T>& lh, const shared_ptr<U>& rh) noexcept {
+MSTL_NODISCARD bool operator >(const shared_ptr<T>& lh, const shared_ptr<U>& rh) noexcept {
     return rh < lh;
 }
 template <typename T, typename U>
-inline MSTL_NODISCARD bool operator <=(const shared_ptr<T>& lh, const shared_ptr<U>& rh) noexcept {
+MSTL_NODISCARD bool operator <=(const shared_ptr<T>& lh, const shared_ptr<U>& rh) noexcept {
     return !(lh > rh);
 }
 template <typename T, typename U>
-inline MSTL_NODISCARD bool operator >=(const shared_ptr<T>& lh, const shared_ptr<U>& rh) noexcept {
+MSTL_NODISCARD bool operator >=(const shared_ptr<T>& lh, const shared_ptr<U>& rh) noexcept {
     return !(lh < rh);
 }
 
 
-
-
 template <class T>
-struct shared_ptr<T[]> : shared_ptr<T> {
+class shared_ptr<T[]> : shared_ptr<T> {
+public:
     using shared_ptr<T>::shared_ptr;
 
     add_lvalue_reference_t<T> operator [](size_t idx) {
@@ -1067,8 +1063,8 @@ shared_ptr<T> make_shared(Args&&... args) {
     constexpr size_t align = MSTL::max(alignof(T), alignof(Counter));
     constexpr size_t size = offset + sizeof(T);
 #if MSTL_VERSION_17__
-    void* mem = ::operator new(size, std::align_val_t(align));
-    Counter* counter = reinterpret_cast<Counter*>(mem);
+    void* mem = ::operator new(size, static_cast<std::align_val_t>(align));
+    auto* counter = static_cast<Counter*>(mem);
 #else
     void* mem = ::operator new(size + align);
     Counter* counter = reinterpret_cast<Counter*>(reinterpret_cast<size_t>(mem) & align);
@@ -1079,7 +1075,7 @@ shared_ptr<T> make_shared(Args&&... args) {
     }
     MSTL_CATCH_UNWIND__{
 #if MSTL_VERSION_17__
-        ::operator delete(mem, std::align_val_t(align));
+        ::operator delete(mem, static_cast<std::align_val_t>(align));
 #else
         ::operator delete(mem);
 #endif
@@ -1098,8 +1094,8 @@ shared_ptr<T> make_shared_for_overwrite() {
     constexpr size_t align = MSTL::max(alignof(T), alignof(Counter));
     constexpr size_t size = offset + sizeof(T);
 #if MSTL_VERSION_17__
-    void* mem = ::operator new(size, std::align_val_t(align));
-    Counter* counter = reinterpret_cast<Counter*>(mem);
+    void* mem = ::operator new(size, static_cast<std::align_val_t>(align));
+    auto* counter = static_cast<Counter*>(mem);
 #else
     void* mem = ::operator new(size + align);
     Counter* counter = reinterpret_cast<Counter*>(reinterpret_cast<size_t>(mem) & align);
@@ -1110,7 +1106,7 @@ shared_ptr<T> make_shared_for_overwrite() {
     }
     MSTL_CATCH_UNWIND__{
 #if MSTL_VERSION_17__
-        ::operator delete(mem, std::align_val_t(align));
+        ::operator delete(mem, static_cast<std::align_val_t>(align));
 #else
         ::operator delete(mem);
 #endif
@@ -1122,16 +1118,16 @@ shared_ptr<T> make_shared_for_overwrite() {
 }
 
 template <class T, class... Args, enable_if_t<is_unbounded_array_v<T>, int> = 0>
-shared_ptr<T> make_shared(size_t len) {
+shared_ptr<T> make_shared(const size_t len) {
     using value = remove_extent_t<T>;
-    value* tmp = new value[len];
+    auto* tmp = new value[len];
     MSTL_TRY__{ return shared_ptr<T>(tmp); }
     MSTL_CATCH_UNWIND_THROW_M__(delete[] tmp)
 }
 template <class T, enable_if_t<is_unbounded_array_v<T>, int> = 0>
-shared_ptr<T> make_shared_for_overwrite(size_t len) {
+shared_ptr<T> make_shared_for_overwrite(const size_t len) {
     using value = remove_extent_t<T>;
-    value* tmp = new value[len];
+    auto* tmp = new value[len];
     MSTL_TRY__{ return shared_ptr<T>(tmp); }
     MSTL_CATCH_UNWIND_THROW_M__(delete[] tmp)
 }
@@ -1154,7 +1150,6 @@ shared_ptr<T> dynamic_pointer_cast(const shared_ptr<U>& ptr) {
     T* tmp = dynamic_cast<T*>(ptr.get());
     if (tmp != nullptr) return shared_ptr<T>(ptr, tmp);
     else return nullptr;
-    
 }
 
 MSTL_END_NAMESPACE__

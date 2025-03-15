@@ -33,22 +33,21 @@ public:
     using self              = unordered_map<Key, T, HashFcn, EqualKey, Alloc>;
 
 private:
-    base_type ht_;
+    base_type ht_{100, hasher(), key_equal()};
 
-    friend bool operator ==(const unordered_map&, const unordered_map&) noexcept;
+    template <typename Key1, typename T1, typename HashFcn1, typename EqualKey1, typename Alloc1>
+    friend bool operator ==(const unordered_map<Key1, T1, HashFcn1, EqualKey1, Alloc1>&,
+        const unordered_map<Key1, T1, HashFcn1, EqualKey1, Alloc1>&) noexcept;
 
 public:
-    unordered_map() : ht_(100, hasher(), key_equal()) {}
+    unordered_map() = default;
     explicit unordered_map(size_type n) : ht_(n) {}
 
     unordered_map(size_type n, const hasher& hf) : ht_(n, hf, key_equal()) {}
     unordered_map(size_type n, const hasher& hf, const key_equal& eql) : ht_(n, hf, eql) {}
 
     unordered_map(const self& ht) : ht_(ht.ht_) {}
-    self& operator =(const self& x) {
-        ht_ = x.ht_;
-        return *this;
-    }
+    self& operator =(const self& x) = default;
 
     unordered_map(self&& x) noexcept(noexcept(ht_.swap(x.ht_))) : ht_(MSTL::forward<base_type>(x.ht_)) {}
     self& operator =(self&& x) noexcept(noexcept(ht_.swap(x.ht_))) {
@@ -184,14 +183,12 @@ unordered_map(std::initializer_list<pair<Key, T>>, HashFcn, Alloc)
 #endif
 
 template <typename Key, typename T, typename HashFcn, typename EqualKey, typename Alloc>
-inline MSTL_NODISCARD bool operator ==(
-    const unordered_map<Key, T, HashFcn, EqualKey, Alloc>& lh,
+MSTL_NODISCARD bool operator ==(const unordered_map<Key, T, HashFcn, EqualKey, Alloc>& lh,
     const unordered_map<Key, T, HashFcn, EqualKey, Alloc>& rh) noexcept {
     return lh.ht_ == rh.ht_;
 }
 template <typename Key, typename T, typename HashFcn, typename EqualKey, typename Alloc>
-inline MSTL_NODISCARD bool operator !=(
-    const unordered_map<Key, T, HashFcn, EqualKey, Alloc>& lh,
+MSTL_NODISCARD bool operator !=(const unordered_map<Key, T, HashFcn, EqualKey, Alloc>& lh,
     const unordered_map<Key, T, HashFcn, EqualKey, Alloc>& rh) noexcept {
     return !(lh.ht_ == rh.ht_);
 }
@@ -232,22 +229,22 @@ public:
     using self              = unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>;
 
 private:
-    base_type ht_;
+    base_type ht_{100, hasher(), key_equal()};
 
-    friend bool operator ==(const unordered_multimap&, const unordered_multimap&) noexcept;
+    template <typename Key1, typename T1, typename HashFcn1, typename EqualKey1, typename Alloc1>
+    friend bool operator ==(const unordered_multimap<Key1, T1, HashFcn1, EqualKey1, Alloc1>&,
+        const unordered_multimap<Key1, T1, HashFcn1, EqualKey1, Alloc1>&) noexcept;
+
 
 public:
-    unordered_multimap() : ht_(100, hasher(), key_equal()) {}
+    unordered_multimap() = default;
     explicit unordered_multimap(size_type n) : ht_(n) {}
 
     unordered_multimap(size_type n, const hasher& hf) : ht_(n, hf, key_equal()) {}
     unordered_multimap(size_type n, const hasher& hf, const key_equal& eql) : ht_(n, hf, eql) {}
 
     unordered_multimap(const self& ht) : ht_(ht.ht_) {}
-    self& operator =(const self& x) {
-        ht_ = x.ht_;
-        return *this;
-    }
+    self& operator =(const self& x) = default;
 
     unordered_multimap(self&& x) noexcept(noexcept(ht_.swap(x.ht_))) : ht_(MSTL::forward<base_type>(x.ht_)) {}
     self& operator =(self&& x) noexcept(noexcept(ht_.swap(x.ht_))) {
@@ -368,12 +365,12 @@ unordered_multimap(std::initializer_list<pair<Key, T>>, HashFcn, Alloc)
 #endif
 
 template <typename Key, typename T, typename HashFcn, typename EqualKey, typename Alloc>
-inline MSTL_NODISCARD bool operator ==(const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& lh,
+MSTL_NODISCARD bool operator ==(const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& lh,
     const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& rh) noexcept {
     return lh.ht_ == rh.ht_;
 }
 template <typename Key, typename T, typename HashFcn, typename EqualKey, typename Alloc>
-inline MSTL_NODISCARD bool operator !=(const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& lh,
+MSTL_NODISCARD bool operator !=(const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& lh,
     const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& rh) noexcept {
     return !(lh.ht_ == rh.ht_);
 }
@@ -384,5 +381,4 @@ void swap(const unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>& lh,
 }
 
 MSTL_END_NAMESPACE__
-
 #endif // MSTL_HASH_MAP_HPP__

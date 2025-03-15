@@ -77,7 +77,7 @@ void bubble_sort(Iterator first, Iterator last, Compare comp) {
 }
 
 template <typename Iterator>
-inline void bubble_sort(Iterator first, Iterator last) {
+void bubble_sort(Iterator first, Iterator last) {
     return MSTL::bubble_sort(first, last, MSTL::less<iter_val_t<Iterator>>());
 }
 
@@ -116,7 +116,7 @@ void cocktail_sort(Iterator first, Iterator last, Compare comp) {
 }
 
 template <typename Iterator>
-inline void cocktail_sort(Iterator first, Iterator last) {
+void cocktail_sort(Iterator first, Iterator last) {
     return MSTL::cocktail_sort(first, last, MSTL::less<iter_val_t<Iterator>>());
 }
 
@@ -138,7 +138,7 @@ void select_sort(Iterator first, Iterator last, Compare comp) {
 }
 
 template <typename Iterator>
-inline void select_sort(Iterator first, Iterator last) {
+void select_sort(Iterator first, Iterator last) {
     return MSTL::select_sort(first, last, MSTL::less<iter_val_t<Iterator>>());
 }
 
@@ -162,7 +162,7 @@ void shell_sort(Iterator first, Iterator last, Compare comp) {
 }
 
 template <typename Iterator>
-inline void shell_sort(Iterator first, Iterator last) {
+void shell_sort(Iterator first, Iterator last) {
     return MSTL::shell_sort(first, last, MSTL::less<iter_val_t<Iterator>>());
 }
 
@@ -175,14 +175,14 @@ void counting_sort(Iterator first, Iterator last, Compare comp, IndexMapper mapp
     auto min_max = MSTL::minmax_element(first, last, comp);
     auto min_val = mapper(*min_max.first);
     auto max_val = mapper(*min_max.second);
-    auto range = static_cast<size_t>(max_val - min_val + 1);
+    const auto range = static_cast<size_t>(max_val - min_val + 1);
     vector<int> count(range, 0);
     for (Iterator it = first; it != last; ++it) {
         auto value = mapper(*it);
         if (value < min_val || value > max_val) {
             Exception(StopIterator("element out of range for counting sort."));
         }
-        count[static_cast<size_t>(value - min_val)]++;
+        ++count[static_cast<size_t>(value - min_val)];
     }
     for (size_t i = 1; i < count.size(); ++i)
         count[i] += count[i - 1];
@@ -190,7 +190,7 @@ void counting_sort(Iterator first, Iterator last, Compare comp, IndexMapper mapp
     auto bound = MSTL::make_reverse_iterator(first);
     for (auto rit = MSTL::make_reverse_iterator(last); rit != bound; ++rit) {
         auto value = mapper(*rit);
-        size_t index = static_cast<size_t>(value - min_val);
+        const auto index = static_cast<size_t>(value - min_val);
         size_t position = --count[index];
         sorted[position] = *rit;
     }
@@ -198,7 +198,7 @@ void counting_sort(Iterator first, Iterator last, Compare comp, IndexMapper mapp
 }
 
 template <typename Iterator>
-inline void counting_sort(Iterator first, Iterator last) {
+void counting_sort(Iterator first, Iterator last) {
     MSTL::counting_sort(first, last, 
         MSTL::less<iter_val_t<Iterator>>(), MSTL::identity<iter_val_t<Iterator>>());
 }
@@ -213,7 +213,7 @@ void bucket_sort_less(Iterator first, Iterator last) {
     T range = max_val - min_val + 1;
     vector<size_t> bucket(range, 0);
     for (Iterator it = first; it != last; ++it) {
-        bucket[*it - min_val]++;
+        ++bucket[*it - min_val];
     }
     Iterator index = first;
     for (size_t i = 0; i < bucket.size(); ++i) {
@@ -234,7 +234,7 @@ void bucket_sort_greater(Iterator first, Iterator last) {
     T range = max_val - min_val + 1;
     vector<size_t> bucket(range, 0);
     for (Iterator it = first; it != last; ++it) {
-        bucket[*it - min_val]++;
+        ++bucket[*it - min_val];
     }
     Iterator index = first;
     for (size_t i = bucket.size(); i-- > 0; ) {
@@ -247,7 +247,7 @@ void bucket_sort_greater(Iterator first, Iterator last) {
 
 // bucket sort : Ot(N + k)~(N^2) Om(N + k) stable
 template<typename Iterator>
-inline void bucket_sort(Iterator first, Iterator last) {
+void bucket_sort(Iterator first, Iterator last) {
     MSTL::bucket_sort_less(first, last);
 }
 
@@ -289,14 +289,14 @@ void radix_sort_less(Iterator first, Iterator last, Mapper mapper) {
     for (int d = 1; d <= MSTL::__max_bit_aux(mapped_values.begin(), mapped_values.end()); ++d) {
         MSTL::fill(count.begin(), count.end(), 0);
         FOR_EACH(num, mapped_values) {
-            count[MSTL::__get_number_aux(*num, d)]++;
+            ++count[MSTL::__get_number_aux(*num, d)];
         }
         for (size_t i = 1; i < count.size(); ++i) {
             count[i] += count[i - 1];
         }
-        for (auto it = mapped_values.rbegin(); it != mapped_values.rend(); ++it) {
-            int k = MSTL::__get_number_aux(*it, d);
-            bucket[--count[k]] = *(first + MSTL::distance(mapped_values.begin(), it.base() - 1));
+        for (auto iter = mapped_values.rbegin(); iter != mapped_values.rend(); ++iter) {
+            const int k = MSTL::__get_number_aux(*iter, d);
+            bucket[--count[k]] = *(first + MSTL::distance(mapped_values.begin(), iter.base() - 1));
         }
         it = first;
         FOR_EACH(value, bucket) {
@@ -322,14 +322,14 @@ void radix_sort_greater(Iterator first, Iterator last, Mapper mapper) {
     for (int d = 1; d <= MSTL::__max_bit_aux(mapped_values.begin(), mapped_values.end()); ++d) {
         MSTL::fill(count.begin(), count.end(), 0);
         FOR_EACH(num, mapped_values) {
-            count[MSTL::__get_number_aux(*num, d)]++;
+            ++count[MSTL::__get_number_aux(*num, d)];
         }
         for (size_t i = count.size() - 1; i > 0; --i) {
             count[i - 1] += count[i];
         }
-        for (auto it = mapped_values.rbegin(); it != mapped_values.rend(); ++it) {
-            int k = MSTL::__get_number_aux(*it, d);
-            bucket[--count[k]] = *(first + MSTL::distance(mapped_values.begin(), it.base() - 1));
+        for (auto iter = mapped_values.rbegin(); iter != mapped_values.rend(); ++iter) {
+            const int k = MSTL::__get_number_aux(*iter, d);
+            bucket[--count[k]] = *(first + MSTL::distance(mapped_values.begin(), iter.base() - 1));
         }
         it = first;
         FOR_EACH(value, bucket) {
@@ -341,7 +341,7 @@ void radix_sort_greater(Iterator first, Iterator last, Mapper mapper) {
 
 // radix sort : Ot(d(n + k)) Om(N + k) stable
 template <typename Iterator, typename Mapper = MSTL::identity<iter_val_t<Iterator>>>
-inline void radix_sort(Iterator first, Iterator last, Mapper mapper = Mapper()) {
+void radix_sort(Iterator first, Iterator last, Mapper mapper = Mapper()) {
     MSTL::radix_sort_less(first, last, mapper);
 }
 
@@ -359,7 +359,7 @@ void merge_sort(Iterator first, Iterator last, Compare comp) {
 }
 
 template <typename Iterator>
-inline void merge_sort(Iterator first, Iterator last) {
+void merge_sort(Iterator first, Iterator last) {
     return MSTL::merge_sort(first, last, MSTL::less<iter_val_t<Iterator>>());
 }
 
@@ -377,7 +377,7 @@ void partial_sort(Iterator first, Iterator middle, Iterator last, Compare comp) 
 }
 
 template <typename Iterator>
-inline void partial_sort(Iterator first, Iterator middle, Iterator last) {
+void partial_sort(Iterator first, Iterator middle, Iterator last) {
     return MSTL::partial_sort(first, middle, last, MSTL::less<iter_val_t<Iterator>>());
 }
 
@@ -406,7 +406,7 @@ Iterator2 partial_sort_copy(Iterator1 first, Iterator1 last,
 }
 
 template <typename Iterator1, typename Iterator2>
-inline Iterator2 partial_sort_copy(
+Iterator2 partial_sort_copy(
     Iterator1 first, Iterator1 last, Iterator2 result_first, Iterator2 result_last) {
     return MSTL::partial_sort_copy(first, result_first, result_last, MSTL::less<iter_val_t<Iterator1>>());
 }
@@ -447,12 +447,12 @@ void insertion_sort(Iterator first, Iterator last, Compare comp) {
 }
 
 template <typename Iterator>
-inline void insertion_sort(Iterator first, Iterator last) {
+void insertion_sort(Iterator first, Iterator last) {
     return MSTL::insertion_sort(first, last, MSTL::less<iter_val_t<Iterator>>());
 }
 
 
-MSTL_CONSTEXPR static size_t SORT_DISPATCH_THRESHOLD__ = 16;
+MSTL_CONSTEXPR static size_t SORT_DISPATCH_THRESHOLD = 16;
 
 // introspective sort : Ot(NlogN) Om(logN) unstable
 template <typename Iterator, typename Compare, enable_if_t<
@@ -472,7 +472,7 @@ void introspective_sort(Iterator first, Iterator last, int depth_limit, Compare 
 }
 
 template <typename Iterator>
-inline void introspective_sort(Iterator first, Iterator last, int depth_limit) {
+void introspective_sort(Iterator first, Iterator last, int depth_limit) {
     return MSTL::introspective_sort(first, last, depth_limit, MSTL::less<iter_val_t<Iterator>>());
 }
 
@@ -490,13 +490,13 @@ void quick_sort(Iterator first, Iterator last, Compare comp) {
 }
 
 template <typename Iterator>
-inline void quick_sort(Iterator first, Iterator last) {
+void quick_sort(Iterator first, Iterator last) {
     return MSTL::quick_sort(first, last, MSTL::less<iter_val_t<Iterator>>());
 }
 
 template <typename Iterator, typename Compare>
 void __intro_sort_dispatch(Iterator first, Iterator last, int depth_limit, Compare comp) {
-    while (last - first > SORT_DISPATCH_THRESHOLD__) {
+    while (last - first > SORT_DISPATCH_THRESHOLD) {
         if (depth_limit == 0) {
             MSTL::partial_sort(first, last, last, comp);
             return;
@@ -515,9 +515,9 @@ template <typename Iterator, typename Compare, enable_if_t<
 void sort(Iterator first, Iterator last, Compare comp) {
     if (first == last) return;
     MSTL::__intro_sort_dispatch(first, last, (int)MSTL::cursory_lg2(last - first) * 2, comp);
-    if (last - first > SORT_DISPATCH_THRESHOLD__) {
-        MSTL::insertion_sort(first, first + SORT_DISPATCH_THRESHOLD__, comp);
-        for (Iterator i = first + SORT_DISPATCH_THRESHOLD__; i != last; ++i)
+    if (last - first > SORT_DISPATCH_THRESHOLD) {
+        MSTL::insertion_sort(first, first + SORT_DISPATCH_THRESHOLD, comp);
+        for (Iterator i = first + SORT_DISPATCH_THRESHOLD; i != last; ++i)
             MSTL::__insertion_sort_aux(i, *i, comp);
     }
     else
@@ -525,7 +525,7 @@ void sort(Iterator first, Iterator last, Compare comp) {
 }
 
 template <typename Iterator>
-inline void sort(Iterator first, Iterator last) {
+void sort(Iterator first, Iterator last) {
     return MSTL::sort(first, last, MSTL::less<iter_val_t<Iterator>>());
 }
 
@@ -543,7 +543,7 @@ void nth_element(Iterator first, Iterator nth, Iterator last, Compare comp) {
 }
 
 template <typename Iterator>
-inline void nth_element(Iterator first, Iterator nth, Iterator last) {
+void nth_element(Iterator first, Iterator nth, Iterator last) {
     return MSTL::nth_element(first, nth, last, MSTL::less<iter_val_t<Iterator>>());
 }
 
@@ -569,7 +569,7 @@ void tim_sort(Iterator first, Iterator last, Compare comp) {
 }
 
 template <typename Iterator>
-inline void tim_sort(Iterator first, Iterator last) {
+void tim_sort(Iterator first, Iterator last) {
     return MSTL::tim_sort(first, last, MSTL::less<iter_val_t<Iterator>>());
 }
 
@@ -583,7 +583,7 @@ void monkey_sort(Iterator first, Iterator last, Compare comp) {
 }
 
 template <typename Iterator>
-inline void monkey_sort(Iterator first, Iterator last) {
+void monkey_sort(Iterator first, Iterator last) {
     return MSTL::monkey_sort(first, last, MSTL::less<iter_val_t<Iterator>>());
 }
 

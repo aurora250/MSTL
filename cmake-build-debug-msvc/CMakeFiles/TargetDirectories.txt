@@ -1,0 +1,3 @@
+D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-debug-msvc/CMakeFiles/MSTL.dir
+D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-debug-msvc/CMakeFiles/edit_cache.dir
+D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-debug-msvc/CMakeFiles/rebuild_cache.dir

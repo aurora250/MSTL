@@ -35,7 +35,9 @@ public:
 private:
     base_type ht_;
 
-    friend bool operator ==(const unordered_set&, const unordered_set&) noexcept;
+    template <typename Value1, typename HashFcn1, typename EqualKey1, typename Alloc1>
+    friend bool operator ==(const unordered_set<Value1, HashFcn1, EqualKey1, Alloc1>&,
+        const unordered_set<Value1, HashFcn1, EqualKey1, Alloc1>&) noexcept;
 
 public:
     unordered_set() : ht_(100, hasher(), key_equal()) {}
@@ -45,10 +47,7 @@ public:
     unordered_set(size_type n, const hasher& hf, const key_equal& eql) : ht_(n, hf, eql) {}
 
     unordered_set(const self& ht) : ht_(ht.ht_) {}
-    self& operator =(const self& x) {
-        ht_ = x.ht_;
-        return *this;
-    }
+    self& operator =(const self& x) = default;
 
     unordered_set(self&& x) noexcept(noexcept(ht_.swap(x.ht_))) : ht_(MSTL::forward<base_type>(x.ht_)) {}
     self& operator =(self&& x) noexcept(noexcept(ht_.swap(x.ht_))) {
@@ -148,7 +147,7 @@ unordered_set(Iterator, Iterator, HashFcn = HashFcn(), Compare = Compare(), Allo
 
 template <typename Key, typename HashFcn = hash<Key>, typename Compare = equal_to<Key>,
     typename Alloc = standard_allocator<Key>>
-unordered_set(std::initializer_list<Key>, HashFcn = _Hasher(), Compare = Compare(), Alloc = Alloc()) 
+unordered_set(std::initializer_list<Key>, HashFcn = HashFcn(), Compare = Compare(), Alloc = Alloc())
 -> unordered_set<Key, HashFcn, Compare, Alloc>;
 
 template <typename Iterator, typename Alloc>
@@ -169,13 +168,13 @@ unordered_set(std::initializer_list<Key>, HashFcn, Alloc)
 #endif
 
 template <typename Value, typename HashFcn, typename EqualKey, typename Alloc>
-inline MSTL_NODISCARD bool operator ==(
+MSTL_NODISCARD bool operator ==(
     const unordered_set<Value, HashFcn, EqualKey, Alloc>& lh,
     const unordered_set<Value, HashFcn, EqualKey, Alloc>& rh) noexcept {
     return lh.ht_ == rh.ht_;
 }
 template <typename Value, typename HashFcn, typename EqualKey, typename Alloc>
-inline MSTL_NODISCARD bool operator !=(
+MSTL_NODISCARD bool operator !=(
     const unordered_set<Value, HashFcn, EqualKey, Alloc>& lh,
     const unordered_set<Value, HashFcn, EqualKey, Alloc>& rh) noexcept {
     return !(lh.ht_ == rh.ht_);
@@ -219,7 +218,9 @@ public:
 private:
     base_type ht_;
 
-    friend bool operator ==(const unordered_multiset&, const unordered_multiset&) noexcept;
+    template <typename Value1, typename HashFcn1, typename EqualKey1, typename Alloc1>
+    friend bool operator ==(const unordered_multiset<Value1, HashFcn1, EqualKey1, Alloc1>&,
+        const unordered_multiset<Value1, HashFcn1, EqualKey1, Alloc1>&) noexcept;
 
 public:
     unordered_multiset() : ht_(100, hasher(), key_equal()) {}
@@ -229,10 +230,7 @@ public:
     unordered_multiset(size_type n, const hasher& hf, const key_equal& eql) : ht_(n, hf, eql) {}
 
     unordered_multiset(const self& ht) : ht_(ht.ht_) {}
-    self& operator =(const self& x) {
-        ht_ = x.ht_;
-        return *this;
-    }
+    self& operator =(const self& x) = default;
 
     unordered_multiset(self&& x) noexcept(noexcept(ht_.swap(x.ht_))) : ht_(MSTL::forward<base_type>(x.ht_)) {}
     self& operator =(self&& x) noexcept(noexcept(ht_.swap(x.ht_))) {
@@ -332,7 +330,7 @@ unordered_multiset(Iterator, Iterator, HashFcn = HashFcn(), Compare = Compare(),
 
 template <typename Value, typename HashFcn = hash<Value>, typename Compare = equal_to<Value>,
     typename Alloc = standard_allocator<Value>>
-unordered_multiset(std::initializer_list<Value>, HashFcn = _Hasher(), Compare = Compare(), Alloc = Alloc()) 
+unordered_multiset(std::initializer_list<Value>, HashFcn = HashFcn(), Compare = Compare(), Alloc = Alloc())
 -> unordered_multiset<Value, HashFcn, Compare, Alloc>;
 
 template <typename Iterator, typename Alloc>
@@ -353,15 +351,13 @@ unordered_multiset(std::initializer_list<Value>, HashFcn, Alloc)
 #endif
 
 template <typename Value, typename HashFcn, typename EqualKey, typename Alloc>
-inline MSTL_NODISCARD bool operator ==(
-    const unordered_multiset<Value, HashFcn, EqualKey, Alloc>& lh,
-    const unordered_multiset<Value, HashFcn, EqualKey, Alloc>& rh) {
+MSTL_NODISCARD bool operator ==(const unordered_multiset<Value, HashFcn, EqualKey, Alloc>& lh,
+    const unordered_multiset<Value, HashFcn, EqualKey, Alloc>& rh) noexcept {
     return lh.ht_ == rh.ht_;
 }
 template <typename Value, typename HashFcn, typename EqualKey, typename Alloc>
-inline MSTL_NODISCARD bool operator !=(
-    const unordered_multiset<Value, HashFcn, EqualKey, Alloc>& lh,
-    const unordered_multiset<Value, HashFcn, EqualKey, Alloc>& rh) {
+MSTL_NODISCARD bool operator !=(const unordered_multiset<Value, HashFcn, EqualKey, Alloc>& lh,
+    const unordered_multiset<Value, HashFcn, EqualKey, Alloc>& rh) noexcept {
     return !(lh.ht_ == rh.ht_);
 }
 template <typename Value, typename HashFcn, typename EqualKey, typename Alloc>

@@ -148,7 +148,11 @@ public:
 #if MSTL_VERSION_20__
         if (MSTL::is_constant_evaluated()) {
             MSTL_IF_CONSTEXPR (is_same_v<char_type, wchar_t>) {
+#ifdef MSTL_COMPILE_MSVC__
                 return __builtin_wcslen(str);
+#else
+                return MSTL::wcslen(str);
+#endif
             }
             else {
                 return base_type::length(str);
@@ -211,7 +215,7 @@ public:
         return rsc != eof() ? rsc : static_cast<int_type>(!eof());
     }
     MSTL_NODISCARD static MSTL_CONSTEXPR int_type eof() noexcept {
-        return uint16_t(0xffff);
+        return 0xffff;
     }
 };
 
@@ -242,7 +246,11 @@ public:
 #ifdef MSTL_VERSION_20__
         MSTL_IF_CONSTEXPR (is_same_v<char_type, char8_t>) {
 #ifdef MSTL_SUPPORT_U8_INTRINSICS__
+#ifdef MSTL_COMPILE_MSVC__
             return __builtin_u8strlen(str);
+#else
+            return MSTL::u8cslen(str);
+#endif
 #else
             return base_type::length(str);
 #endif // MSTL_SUPPORT_U8_INTRINSICS__
@@ -271,7 +279,11 @@ public:
         else
 #endif // MSTL_VERSION_20__
         {
+#ifdef MSTL_COMPILE_MSVC__
             return __builtin_char_memchr(str, chr, n);
+#else
+            return base_type::find(str, n, chr);
+#endif
         }
 #else
         return static_cast<const char_type*>(MSTL::memchr(str, chr, n));
@@ -655,7 +667,7 @@ public:
         return tmp;
     }
 
-    friend MSTL_NODISCARD MSTL_CONSTEXPR string_view_iterator operator +(
+    MSTL_NODISCARD friend MSTL_CONSTEXPR string_view_iterator operator +(
         const difference_type n, string_view_iterator iter) noexcept {
         iter += n;
         return iter;
@@ -747,11 +759,11 @@ private:
     const_pointer data_;
     size_type size_;
 
-    inline constexpr void range_check(const size_type n) const {
+    static constexpr void range_check(const size_type n) {
         MSTL_DEBUG_VERIFY__(size_ < n, "basic string view index out of ranges.");
     }
 
-    constexpr size_type clamp_size(const size_type position, const size_type size) const noexcept {
+    MSTL_NODISCARD constexpr size_type clamp_size(const size_type position, const size_type size) const noexcept {
         return MSTL::min(size, size_ - position);
     }
 
@@ -761,7 +773,7 @@ public:
     constexpr basic_string_view(const self&) noexcept = default;
     constexpr basic_string_view& operator =(const self&) noexcept = default;
 
-    constexpr basic_string_view(const const_pointer str) noexcept
+    constexpr explicit basic_string_view(const const_pointer str) noexcept
         : data_(str), size_(Traits::length(str)) {}
     constexpr basic_string_view(const const_pointer str, const size_type n) noexcept
         : data_(str), size_(n) {}
@@ -777,7 +789,7 @@ public:
 
     MSTL_NODISCARD constexpr size_type size() const noexcept { return size_; }
     MSTL_NODISCARD constexpr size_type max_size() const noexcept {
-        return MSTL::min(static_cast<size_t>(INT64_MAX), static_cast<size_t>(-1) / sizeof(CharT));
+        return MSTL::min(static_cast<size_t>(9223372036854775807LL), static_cast<size_t>(-1) / sizeof(CharT));
     }
     MSTL_NODISCARD constexpr size_type length() const noexcept { return size_; }
     MSTL_NODISCARD constexpr bool empty() const noexcept { return size_ == 0; }
@@ -830,7 +842,7 @@ public:
         return self(data_ + off, count);
     }
 
-    MSTL_CONSTEXPR bool equal_to(const self view) const noexcept {
+    MSTL_NODISCARD MSTL_CONSTEXPR bool equal_to(const self view) const noexcept {
         return (char_traits_equal<Traits>)(data_, size_, view.data_, view.size_);
     }
 
@@ -986,22 +998,22 @@ using u32string_view = basic_string_view<char32_t>;
 #pragma warning(push)
 #pragma warning(disable: 4455)
 inline namespace string_operator {
-    MSTL_NODISCARD constexpr string_view operator ""sv(const char* str, size_t len) noexcept {
-        return string_view(str, len);
+    MSTL_NODISCARD constexpr string_view operator ""_sv(const char* str, size_t len) noexcept {
+        return {str, len};
     }
-    MSTL_NODISCARD constexpr wstring_view operator ""sv(const wchar_t* str, size_t len) noexcept {
-        return wstring_view(str, len);
+    MSTL_NODISCARD constexpr wstring_view operator ""_sv(const wchar_t* str, size_t len) noexcept {
+        return {str, len};
     }
 #ifdef MSTL_VERSION_20__
-    MSTL_NODISCARD constexpr u8string_view operator ""sv(const char8_t* str, size_t len) noexcept {
-        return u8string_view(str, len);
+    MSTL_NODISCARD constexpr u8string_view operator ""_sv(const char8_t* str, size_t len) noexcept {
+        return {str, len};
     }
 #endif // MSTL_VERSION_20__
-    MSTL_NODISCARD constexpr u16string_view operator ""sv(const char16_t* str, size_t len) noexcept {
-        return u16string_view(str, len);
+    MSTL_NODISCARD constexpr u16string_view operator ""_sv(const char16_t* str, size_t len) noexcept {
+        return {str, len};
     }
-    MSTL_NODISCARD constexpr u32string_view operator ""sv(const char32_t* str, size_t len) noexcept {
-        return u32string_view(str, len);
+    MSTL_NODISCARD constexpr u32string_view operator ""_sv(const char32_t* str, size_t len) noexcept {
+        return {str, len};
     }
 }
 #pragma warning(pop)
@@ -1011,10 +1023,10 @@ inline namespace string_operator {
 // DJB2 is a non-cryptographic hash algorithm
 // with simple implement, fast speed and evenly distributed.
 // but in some special cases, there will still occur hash conflicts.
-constexpr size_t DJB2_hash(const char* str, size_t len) noexcept {
+inline size_t DJB2_hash(const char* str, const size_t len) noexcept {
     size_t hash = 5381;
     for (size_t i = 0; i < len; ++i) {
-        hash = ((hash << 5) + hash) + static_cast<unsigned char>(str[i]);
+        hash = (hash << 5) + hash + static_cast<unsigned char>(str[i]);
     }
     return hash;
 }
@@ -1036,12 +1048,12 @@ constexpr uint32_t hash_rotate_x32(uint32_t x, int r) noexcept {
 }
 
 inline uint32_t MurmurHash_x32(const char* key, size_t len, uint32_t seed) noexcept {
-    const uint8_t* data = reinterpret_cast<const uint8_t*>(key);
+    const auto* data = reinterpret_cast<const uint8_t*>(key);
     const size_t nblocks = len / 4;
 
     uint32_t h1 = seed;
 
-    const uint32_t* blocks = reinterpret_cast<const uint32_t*>(data);
+    const auto* blocks = reinterpret_cast<const uint32_t*>(data);
     for (size_t i = 0; i < nblocks; ++i) {
         uint32_t k1 = blocks[i];
 
@@ -1068,6 +1080,7 @@ inline uint32_t MurmurHash_x32(const char* key, size_t len, uint32_t seed) noexc
         k1 = hash_rotate_x32(k1, 15);
         k1 *= BLOCK_MULTIPLIER32_2;
         h1 ^= k1;
+    default: break;
     }
 
     h1 ^= static_cast<uint32_t>(len);
@@ -1109,13 +1122,13 @@ constexpr uint64_t hash_mix_x64(uint64_t k) noexcept {
 // with fast speed, low collision rate and customizable seed.
 // MurmurHash_x64 is MurmurHash3 version.
 inline pair<size_t, size_t> MurmurHash_x64(const char* key, size_t len, uint32_t seed) noexcept {
-    const uint8_t* data = reinterpret_cast<const uint8_t*>(key);
+    const auto* data = reinterpret_cast<const uint8_t*>(key);
     const size_t nblocks = len / 16;
 
     uint64_t h1 = seed;
     uint64_t h2 = seed;
 
-    const uint64_t* blocks = reinterpret_cast<const uint64_t*>(data);
+    const auto* blocks = reinterpret_cast<const uint64_t*>(data);
     for (size_t i = 0; i < nblocks; i++) {
         uint64_t k1 = blocks[i * 2];
         uint64_t k2 = blocks[i * 2 + 1];
@@ -1167,7 +1180,8 @@ inline pair<size_t, size_t> MurmurHash_x64(const char* key, size_t len, uint32_t
         k1 = hash_rotate_x64(k1, 31);
         k1 *= MULTIPLIER64_2;
         h1 ^= k1;
-    };
+    default: break;
+    }
 
     h1 ^= len;
     h2 ^= len;
@@ -1195,40 +1209,47 @@ inline size_t string_hash(const char* s, size_t len, uint32_t seed) noexcept {
 #endif
 }
 
-TEMNULL__ struct hash<char*> {
+template <>
+ struct hash<char*> {
     MSTL_NODISCARD size_t operator ()(const char* str) const noexcept {
         return string_hash(str, MSTL::strlen(str), 0);
     }
 }; 
-TEMNULL__ struct hash<const char*> {
+template <>
+ struct hash<const char*> {
     MSTL_NODISCARD size_t operator ()(const char* str) const noexcept {
         return string_hash(str, MSTL::strlen(str), 0);
     }
 };
-TEMNULL__ struct hash<wchar_t*> {
-    MSTL_NODISCARD MSTL_CONSTEXPR size_t operator ()(const wchar_t* str) const noexcept {
+template <>
+ struct hash<wchar_t*> {
+    MSTL_NODISCARD size_t operator ()(const wchar_t* str) const noexcept {
         return FNV_hash(reinterpret_cast<const byte_t*>(str), sizeof(wchar_t) * char_traits<wchar_t>::length(str));
     }
 };
-TEMNULL__ struct hash<const wchar_t*> {
-    MSTL_NODISCARD MSTL_CONSTEXPR size_t operator ()(const wchar_t* str) const noexcept {
+template <>
+struct hash<const wchar_t*> {
+    MSTL_NODISCARD size_t operator ()(const wchar_t* str) const noexcept {
         return FNV_hash(reinterpret_cast<const byte_t*>(str), sizeof(wchar_t) * char_traits<wchar_t>::length(str));
     }
 };
 #define CHAR_PTR_HASH_STRUCTS__(OPT) \
-TEMNULL__ struct hash<OPT*> { \
-    MSTL_NODISCARD MSTL_CONSTEXPR size_t operator ()(const OPT* str) const noexcept { \
+template <> \
+struct hash<OPT*> { \
+    MSTL_NODISCARD size_t operator ()(const OPT* str) const noexcept { \
         return FNV_hash(reinterpret_cast<const byte_t*>(str), sizeof(OPT) * char_traits<OPT>::length(str)); \
     } \
 }; \
-TEMNULL__ struct hash<const OPT*> { \
-    MSTL_NODISCARD MSTL_CONSTEXPR size_t operator ()(const OPT* str) const noexcept { \
+template <> \
+struct hash<const OPT*> { \
+    MSTL_NODISCARD size_t operator ()(const OPT* str) const noexcept { \
         return FNV_hash(reinterpret_cast<const byte_t*>(str), sizeof(OPT) * char_traits<OPT>::length(str)); \
     } \
 };
 MSTL_MACRO_RANGES_UNICODE_CHARS(CHAR_PTR_HASH_STRUCTS__)
 
-TEMNULL__ struct hash<MSTL::string_view> {
+template <>
+struct hash<MSTL::string_view> {
     MSTL_NODISCARD size_t operator ()(const MSTL::string_view str) const noexcept {
         return string_hash(str.data(), str.size(), 0);
     }

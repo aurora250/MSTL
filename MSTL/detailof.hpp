@@ -19,14 +19,6 @@ void show_data_only(const Container& c, std::ostream& _out) {
 	_out << ']' << std::flush;
 }
 
-inline void show_data_only(const Error& e, std::ostream& _out) {
-	_out << "Exception : (" << e._type << ") " << e._info << std::flush;
-}
-inline std::ostream& operator <<(std::ostream& _out, const Error& err) {
-	show_data_only(err, _out);
-	return _out;
-}
-
 template <typename T1, typename T2>
 #ifdef MSTL_VERSION_20__
 	requires(is_printable<T1> && is_printable<T2>)

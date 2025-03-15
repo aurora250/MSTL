@@ -13,13 +13,13 @@ struct variant {
 private:
     size_t index_;
 
-    alignas(std::max({ alignof(Types)... })) char union_[std::max({ sizeof(Types)... })];
+    alignas(std::max({ alignof(Types)... })) char union_[std::max({ sizeof(Types)... })]{};
 
     using destruct_function = void(*)(char*) noexcept;
 
     static destruct_function* destructors_table() noexcept {
         static destruct_function function_ptrs[sizeof...(Types)] = {
-            [](char* union_p) noexcept {
+            [](const char* union_p) noexcept {
                 reinterpret_cast<Types*>(union_p)->~Ts();
             }...
         };
@@ -52,7 +52,7 @@ private:
 
     static move_construct_function* move_constructors_table() noexcept {
         static move_construct_function function_ptrs[sizeof...(Types)] = {
-            [](char* union_dst, char* union_src) noexcept {
+            [](char* union_dst, const char* union_src) noexcept {
                 new (union_dst) Types(MSTL::move(*reinterpret_cast<Types const*>(union_src)));
             }...
         };
@@ -63,7 +63,7 @@ private:
 
     static move_assignment_function* move_assigment_functions_table() noexcept {
         static move_assignment_function function_ptrs[sizeof...(Types)] = {
-            [](char* union_dst, char* union_src) noexcept {
+            [](char* union_dst, const char* union_src) noexcept {
                 *reinterpret_cast<Types*>(union_dst) = MSTL::move(*reinterpret_cast<Types*>(union_src));
             }...
         };
@@ -90,7 +90,7 @@ private:
     template <class Lambda>
     static visitor_function<Lambda>* visitors_table() noexcept {
         static visitor_function<Lambda> function_ptrs[sizeof...(Types)] = {
-            [](char* union_p, Lambda&& lambda) -> common_type_t<std::invoke_result_t<Lambda, Types&>...> {
+            [](const char* union_p, Lambda&& lambda) -> common_type_t<std::invoke_result_t<Lambda, Types&>...> {
                 return std::invoke(MSTL::forward<Lambda>(lambda), *reinterpret_cast<Types*>(union_p));
             }...
         };
@@ -99,7 +99,7 @@ private:
 
 public:
     template <typename T, enable_if_t<disjunction_v<is_same<T, Types>...>, int> = 0>
-    variant(T value) : index_(variant_index<variant, T>::value) {
+    explicit variant(T value) : index_(variant_index<variant, T>::value) {
         T* p = reinterpret_cast<T*>(union_);
         new (p) T(value);
     }
@@ -108,18 +108,22 @@ public:
         copy_constructors_table()[index()](union_, that.union_);
     }
 
-    variant& operator=(variant const& that) {
+    variant& operator =(variant const& that) {
+        if(MSTL::addressof(that) == this) return *this;
         index_ = that.index_;
         copy_assigment_functions_table()[index()](union_, that.union_);
+        return *this;
     }
 
-    variant(variant&& that) : index_(that.index_) {
+    variant(variant&& that) noexcept : index_(that.index_) {
         move_constructors_table()[index()](union_, that.union_);
     }
 
-    variant& operator=(variant&& that) {
+    variant& operator =(variant&& that) noexcept {
+        if(MSTL::addressof(that) == this) return *this;
         index_ = that.index_;
         move_assigment_functions_table()[index()](union_, that.union_);
+        return *this;
     }
 
     template <size_t Idx, typename... Args>
@@ -141,12 +145,11 @@ public:
         return const_visitors_table<Lambda>()[index()](union_, MSTL::forward<Lambda>(lambda));
     }
 
-    constexpr size_t index() const noexcept {
+    MSTL_NODISCARD constexpr size_t index() const noexcept {
         return index_;
     }
-
     template <typename T>
-    constexpr bool holds_alternative() const noexcept {
+    MSTL_NODISCARD constexpr bool holds_alternative() const noexcept {
         return variant_index<variant, T>::value == index();
     }
 

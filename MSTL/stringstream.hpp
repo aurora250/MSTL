@@ -22,9 +22,9 @@ public:
 	basic_stringstream(const self& str) : buffer_(str.buffer_) {}
 	basic_stringstream(self&& str) noexcept : buffer_(MSTL::move(str.buffer_)) {}
 
-	basic_stringstream(const value_type& str) : buffer_(str) {}
-	basic_stringstream(value_type&& str) noexcept : buffer_(MSTL::move(str)) {}
-	basic_stringstream(const char_type* str) : buffer_(str) {}
+	explicit basic_stringstream(const value_type& str) : buffer_(str) {}
+	explicit basic_stringstream(value_type&& str) noexcept : buffer_(MSTL::move(str)) {}
+	explicit basic_stringstream(const char_type* str) : buffer_(str) {}
 
 	~basic_stringstream() = default;
 
@@ -97,17 +97,17 @@ public:
 	}
 	template <typename T1, typename T2>
 	self& operator <<(const pair<T1, T2>& pir) {
-		(*this) << "{ " << pir.first << ", " << pir.second << " }";
+		*this << "{ " << pir.first << ", " << pir.second << " }";
 		return *this;
 	}
 	template <typename T>
 	self& operator <<(const shared_ptr<T>& ptr) {
-		(*this) << ptr.get();
+		*this << ptr.get();
 		return *this;
 	}
 	template <typename T, typename Deleter>
 	self& operator <<(const unique_ptr<T, Deleter>& ptr) {
-		(*this) << ptr.get();
+		*this << ptr.get();
 		return *this;
 	}
 };

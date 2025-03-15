@@ -188,8 +188,8 @@ template <typename Iterator1, typename Iterator2, enable_if_t<
 	is_cot_iter_v<Iterator1> && is_cot_iter_v<Iterator2>, int> = 0>
 MSTL_NODISCARD MSTL_CONSTEXPR bool __lexicographical_compare_aux(
 	Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2) {
-	const size_t len1 = static_cast<size_t>(last1 - first1);
-	const size_t len2 = static_cast<size_t>(last2 - first2);
+	const auto len1 = static_cast<size_t>(last1 - first1);
+	const auto len2 = static_cast<size_t>(last2 - first2);
 	const size_t clp = MSTL::min(len1, len2);
 
 	const int result = MSTL::memcmp(
@@ -238,13 +238,13 @@ MSTL_CONSTEXPR20 Iterator2 __copy_aux(Iterator1 first, Iterator1 last, Iterator2
 
 template <typename Iterator1, typename Iterator2, enable_if_t<is_cot_iter_v<Iterator1>, int> = 0>
 MSTL_CONSTEXPR20 Iterator2 __copy_aux(Iterator1 first, Iterator1 last, Iterator2 result) {
-	const size_t n = static_cast<size_t>(last - first);
+	const auto n = static_cast<size_t>(last - first);
 	MSTL::memmove(MSTL::addressof(*result), MSTL::addressof(*first), n * sizeof(iter_val_t<Iterator1>));
 	return result + n;
 }
 
 template <typename Iterator1, typename Iterator2, enable_if_t<
-	is_input_iter_v<Iterator1> && is_input_iter_v<Iterator2>, int> = 0>
+	is_iter_v<Iterator1> && is_iter_v<Iterator2>, int> = 0>
 MSTL_CONSTEXPR20 Iterator2 copy(Iterator1 first, Iterator1 last, Iterator2 result) {
 	return MSTL::__copy_aux(first, last, result);
 }
@@ -290,7 +290,7 @@ MSTL_CONSTEXPR20 Iterator2 __copy_backward_aux(Iterator1 first, Iterator1 last, 
 
 template <typename Iterator1, typename Iterator2, enable_if_t<is_cot_iter_v<Iterator1>, int> = 0>
 MSTL_CONSTEXPR20 Iterator2 __copy_backward_aux(Iterator1 first, Iterator1 last, Iterator2 result) {
-	const size_t n = static_cast<size_t>(last - first);
+	const auto n = static_cast<size_t>(last - first);
 	last -= n;
 	MSTL::memmove(MSTL::addressof(*result), MSTL::addressof(*first), n * sizeof(iter_val_t<Iterator1>));
 	return result;
@@ -299,7 +299,7 @@ MSTL_CONSTEXPR20 Iterator2 __copy_backward_aux(Iterator1 first, Iterator1 last, 
 template <typename Iterator1, typename Iterator2, enable_if_t<
 	is_bid_iter_v<Iterator1>&& is_bid_iter_v<Iterator2>, int> = 0>
 MSTL_CONSTEXPR20 Iterator2 copy_backward(Iterator1 first, Iterator1 last, Iterator2 result) {
-	return MSTL::__copy_aux(first, last, result);
+	return MSTL::__copy_backward_aux(first, last, result);
 }
 
 
@@ -313,7 +313,7 @@ MSTL_CONSTEXPR20 Iterator2 __move_aux(Iterator1 first, Iterator1 last, Iterator2
 
 template <typename Iterator1, typename Iterator2, enable_if_t<is_cot_iter_v<Iterator1>, int> = 0>
 MSTL_CONSTEXPR20 Iterator2 __move_aux(Iterator1 first, Iterator1 last, Iterator2 result) {
-	const size_t n = static_cast<size_t>(last - first);
+	const auto n = static_cast<size_t>(last - first);
 	MSTL::memmove(MSTL::addressof(*result), MSTL::addressof(*first), n * sizeof(iter_val_t<Iterator1>));
 	return result + n;
 }
@@ -327,15 +327,14 @@ MSTL_CONSTEXPR20 Iterator2 move(Iterator1 first, Iterator1 last, Iterator2 resul
 
 template <typename Iterator1, typename Iterator2, enable_if_t<!is_cot_iter_v<Iterator1>, int> = 0>
 MSTL_CONSTEXPR20 Iterator2 __move_backward_aux(Iterator1 first, Iterator1 last, Iterator2 result) {
-	size_t n = MSTL::distance(first, last);
-	for (; n > 0; --n)
+	for (size_t n = MSTL::distance(first, last); n > 0; --n)
 		*--result = MSTL::move(*--last);
 	return result;
 }
 
 template <typename Iterator1, typename Iterator2, enable_if_t<is_cot_iter_v<Iterator1>, int> = 0>
 MSTL_CONSTEXPR20 Iterator2 __move_backward_aux(Iterator1 first, Iterator1 last, Iterator2 result) {
-	const size_t n = static_cast<size_t>(last - first);
+	const auto n = static_cast<size_t>(last - first);
 	last -= n;
 	MSTL::memmove(MSTL::addressof(*result), MSTL::addressof(*first), n * sizeof(iter_val_t<Iterator1>));
 	return result;

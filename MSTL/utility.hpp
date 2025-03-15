@@ -30,14 +30,13 @@ using index_sequence_for = make_index_sequence<sizeof...(Types)>;
 
 template <typename T, size_t Size, enable_if_t<is_swappable<T>::value, int>>
 MSTL_CONSTEXPR void swap(T(& lh)[Size], T(& rh)[Size]) noexcept(is_nothrow_swappable<T>::value) {
-    if (&lh != &rh) {
-        T* first1 = lh;
-        T* last1 = first1 + Size;
-        T* first2 = rh;
-        for (; first1 != last1; ++first1, ++first2) {
-            MSTL::swap(*first1, *first2);
-        }
-    }
+    if (&lh == &rh) return;
+	T* first1 = lh;
+	T* last1 = first1 + Size;
+	T* first2 = rh;
+	for (; first1 != last1; ++first1, ++first2) {
+		MSTL::swap(*first1, *first2);
+	}
 }
 
 template <typename T, enable_if_t<conjunction_v<is_move_constructible<T>, is_move_assignable<T>>, int>>
@@ -56,37 +55,39 @@ MSTL_CONSTEXPR T exchange(T& val, U&& new_val) noexcept(conjunction_v<
 	return old_val;
 }
 
-// have the compile perform NRVO(Named Return Value Optimization) instead of moving it.
+
+// have to compile perform NRVO(Named Return Value Optimization) instead of moving it.
 // after C++ 11, compilers do NRVO when the following conditions are met:
 //   the function returns a class-type object and the object is a local object of the function.
 //   the function's return statement returns the local object directly.
 template <typename T, enable_if_t<is_default_constructible_v<T>, int> = 0>
+MSTL_CONSTEXPR T initialize() noexcept(is_nothrow_default_constructible_v<T>);
+
+template <typename T, enable_if_t<is_default_constructible_v<T>, int>>
 MSTL_CONSTEXPR T initialize() noexcept(is_nothrow_default_constructible_v<T>) {
 	return T();
 }
 #define INITIALIZE_BASIC_FUNCTION__(OPT) \
-	TEMNULL__ MSTL_CONSTEXPR OPT initialize<OPT>() noexcept { return static_cast<OPT>(0); }
+TEMNULL__ MSTL_CONSTEXPR OPT initialize<OPT>() noexcept { return static_cast<OPT>(0); }
+
 MSTL_MACRO_RANGE_CHARS(INITIALIZE_BASIC_FUNCTION__)
 MSTL_MACRO_RANGE_FLOAT(INITIALIZE_BASIC_FUNCTION__)
 MSTL_MACRO_RANGE_INT(INITIALIZE_BASIC_FUNCTION__)
+#undef INITIALIZE_BASIC_FUNCTION__
 
 
 inline namespace tags {
 	// construct without arguments
 	struct default_construct_tag {
-		constexpr explicit default_construct_tag() = default;
+		constexpr explicit default_construct_tag() noexcept = default;
 	};
 	// construct by arguments
 	struct exact_arg_construct_tag {
-		constexpr explicit exact_arg_construct_tag() = default;
+		constexpr explicit exact_arg_construct_tag() noexcept  = default;
 	};
-	// construct by multiple tuples or pairs
-	struct piecewise_construct_tag {
-		constexpr explicit piecewise_construct_tag() = default;
-	};
-	// construct by unpacking a tuple or pair
-	struct unpack_tuple_construct_tag {
-		constexpr explicit unpack_tuple_construct_tag() = default;
+	// construct by unpacking tuple or pair type
+	struct unpack_utility_construct_tag {
+		constexpr explicit unpack_utility_construct_tag() noexcept = default;
 	};
 }
 
@@ -102,7 +103,7 @@ public:
 	T2 value;
 
 	constexpr compressed_pair(const compressed_pair& pir) : value(pir.value) {}
-	constexpr compressed_pair(compressed_pair&& pir) : value(MSTL::move(pir.value)) {}
+	constexpr compressed_pair(compressed_pair&& pir)  noexcept : value(MSTL::move(pir.value)) {}
 
 	template <typename... Args>
 	constexpr compressed_pair(default_construct_tag, Args&&... args)
@@ -144,13 +145,13 @@ public:
 	constexpr compressed_pair(const compressed_pair& pir)
 		: no_compressed(pir.no_compressed), value(pir.value) {
 	}
-	constexpr compressed_pair(compressed_pair&& pir)
+	constexpr compressed_pair(compressed_pair&& pir) noexcept
 		: no_compressed(MSTL::move(pir.no_compressed)), value(MSTL::move(pir.value)) {
 	}
 
 	template <typename... Args>
 	constexpr compressed_pair(default_construct_tag, Args&&... args)
-		noexcept(conjunction_v<is_nothrow_default_constructible<T1>, is_nothrow_constructible<T2, Args>>)
+		noexcept(conjunction_v<is_nothrow_default_constructible<T1>, is_nothrow_constructible<T2, Args...>>)
 		: no_compressed(), value(MSTL::forward<Args>(args)...) {
 	}
 
@@ -294,7 +295,7 @@ struct pair {
 		: first(MSTL::forward<U1>(a)), second(MSTL::forward<U2>(b)) {}
 
 	template <typename U1, typename U2, enable_if_t<
-		conjunction_v<is_constructible<T1, U1>, is_constructible<T2, U2>>&&
+		conjunction_v<is_constructible<T1, U1>, is_constructible<T2, U2>> &&
 		conjunction_v<is_convertible<U1, T1>, is_convertible<U2, T2>>, int> = 0>
 	pair(U1&& a, U2&& b) noexcept(conjunction_v<
 		is_nothrow_constructible<T1, U1>, is_nothrow_constructible<T2, U2>>)
@@ -337,13 +338,13 @@ struct pair {
 		: first(MSTL::pair_get_from_tuple<Index1>(MSTL::move(t1))...),
 		second(MSTL::pair_get_from_tuple<Index2>(MSTL::move(t2))...) {}
 
-	// use pair_piecewise_construct_t to construct from tuple
+	// construct from tuple
 	template <typename... Types1, typename... Types2>
-	MSTL_CONSTEXPR pair(piecewise_construct_tag, tuple<Types1...> t1, tuple<Types2...> t2)
+	MSTL_CONSTEXPR pair(unpack_utility_construct_tag, tuple<Types1...> t1, tuple<Types2...> t2)
 		: pair(t1, t2, index_sequence_for<Types1...>{}, index_sequence_for<Types2...>{}) {}
 
 
-	// use identity_t to fasten type informations
+	// use identity_t to fasten type information
 	template <typename self = pair, enable_if_t<conjunction_v<
 		is_copy_assignable<typename self::first_type>, is_copy_assignable<typename self::second_type>>, int> = 0>
 	MSTL_CONSTEXPR pair& operator =(type_identity_t<const self&> p) noexcept(conjunction_v<
@@ -353,7 +354,7 @@ struct pair {
 		return *this;
 	}
 
-	// use identity_t to fasten type informations
+	// use identity_t to fasten type information
 	template <typename self = pair, enable_if_t<conjunction_v<
 		is_move_assignable<typename self::first_type>, is_move_assignable<typename self::second_type>>, int> = 0>
 	MSTL_CONSTEXPR pair& operator =(type_identity_t<self&&> p) noexcept(conjunction_v<
@@ -446,9 +447,8 @@ template <typename... Types>
 struct tuple_size<tuple<Types...>> : integral_constant<size_t, sizeof...(Types)> {};
 
 template <size_t Index>
-struct tuple_element<Index, tuple<>> {
-	static_assert(false, "tuple element index out of range.");
-};
+struct tuple_element<Index, tuple<>> {};
+
 template <typename This, typename... Rest>
 struct tuple_element<0, tuple<This, Rest...>> {
 	using type = This;
@@ -637,19 +637,15 @@ MSTL_CONSTEXPR20 void destroy(T* pointer) noexcept(is_nothrow_destructible_v<T>)
 }
 
 template <typename Iterator, enable_if_t<
-	is_fwd_iter_v<Iterator> && !is_trivially_destructible_v<iter_val_t<Iterator>>, int> = 0>
+	is_iter_v<Iterator> && !is_trivially_destructible_v<iter_val_t<Iterator>>, int> = 0>
 MSTL_CONSTEXPR20 void destroy(Iterator first, Iterator last)
-noexcept(is_nothrow_destructible_v<typename iterator_traits<Iterator>::value_type>) {
+noexcept(is_nothrow_destructible_v<iter_val_t<Iterator>>) {
 	for (; first < last; ++first) MSTL::destroy(&*first);
 }
 
 template <typename Iterator, enable_if_t<
-	is_fwd_iter_v<Iterator> && is_trivially_destructible_v<iter_val_t<Iterator>>, int> = 0>
+	is_iter_v<Iterator> && is_trivially_destructible_v<iter_val_t<Iterator>>, int> = 0>
 MSTL_CONSTEXPR20 void destroy(Iterator, Iterator) noexcept {}
-
-#define DESTORY_CHAR_FUNCTION__(OPT) \
-    MSTL_CONSTEXPR20 void destroy(OPT*, OPT*) noexcept {}
-MSTL_MACRO_RANGE_CHARS(DESTORY_CHAR_FUNCTION__)
 
 
 template <typename Iterator>

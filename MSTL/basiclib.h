@@ -1,7 +1,7 @@
 #ifndef MSTL_BASICLIB_H__
 #define MSTL_BASICLIB_H__
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 
 #if defined(WIN32) || defined(_WIN32) || defined(_WIN32_) || defined(_M_X86)
 	#define MSTL_PLATFORM_WINDOWS__		1
@@ -100,7 +100,7 @@
 	#define MSTL_SUPPORT_NODISCARD__		1
 #endif
 #if defined(MSTL_VERSION_17__)
-	#define MSTL_SUPPORT_IFCONSTEXPR__		1
+	#define MSTL_SUPPORT_IF_CONSTEXPR__		1
 #endif
 #if defined(MSTL_VERSION_20__)
 	#define MSTL_SUPPORT_NO_UNIQUE_ADS__	1
@@ -127,7 +127,7 @@
 
 
 // to libraries : boost / mysql
-#define MSTL_DLL_LINK__	1
+#define MSTL_DLL_LINK__	0
 
 
 #define TO_STRING(VALUE) #VALUE
@@ -164,7 +164,7 @@
 #endif // MSTL_SUPPORT_CONSTEXPR__
 
 
-#ifdef MSTL_SUPPORT_IFCONSTEXPR__
+#ifdef MSTL_SUPPORT_IF_CONSTEXPR__
 	// this macro will be used with caution, as it will break static overload.
 	#define MSTL_IF_CONSTEXPR if constexpr
 #else
@@ -174,8 +174,12 @@
 
 #ifdef MSTL_SUPPORT_NODISCARD__
 	#define MSTL_NODISCARD [[nodiscard]]
-	#define MSTL_ALLOCNODISCARD \
-		[[nodiscard("discard the return of allocators will cause memory leaks.")]]
+	#if (defined(MSTL_VERSION_20__) && defined(MSTL_COMPILE_GCC__)) || defined(MSTL_COMPILE_MSVC__)
+		#define MSTL_ALLOCNODISCARD \
+			[[nodiscard("discard the return of allocators will cause memory leaks.")]]
+	#else
+		#define MSTL_ALLOCNODISCARD MSTL_NODISCARD
+	#endif
 #else
 	#define MSTL_NODISCARD
 	#define MSTL_ALLOCNODISCARD
@@ -195,12 +199,17 @@
 
 #ifdef MSTL_SUPPORT_DEPRECATED__
 	#define MSTL_DEPRECATED [[deprecated]]
+	#if (defined(MSTL_VERSION_20__) && defined(MSTL_COMPILE_GCC__)) || defined(MSTL_COMPILE_MSVC__)
 	// after C++ 11, we can use lambda expressions to quickly build closures 
 	// instead of using functor adapters.
-	#define MSTL_FUNCADP_DEPRE \
-		[[deprecated("C++ 11 and later versions no longer use functor adapters.")]]
-	#define MSTL_TRAITS_DEPRE \
-		[[deprecated("C++ 11 and later versions no longer use iterator traits functions.")]]
+		#define MSTL_FUNCADP_DEPRE \
+			[[deprecated("C++ 11 and later versions no longer use functor adapters.")]]
+		#define MSTL_TRAITS_DEPRE \
+			[[deprecated("C++ 11 and later versions no longer use iterator traits functions.")]]
+	#else
+		#define MSTL_FUNCADP_DEPRE MSTL_DEPRECATED
+		#define MSTL_TRAITS_DEPRE MSTL_DEPRECATED
+	#endif
 #else 
 	#define MSTL_DEPRECATED
 	#define MSTL_FUNCADP_DEPRE
@@ -279,8 +288,34 @@
 	MAC(long double)
 
 
+#ifdef MSTL_COMPILE_CLANG__
+	#define MSTL_PUSH_WARNING__ clang diagnostic push
+#elif defined(MSTL_COMPILE_GCC__)
+	#define MSTL_PUSH_WARNING__ GCC diagnostic push
+#elif defined(MSTL_COMPILE_MSVC__)
+	#define MSTL_PUSH_WARNING__ warning(push)
+#endif
+
+#ifdef MSTL_COMPILE_CLANG__
+	#define MSTL_IGNORE_WARNING__(WARN) clang diagnostic ignored WARN
+#elif defined(MSTL_COMPILE_GCC__)
+	#define MSTL_IGNORE_WARNING__(WARN) GCC diagnostic ignored WARN
+#elif defined(MSTL_COMPILE_MSVC__)
+	#define MSTL_IGNORE_WARNING__(WARN) warning(disable : WARN)
+#endif
+
+#ifdef MSTL_COMPILE_CLANG__
+	#define MSTL_POP_WARNING__ clang diagnostic pop
+#elif defined(MSTL_COMPILE_GCC__)
+	#define MSTL_POP_WARNING__ GCC diagnostic pop
+#elif defined(MSTL_COMPILE_MSVC__)
+	#define MSTL_POP_WARNING__ warning(pop)
+#endif
+
+
 MSTL_BEGIN_NAMESPACE__
 
+using nullptr_t = decltype(nullptr);
 using byte_t	= unsigned char;
 
 using int8_t	= signed char;
@@ -318,7 +353,7 @@ MSTL_INLINECSP constexpr size_t MEMORY_BIG_ALLOC_THRESHHOLD = 4096ULL;
 #ifdef MSTL_STATE_DEBUG__
 MSTL_INLINECSP constexpr size_t MEMORY_NO_USER_SIZE = 2 * sizeof(void*) + MEMORY_BIG_ALLOC_ALIGN - 1;
 #else
-MSTL_INLINECSP constexpr size_t NO_USER_SIZE = sizeof(void*) + MEMORY_BIG_ALLOC_ALIGN_THRESHHOLD - 1;
+MSTL_INLINECSP constexpr size_t MEMORY_NO_USER_SIZE = sizeof(void*) + MEMORY_BIG_ALLOC_ALIGN - 1;
 #endif
 #ifdef MSTL_DATA_BUS_WIDTH_64__
 MSTL_INLINECSP constexpr size_t MEMORY_BIG_ALLOC_SENTINEL = 0xFAFAFAFAFAFAFAFAULL;
@@ -344,6 +379,9 @@ wchar_t* wmemset(wchar_t*, wchar_t, size_t);
 
 int strlen(const char*);
 int wcslen(const wchar_t*);
+#ifdef MSTL_VERSION_20__
+int u8cslen(const char8_t*);
+#endif
 
 char* strcpy(char*, const char*);
 int strcmp(const char*, const char*);

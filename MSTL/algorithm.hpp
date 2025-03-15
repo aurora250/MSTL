@@ -2,13 +2,13 @@
 #define MSTL_ALGORITHM_HPP__
 #include "numeric.hpp"
 #include "sort.hpp"
+#include <thread>
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator, typename BinaryOperation, typename Result,
     size_t Threshhold = 10, enable_if_t<is_input_iter_v<Iterator>, int> = 0>
 void reduce(Iterator first, Iterator last, BinaryOperation op, Result& res) {
-    size_t dist = MSTL::distance(first, last);
-    if (dist <= Threshhold) {
+    if (const size_t dist = MSTL::distance(first, last); dist <= Threshhold) {
         for (Iterator it = first; it != last; ++it)
             res = op(res, *it);
     }
@@ -25,8 +25,7 @@ void reduce(Iterator first, Iterator last, BinaryOperation op, Result& res) {
 template <typename Iterator, typename UnaryOperation, typename BinaryOp, typename Result,
     size_t Threshhold = 10, enable_if_t<is_input_iter_v<Iterator>, int> = 0>
 void transform_reduce(Iterator first, Iterator last, UnaryOperation transform, BinaryOp reduce, Result& res) {
-    size_t dist = MSTL::distance(first, last);
-    if (dist <= Threshhold) {
+    if (const size_t dist = MSTL::distance(first, last); dist <= Threshhold) {
         for (Iterator it = first; it != last; ++it)
             res = reduce(res, transform(*it));
     }

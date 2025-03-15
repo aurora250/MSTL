@@ -26,8 +26,7 @@ concept common_with = requires { typename common_type_t<T1, T2>; typename common
 	common_reference_t<add_lvalue_reference_t<const T1>, add_lvalue_reference_t<const T2>>>;
 
 template <typename Derived, typename Base>
-concept derived_from = is_base_of_v<Base, Derived>
-&& is_convertible_to_v<const volatile Derived*, const volatile Base*>;
+concept derived_from = is_base_of_v<Base, Derived> && convertible_to<const volatile Derived*, const volatile Base*>;
 
 
 template<typename T, typename... Args>
@@ -124,7 +123,7 @@ concept is_printable = requires(T t) {
 };
 
 template <typename T>
-concept is_detailable = requires(const T & c) {
+concept is_detailable = requires(const T& c) {
 	{ c.cbegin() } -> convertible_to<typename T::const_iterator>;
 	{ c.cend() } -> convertible_to<typename T::const_iterator>;
 	{ c.size() } -> convertible_to<size_t>;

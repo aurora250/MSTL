@@ -1,5 +1,4 @@
 #include "basiclib.h"
-#include <assert.h>
 MSTL_BEGIN_NAMESPACE__
 
 void split_line(std::ostream& out, uint32_t size, char split_type) {
@@ -119,13 +118,19 @@ wchar_t* wmemset(wchar_t* _dest, wchar_t _val, size_t _count) {
 
 int strlen(const char* _str) {
 	if (*_str != '\0') return strlen(_str + 1) + 1;
-	else return 0;
+	return 0;
 }
 
 int wcslen(const wchar_t* _str) {
 	if (*_str != L'\0') return wcslen(_str + 1) + 1;
-	else return 0;
+	return 0;
 }
+#ifdef MSTL_VERSION_20__
+int u8cslen(const char8_t* _str) {
+	if (*_str != u8'\0') return u8cslen(_str + 1) + 1;
+	return 0;
+}
+#endif
 
 char* strcpy(char* _dest, const char* _sou) {
 	char* _ret = _dest;

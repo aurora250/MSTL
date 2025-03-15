@@ -24,15 +24,15 @@ private:
     template <typename T>
     void out(const T& val) {
         if (this->check_empty(val)) return;
-        if (not this->is_compact_) sr_ += " ";
+        if (!this->is_compact_) sr_ += " ";
         using ss_t = stringstream;
         this->sr_ += static_cast<ss_t>(ss_t() << val).str();
         this->is_compact_ = false;
     }
 public:
     output(string& sr);
-    output& operator ()(void);
-    output& compact(void);
+    output& operator ()();
+    output& compact();
 
     template <typename T1, typename... T>
     output& operator()(const T1& val, const T&... args) {
@@ -47,7 +47,7 @@ struct bracket {   // ()
     bracket(output& out, const char* = nullptr) : out_(out) {
         out_("(").compact();
     }
-    ~bracket(void) {
+    ~bracket() {
         out_.compact()(")");
     }
 };
@@ -74,7 +74,7 @@ struct parameter<IsStart> {
     output& out_;
 
     parameter(output& out) : out_(out) {}
-    ~parameter(void) { bracket<IsStart> { out_ }; }
+    ~parameter() { bracket<IsStart> { out_ }; }
 };
 
 template <typename T, bool IsBase = false>
@@ -84,12 +84,8 @@ struct check {
     check(const output& out) : out_(out) {
 #if defined(MSTL_COMPILE_GNUC__)
         const char* typeid_name = typeid(T).name();
-        auto deleter = [](char* p)
-            {
-                if (p) free(p);
-            };
-        std::unique_ptr<char, decltype(deleter)> real_name
-        {
+        auto deleter = [](char* p) { if (p) free(p); };
+        std::unique_ptr<char, decltype(deleter)> real_name {
             abi::__cxa_demangle(typeid_name, nullptr, nullptr, nullptr), deleter
         };
         out_(real_name ? real_name.get() : typeid_name);
@@ -124,13 +120,14 @@ CHECK_TYPE__(const volatile)
 CHECK_TYPE__(&)
 CHECK_TYPE__(&&)
 CHECK_TYPE__(*)
+#undef CHECK_TYPE__
 
 
 template <bool IsStart, typename P1, typename... P>
 struct parameter<IsStart, P1, P...> {
     output& out_;
     parameter(output& out) : out_(out) {}
-    ~parameter(void) {
+    ~parameter() {
         [this](bracket<IsStart>&&) {
             check<P1> { out_ };
             parameter<false, P...> { out_.compact() };
@@ -166,6 +163,9 @@ CHECK_TYPE_ARRAY_CV__(N, size_t N)
 CHECK_TYPE_ARRAY__(const, , )
 CHECK_TYPE_ARRAY__(volatile, , )
 CHECK_TYPE_ARRAY__(const volatile, , )
+
+#undef CHECK_TYPE_ARRAY__
+#undef CHECK_TYPE_ARRAY_CV__
 
 template <typename T, bool IsBase, typename... P>
 struct check<T(P...), IsBase> : check<T, true> {   // function
@@ -227,6 +227,7 @@ struct at_destruct {
 CHECK_TYPE_MEM_FUNC__(const)
 CHECK_TYPE_MEM_FUNC__(volatile)
 CHECK_TYPE_MEM_FUNC__(const volatile)
+#undef CHECK_TYPE_MEM_FUNC__
 
 template <typename T>
 MSTL_CONSTEXPR string check_type() {

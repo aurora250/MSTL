@@ -112,8 +112,8 @@ __rb_tree_node_base* rb_tree_rebalance_for_erase(
     __rb_tree_node_base* z, __rb_tree_node_base*& root,
     __rb_tree_node_base*& leftmost, __rb_tree_node_base*& rightmost) noexcept {
     __rb_tree_node_base* y = z;
-    __rb_tree_node_base* x = nullptr;
-    __rb_tree_node_base* x_parent = nullptr;
+    __rb_tree_node_base* x;
+    __rb_tree_node_base* x_parent;
     if (y->left_ == nullptr) x = y->right_;
     else {
         if (y->right_ == nullptr) x = y->left_;

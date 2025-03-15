@@ -7,9 +7,9 @@ MSTL_BEGIN_NAMESPACE__
 template <typename T, typename Ref = T&, typename Ptr = T*>
 struct vector_iterator {
 #ifdef MSTL_VERSION_20__
-	using iterator_category = std::contiguous_iterator_tag;
+	using iterator_category = contiguous_iterator_tag;
 #else
-	using iterator_category = std::random_access_iterator_tag;
+	using iterator_category = random_access_iterator_tag;
 #endif // MSTL_VERSION_20__
 	using value_type		= T;
 	using pointer			= Ptr;
@@ -27,11 +27,34 @@ public:
 	MSTL_CONSTEXPR20 vector_iterator() = default;
 
 	explicit MSTL_CONSTEXPR20 vector_iterator(pointer ptr) : ptr_(ptr) {}
-	MSTL_CONSTEXPR20 vector_iterator(const iterator& x) noexcept : ptr_(x.ptr_) {}
 
-	MSTL_CONSTEXPR20 self& operator =(const self& rh) noexcept {
+	MSTL_CONSTEXPR20 vector_iterator(const iterator& x) noexcept : ptr_(x.ptr_) {}
+	MSTL_CONSTEXPR20 self& operator =(const iterator& rh) noexcept {
 		if (MSTL::addressof(rh) == this) return *this;
 		this->ptr_ = rh.ptr_;
+		return *this;
+	}
+
+	MSTL_CONSTEXPR20 vector_iterator(iterator&& x) noexcept : ptr_(x.ptr_) { x.ptr_ = nullptr; }
+	MSTL_CONSTEXPR20 self& operator =(iterator&& rh) noexcept {
+		if (MSTL::addressof(rh) == this) return *this;
+		this->ptr_ = rh.ptr_;
+		rh.ptr_ = nullptr;
+		return *this;
+	}
+
+	MSTL_CONSTEXPR20 vector_iterator(const const_iterator& x) noexcept : ptr_(x.ptr_) {}
+	MSTL_CONSTEXPR20 self& operator =(const const_iterator& rh) noexcept {
+		if (MSTL::addressof(rh) == this) return *this;
+		this->ptr_ = rh.ptr_;
+		return *this;
+	}
+
+	MSTL_CONSTEXPR20 vector_iterator(const_iterator&& x) noexcept : ptr_(x.ptr_) { x.ptr_ = nullptr; }
+	MSTL_CONSTEXPR20 self& operator =(const_iterator&& rh) noexcept {
+		if (MSTL::addressof(rh) == this) return *this;
+		this->ptr_ = rh.ptr_;
+		rh.ptr_ = nullptr;
 		return *this;
 	}
 
@@ -132,12 +155,12 @@ private:
 	pointer finish_ = nullptr;
 	compressed_pair<allocator_type, pointer> pair_{ default_construct_tag{}, nullptr };
 
-	MSTL_CONSTEXPR20 void range_check(size_type position) const noexcept {
+	MSTL_CONSTEXPR20 void range_check(const size_type position) const noexcept {
 		MSTL_DEBUG_VERIFY__(
 			position < static_cast<size_type>(finish_ - start_), "vector index out of ranges."
 		);
 	}
-	MSTL_CONSTEXPR20 void range_check(iterator position) const noexcept {
+	MSTL_CONSTEXPR20 void range_check(const iterator& position) const noexcept {
 		MSTL_DEBUG_VERIFY__(
 			&*position >= start_ && &*position <= finish_, "vector index out of ranges."
 		);
@@ -163,7 +186,7 @@ private:
 	}
 
 	template <typename Iterator, enable_if_t<
-		is_input_iter_v<Iterator> && !is_fwd_iter_v<Iterator>, int> = 0>
+		is_iter_v<Iterator> && !is_fwd_iter_v<Iterator>, int> = 0>
 	MSTL_CONSTEXPR20 void range_initialize(Iterator first, Iterator last) {
 		for (; first != last; ++first)
 			push_back(*first);
@@ -184,9 +207,9 @@ private:
 	MSTL_CONSTEXPR20 void range_insert(iterator position, Iterator first, Iterator last) {
 		range_check(position);
 		if (first == last) return;
-		size_t n = MSTL::distance(first, last);
-		if (size_t(pair_.value - finish_) >= n) {
-			const size_t elems_after = size_t(end() - position);
+		const size_t n = MSTL::distance(first, last);
+		if (static_cast<size_t>(pair_.value - finish_) >= n) {
+			const auto elems_after = static_cast<size_t>(end() - position);
 			iterator old_finish = end();
 			if (elems_after > n) {
 				MSTL::uninitialized_copy(finish_ - n, finish_, finish_);
@@ -222,12 +245,11 @@ private:
 
 	template <typename Iterator, enable_if_t<!is_fwd_iter_v<Iterator>, int> = 0>
 	MSTL_CONSTEXPR20 void assign_aux(Iterator first, Iterator last) {
-		size_t n = MSTL::distance(first, last);
+		const size_t n = MSTL::distance(first, last);
 		MSTL_DEBUG_VERIFY__(n >= 0, "vector assign out of ranges.");
 		pointer cur = start_;
 		for (; first != last && cur != finish_; ++first, ++cur)
 			*cur = *first;
-
 		if (first == last)
 			erase(cur, finish_);
 		else
@@ -235,7 +257,7 @@ private:
 	}
 	template <typename Iterator, enable_if_t<is_fwd_iter_v<Iterator>, int> = 0>
 	MSTL_CONSTEXPR20 void assign_aux(Iterator first, Iterator last) {
-		size_t n = MSTL::distance(first, last);
+		const size_t n = MSTL::distance(first, last);
 		MSTL_DEBUG_VERIFY__(n >= 0, "vector assign out of ranges.");
 		if (n > capacity()) {
 			clear();
@@ -261,25 +283,25 @@ public:
 		pair_.value = finish_;
 	}
 
-	MSTL_CONSTEXPR20 explicit vector(size_type n) {
+	MSTL_CONSTEXPR20 explicit vector(const size_type n) {
 		(fill_initialize)(n, T());
 	}
-	MSTL_CONSTEXPR20 explicit vector(size_type n, const T& value) {
+	MSTL_CONSTEXPR20 explicit vector(const size_type n, const T& value) {
 		(fill_initialize)(n, value);
 	}
-	MSTL_CONSTEXPR20 explicit vector(int n, const T& value) {
+	MSTL_CONSTEXPR20 explicit vector(const int n, const T& value) {
 		(fill_initialize)(n, value);
 	}
-	MSTL_CONSTEXPR20 explicit vector(long n, const T& value) {
+	MSTL_CONSTEXPR20 explicit vector(const long n, const T& value) {
 		(fill_initialize)(n, value);
 	}
-	MSTL_CONSTEXPR20 explicit vector(size_type n, T&& value) {
+	MSTL_CONSTEXPR20 explicit vector(const size_type n, T&& value) {
 		(fill_initialize)(n, MSTL::forward<T>(value));
 	}
-	MSTL_CONSTEXPR20 explicit vector(int n, T&& value) {
+	MSTL_CONSTEXPR20 explicit vector(const int n, T&& value) {
 		(fill_initialize)(n, MSTL::forward<T>(value));
 	}
-	MSTL_CONSTEXPR20 explicit vector(long n, T&& value) {
+	MSTL_CONSTEXPR20 explicit vector(const long n, T&& value) {
 		(fill_initialize)(n, MSTL::forward<T>(value));
 	}
 
@@ -288,17 +310,16 @@ public:
 		finish_ = start_ + (x.cend() - x.cbegin());
 		pair_.value = finish_;
 	}
-
 	MSTL_CONSTEXPR20 self& operator =(const self& x) {
 		if (MSTL::addressof(x) == this) return *this;
 		clear();
 		insert(end(), x.cbegin(), x.cend());
+		return *this;
 	}
 
 	MSTL_CONSTEXPR20 vector(self&& x) noexcept {
 		swap(x);
 	}
-
 	MSTL_CONSTEXPR20 self& operator =(self&& x) noexcept {
 		if (MSTL::addressof(x) == this) return *this;
 		clear();
@@ -402,7 +423,7 @@ public:
 		return *(finish_ - 1);
 	}
 
-	MSTL_CONSTEXPR20 void reserve(size_type n) {
+	MSTL_CONSTEXPR20 void reserve(const size_type n) {
 		MSTL_DEBUG_VERIFY__(n < max_size(), "vector reserve out of allocate bounds.");
 		if (capacity() >= n) return;
 		size_type new_capacity = MSTL::max(capacity() * 2, n);
@@ -419,7 +440,7 @@ public:
 		if (new_size < size()) erase(begin() + new_size, end());
 		else insert(end(), new_size - size(), x);
 	}
-	MSTL_CONSTEXPR20 void resize(size_type new_size) {
+	MSTL_CONSTEXPR20 void resize(const size_type new_size) {
 		resize(new_size, T());
 	}
 
@@ -436,8 +457,7 @@ public:
 		const size_type old_size = size();
 		const size_type len = old_size != 0 ? 2 * old_size : 1;
 		pointer new_start = pair_.get_base().allocate(len);
-		pointer new_finish = new_start;
-		new_finish = MSTL::uninitialized_copy(start_, &*position, new_start);
+		pointer new_finish = MSTL::uninitialized_copy(start_, &*position, new_start);
 		MSTL::construct(new_finish, MSTL::forward<U>(args)...);
 		++new_finish;
 		new_finish = MSTL::uninitialized_copy(&*position, finish_, new_finish);
@@ -522,7 +542,7 @@ public:
 	MSTL_CONSTEXPR20 void insert(iterator position, size_type n, const T& x) {
 		range_check(position);
 		if (n == 0) return;
-		if (size_type(pair_.value - finish_) >= n) {
+		if (static_cast<size_type>(pair_.value - finish_) >= n) {
 			const size_type elems_after = finish_ - (&*position);
 			pointer old_finish = finish_;
 			if (elems_after > n) {
@@ -567,7 +587,7 @@ public:
 	MSTL_CONSTEXPR20 iterator erase(iterator position)
 		noexcept(is_nothrow_move_assignable_v<value_type>) {
 		range_check(position);
-		if ((position + 1) != end()) 
+		if (position + 1 != end())
 			MSTL::copy(position + 1, end(), position);
 		--finish_;
 		MSTL::destroy(finish_);
@@ -580,22 +600,20 @@ public:
 		if (MSTL::addressof(x) == this) return;
 		MSTL::swap(start_, x.start_);
 		MSTL::swap(finish_, x.finish_);
-		MSTL::swap(pair_, x.pair_);
+		pair_.swap(x.pair_);
 	}
 
-	MSTL_NODISCARD MSTL_CONSTEXPR20 const_reference at(size_type position) const {
+	MSTL_NODISCARD MSTL_CONSTEXPR20 const_reference at(const size_type position) const {
 		range_check(position);
 		return *(start_ + position);
 	}
-	MSTL_NODISCARD MSTL_CONSTEXPR20 reference at(size_type position) {
-		return const_cast<reference>(
-			static_cast<const self*>(this)->at(position)
-			);
+	MSTL_NODISCARD MSTL_CONSTEXPR20 reference at(const size_type position) {
+		return const_cast<reference>(static_cast<const self*>(this)->at(position));
 	}
-	MSTL_NODISCARD MSTL_CONSTEXPR20 const_reference operator [](size_type position) const {
+	MSTL_NODISCARD MSTL_CONSTEXPR20 const_reference operator [](const size_type position) const {
 		return this->at(position);
 	}
-	MSTL_NODISCARD MSTL_CONSTEXPR20 reference operator [](size_type position) {
+	MSTL_NODISCARD MSTL_CONSTEXPR20 reference operator [](const size_type position) {
 		return this->at(position);
 	}
 };

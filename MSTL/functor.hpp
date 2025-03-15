@@ -4,27 +4,31 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Arg, typename Result>
-struct unary_function {
-	typedef Arg		argument_type;
-	typedef Result  result_type;
+struct MSTL_FUNCADP_DEPRE unary_function {
+	using argument_type = Arg;
+	using result_type	= Result;
 };
 template <typename Arg1, typename Arg2, typename Result>
-struct binary_function {
-	typedef Arg1	first_argument_type;
-	typedef Arg2	second_argument_type;
-	typedef Result  result_type;
+struct MSTL_FUNCADP_DEPRE binary_function {
+	using first_argument_type	= Arg1;
+	using second_argument_type	= Arg2;
+	using result_type			= Result;
 };
 
-//arithmetic:
 
 template <typename T = void>
-struct plus : public binary_function<T, T, T> {
+struct plus {
+	using first_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using second_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using result_type MSTL_FUNCADP_DEPRE			= T;
+
 	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const
 		noexcept(noexcept(MSTL::declcopy<T>(x + y))) {
 		return x + y;
 	}
 };
-TEMNULL__ 
+
+template <>
 struct plus<void> {
 	template <typename T1, typename T2>
 	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
@@ -34,13 +38,18 @@ struct plus<void> {
 };
 
 template <typename T = void>
-struct minus : public binary_function<T, T, T> {
+struct minus {
+	using first_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using second_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using result_type MSTL_FUNCADP_DEPRE			= T;
+
 	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const 
 		noexcept(noexcept(MSTL::declcopy<T>(x - y))) {
 		return x - y;
 	}
 };
-TEMNULL__
+
+template <>
 struct minus<void> {
 	template <typename T1, typename T2>
 	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
@@ -50,13 +59,18 @@ struct minus<void> {
 };
 
 template <typename T = void>
-struct multiplies : public binary_function<T, T, T> {
+struct multiplies {
+	using first_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using second_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using result_type MSTL_FUNCADP_DEPRE			= T;
+
 	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const 
 		noexcept(noexcept(MSTL::declcopy<T>(x * y))) {
 		return x * y;
 	}
 };
-TEMNULL__
+
+template <>
 struct multiplies<void> {
 	template <typename T1, typename T2>
 	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
@@ -66,13 +80,18 @@ struct multiplies<void> {
 };
 
 template <typename T = void>
-struct divides : public binary_function<T, T, T> {
+struct divides {
+	using first_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using second_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using result_type MSTL_FUNCADP_DEPRE			= T;
+
 	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const
 		noexcept(noexcept(MSTL::declcopy<T>(x / y))) {
 		return x / y;
 	}
 };
-TEMNULL__
+
+template <>
 struct divides<void> {
 	template <typename T1, typename T2>
 	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
@@ -82,13 +101,18 @@ struct divides<void> {
 };
 
 template <typename T = void>
-struct modulus : public binary_function<T, T, T> {
+struct modulus {
+	using first_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using second_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using result_type MSTL_FUNCADP_DEPRE			= T;
+
 	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x, const T& y) const
 		noexcept(noexcept(MSTL::declcopy<T>(x % y))) {
 		return x % y;
 	}
 };
-TEMNULL__
+
+template <>
 struct modulus<void> {
 	template <typename T1, typename T2>
 	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
@@ -98,13 +122,17 @@ struct modulus<void> {
 };
 
 template <typename T = void>
-struct negate : public unary_function<T, T> {
+struct negate {
+	using argument_type MSTL_FUNCADP_DEPRE	= T;
+	using result_type MSTL_FUNCADP_DEPRE	= T;
+
 	MSTL_NODISCARD MSTL_CONSTEXPR T operator()(const T& x) const
 		noexcept(noexcept(MSTL::declcopy<T>(-x))) {
 		return -x;
 	}
 };
-TEMNULL__
+
+template <>
 struct negate<void> {
 	template <typename T1>
 	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x) const
@@ -113,16 +141,20 @@ struct negate<void> {
 	}
 };
 
-//relational:
 
 template <typename T = void>
-struct equal_to : public binary_function<T, T, bool> {
+struct equal_to {
+	using first_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using second_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using result_type MSTL_FUNCADP_DEPRE			= bool;
+
 	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const 
 		noexcept(noexcept(MSTL::declcopy<bool>(x == y))) {
 		return x == y;
 	}
 };
-TEMNULL__
+
+template <>
 struct equal_to<void> {
 	template <typename T1, typename T2>
 	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
@@ -132,13 +164,18 @@ struct equal_to<void> {
 };
 
 template <typename T = void>
-struct not_equal_to : public binary_function<T, T, bool> {
+struct not_equal_to {
+	using first_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using second_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using result_type MSTL_FUNCADP_DEPRE			= bool;
+
 	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const
 		noexcept(noexcept(MSTL::declcopy<bool>(x != y))) {
 		return x != y;
 	}
 };
-TEMNULL__
+
+template <>
 struct not_equal_to<void> {
 	template <typename T1, typename T2>
 	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
@@ -148,13 +185,18 @@ struct not_equal_to<void> {
 };
 
 template <typename T = void>
-struct greater : public binary_function<T, T, bool> {
+struct greater {
+	using first_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using second_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using result_type MSTL_FUNCADP_DEPRE			= bool;
+
 	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const
 		noexcept(noexcept(MSTL::declcopy<bool>(x > y))) {
 		return x > y;
 	}
 };
-TEMNULL__
+
+template <>
 struct greater<void> {
 	template <typename T1, typename T2>
 	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
@@ -164,13 +206,18 @@ struct greater<void> {
 };
 
 template <typename T = void>
-struct less : public binary_function<T, T, bool> {
+struct less {
+	using first_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using second_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using result_type MSTL_FUNCADP_DEPRE			= bool;
+
 	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const
 		noexcept(noexcept(MSTL::declcopy<bool>(x < y))) {
 		return x < y;
 	}
 };
-TEMNULL__
+
+template <>
 struct less<void> {
 	template <typename T1, typename T2>
 	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
@@ -180,13 +227,18 @@ struct less<void> {
 };
 
 template <typename T = void>
-struct greater_equal : public binary_function<T, T, bool> {
+struct greater_equal {
+	using first_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using second_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using result_type MSTL_FUNCADP_DEPRE			= bool;
+
 	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const
 		noexcept(noexcept(MSTL::declcopy<bool>(x >= y))) {
 		return x >= y;
 	}
 };
-TEMNULL__
+
+template <>
 struct greater_equal<void> {
 	template <typename T1, typename T2>
 	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
@@ -196,13 +248,18 @@ struct greater_equal<void> {
 };
 
 template <typename T = void>
-struct less_equal : public binary_function<T, T, bool> {
+struct less_equal {
+	using first_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using second_argument_type MSTL_FUNCADP_DEPRE	= T;
+	using result_type MSTL_FUNCADP_DEPRE			= bool;
+
 	MSTL_NODISCARD MSTL_CONSTEXPR bool operator()(const T& x, const T& y) const
 		noexcept(noexcept(MSTL::declcopy<bool>(x <= y))) {
 		return x <= y;
 	}
 };
-TEMNULL__
+
+template <>
 struct less_equal<void> {
 	template <typename T1, typename T2>
 	MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator()(T1&& x, T2&& y) const
@@ -211,21 +268,24 @@ struct less_equal<void> {
 	}
 };
 
-//others:
 
 template <typename T>
-struct identity : public unary_function<T, T> {
+struct identity {
 	template <typename U = T>
 	MSTL_NODISCARD MSTL_CONSTEXPR U&& operator()(U&& x) const noexcept {
 		return MSTL::forward<U>(x);
 	}
 };
 
+
 template <typename Pair>
-struct select1st : public unary_function<Pair, typename Pair::first_type> {
+struct select1st {
 #ifdef MSTL_VERSION_20__
 	static_assert(is_pair_v<Pair>, "select1st requires pair type.");
 #endif // MSTL_VERSION_20__
+
+	using argument_type MSTL_FUNCADP_DEPRE	= Pair;
+	using result_type MSTL_FUNCADP_DEPRE	= typename Pair::first_type;
 
 	MSTL_NODISCARD MSTL_CONSTEXPR const typename Pair::first_type& 
 		operator()(const Pair& x) const noexcept {
@@ -234,10 +294,13 @@ struct select1st : public unary_function<Pair, typename Pair::first_type> {
 };
 
 template <typename Pair>
-struct select2nd : public unary_function<Pair, typename Pair::second_type> {
+struct select2nd {
 #ifdef MSTL_VERSION_20__
 	static_assert(is_pair_v<Pair>, "select2nd requires pair type.");
 #endif // MSTL_VERSION_20__
+
+	using argument_type MSTL_FUNCADP_DEPRE	= Pair;
+	using result_type MSTL_FUNCADP_DEPRE	= typename Pair::second_type;
 
 	MSTL_NODISCARD MSTL_CONSTEXPR const typename Pair::second_type&
 		operator()(const Pair& x) const noexcept {
@@ -246,14 +309,27 @@ struct select2nd : public unary_function<Pair, typename Pair::second_type> {
 };
 
 
-// not:
+#ifdef MSTL_COMPILE_CLANG__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(MSTL_COMPILE_GCC__)
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(MSTL_COMPILE_MSVC__)
+#pragma warning(push)
+#pragma warning(disable: 4996)
+#endif
+
 template <typename Predicate>
-class unary_negate : public unary_function<typename Predicate::argument_type, bool> {
+class MSTL_FUNCADP_DEPRE unary_negate {
 protected:
 	Predicate pred;
+
 public:
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR explicit unary_negate(const Predicate& x) : pred(x) {}
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR bool operator ()(const typename Predicate::argument_type& x) const {
+	using argument_type MSTL_FUNCADP_DEPRE	= typename Predicate::argument_type;
+	using result_type MSTL_FUNCADP_DEPRE	= bool;
+
+	MSTL_CONSTEXPR explicit unary_negate(const Predicate& x) : pred(x) {}
+	MSTL_CONSTEXPR bool operator ()(const typename Predicate::argument_type& x) const {
 		return !pred(x);
 	}
 };
@@ -263,14 +339,17 @@ MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR unary_negate<Predicate> not1(const Predicate& 
 }
 
 template <typename Predicate>
-class binary_negate :
-	public binary_function<typename Predicate::first_argument_type,
-	typename Predicate::second_argument_type, bool> {
+class MSTL_FUNCADP_DEPRE binary_negate {
 protected:
 	Predicate pred;
+
 public:
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR explicit binary_negate(const Predicate& x) : pred(x) {}
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR bool operator ()(const typename Predicate::first_argument_type& x,
+	using first_argument_type MSTL_FUNCADP_DEPRE	= typename Predicate::first_argument_type;
+	using second_argument_type MSTL_FUNCADP_DEPRE	= typename Predicate::second_argument_type;
+	using result_type MSTL_FUNCADP_DEPRE			= bool;
+
+	MSTL_CONSTEXPR explicit binary_negate(const Predicate& x) : pred(x) {}
+	MSTL_CONSTEXPR bool operator ()(const typename Predicate::first_argument_type& x,
 		const typename Predicate::second_argument_type& y) const {
 		return !pred(x, y);
 	}
@@ -280,18 +359,20 @@ MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR binary_negate<Predicate> not2(const Predicate&
 	return binary_negate<Predicate>(pred);
 }
 
-// bind:
 template <typename Operation>
-class binder1st :
-	public unary_function<typename Operation::second_argument_type, typename Operation::result_type> {
+class MSTL_FUNCADP_DEPRE binder1st {
 protected:
 	Operation op;
 	typename Operation::first_argument_type value;
+
 public:
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR explicit binder1st(
+	using argument_type MSTL_FUNCADP_DEPRE	= typename Operation::second_argument_type;
+	using result_type MSTL_FUNCADP_DEPRE	= typename Operation::result_type;
+
+	MSTL_CONSTEXPR explicit binder1st(
 		const Operation x, const typename Operation::first_argument_type& y) : op(x), value(y) {
 	}
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR typename Operation::result_type operator ()(
+	MSTL_CONSTEXPR typename Operation::result_type operator ()(
 		const typename Operation::second_argument_type& x) {
 		return op(value, x);
 	}
@@ -302,16 +383,19 @@ MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR binder1st<Operation> bind1st(const Operation& 
 }
 
 template <class Operation>
-class binder2nd :
-	public unary_function<typename Operation::first_argument_type, typename Operation::result_type> {
+class MSTL_FUNCADP_DEPRE binder2nd {
 protected:
 	Operation op;
 	typename Operation::second_argument_type value;
+
 public:
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR explicit binder2nd(
+	using argument_type MSTL_FUNCADP_DEPRE	= typename Operation::first_argument_type;
+	using result_type MSTL_FUNCADP_DEPRE	= typename Operation::result_type;
+
+	MSTL_CONSTEXPR explicit binder2nd(
 		const Operation& x, const typename Operation::second_argument_type& y) : op(x), value(y) {
 	}
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR typename Operation::result_type operator()(
+	MSTL_CONSTEXPR typename Operation::result_type operator()(
 		const typename Operation::first_argument_type& x) const {
 		return op(x, value);
 	}
@@ -321,18 +405,21 @@ MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR binder2nd<Operation> bind2nd(const Operation& 
 	return binder2nd<Operation>(op, typename Operation::second_argument_type(x));
 }
 
-// compose:
+
 template <class Operation1, class Operation2>
-class unary_compose :
-	public unary_function<typename Operation2::argument_type, typename Operation1::result_type> {
+class MSTL_FUNCADP_DEPRE unary_compose {
 protected:
 	Operation1 op1;
 	Operation2 op2;
+
 public:
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR explicit unary_compose(
+	using argument_type MSTL_FUNCADP_DEPRE	= typename Operation2::argument_type;
+	using result_type MSTL_FUNCADP_DEPRE	= typename Operation1::result_type;
+
+	MSTL_CONSTEXPR explicit unary_compose(
 		const Operation1& x, const Operation2& y) : op1(x), op2(y) {
 	}
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR typename Operation1::result_type operator()(
+	MSTL_CONSTEXPR typename Operation1::result_type operator()(
 		const typename Operation2::argument_type& x) const {
 		return op1(op2(x));
 	}
@@ -344,18 +431,21 @@ MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR unary_compose<Operation1, Operation2> compose1
 }
 
 template <class Operation1, class Operation2, class Operation3>
-class binary_compose
-	: public unary_function<typename Operation2::argument_type, typename Operation1::result_type> {
+class MSTL_FUNCADP_DEPRE binary_compose {
 protected:
 	Operation1 op1;
 	Operation2 op2;
 	Operation3 op3;
+
 public:
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR explicit binary_compose(
+	using argument_type MSTL_FUNCADP_DEPRE	= typename Operation2::argument_type;
+	using result_type MSTL_FUNCADP_DEPRE	= typename Operation1::result_type;
+
+	MSTL_CONSTEXPR explicit binary_compose(
 		const Operation1& x, const Operation2& y, const Operation3& z) :
 		op1(x), op2(y), op3(z) {
 	}
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR typename Operation1::result_type operator()(
+	MSTL_CONSTEXPR typename Operation1::result_type operator()(
 		const typename Operation2::argument_type& x) const {
 		return op1(op2(x), op3(x));
 	}
@@ -367,17 +457,21 @@ compose2(const Operation1& op1, const Operation2& op2, const Operation3& op3) {
 	return binary_compose<Operation1, Operation2, Operation3>(op1, op2, op3);
 }
 
-// pointer_function:
+
 template <class Arg, class Result>
-class pointer_to_unary_function : public unary_function<Arg, Result> {
+class MSTL_FUNCADP_DEPRE pointer_to_unary_function {
 protected:
 	Result(*ptr)(Arg);
+
 public:
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR pointer_to_unary_function() : ptr(nullptr) {}
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR explicit pointer_to_unary_function(Result(*x)(Arg)) : ptr(x) {}
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR Result operator()(Arg x) const {
+	using argument_type MSTL_FUNCADP_DEPRE	= Arg;
+	using result_type MSTL_FUNCADP_DEPRE	= Result;
+
+	MSTL_CONSTEXPR pointer_to_unary_function() : ptr(nullptr) {}
+	MSTL_CONSTEXPR explicit pointer_to_unary_function(Result(*x)(Arg)) : ptr(x) {}
+	MSTL_CONSTEXPR Result operator()(Arg x) const {
 		if (ptr == nullptr) return Result();
-		else return ptr(x);
+		return ptr(x);
 	}
 };
 template <class Arg, class Result>
@@ -386,15 +480,20 @@ MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR pointer_to_unary_function<Arg, Result> ptr_fun
 }
 
 template <class Arg1, class Arg2, class Result>
-class pointer_to_binary_function : public binary_function<Arg1, Arg2, Result> {
+class MSTL_FUNCADP_DEPRE pointer_to_binary_function {
 protected:
-	Result(*ptr)(Arg1, Arg2);
+	Result(* ptr)(Arg1, Arg2);
+
 public:
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR pointer_to_binary_function() : ptr(nullptr) {}
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR explicit pointer_to_binary_function(Result(*x)(Arg1, Arg2)) : ptr(x) {}
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR Result operator()(Arg1 x, Arg2 y) const {
+	using first_argument_type MSTL_FUNCADP_DEPRE	= Arg1;
+	using second_argument_type MSTL_FUNCADP_DEPRE	= Arg2;
+	using result_type MSTL_FUNCADP_DEPRE			= Result;
+
+	MSTL_CONSTEXPR pointer_to_binary_function() : ptr(nullptr) {}
+	MSTL_CONSTEXPR explicit pointer_to_binary_function(Result(*x)(Arg1, Arg2)) : ptr(x) {}
+	MSTL_CONSTEXPR Result operator()(Arg1 x, Arg2 y) const {
 		if (ptr == nullptr) return Result();
-		else return ptr(x, y);
+		return ptr(x, y);
 	}
 };
 template <class Arg1, class Arg2, class Result>
@@ -403,14 +502,17 @@ ptr_fun(Result(*x)(Arg1, Arg2)) {
 	return pointer_to_binary_function<Arg1, Arg2, Result>(x);
 }
 
-// member_function:
 template <class S, class T>
-class mem_fun_t : public unary_function<T*, S> {
-public:
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR explicit mem_fun_t(S(T::* pf)()) : f(pf) {}
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR S operator ()(T* p) const { return (p->*f)(); }
-private:
+class MSTL_FUNCADP_DEPRE mem_fun_t {
+protected:
 	S(T::* f)();
+
+public:
+	using argument_type MSTL_FUNCADP_DEPRE	= T*;
+	using result_type MSTL_FUNCADP_DEPRE	= S;
+
+	MSTL_CONSTEXPR explicit mem_fun_t(S(T::* pf)()) : f(pf) {}
+	MSTL_CONSTEXPR S operator ()(T* p) const { return (p->*f)(); }
 };
 template <class S, class T>
 MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR mem_fun_t<S, T> mem_fun(S(T::* f)()) {
@@ -418,12 +520,16 @@ MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR mem_fun_t<S, T> mem_fun(S(T::* f)()) {
 }
 
 template <class S, class T>
-class const_mem_fun_t : public unary_function<const T*, S> {
-public:
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR explicit const_mem_fun_t(S(T::* pf)() const) : f(pf) {}
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR S operator ()(const T* p) const { return (p->*f)(); }
-private:
+class MSTL_FUNCADP_DEPRE const_mem_fun_t {
+protected:
 	S(T::* f)() const;
+
+public:
+	using argument_type MSTL_FUNCADP_DEPRE	= const T*;
+	using result_type MSTL_FUNCADP_DEPRE	= S;
+
+	MSTL_CONSTEXPR explicit const_mem_fun_t(S(T::* pf)() const) : f(pf) {}
+	MSTL_CONSTEXPR S operator ()(const T* p) const { return (p->*f)(); }
 };
 template <class S, class T>
 MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR const_mem_fun_t<S, T> mem_fun(S(T::* f)() const) {
@@ -431,12 +537,16 @@ MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR const_mem_fun_t<S, T> mem_fun(S(T::* f)() cons
 }
 
 template <class S, class T>
-class mem_fun_ref_t : public unary_function<T, S> {
-public:
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR explicit mem_fun_ref_t(S(T::* pf)()) : f(pf) {}
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR S operator ()(T& r) const { return (r.*f)(); }
-private:
+class MSTL_FUNCADP_DEPRE mem_fun_ref_t {
+protected:
 	S(T::* f)();
+
+public:
+	using argument_type MSTL_FUNCADP_DEPRE	= T&;
+	using result_type MSTL_FUNCADP_DEPRE	= S;
+
+	MSTL_CONSTEXPR explicit mem_fun_ref_t(S(T::* pf)()) : f(pf) {}
+	MSTL_CONSTEXPR S operator ()(T& r) const { return (r.*f)(); }
 };
 template <class S, class T>
 MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR mem_fun_ref_t<S, T> mem_fun_ref(S(T::* f)()) {
@@ -444,12 +554,16 @@ MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR mem_fun_ref_t<S, T> mem_fun_ref(S(T::* f)()) {
 }
 
 template <class S, class T>
-class const_mem_fun_ref_t : public unary_function<T, S> {
-public:
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR explicit const_mem_fun_ref_t(S(T::* pf)() const) : f(pf) {}
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR S operator ()(const T& r) const { return (r.*f)(); }
-private:
+class MSTL_FUNCADP_DEPRE const_mem_fun_ref_t {
+protected:
 	S(T::* f)() const;
+
+public:
+	using argument_type MSTL_FUNCADP_DEPRE	= const T&;
+	using result_type MSTL_FUNCADP_DEPRE	= S;
+
+	MSTL_CONSTEXPR explicit const_mem_fun_ref_t(S(T::* pf)() const) : f(pf) {}
+	MSTL_CONSTEXPR S operator ()(const T& r) const { return (r.*f)(); }
 };
 template <class S, class T>
 MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR const_mem_fun_ref_t<S, T> mem_fun_ref(S(T::* f)() const) {
@@ -457,12 +571,17 @@ MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR const_mem_fun_ref_t<S, T> mem_fun_ref(S(T::* f
 }
 
 template <class S, class T, class A>
-class mem_fun1_t : public binary_function<T*, A, S> {
-public:
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR explicit mem_fun1_t(S(T::* pf)(A)) : f(pf) {}
-	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR S operator()(T* p, A x) const { return (p->*f)(x); }
-private:
+class MSTL_FUNCADP_DEPRE mem_fun1_t {
+protected:
 	S(T::* f)(A);
+
+public:
+	using first_argument_type MSTL_FUNCADP_DEPRE	= T*;
+	using second_argument_type MSTL_FUNCADP_DEPRE	= A;
+	using result_type MSTL_FUNCADP_DEPRE			= S;
+
+	MSTL_CONSTEXPR explicit mem_fun1_t(S(T::* pf)(A)) : f(pf) {}
+	MSTL_CONSTEXPR S operator()(T* p, A x) const { return (p->*f)(x); }
 };
 template <class S, class T, class A>
 MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR mem_fun1_t<S, T, A> mem_fun1(S(T::* f)(A)) {
@@ -470,12 +589,17 @@ MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR mem_fun1_t<S, T, A> mem_fun1(S(T::* f)(A)) {
 }
 
 template <class S, class T, class A>
-class const_mem_fun1_t : public binary_function<const T*, A, S> {
+class MSTL_FUNCADP_DEPRE const_mem_fun1_t {
+protected:
+	S(T::* f)(A) const;
+
 public:
+	using first_argument_type MSTL_FUNCADP_DEPRE	= const T*;
+	using second_argument_type MSTL_FUNCADP_DEPRE	= A;
+	using result_type MSTL_FUNCADP_DEPRE			= S;
+
 	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR explicit const_mem_fun1_t(S(T::* pf)(A) const) : f(pf) {}
 	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR S operator()(const T* p, A x) const { return (p->*f)(x); }
-private:
-	S(T::* f)(A) const;
 };
 template <class S, class T, class A>
 MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR const_mem_fun1_t<S, T, A> mem_fun1(S(T::* f)(A) const) {
@@ -484,11 +608,16 @@ MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR const_mem_fun1_t<S, T, A> mem_fun1(S(T::* f)(A
 
 template <class S, class T, class A>
 class mem_fun1_ref_t : public binary_function<T, A, S> {
+protected:
+	S(T::* f)(A);
+
 public:
+	using first_argument_type MSTL_FUNCADP_DEPRE	= T&;
+	using second_argument_type MSTL_FUNCADP_DEPRE	= A;
+	using result_type MSTL_FUNCADP_DEPRE			= S;
+
 	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR explicit mem_fun1_ref_t(S(T::* pf)(A)) : f(pf) {}
 	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR S operator()(T& r, A x) const { return (r.*f)(x); }
-private:
-	S(T::* f)(A);
 };
 template <class S, class T, class A>
 MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR mem_fun1_ref_t<S, T, A> mem_fun1_ref(S(T::* f)(A)) {
@@ -497,16 +626,29 @@ MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR mem_fun1_ref_t<S, T, A> mem_fun1_ref(S(T::* f)
 
 template <class S, class T, class A>
 class const_mem_fun1_ref_t : public binary_function<T, A, S> {
+protected:
+	S(T::* f)(A) const;
+
 public:
+	using first_argument_type MSTL_FUNCADP_DEPRE	= const T&;
+	using second_argument_type MSTL_FUNCADP_DEPRE	= A;
+	using result_type MSTL_FUNCADP_DEPRE			= S;
+
 	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR explicit const_mem_fun1_ref_t(S(T::* pf)(A) const) : f(pf) {}
 	MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR S operator()(const T& r, A x) const { return (r.*f)(x); }
-private:
-	S(T::* f)(A) const;
 };
 template <class S, class T, class A>
 MSTL_FUNCADP_DEPRE MSTL_CONSTEXPR const_mem_fun1_ref_t<S, T, A> mem_fun1_ref(S(T::* f)(A) const) {
 	return const_mem_fun1_ref_t<S, T, A>(f);
 }
+
+#ifdef MSTL_COMPILE_CLANG__
+#pragma clang diagnostic pop
+#elif defined(MSTL_COMPILE_GCC__)
+#pragma GCC diagnostic pop
+#elif defined(MSTL_COMPILE_MSVC__)
+#pragma warning(pop)
+#endif
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_FUNCTOR_HPP__

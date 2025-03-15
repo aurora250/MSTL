@@ -21,10 +21,9 @@ public:
 	using key_compare	= Compare;
 	using self			= map<Key, T, Compare, Alloc>;
 
-	struct value_compare : public binary_function<value_type, value_type, bool> {
+	struct value_compare {
 	private:
 		Compare comp_;
-
 		friend class map;
 
 	public:
@@ -51,8 +50,12 @@ public:
 private:
 	base_type tree_;
 
-	friend inline bool operator ==(const map&, const map&);
-	friend inline bool operator <(const map&, const map&);
+	template <typename Key1, typename T1, typename Compare1, typename Alloc1>
+	friend bool operator ==(const map<Key1, T1, Compare1, Alloc1>&,
+		const map<Key1, T1, Compare1, Alloc1>&) noexcept;
+	template <typename Key1, typename T1, typename Compare1, typename Alloc1>
+	friend bool operator <(const map<Key1, T1, Compare1, Alloc1>&,
+		const map<Key1, T1, Compare1, Alloc1>&) noexcept;
 
 public:
 	map() : tree_(Compare()) {}
@@ -60,10 +63,7 @@ public:
 
 	map(const self& x) : tree_(x.tree_) {}
 
-	self& operator =(const self& x) {
-		tree_ = x.tree_;
-		return *this;
-	}
+	self& operator =(const self& x) = default;
 
 	map(self&& x) noexcept(is_nothrow_move_constructible_v<base_type>) 
 		: tree_(MSTL::move(x.tree_)) {}
@@ -200,37 +200,37 @@ map(std::initializer_list<pair<Key, T>>, Alloc) -> map<Key, T, less<Key>, Alloc>
 #endif
 
 template <typename Key, typename T, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator ==(
+MSTL_NODISCARD bool operator ==(
 	const map<Key, T, Compare, Alloc>& lh,
 	const map<Key, T, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ == rh.tree_;
 }
 template <typename Key, typename T, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator !=(
+MSTL_NODISCARD bool operator !=(
 	const map<Key, T, Compare, Alloc>& lh,
 	const map<Key, T, Compare, Alloc>& rh) noexcept {
 	return !(lh.tree_ == rh.tree_);
 }
 template <typename Key, typename T, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator <(
+MSTL_NODISCARD bool operator <(
 	const map<Key, T, Compare, Alloc>& lh,
 	const map<Key, T, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ < rh.tree_;
 }
 template <typename Key, typename T, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator >(
+MSTL_NODISCARD bool operator >(
 	const map<Key, T, Compare, Alloc>& lh,
 	const map<Key, T, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ > rh.tree_;
 }
 template <typename Key, typename T, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator <=(
+MSTL_NODISCARD bool operator <=(
 	const map<Key, T, Compare, Alloc>& lh,
 	const map<Key, T, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ <= rh.tree_;
 }
 template <typename Key, typename T, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator >=(
+MSTL_NODISCARD bool operator >=(
 	const map<Key, T, Compare, Alloc>& lh,
 	const map<Key, T, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ >= rh.tree_;
@@ -260,10 +260,9 @@ public:
 	using key_compare	= Compare;
 	using self			= multimap<Key, T, Compare, Alloc>;
 
-	struct value_compare : public binary_function<value_type, value_type, bool> {
+	struct value_compare {
 	private:
 		Compare comp_;
-
 		friend class multimap;
 
 	public:
@@ -290,8 +289,12 @@ public:
 private:
 	base_type tree_;
 
-	friend inline bool operator ==(const multimap&, const multimap&);
-	friend inline bool operator <(const multimap&, const multimap&);
+	template <typename Key1, typename T1, typename Compare1, typename Alloc1>
+	friend bool operator ==(const multimap<Key1, T1, Compare1, Alloc1>&,
+		const multimap<Key1, T1, Compare1, Alloc1>&) noexcept;
+	template <typename Key1, typename T1, typename Compare1, typename Alloc1>
+	friend bool operator <(const multimap<Key1, T1, Compare1, Alloc1>&,
+		const multimap<Key1, T1, Compare1, Alloc1>&) noexcept;
 
 public:
 	multimap() : tree_(Compare()) {}
@@ -299,10 +302,7 @@ public:
 
 	multimap(const self& x) : tree_(x.tree_) {}
 
-	self& operator =(const self& x) {
-		tree_ = x.tree_;
-		return *this;
-	}
+	self& operator =(const self& x) = default;
 
 	multimap(self&& x) noexcept(is_nothrow_move_constructible_v<base_type>)
 		: tree_(MSTL::move(x.tree_)) {}
@@ -418,37 +418,37 @@ multimap(std::initializer_list<pair<Key, T>>, Alloc) -> multimap<Key, T, less<Ke
 #endif
 
 template <typename Key, typename T, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator ==(
+MSTL_NODISCARD bool operator ==(
 	const multimap<Key, T, Compare, Alloc>& lh,
 	const multimap<Key, T, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ == rh.tree_;
 }
 template <typename Key, typename T, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator !=(
+MSTL_NODISCARD bool operator !=(
 	const multimap<Key, T, Compare, Alloc>& lh,
 	const multimap<Key, T, Compare, Alloc>& rh) noexcept {
 	return !(lh.tree_ == rh.tree_);
 }
 template <typename Key, typename T, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator <(
+MSTL_NODISCARD bool operator <(
 	const multimap<Key, T, Compare, Alloc>& lh,
 	const multimap<Key, T, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ < rh.tree_;
 }
 template <typename Key, typename T, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator >(
+MSTL_NODISCARD bool operator >(
 	const multimap<Key, T, Compare, Alloc>& lh,
 	const multimap<Key, T, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ > rh.tree_;
 }
 template <typename Key, typename T, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator <=(
+MSTL_NODISCARD bool operator <=(
 	const multimap<Key, T, Compare, Alloc>& lh,
 	const multimap<Key, T, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ <= rh.tree_;
 }
 template <typename Key, typename T, typename Compare, typename Alloc>
-inline MSTL_NODISCARD bool operator >=(
+MSTL_NODISCARD bool operator >=(
 	const multimap<Key, T, Compare, Alloc>& lh,
 	const multimap<Key, T, Compare, Alloc>& rh) noexcept {
 	return lh.tree_ >= rh.tree_;

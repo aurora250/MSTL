@@ -1,5 +1,7 @@
 #ifndef MSTL_QUEUE_HPP__
 #define MSTL_QUEUE_HPP__
+#include <queue>
+
 #include "deque.hpp"
 #include "heap.hpp"
 MSTL_BEGIN_NAMESPACE__
@@ -169,10 +171,10 @@ public:
         make_heap_inside();
     }
 
-    MSTL_NODISCARD bool empty() const noexcept(noexcept(pair_.value.empty())) { return pair_.value.empty(); }
-    MSTL_NODISCARD size_type size() const noexcept(noexcept(pair_.value.size())) { return pair_.value.size(); }
+    MSTL_NODISCARD bool empty() const noexcept(noexcept(MSTL::declval<Sequence>().empty())) { return pair_.value.empty(); }
+    MSTL_NODISCARD size_type size() const noexcept(noexcept(MSTL::declval<Sequence>().size())) { return pair_.value.size(); }
 
-    MSTL_NODISCARD const_reference top() const noexcept(pair_.value.front()) { return pair_.value.front(); }
+    MSTL_NODISCARD const_reference top() const noexcept(noexcept(MSTL::declval<Sequence>().front())) { return pair_.value.front(); }
 
     void push(const value_type& x) {
         pair_.value.push_back(x);
@@ -195,7 +197,7 @@ public:
     }
 
     void swap(self& x) noexcept(is_nothrow_swappable_v<Sequence> && is_nothrow_swappable_v<Compare>) {
-        MSTL::swap(pair_, x.pair_);
+        pair_.swap(x.pair_);
     }
 };
 #ifdef MSTL_SUPPORT_DEDUCTION_GUIDES__

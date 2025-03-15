@@ -1,19 +1,20 @@
 #include "thread_pool.h"
+
+#include <utility>
 MSTL_BEGIN_NAMESPACE__
 
-int Thread__::generateId_ = 0;
+int __thread_aux::generateId_ = 0;
 
-Thread__::Thread__(ThreadFunc func)
-	: func_(func),
+__thread_aux::__thread_aux(ThreadFunc func)
+	: func_(MSTL::move(func)),
 	threadId_(generateId_++) {
 }
-Thread__::~Thread__() {}
 
-void Thread__::start() {
+void __thread_aux::start() {
 	std::thread t(func_, threadId_);
 	t.detach();
 }
-int Thread__::get_id() const {
+int __thread_aux::get_id() const {
 	return threadId_;
 }
 
@@ -34,15 +35,15 @@ ThreadPool::~ThreadPool() {
 	exit_cond_.wait(lock, [&]()->bool { return threads_.empty(); });
 }
 
-void ThreadPool::set_mode(POOL_MODE mode) {
+void ThreadPool::set_mode(const POOL_MODE mode) {
 	if (running()) return;
 	pool_mode_ = mode;
 }
-void ThreadPool::set_taskque_max_thresh_hold(size_t threshHold) {
+void ThreadPool::set_taskque_max_thresh_hold(const size_t threshHold) {
 	if (running()) return;
 	task_queue_max_thresh_hold_ = threshHold;
 }
-void ThreadPool::set_thread_size_thresh_hold(size_t threshHold) {
+void ThreadPool::set_thread_size_thresh_hold(const size_t threshHold) {
 	if (running() || pool_mode_ == POOL_MODE::MODE_FIXED) return;
 	thread_size_thresh_hold_ = threshHold > MSTL_THREAD_MAX_THRESHHOLD__ ? MSTL_THREAD_MAX_THRESHHOLD__ : threshHold;
 }
@@ -53,37 +54,37 @@ size_t ThreadPool::max_thread_size() {
 void ThreadPool::start(unsigned int initThreadSize) {
 	is_running_ = true;
 	init_thread_size_ = initThreadSize;
-	for (uint32_t i = 0; i < init_thread_size_; i++) {
-		auto ptr = MSTL::make_unique<Thread__>(
+	for (int i = 0; i < init_thread_size_; i++) {
+		auto ptr = MSTL::make_unique<__thread_aux>(
 			std::bind(&ThreadPool::thread_function, this, std::placeholders::_1));
 		threads_.emplace(ptr->get_id(), MSTL::move(ptr));
 	}
-	for (uint32_t i = 0; i < init_thread_size_; i++) {
+	for (int i = 0; i < init_thread_size_; i++) {
 		threads_[i]->start();
-		idle_thread_size_++;
+		++idle_thread_size_;
 	}
 }
 
-void ThreadPool::thread_function(int threadid) {
-	auto last = std::chrono::high_resolution_clock().now();
+void ThreadPool::thread_function(const int thread_id) {
+	auto last = std::chrono::high_resolution_clock::now();
 
 	for (;;) {
 		Task task;
 		{
 			std::unique_lock<std::mutex> lock(task_queue_mtx_);
 			while (task_queue_.empty()) {
-				if (not is_running_) {  // unlock deadlock after finish every mission 
-					threads_.erase(threadid);
+				if (!is_running_) {
+					threads_.erase(thread_id);
 					exit_cond_.notify_all();
 					return;
 				}
 				if (pool_mode_ == POOL_MODE::MODE_CACHED) {
 					if (std::cv_status::timeout == not_empty_.wait_for(lock, std::chrono::seconds(1))) {
-						auto now = std::chrono::high_resolution_clock().now();
-						auto sub = std::chrono::duration_cast<std::chrono::seconds>(now - last);
-						if (sub.count() >= MSTL_THREAD_MAX_IDLE_SECONDS__ && threads_.size() > init_thread_size_) {
-							threads_.erase(threadid);
-							idle_thread_size_--;
+						auto now = std::chrono::high_resolution_clock::now();
+						if (auto sub = std::chrono::duration_cast<std::chrono::seconds>(now - last);
+							sub.count() >= MSTL_THREAD_MAX_IDLE_SECONDS__ && threads_.size() > init_thread_size_) {
+							threads_.erase(thread_id);
+							--idle_thread_size_;
 							return;
 						}
 					}
@@ -91,21 +92,21 @@ void ThreadPool::thread_function(int threadid) {
 				else {
 					not_empty_.wait(lock);
 				}
-			} // free lock
+			}
 
-			idle_thread_size_--;
+			--idle_thread_size_;
 			task = task_queue_.front();
 			finished_queue_.push(task);
 			task_queue_.pop();
-			task_size_--;
-			if (not task_queue_.empty()) not_empty_.notify_all();
+			--task_size_;
+			if (!task_queue_.empty()) not_empty_.notify_all();
 			not_full_.notify_all();
 		}
 		if (task != nullptr) {
 			task();
 		}
-		idle_thread_size_++;
-		last = std::chrono::high_resolution_clock().now();
+		++idle_thread_size_;
+		last = std::chrono::high_resolution_clock::now();
 	}
 }
 
