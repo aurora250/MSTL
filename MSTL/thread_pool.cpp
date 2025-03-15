@@ -81,8 +81,8 @@ void ThreadPool::thread_function(const int thread_id) {
 				if (pool_mode_ == POOL_MODE::MODE_CACHED) {
 					if (std::cv_status::timeout == not_empty_.wait_for(lock, std::chrono::seconds(1))) {
 						auto now = std::chrono::high_resolution_clock::now();
-						if (auto sub = std::chrono::duration_cast<std::chrono::seconds>(now - last);
-							sub.count() >= MSTL_THREAD_MAX_IDLE_SECONDS__ && threads_.size() > init_thread_size_) {
+						auto sub = std::chrono::duration_cast<std::chrono::seconds>(now - last);
+						if (sub.count() >= MSTL_THREAD_MAX_IDLE_SECONDS__ && threads_.size() > init_thread_size_) {
 							threads_.erase(thread_id);
 							--idle_thread_size_;
 							return;

@@ -49,7 +49,7 @@ noexcept(is_nothrow_invocable_v<Callable, Args...>) {
     using result = __invoke_result_aux<Callable, Args...>;
     using type = typename result::type;
     using tag = typename result::invoke_type;
-    if constexpr (is_void_v<Res>) {
+    MSTL_IF_CONSTEXPR (is_void_v<Res>) {
         MSTL::__invoke_dispatch<type>(tag{},
             MSTL::forward<Callable>(f), MSTL::forward<Args>(args)...);
         return;

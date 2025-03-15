@@ -207,17 +207,17 @@ constexpr mathul_t factorial(mathui_t n) noexcept {
 // a bit down to the nearest digit, > 0 operates on decimal places, and ¡Ü 0 on integer places.
 constexpr mathld_t floor_bit(const mathld_t x, const mathui_t bit) noexcept {
 	const mathld_t times = power(10.0, bit);
-	if (const auto int_part = x * times; x < 0 && (x * times * 10) / 10.0 != int_part)
+	const auto int_part = x * times;
+	if (x < 0 && x * times * 10 / 10.0 != int_part)
 		return (int_part - 1) / times;
-	else 
-		return int_part / times;
+	return int_part / times;
 }
 constexpr mathld_t ceil_bit(const mathld_t x, const mathui_t bit) noexcept {
 	const mathld_t times = power(10.0, bit);
-	if (const auto int_part = x * times; x > 0 && (x * times * 10) / 10.0 != int_part)
+	const auto int_part = x * times;
+	if (x > 0 && x * times * 10 / 10.0 != int_part)
 		return (int_part + 1) / times;
-	else 
-		return int_part / times;
+	return int_part / times;
 }
 
 constexpr mathld_t round_bit(const mathld_t x, const mathui_t bit) noexcept {
@@ -229,17 +229,17 @@ constexpr mathld_t truncate_bit(const mathld_t x, const mathui_t bit) noexcept {
 }
 constexpr mathld_t floor(const mathld_t x, const mathui_t bit) noexcept {
 	const mathld_t times = power(10.0, bit);
-	if (const auto int_part = x * times; x < 0 && x * times != int_part)
+	const auto int_part = x * times;
+	if (x < 0 && x * times != int_part)
 		return (int_part - 1) / times;
-	else
-		return int_part / times;
+	return int_part / times;
 }
 constexpr mathld_t ceil(const mathld_t x, const mathui_t bit) noexcept {
 	const mathld_t times = power(10.0, bit);
-	if (const auto int_part = x * times; x > 0 && x * times != int_part)
+	const auto int_part = x * times;
+	if (x > 0 && x * times != int_part)
 		return (int_part + 1) / times;
-	else
-		return int_part / times;
+	return int_part / times;
 }
 
 constexpr mathld_t round(const mathld_t x, const mathui_t bit) noexcept {

@@ -62,7 +62,7 @@ public:
 		node_ = x.node_;
 		return *this;
 	}
-    list_iterator(const const_iterator& x) noexcept : node_(const_cast<link_type*>(x.node_)) {}
+    list_iterator(const const_iterator& x) noexcept : node_(const_cast<link_type>(x.node_)) {}
     self& operator =(const const_iterator& x) noexcept {
         if(MSTL::addressof(x) == this) return *this;
         node_ = const_cast<link_type*>(x.node_);
@@ -76,7 +76,7 @@ public:
         x.node_ = nullptr;
         return *this;
     }
-    list_iterator(const_iterator&& x) noexcept : node_(const_cast<link_type*>(x.node_)) { x.node_ = nullptr; }
+    list_iterator(const_iterator&& x) noexcept : node_(const_cast<link_type>(x.node_)) { x.node_ = nullptr; }
     self& operator =(const_iterator&& x) noexcept {
         if(MSTL::addressof(x) == this) return *this;
         node_ = const_cast<link_type*>(x.node_);

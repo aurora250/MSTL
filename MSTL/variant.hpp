@@ -72,26 +72,26 @@ private:
 
     template <class Lambda>
     using const_visitor_function = common_type_t<
-        std::invoke_result_t<Lambda, Types const&>...>(*)(char const*, Lambda&&);
+        MSTL::invoke_result_t<Lambda, Types const&>...>(*)(char const*, Lambda&&);
 
     template <class Lambda>
     static const_visitor_function<Lambda>* const_visitors_table() noexcept {
         static const_visitor_function<Lambda> function_ptrs[sizeof...(Types)] = {
-            [](char const* union_p, Lambda&& lambda) -> std::invoke_result_t<Lambda, Types const&> {
-                std::invoke(MSTL::forward<Lambda>(lambda), *reinterpret_cast<Types const*>(union_p));
+            [](char const* union_p, Lambda&& lambda) -> MSTL::invoke_result_t<Lambda, Types const&> {
+                MSTL::invoke(MSTL::forward<Lambda>(lambda), *reinterpret_cast<Types const*>(union_p));
             }...
         };
         return function_ptrs;
     }
 
     template <class Lambda>
-    using visitor_function = common_type_t<std::invoke_result_t<Lambda, Types&>...>(*)(char*, Lambda&&);
+    using visitor_function = common_type_t<MSTL::invoke_result_t<Lambda, Types&>...>(*)(char*, Lambda&&);
 
     template <class Lambda>
     static visitor_function<Lambda>* visitors_table() noexcept {
         static visitor_function<Lambda> function_ptrs[sizeof...(Types)] = {
-            [](const char* union_p, Lambda&& lambda) -> common_type_t<std::invoke_result_t<Lambda, Types&>...> {
-                return std::invoke(MSTL::forward<Lambda>(lambda), *reinterpret_cast<Types*>(union_p));
+            [](const char* union_p, Lambda&& lambda) -> common_type_t<MSTL::invoke_result_t<Lambda, Types&>...> {
+                return MSTL::invoke(MSTL::forward<Lambda>(lambda), *reinterpret_cast<Types*>(union_p));
             }...
         };
         return function_ptrs;
@@ -136,12 +136,12 @@ public:
     }
 
     template <class Lambda>
-    common_type_t<std::invoke_result_t<Lambda, Types&>...> visit(Lambda&& lambda) {
+    common_type_t<MSTL::invoke_result_t<Lambda, Types&>...> visit(Lambda&& lambda) {
         return visitors_table<Lambda>()[index()](union_, MSTL::forward<Lambda>(lambda));
     }
 
     template <class Lambda>
-    common_type_t<std::invoke_result_t<Lambda, Types const&>...> visit(Lambda&& lambda) const {
+    common_type_t<MSTL::invoke_result_t<Lambda, Types const&>...> visit(Lambda&& lambda) const {
         return const_visitors_table<Lambda>()[index()](union_, MSTL::forward<Lambda>(lambda));
     }
 

@@ -151,8 +151,8 @@ public:
     }
 
     self& operator +=(difference_type n) noexcept {
-        if (const difference_type offset = n + (cur_ - first_);
-            offset >= 0 && offset < static_cast<difference_type>(buff_size()))
+        const difference_type offset = n + (cur_ - first_);
+        if (offset >= 0 && offset < static_cast<difference_type>(buff_size()))
             cur_ += n;
         else {
             difference_type node_offset = offset > 0 ?
