@@ -1,29 +1,3 @@
-"D:\JetBrains\CLion 2024.2\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=D:/JetBrains/CLion 2024.2/bin/ninja/win/x64/ninja.exe" -G Ninja -S "D:\Workspace\Cpp Workspace\CLine Workspace\MSTL" -B "D:\Workspace\Cpp Workspace\CLine Workspace\MSTL\cmake-build-debug-clang"
--- The C compiler identification is GNU 14.2.0
--- The CXX compiler identification is GNU 14.2.0
--- Detecting C compiler ABI info
--- Detecting C compiler ABI info - done
--- Check for working C compiler: D:/mingw64/bin/cc.exe - skipped
--- Detecting C compile features
--- Detecting C compile features - done
--- Detecting CXX compiler ABI info
--- Detecting CXX compiler ABI info - done
--- Check for working CXX compiler: D:/mingw64/bin/c++.exe - skipped
--- Detecting CXX compile features
--- Detecting CXX compile features - done
--- Configuring done (2.5s)
-CMake Error at CMakeLists.txt:6 (add_executable):
-  Cannot find source file:
-
-    MSTL/detalof.hpp
-
-  Tried extensions .c .C .c++ .cc .cpp .cxx .cu .mpp .m .M .mm .ixx .cppm
-  .ccm .cxxm .c++m .h .hh .h++ .hm .hpp .hxx .in .txx .f .F .for .f77 .f90
-  .f95 .f03 .hip .ispc
-
-
-CMake Error at CMakeLists.txt:6 (add_executable):
-  No SOURCES given to target: MSTL
-
-
-CMake Generate step failed.  Build files cannot be regenerated correctly.
+version https://git-lfs.github.com/spec/v1
+oid sha256:3ef911f3f0c46367caeba8244d893cbb94050637ebeabc8f157689260bdb3157
+size 463

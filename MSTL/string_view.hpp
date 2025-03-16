@@ -589,9 +589,9 @@ template <typename Traits>
 class string_view_iterator {
 public:
 #ifdef MSTL_VERSION_20__
-    using iterator_category = std::contiguous_iterator_tag;
+    using iterator_category = contiguous_iterator_tag;
 #else
-    using iterator_category = std::random_access_iterator_tag;
+    using iterator_category = random_access_iterator_tag;
 #endif // MSTL_VERSION_20__
     using value_type        = typename Traits::char_type;
     using difference_type   = ptrdiff_t;

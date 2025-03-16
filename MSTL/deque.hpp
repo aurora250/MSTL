@@ -18,7 +18,7 @@ struct deque_iterator {
     friend struct deque_iterator;
 
 public:
-    using iterator_category = std::random_access_iterator_tag;
+    using iterator_category = random_access_iterator_tag;
     using value_type        = T;
     using pointer           = Ptr;
     using reference         = Ref;

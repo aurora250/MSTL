@@ -167,7 +167,7 @@ private:
     MSTL_CONSTEXPR20 void allocate_buffer() {
         original_len_ = len_;
         buffer_ = 0;
-        if (len_ > static_cast<ptrdiff_t>((INT_MAX / sizeof(T)))) len_ = INT_MAX / sizeof(T);
+        if (len_ > static_cast<ptrdiff_t>(INT_MAX / sizeof(T))) len_ = INT_MAX / sizeof(T);
         while (len_ > 0) {
             buffer_ = static_cast<T *>(std::malloc(len_ * sizeof(T)));
             if (buffer_) break;
@@ -206,7 +206,7 @@ public:
 
 
 template <typename Ptr, typename Elem>
-struct ptr_traits_base {
+struct __ptr_traits_base {
     using pointer = Ptr;
     using element_type = Elem;
     using difference_type = get_ptr_difference_type_t<Ptr>;
@@ -222,20 +222,20 @@ struct ptr_traits_base {
 };
 
 template <typename, typename = void, typename = void>
-struct ptr_traits_extract {};
+struct __ptr_traits_extract {};
 
 template <typename T, typename U>
-struct ptr_traits_extract<T, U, void_t<typename get_first_parameter<T>::type>>
-    : ptr_traits_base<T, typename get_first_parameter<T>::type> {
+struct __ptr_traits_extract<T, U, void_t<typename get_first_parameter<T>::type>>
+    : __ptr_traits_base<T, typename get_first_parameter<T>::type> {
 };
 
 template <typename T>
-struct ptr_traits_extract<T, void_t<typename T::element_type>, void>
-    : ptr_traits_base<T, typename T::element_type> {
+struct __ptr_traits_extract<T, void_t<typename T::element_type>, void>
+    : __ptr_traits_base<T, typename T::element_type> {
 };
 
 template <typename T>
-struct pointer_traits : ptr_traits_extract<T> {};
+struct pointer_traits : __ptr_traits_extract<T> {};
 
 template <typename T>
 struct pointer_traits<T*> {

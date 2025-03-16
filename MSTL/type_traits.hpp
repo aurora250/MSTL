@@ -4,13 +4,13 @@
 MSTL_BEGIN_NAMESPACE__
 
 inline namespace tags {
-    using input_iterator_tag = std::input_iterator_tag;
-    using output_iterator_tag = std::output_iterator_tag;
-    using forward_iterator_tag = std::forward_iterator_tag;
-    using bidirectional_iterator_tag = std::bidirectional_iterator_tag;
-    using random_access_iterator_tag = std::random_access_iterator_tag;
+    using input_iterator_tag            = std::input_iterator_tag;
+    using output_iterator_tag           = std::output_iterator_tag;
+    using forward_iterator_tag          = std::forward_iterator_tag;
+    using bidirectional_iterator_tag    = std::bidirectional_iterator_tag;
+    using random_access_iterator_tag    = std::random_access_iterator_tag;
 #ifdef MSTL_VERSION_20__
-    using contiguous_iterator_tag = std::contiguous_iterator_tag;
+    using contiguous_iterator_tag       = std::contiguous_iterator_tag;
 #endif
 }
 
@@ -1522,8 +1522,8 @@ inline namespace tags {
 
 template <typename T, typename Tag>
 struct invoke_result_true {
-    using invoke_type = Tag;
-    using type = T;
+    using invoke_type   = Tag;
+    using type          = T;
 };
 
 struct invoke_result_false {};
@@ -2011,10 +2011,10 @@ struct iterator {
 
 
 template <typename, typename = void>
-struct iterator_traits_base {};
+struct __iterator_traits_base {};
 
 template <typename Iterator>
-struct iterator_traits_base<Iterator,
+struct __iterator_traits_base<Iterator,
     void_t<typename Iterator::iterator_category, typename Iterator::value_type,
     typename Iterator::difference_type, typename Iterator::pointer, typename Iterator::reference>>
 {
@@ -2026,7 +2026,7 @@ struct iterator_traits_base<Iterator,
 };
 
 template <typename Iterator>
-struct iterator_traits : iterator_traits_base<Iterator> {};
+struct iterator_traits : __iterator_traits_base<Iterator> {};
 
 template <typename T>
 struct iterator_traits<T*> {

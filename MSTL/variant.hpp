@@ -13,7 +13,7 @@ struct variant {
 private:
     size_t index_;
 
-    alignas(std::max({ alignof(Types)... })) char union_[std::max({ sizeof(Types)... })]{};
+    alignas(MSTL::max({ alignof(Types)... })) char union_[MSTL::max({ sizeof(Types)... })]{};
 
     using destruct_function = void(*)(char*) noexcept;
 

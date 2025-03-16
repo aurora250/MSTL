@@ -34,7 +34,7 @@ public:
 template <typename T, typename Ref = T&, typename Ptr = T*>
 struct list_iterator {
 public:
-    using iterator_category = std::bidirectional_iterator_tag;
+    using iterator_category = bidirectional_iterator_tag;
     using difference_type   = ptrdiff_t;
     using value_type        = T;
     using pointer           = Ptr;
