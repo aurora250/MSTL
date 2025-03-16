@@ -15,7 +15,7 @@ private:
 
     alignas(MSTL::max({ alignof(Types)... })) char union_[MSTL::max({ sizeof(Types)... })]{};
 
-    using destruct_function = void(*)(char*) noexcept;
+    using destruct_function = void(*)(char*);
 
     static destruct_function* destructors_table() noexcept {
         static destruct_function function_ptrs[sizeof...(Types)] = {
@@ -26,7 +26,7 @@ private:
         return function_ptrs;
     }
 
-    using copy_construct_function = void(*)(char*, char const*) noexcept;
+    using copy_construct_function = void(*)(char*, char const*);
 
     static copy_construct_function* copy_constructors_table() noexcept {
         static copy_construct_function function_ptrs[sizeof...(Types)] = {
@@ -37,7 +37,7 @@ private:
         return function_ptrs;
     }
 
-    using copy_assignment_function = void(*)(char*, char const*) noexcept;
+    using copy_assignment_function = void(*)(char*, char const*);
 
     static copy_assignment_function* copy_assigment_functions_table() noexcept {
         static copy_assignment_function function_ptrs[sizeof...(Types)] = {
@@ -48,7 +48,7 @@ private:
         return function_ptrs;
     }
 
-    using move_construct_function = void(*)(char*, char*) noexcept;
+    using move_construct_function = void(*)(char*, char*);
 
     static move_construct_function* move_constructors_table() noexcept {
         static move_construct_function function_ptrs[sizeof...(Types)] = {
@@ -59,7 +59,7 @@ private:
         return function_ptrs;
     }
 
-    using move_assignment_function = void(*)(char*, char*) noexcept;
+    using move_assignment_function = void(*)(char*, char*);
 
     static move_assignment_function* move_assigment_functions_table() noexcept {
         static move_assignment_function function_ptrs[sizeof...(Types)] = {

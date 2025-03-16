@@ -38,13 +38,13 @@ struct tuple_perfect_forward<Tuple1, Tuple2> : bool_constant<!is_same_v<Tuple1, 
 
 template <typename T1, typename T2, typename U1, typename U2>
 struct tuple_perfect_forward<tuple<T1, T2>, U1, U2>
-	: bool_constant<disjunction_v<negation<is_same<remove_cvref_t<U1>, std::allocator_arg_t>>,
-	is_same<remove_cvref_t<T1>, std::allocator_arg_t>>> {};
+	: bool_constant<disjunction_v<negation<is_same<remove_cvref_t<U1>, allocator_arg_tag>>,
+	is_same<remove_cvref_t<T1>, allocator_arg_tag>>> {};
 
 template <typename T1, typename T2, typename T3, typename U1, typename U2, typename U3>
 struct tuple_perfect_forward<tuple<T1, T2, T3>, U1, U2, U3>
-	: bool_constant<disjunction_v<negation<is_same<remove_cvref_t<U1>, std::allocator_arg_t>>,
-	is_same<remove_cvref_t<T1>, std::allocator_arg_t>>> {};
+	: bool_constant<disjunction_v<negation<is_same<remove_cvref_t<U1>, allocator_arg_tag>>,
+	is_same<remove_cvref_t<T1>, allocator_arg_tag>>> {};
 
 
 template <bool Same, typename Dest, typename... Srcs>

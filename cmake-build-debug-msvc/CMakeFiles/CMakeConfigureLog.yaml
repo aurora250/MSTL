@@ -109,8 +109,8 @@ events:
     checks:
       - "Detecting C compiler ABI info"
     directories:
-      source: "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-debug-msvc/CMakeFiles/CMakeScratch/TryCompile-xef8by"
-      binary: "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-debug-msvc/CMakeFiles/CMakeScratch/TryCompile-xef8by"
+      source: "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-debug-msvc/CMakeFiles/CMakeScratch/TryCompile-sf0p8h"
+      binary: "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-debug-msvc/CMakeFiles/CMakeScratch/TryCompile-sf0p8h"
     cmakeVariables:
       CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS"
       CMAKE_C_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
@@ -119,11 +119,11 @@ events:
       variable: "CMAKE_C_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: 'D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-debug-msvc/CMakeFiles/CMakeScratch/TryCompile-xef8by'
+        Change Dir: 'D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-debug-msvc/CMakeFiles/CMakeScratch/TryCompile-sf0p8h'
         
-        Run Build Command(s): "D:/JetBrains/CLion 2024.2/bin/ninja/win/x64/ninja.exe" -v cmTC_6b220
-        [1/2] "D:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.43.34808\\bin\\Hostx64\\x64\\cl.exe"  /nologo   /DWIN32 /D_WINDOWS  /Zi /Ob0 /Od /RTC1 -MDd /showIncludes /FoCMakeFiles\\cmTC_6b220.dir\\CMakeCCompilerABI.c.obj /FdCMakeFiles\\cmTC_6b220.dir\\ /FS -c "D:\\JetBrains\\CLion 2024.2\\bin\\cmake\\win\\x64\\share\\cmake-3.29\\Modules\\CMakeCCompilerABI.c"
-        [2/2] C:\\Windows\\system32\\cmd.exe /C "cd . && "D:\\JetBrains\\CLion 2024.2\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_6b220.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x64\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x64\\mt.exe --manifests  -- "D:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.43.34808\\bin\\Hostx64\\x64\\link.exe" /nologo CMakeFiles\\cmTC_6b220.dir\\CMakeCCompilerABI.c.obj  /out:cmTC_6b220.exe /implib:cmTC_6b220.lib /pdb:cmTC_6b220.pdb /version:0.0 /machine:x64  /debug /INCREMENTAL /subsystem:console  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
+        Run Build Command(s): "D:/JetBrains/CLion 2024.2/bin/ninja/win/x64/ninja.exe" -v cmTC_6db1a
+        [1/2] "D:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.43.34808\\bin\\Hostx64\\x64\\cl.exe"  /nologo   /DWIN32 /D_WINDOWS  /Zi /Ob0 /Od /RTC1 -MDd /showIncludes /FoCMakeFiles\\cmTC_6db1a.dir\\CMakeCCompilerABI.c.obj /FdCMakeFiles\\cmTC_6db1a.dir\\ /FS -c "D:\\JetBrains\\CLion 2024.2\\bin\\cmake\\win\\x64\\share\\cmake-3.29\\Modules\\CMakeCCompilerABI.c"
+        [2/2] C:\\Windows\\system32\\cmd.exe /C "cd . && "D:\\JetBrains\\CLion 2024.2\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_6db1a.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x64\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x64\\mt.exe --manifests  -- "D:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.43.34808\\bin\\Hostx64\\x64\\link.exe" /nologo CMakeFiles\\cmTC_6db1a.dir\\CMakeCCompilerABI.c.obj  /out:cmTC_6db1a.exe /implib:cmTC_6db1a.lib /pdb:cmTC_6db1a.pdb /version:0.0 /machine:x64  /debug /INCREMENTAL /subsystem:console  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
         
       exitCode: 0
   -
@@ -151,8 +151,8 @@ events:
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-      source: "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-debug-msvc/CMakeFiles/CMakeScratch/TryCompile-p9c8tx"
-      binary: "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-debug-msvc/CMakeFiles/CMakeScratch/TryCompile-p9c8tx"
+      source: "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-debug-msvc/CMakeFiles/CMakeScratch/TryCompile-ccgyrg"
+      binary: "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-debug-msvc/CMakeFiles/CMakeScratch/TryCompile-ccgyrg"
     cmakeVariables:
       CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /GR /EHsc"
       CMAKE_CXX_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
@@ -162,11 +162,11 @@ events:
       variable: "CMAKE_CXX_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: 'D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-debug-msvc/CMakeFiles/CMakeScratch/TryCompile-p9c8tx'
+        Change Dir: 'D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-debug-msvc/CMakeFiles/CMakeScratch/TryCompile-ccgyrg'
         
-        Run Build Command(s): "D:/JetBrains/CLion 2024.2/bin/ninja/win/x64/ninja.exe" -v cmTC_f6788
-        [1/2] "D:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.43.34808\\bin\\Hostx64\\x64\\cl.exe"  /nologo /TP   /DWIN32 /D_WINDOWS /GR /EHsc  /Zi /Ob0 /Od /RTC1 -MDd /showIncludes /FoCMakeFiles\\cmTC_f6788.dir\\CMakeCXXCompilerABI.cpp.obj /FdCMakeFiles\\cmTC_f6788.dir\\ /FS -c "D:\\JetBrains\\CLion 2024.2\\bin\\cmake\\win\\x64\\share\\cmake-3.29\\Modules\\CMakeCXXCompilerABI.cpp"
-        [2/2] C:\\Windows\\system32\\cmd.exe /C "cd . && "D:\\JetBrains\\CLion 2024.2\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_f6788.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x64\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x64\\mt.exe --manifests  -- "D:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.43.34808\\bin\\Hostx64\\x64\\link.exe" /nologo CMakeFiles\\cmTC_f6788.dir\\CMakeCXXCompilerABI.cpp.obj  /out:cmTC_f6788.exe /implib:cmTC_f6788.lib /pdb:cmTC_f6788.pdb /version:0.0 /machine:x64  /debug /INCREMENTAL /subsystem:console  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
+        Run Build Command(s): "D:/JetBrains/CLion 2024.2/bin/ninja/win/x64/ninja.exe" -v cmTC_79ded
+        [1/2] "D:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.43.34808\\bin\\Hostx64\\x64\\cl.exe"  /nologo /TP   /DWIN32 /D_WINDOWS /GR /EHsc  /Zi /Ob0 /Od /RTC1 -MDd /showIncludes /FoCMakeFiles\\cmTC_79ded.dir\\CMakeCXXCompilerABI.cpp.obj /FdCMakeFiles\\cmTC_79ded.dir\\ /FS -c "D:\\JetBrains\\CLion 2024.2\\bin\\cmake\\win\\x64\\share\\cmake-3.29\\Modules\\CMakeCXXCompilerABI.cpp"
+        [2/2] C:\\Windows\\system32\\cmd.exe /C "cd . && "D:\\JetBrains\\CLion 2024.2\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_79ded.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x64\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x64\\mt.exe --manifests  -- "D:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.43.34808\\bin\\Hostx64\\x64\\link.exe" /nologo CMakeFiles\\cmTC_79ded.dir\\CMakeCXXCompilerABI.cpp.obj  /out:cmTC_79ded.exe /implib:cmTC_79ded.lib /pdb:cmTC_79ded.pdb /version:0.0 /machine:x64  /debug /INCREMENTAL /subsystem:console  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
         
       exitCode: 0
   -

@@ -32,7 +32,7 @@ void try_lls() {
     detailof(lls2);
     lls2.unique();
     detailof(lls2);
-    list<unique_ptr<int>> nocopy;
+    list<MSTL::unique_ptr<int>> nocopy;
     // nocopy.emplace_back(2); not support in std
     lls.clear();
 }
@@ -40,6 +40,7 @@ void try_lls() {
 class Foo {};
 void try_check() {
     USE_MSTL;
+    using MSTL::string;
     std::cout << check_type<string>() << std::endl;
     std::cout << check_type<const volatile void* const*&>() << std::endl;
     std::cout << check_type<int(*)[]>() << std::endl;
@@ -106,6 +107,7 @@ void try_copy() {
 #include <deque>
 void try_deq() {
     using namespace MSTL;
+    using MSTL::deque;
     deque<int> a;
     a.push_back(2);
     a.push_front(10);
@@ -140,6 +142,7 @@ void try_stack() {
 }
 void try_vec() {
     USE_MSTL;
+    using MSTL::vector;
     MSTL_TRY__{
         vector<int> v{ 1,2,3,4 };
         v.push_back(3);
@@ -183,6 +186,7 @@ void try_vec() {
 }
 void try_pque() {
     USE_MSTL;
+    using MSTL::priority_queue;
     priority_queue<int> q;
     std::cout << typeid(priority_queue<int*>).name() << std::endl;
     q.push(6); q.push(9); q.push(1); q.push(5);
@@ -194,6 +198,7 @@ void try_pque() {
 
 void try_rb() {
     USE_MSTL;
+    using MSTL::pair;
     map<int, char> m;
     m.insert(pair<int, char>(1, 'c'));
     m.emplace(3, 'c');
@@ -228,6 +233,7 @@ void try_rb() {
 }
 void try_tup() {
     USE_MSTL;
+    using MSTL::tuple;
     tuple<int, char, const char*> t(1, 't', "MSTL");
     auto a = get<0>(t);
     std::cout << get<1>(t) << std::endl;
@@ -235,6 +241,13 @@ void try_tup() {
 }
 void try_hash() {
     USE_MSTL;
+    using MSTL::unordered_map;
+    using MSTL::unordered_set;
+    using MSTL::unordered_multimap;
+    using MSTL::unordered_multiset;
+    using MSTL::pair;
+    using MSTL::string;
+    using MSTL::unique_ptr;
     unordered_map<int, char> m;
     m[1] = 'a';
     m[2] = 'b';
@@ -253,7 +266,7 @@ void try_hash() {
     mm.clear();
     detailof(mm);
     unordered_map<int, unique_ptr<int>> uncopy;
-    uncopy.emplace(1, make_unique<int>(1));
+    uncopy.emplace(1, MSTL::make_unique<int>(1));
     detailof(uncopy);
     uncopy.erase(uncopy.begin());
 
@@ -267,7 +280,7 @@ void try_hash() {
 
     unordered_multiset<pair<int, const char*>> ms;
     ms.emplace(1, "234");
-    ms.insert(make_pair(2, "345"));
+    ms.insert(MSTL::make_pair(2, "345"));
     ms.emplace(1, "234");
     detailof(ms);
     ms.erase(ms.begin());
@@ -337,7 +350,7 @@ inline std::ostream& operator <<(std::ostream& out, const Person& p) {
 }
 void try_sort() {
     USE_MSTL;
-    vector<int> vec{ 6,9,1,5,8,4,7 };
+    MSTL::vector<int> vec{ 6,9,1,5,8,4,7 };
     //insertion_sort(vec.begin(), vec.end());
     //bubble_sort(vec.begin(), vec.end());
     //select_sort(vec.begin(), vec.end());
@@ -370,8 +383,8 @@ void try_sort() {
 
 void try_ss() {
     USE_MSTL;
-    stringstream ss;
-    ss << "a" << 'b' << 333 << " " << 9.333 << string("hello") << false << MSTL::move(string("aaaa"));
+    MSTL::stringstream ss;
+    ss << "a" << 'b' << 333 << " " << 9.333 << MSTL::string("hello") << false << MSTL::move(MSTL::string("aaaa"));
     std::cout << ss.str() << std::endl;
     ss.str("wert");
     std::cout << ss.str() << std::endl;
@@ -386,6 +399,7 @@ void try_str() {
     USE_MSTL;
     using std::cout;
     using std::endl;
+    using MSTL::string;
 
     string emptyStr;
     string hello = "Hello";

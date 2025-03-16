@@ -77,6 +77,9 @@ MSTL_MACRO_RANGE_INT(INITIALIZE_BASIC_FUNCTION__)
 
 
 inline namespace tags {
+	struct allocator_arg_tag {
+		constexpr allocator_arg_tag() noexcept = default;
+	};
 	// construct without arguments
 	struct default_construct_tag {
 		constexpr explicit default_construct_tag() noexcept = default;

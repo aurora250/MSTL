@@ -64,6 +64,9 @@
 #define MSTL_ MSTL::
 
 
+#if (__cplusplus >= 202100L) || (_MSVC_LANG >= 202100L)
+	#define MSTL_VERSION_23__	1
+#endif
 #if _HAS_CXX20 || (__cplusplus >= 202002L) || (_MSVC_LANG >= 202002L)
 	#define MSTL_VERSION_20__	1
 #endif
@@ -147,6 +150,11 @@
 
 #ifdef MSTL_SUPPORT_CONSTEXPR__
 	#define MSTL_CONSTEXPR constexpr
+#ifdef MSTL_VERSION_23__
+		#define MSTL_CONSTEXPR23 MSTL_CONSTEXPR
+#else
+		#define MSTL_CONSTEXPR23 inline
+#endif // MSTL_VERSION_23__
 #ifdef MSTL_VERSION_20__
 		#define MSTL_CONSTEXPR20 MSTL_CONSTEXPR
 #else
@@ -160,7 +168,11 @@
 	#define MSTL_INLINECSP
 #endif // MSTL_VERSION_17__
 #else
-	#define MSTL_CONSTEXPR
+	#define MSTL_CONSTEXPR inline
+	#define MSTL_CONSTEXPR23 inline
+	#define MSTL_CONSTEXPR20 inline
+	#define MSTL_CONSTEXPR17 inline
+	#define MSTL_INLINECSP inline
 #endif // MSTL_SUPPORT_CONSTEXPR__
 
 

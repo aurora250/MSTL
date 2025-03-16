@@ -634,7 +634,7 @@ struct is_function : bool_constant<is_function_v<T>> {};
 
 
 template <typename T>
-constexpr bool is_allocable_v = !(is_void_v<T> || is_reference_v<T> || is_function_v<T> || is_const_v<T>);
+constexpr bool is_allocable_v = !(is_void_v<T> || is_reference_v<T> || is_function_v<T> || is_const_v<T>) && sizeof(T) > 0;
 template <typename T>
 struct is_allocable : bool_constant<is_allocable_v<T>> {};
 
@@ -2002,9 +2002,9 @@ concept is_pair_v = requires(T p) {
 template <typename Category, typename T, typename Distance = ptrdiff_t,
     typename Pointer = T*, typename Reference = T&>
 struct iterator {
-    using iterator_category =  Category;
-    using value_type        =  T;
-    using difference_type   =  Distance;
+    using iterator_category = Category;
+    using value_type        = T;
+    using difference_type   = Distance;
     using pointer           = Pointer;
     using reference         = Reference;
 };

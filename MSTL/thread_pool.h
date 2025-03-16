@@ -81,7 +81,7 @@ public:
 	template <typename Func, typename... Args>
 	decltype(auto) submit_task(Func&& func, Args&&... args) {
 		using Result = decltype(func(args...));
-		auto task = std::make_shared<std::packaged_task<Result()>>(
+		auto task = MSTL::make_shared<std::packaged_task<Result()>>(
 			std::bind(MSTL::forward<Func>(func), MSTL::forward<Args>(args)...));
 		std::future<Result> res = task->get_future();
 
