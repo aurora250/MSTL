@@ -955,7 +955,7 @@ template <typename T>
 constexpr bool is_trivially_move_assignable_v = is_trivially_move_assignable<T>::value;
 
 
-#ifdef MSTL_COMPILER_MSVC__
+#if defined(MSTL_COMPILE_MSVC__) || defined(MSTL_COMPILE_CLANG__)
 template <typename T>
 struct is_trivially_destructible : bool_constant<__is_trivially_destructible(T)> {};
 #else
@@ -1384,6 +1384,7 @@ struct common_reference<T1, T2, T3, Rest...> : common_reference<common_reference
 #endif // MSTL_VERSION_20__
 
 
+#ifdef MSTL_VERSION_17__
 template <typename T, template <typename...> typename Template>
 constexpr bool is_specialization_v = false;
 template <template <typename...> typename Template, typename... Args>
@@ -1391,6 +1392,17 @@ constexpr bool is_specialization_v<Template<Args...>, Template> = true;
 
 template <typename T, template <typename...> typename Template>
 struct is_specialization : bool_constant<is_specialization_v<T, Template>> {};
+#else
+template <typename T, template <typename...> class Template>
+struct is_specialization : false_type {};
+template <template <typename...> class Template, typename... Args>
+struct is_specialization<Template<Args...>, Template> : true_type {};
+
+template <typename T, template <typename...> class Template>
+constexpr bool is_specialization_v() {
+    return is_specialization<T, Template>::value;
+}
+#endif
 
 
 template <typename From, typename To, bool = is_convertible_v<From, To>, bool = is_void_v<To>>
@@ -1783,7 +1795,7 @@ constexpr bool is_pointer_interconvertible_base_of_v = is_pointer_interconvertib
 
 template <typename>
 struct get_first_parameter;
-template <template <typename, typename...> typename T, typename First, typename... Rest>
+template <template <typename, typename...> class T, typename First, typename... Rest>
 struct get_first_parameter<T<First, Rest...>> {
     using type = First;
 };
@@ -1791,10 +1803,10 @@ struct get_first_parameter<T<First, Rest...>> {
 
 template <typename, typename = void>
 struct get_ptr_difference_type {
-    using type = ptrdiff_t;
+    using type = std::ptrdiff_t;
 };
 template <typename T>
-struct get_ptr_difference_type<T, void_t<typename T::difference_type>> {
+struct get_ptr_difference_type<T, enable_if_t<is_same_v<typename T::difference_type, typename T::difference_type>>> {
     using type = typename T::difference_type;
 };
 template <typename T>
@@ -1803,7 +1815,7 @@ using get_ptr_difference_type_t = typename get_ptr_difference_type<T>::type;
 
 template <typename, typename>
 struct replace_first_parameter;
-template <typename NewFirst, template <typename, typename...> typename T, typename First, typename... Rest>
+template <typename NewFirst, template <typename, typename...> class T, typename First, typename... Rest>
 struct replace_first_parameter<NewFirst, T<First, Rest...>> {
     using type = T<NewFirst, Rest...>;
 };
@@ -1814,7 +1826,7 @@ struct get_rebind_type {
     using type = typename replace_first_parameter<U, T>::type;
 };
 template <typename T, typename U>
-struct get_rebind_type<T, U, void_t<typename T::template rebind<U>>> {
+struct get_rebind_type<T, U, enable_if_t<is_same_v<typename T::template rebind<U>, typename T::template rebind<U>>>> {
     using type = typename T::template rebind<U>;
 };
 template <typename T, typename U>
@@ -1907,8 +1919,6 @@ struct ADL_swappable<T, void_t<decltype(MSTL::swap(MSTL::declval<T&>(), MSTL::de
 template <typename T>
 constexpr bool is_trivially_swappable_v = conjunction_v<is_trivially_destructible<T>,
     is_trivially_move_constructible<T>, is_trivially_move_assignable<T>, negation<ADL_swappable<T>>>;
-TEMNULL__
-MSTL_INLINECSP constexpr bool is_trivially_swappable_v<byte_t> = true;
 
 template <typename T>
 struct is_trivially_swappable : bool_constant<is_trivially_swappable_v<T>> {};

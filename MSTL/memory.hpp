@@ -168,7 +168,7 @@ private:
     MSTL_CONSTEXPR20 void allocate_buffer() {
         original_len_ = len_;
         buffer_ = 0;
-        if (len_ > static_cast<ptrdiff_t>(INT_MAX / sizeof(T))) len_ = INT_MAX / sizeof(T);
+        if (len_ > static_cast<ptrdiff_t>(INT_MAX_SIZE / sizeof(T))) len_ = INT_MAX_SIZE / sizeof(T);
         while (len_ > 0) {
             buffer_ = static_cast<T *>(std::malloc(len_ * sizeof(T)));
             if (buffer_) break;
@@ -396,13 +396,25 @@ MSTL_CONSTEXPR20 void __deallocate_aux(void* ptr, size_t bytes) noexcept {
         MSTL_DEBUG_VERIFY__(shift >= min_shift && shift <= MEMORY_NO_USER_SIZE, "invalid argument.");
         ptr = reinterpret_cast<void*>(holder);
     }
+#ifdef MSTL_VERSION_17__
+#ifdef MSTL_PLATFORM_WINDOWS__
     ::operator delete(ptr, bytes);
+#else
+    ::operator delete(ptr, std::align_val_t{ bytes });
+#endif
+#else
+    ::operator delete(ptr);
+#endif
 }
 #ifdef MSTL_VERSION_17__
 template <size_t Align, enable_if_t<(Align > MEMORY_ALIGN_THRESHHOLD), int> = 0>
 MSTL_CONSTEXPR20 void __deallocate_dispatch(void* ptr, const size_t bytes) noexcept {
     size_t align = MSTL::max(Align, MEMORY_BIG_ALLOC_ALIGN);
+#ifdef MSTL_PLATFORM_LINUX__
+    ::operator delete(ptr, std::align_val_t{ align });
+#else
     ::operator delete(ptr, bytes, std::align_val_t{ align });
+#endif
 }
 template <size_t Align, enable_if_t<Align <= MEMORY_ALIGN_THRESHHOLD, int> = 0>
 MSTL_CONSTEXPR20 void __deallocate_dispatch(void* ptr, const size_t bytes) noexcept {

@@ -51,37 +51,37 @@ build cmake_object_order_depends_target_MSTL: phony || .
 
 build CMakeFiles/MSTL.dir/main.cpp.obj: CXX_COMPILER__MSTL_unscanned_Debug D$:/Workspace/Cpp$ Workspace/CLine$ Workspace/MSTL/main.cpp || cmake_object_order_depends_target_MSTL
   DEP_FILE = CMakeFiles\MSTL.dir\main.cpp.obj.d
-  FLAGS = -g -std=gnu++14 -fdiagnostics-color=always
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\MSTL.dir
   OBJECT_FILE_DIR = CMakeFiles\MSTL.dir
 
 build CMakeFiles/MSTL.dir/MSTL/basiclib.cpp.obj: CXX_COMPILER__MSTL_unscanned_Debug D$:/Workspace/Cpp$ Workspace/CLine$ Workspace/MSTL/MSTL/basiclib.cpp || cmake_object_order_depends_target_MSTL
   DEP_FILE = CMakeFiles\MSTL.dir\MSTL\basiclib.cpp.obj.d
-  FLAGS = -g -std=gnu++14 -fdiagnostics-color=always
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\MSTL.dir
   OBJECT_FILE_DIR = CMakeFiles\MSTL.dir\MSTL
 
 build CMakeFiles/MSTL.dir/MSTL/check_type.cpp.obj: CXX_COMPILER__MSTL_unscanned_Debug D$:/Workspace/Cpp$ Workspace/CLine$ Workspace/MSTL/MSTL/check_type.cpp || cmake_object_order_depends_target_MSTL
   DEP_FILE = CMakeFiles\MSTL.dir\MSTL\check_type.cpp.obj.d
-  FLAGS = -g -std=gnu++14 -fdiagnostics-color=always
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\MSTL.dir
   OBJECT_FILE_DIR = CMakeFiles\MSTL.dir\MSTL
 
 build CMakeFiles/MSTL.dir/MSTL/mathlib.cpp.obj: CXX_COMPILER__MSTL_unscanned_Debug D$:/Workspace/Cpp$ Workspace/CLine$ Workspace/MSTL/MSTL/mathlib.cpp || cmake_object_order_depends_target_MSTL
   DEP_FILE = CMakeFiles\MSTL.dir\MSTL\mathlib.cpp.obj.d
-  FLAGS = -g -std=gnu++14 -fdiagnostics-color=always
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\MSTL.dir
   OBJECT_FILE_DIR = CMakeFiles\MSTL.dir\MSTL
 
 build CMakeFiles/MSTL.dir/MSTL/rb_tree.cpp.obj: CXX_COMPILER__MSTL_unscanned_Debug D$:/Workspace/Cpp$ Workspace/CLine$ Workspace/MSTL/MSTL/rb_tree.cpp || cmake_object_order_depends_target_MSTL
   DEP_FILE = CMakeFiles\MSTL.dir\MSTL\rb_tree.cpp.obj.d
-  FLAGS = -g -std=gnu++14 -fdiagnostics-color=always
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\MSTL.dir
   OBJECT_FILE_DIR = CMakeFiles\MSTL.dir\MSTL
 
 build CMakeFiles/MSTL.dir/MSTL/thread_pool.cpp.obj: CXX_COMPILER__MSTL_unscanned_Debug D$:/Workspace/Cpp$ Workspace/CLine$ Workspace/MSTL/MSTL/thread_pool.cpp || cmake_object_order_depends_target_MSTL
   DEP_FILE = CMakeFiles\MSTL.dir\MSTL\thread_pool.cpp.obj.d
-  FLAGS = -g -std=gnu++14 -fdiagnostics-color=always
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\MSTL.dir
   OBJECT_FILE_DIR = CMakeFiles\MSTL.dir\MSTL
 

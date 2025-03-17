@@ -82,7 +82,10 @@ public:
 	decltype(auto) submit_task(Func&& func, Args&&... args) {
 		using Result = decltype(func(args...));
 		auto task = MSTL::make_shared<std::packaged_task<Result()>>(
-			std::bind(MSTL::forward<Func>(func), MSTL::forward<Args>(args)...));
+			[func = MSTL::forward<Func>(func), args = MSTL::make_tuple(MSTL::forward<Args>(args)...)]() mutable {
+				return MSTL::apply(func, args);
+			}
+		);
 		std::future<Result> res = task->get_future();
 
 		std::unique_lock<std::mutex> lock(task_queue_mtx_);
@@ -98,8 +101,9 @@ public:
 		if (pool_mode_ == POOL_MODE::MODE_CACHED
 			&& task_size_ > idle_thread_size_
 			&& threads_.size() < thread_size_thresh_hold_) {
-			auto ptr = MSTL::make_unique<__thread_aux>(std::bind(
-				&ThreadPool::thread_function, this, std::placeholders::_1));
+			auto ptr = MSTL::make_unique<__thread_aux>([this](auto&& PH1) {
+				thread_function(MSTL::forward<decltype(PH1)>(PH1));
+			});
 			int thread_id = ptr->get_id();
 			threads_.emplace(thread_id, MSTL::move(ptr));
 			threads_[thread_id]->start();

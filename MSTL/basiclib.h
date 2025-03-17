@@ -13,7 +13,7 @@
 	#define MSTL_PLATFORM_LINUX__		1
 	#if (__WORDSIZE == 64) || (__SIZEOF_POINTER__ == 8)
 		#define MSTL_PLATFORM_LINUX64__ 1
-	#elif (__WORDSIZE == 32) || (__SIZEOF_POINTER__ == 4)
+	#elif (__WORDSIZE == 32) || (__SIZEOF_POINTER__ == 4) || defined(MSTL_PLATFORM_LINUX64__)
 		#define MSTL_PLATFORM_LINUX32__ 1
 	#endif
 #else
@@ -53,7 +53,7 @@
 #if defined(MSTL_PLATFORM_WIN64__) || defined(MSTL_PLATFORM_LINUX64__) || defined(__amd64__) || defined(__x86_64__) || defined(__aarch64__)
 	#define MSTL_DATA_BUS_WIDTH_64__	1
 #endif
-#if defined(MSTL_PLATFORM_WIN32__) || defined(MSTL_PLATFORM_LINUX32__) || defined(__i386__)
+#if defined(MSTL_PLATFORM_WIN32__) || defined(MSTL_PLATFORM_LINUX32__) || defined(__i386__) || defined(MSTL_DATA_BUS_WIDTH_64__)
 	#define MSTL_DATA_BUS_WIDTH_32__	1
 #endif
 
@@ -118,11 +118,8 @@
 #if defined(MSTL_COMPILE_MSVC__)
 	#define MSTL_SUPPORT_DECLSPEC__			1
 #endif
-#if defined(MSTL_COMPILE_MSVC__)
+#if defined(MSTL_COMPILE_MSVC__) || defined(MSTL_COMPILE_CLANG__)
 	#define MSTL_SUPPORT_MAKE_INTEGER_SEQ__	1
-#endif
-#if defined(MSTL_COMPILE_CLANG__)
-	#define MSTL_SUPPORT_MEM_INTRINSICS__	1
 #endif
 #if defined(MSTL_VERSION_20__) && !defined(MSTL_COMPILE_CLANG__) && !defined(MSTL_COMPILE_WITH_EDG__)
 	#define MSTL_SUPPORT_U8_INTRINSICS__	1
@@ -339,23 +336,31 @@ using uint16_t	= unsigned short;
 using uint32_t	= unsigned int;
 using uint64_t	= unsigned MSTL_LLT;
 
-#ifdef MSTL_DATA_BUS_WIDTH_64__
+#if defined(MSTL_PLATFORM_LINUX__)
+using uintptr_t = long unsigned int;
+using size_t	= long unsigned int;
+using ptrdiff_t = long int;
+using intptr_t	= long int;
+#elif defined(MSTL_PLATFORM_WIN64__)
 using uintptr_t = unsigned MSTL_LLT;
 using size_t	= unsigned MSTL_LLT;
 using ptrdiff_t = MSTL_LLT;
 using intptr_t	= MSTL_LLT;
-#else
+#elif defined(MSTL_PLATFORM_WIN32__)
 using uintptr_t = unsigned int;
 using size_t	= unsigned int;
 using ptrdiff_t = int;
 using intptr_t	= int;
 #endif
 
+
 using cstring_t = const char*;
 using ccstring_t = const char* const;
 
 
-MSTL_INLINECSP constexpr size_t INT_MAX_SIZE = static_cast<size_t>(-1);
+MSTL_INLINECSP constexpr uint32_t INT_MAX_SIZE = static_cast<uint32_t>(-1);
+MSTL_INLINECSP constexpr size_t SIZE_T_MAX_SIZE = static_cast<size_t>(-1);
+MSTL_INLINECSP constexpr uint64_t LONG_LONG_MAX_SIZE = static_cast<uint64_t>(-1);
 MSTL_INLINECSP constexpr uint32_t MSTL_SPLIT_LENGTH = 15U;
 
 

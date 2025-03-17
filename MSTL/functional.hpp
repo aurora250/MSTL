@@ -58,6 +58,36 @@ noexcept(is_nothrow_invocable_v<Callable, Args...>) {
             MSTL::forward<Callable>(f), MSTL::forward<Args>(args)...);
 }
 
+
+template <template <typename...> class, typename, typename>
+MSTL_INLINECSP constexpr bool __apply_unpack_tuple = false;
+
+template <template <typename...> class Trait, typename T, typename... U>
+MSTL_INLINECSP constexpr bool __apply_unpack_tuple<Trait, T, tuple<U...>> = Trait<T, U...>::value;
+
+template <template <typename...> class Trait, typename T, typename... U>
+MSTL_INLINECSP constexpr bool __apply_unpack_tuple<Trait, T, tuple<U...>&> = Trait<T, U&...>::value;
+
+template <template <typename...> class Trait, typename T, typename... U>
+MSTL_INLINECSP constexpr bool __apply_unpack_tuple<Trait, T, const tuple<U...>> = Trait<T, const U...>::value;
+
+template<template<typename...> class Trait, typename T, typename... U>
+MSTL_INLINECSP constexpr bool __apply_unpack_tuple<Trait, T, const tuple<U...>&> = Trait<T, const U&...>::value;
+
+
+template <typename F, typename Tuple, size_t... Idx>
+constexpr decltype(auto) __apply_impl(F&& f, Tuple&& t, MSTL::index_sequence<Idx...>) {
+    return MSTL::invoke(MSTL::forward<F>(f), MSTL::get<Idx>(MSTL::forward<Tuple>(t))...);
+}
+
+template <typename F, typename Tuple>
+constexpr decltype(auto) apply(F&& f, Tuple&& t)
+noexcept(__apply_unpack_tuple<MSTL::is_nothrow_invocable, F, Tuple>) {
+    using Indices = make_index_sequence<tuple_size_v<remove_reference_t<Tuple>>>;
+    return MSTL::__apply_impl(MSTL::forward<F>(f), MSTL::forward<Tuple>(t), Indices{});
+}
+
+
 template <typename>
 struct function {};
 

@@ -146,10 +146,17 @@ MSTL_NODISCARD inline string to_string(unsigned MSTL_LLT x) {
 }
 
 MSTL_NODISCARD inline string to_string(double x) {
+#ifdef MSTL_PLATFORM_LINUX__
+    const int len = ::snprintf(nullptr, 0, "%f", x);
+    string str(len, '\0');
+    ::snprintf(&str[0], len + 1, "%f", x);
+    return str;
+#else
     const auto len = static_cast<size_t>(::_scprintf("%f", x));
     string str(len, '\0');
     ::sprintf_s(&str[0], len + 1, "%f", x);
     return str;
+#endif
 }
 MSTL_NODISCARD inline string to_string(float x) {
     return to_string(static_cast<double>(x));
@@ -178,10 +185,18 @@ MSTL_NODISCARD inline wstring to_wstring(unsigned long long x) {
     return uint_to_string<wchar_t>(x);
 }
 MSTL_NODISCARD inline wstring to_wstring(double x) {
+#ifdef MSTL_PLATFORM_LINUX__
+    std::setlocale(LC_ALL, "en_US.UTF-8");
+    const int len = ::swprintf(nullptr, 0, L"%f", x);
+    wstring str(len, L'\0');
+    ::swprintf(&str[0], len + 1, L"%f", x);
+    return str;
+#else
     const auto len = static_cast<size_t>(::_scwprintf(L"%f", x));
     wstring str(len, L'\0');
     ::swprintf_s(&str[0], len + 1, L"%f", x);
     return str;
+#endif
 }
 MSTL_NODISCARD inline wstring to_wstring(float x) {
     return to_wstring(static_cast<double>(x));

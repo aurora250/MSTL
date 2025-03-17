@@ -1,15 +1,10 @@
 #ifndef MSTL_CHECK_TYPE_H__
 #define MSTL_CHECK_TYPE_H__
 #include "stringstream.hpp"
-#ifdef MSTL_COMPILE_GNUC__ 
+#ifdef MSTL_COMPILE_GNUC__
 #include <memory>
 #include <cxxabi.h>
 #endif
-
-// use unnamed object
-#pragma warning(push)
-#pragma warning(disable: 26444)
-
 MSTL_BEGIN_NAMESPACE__
 
 class output {
@@ -202,7 +197,7 @@ struct at_destruct {
     const char* str_;
 
     at_destruct(output& out, const char* str = nullptr);
-    ~at_destruct(void);
+    ~at_destruct();
     void set_str(const char* str = nullptr);
 };
 
@@ -230,12 +225,11 @@ CHECK_TYPE_MEM_FUNC__(const volatile)
 #undef CHECK_TYPE_MEM_FUNC__
 
 template <typename T>
-MSTL_CONSTEXPR string check_type() {
+MSTL_CONSTEXPR20 string check_type() {
     string str;
     check<T> { str };
     return str;
 }
 
-#pragma warning(pop)
 MSTL_END_NAMESPACE__
 #endif // MSTL_CHECK_TYPE_H__

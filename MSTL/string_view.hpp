@@ -11,7 +11,7 @@ struct base_char_traits {
 
     static MSTL_CONSTEXPR char_type* copy(char_type* const dest,
         const char_type* const srcs, const size_t count) noexcept {
-#if MSTL_SUPPORT_MEM_INTRINSICS__
+#if defined(MSTL_COMPILE_CLANG__)
         __builtin_memcpy(dest, srcs, count * sizeof(char_type));
 #else
 #ifdef MSTL_VERSION_20__
@@ -28,7 +28,7 @@ struct base_char_traits {
 
     static MSTL_CONSTEXPR char_type* move(char_type* const dest,
         const char_type* const srcs, const size_t count) noexcept {
-#ifdef MSTL_SUPPORT_MEM_INTRINSICS__
+#if defined(MSTL_COMPILE_CLANG__)
         __builtin_memmove(dest, srcs, count * sizeof(char_type));
 #else 
 #if MSTL_VERSION_20__
@@ -148,7 +148,7 @@ public:
 #if MSTL_VERSION_20__
         if (MSTL::is_constant_evaluated()) {
             MSTL_IF_CONSTEXPR (is_same_v<char_type, wchar_t>) {
-#ifdef MSTL_COMPILE_MSVC__
+#if defined(MSTL_COMPILE_MSVC__) || defined(MSTL_COMPILE_CLANG__)
                 return __builtin_wcslen(str);
 #else
                 return MSTL::wcslen(str);
@@ -245,7 +245,7 @@ public:
 #ifdef MSTL_VERSION_17__
 #ifdef MSTL_VERSION_20__
         MSTL_IF_CONSTEXPR (is_same_v<char_type, char8_t>) {
-#ifdef MSTL_SUPPORT_U8_INTRINSICS__
+#if defined(MSTL_VERSION_20__) && !defined(MSTL_COMPILE_CLANG__) && !defined(MSTL_COMPILE_WITH_EDG__)
 #ifdef MSTL_COMPILE_MSVC__
             return __builtin_u8strlen(str);
 #else
@@ -270,7 +270,7 @@ public:
 #ifdef MSTL_VERSION_17__
 #ifdef MSTL_VERSION_20__
         MSTL_IF_CONSTEXPR (is_same_v<char_type, char8_t>) {
-#ifdef MSTL_SUPPORT_U8_INTRINSICS__
+#if defined(MSTL_VERSION_20__) && !defined(MSTL_COMPILE_CLANG__) && !defined(MSTL_COMPILE_WITH_EDG__)
             return __builtin_u8memchr(str, chr, n);
 #else
             return base_type::find(str, n, chr);
@@ -425,7 +425,13 @@ constexpr size_t char_traits_rfind_char(const char_traits_ptr_t<Traits> dest, co
     return static_cast<size_t>(-1);
 }
 
-template <typename Traits, enable_if_t<is_specialization_v<Traits, char_traits>, int> = 0>
+template <typename Traits, enable_if_t<
+#ifdef MSTL_VERSION_17__
+    is_specialization_v<Traits, char_traits>
+#else
+    is_specialization_v<Traits, char_traits>()
+#endif
+, int> = 0>
 constexpr size_t char_traits_find_first_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (rsc_size != 0 && start < dest_size) {
@@ -443,7 +449,13 @@ constexpr size_t char_traits_find_first_of(const char_traits_ptr_t<Traits> dest,
     return static_cast<size_t>(-1);
 }
 
-template <typename Traits, enable_if_t<!is_specialization_v<Traits, char_traits>, int> = 0>
+template <typename Traits, enable_if_t<
+#ifdef MSTL_VERSION_17__
+    !is_specialization_v<Traits, char_traits>
+#else
+    !is_specialization_v<Traits, char_traits>()
+#endif
+, int> = 0>
 constexpr size_t char_traits_find_first_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size, 
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (rsc_size != 0 && start < dest_size) {
@@ -456,7 +468,13 @@ constexpr size_t char_traits_find_first_of(const char_traits_ptr_t<Traits> dest,
     return static_cast<size_t>(-1);
 }
 
-template <typename Traits, enable_if_t<is_specialization_v<Traits, char_traits>, int> = 0>
+template <typename Traits, enable_if_t<
+#ifdef MSTL_VERSION_17__
+    is_specialization_v<Traits, char_traits>
+#else
+    is_specialization_v<Traits, char_traits>()
+#endif
+, int> = 0>
 constexpr size_t char_traits_find_last_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (rsc_size != 0 && dest_size != 0) {
@@ -475,7 +493,13 @@ constexpr size_t char_traits_find_last_of(const char_traits_ptr_t<Traits> dest, 
     return static_cast<size_t>(-1);
 }
 
-template <typename Traits, enable_if_t<!is_specialization_v<Traits, char_traits>, int> = 0>
+template <typename Traits, enable_if_t<
+#ifdef MSTL_VERSION_17__
+    !is_specialization_v<Traits, char_traits>
+#else
+    !is_specialization_v<Traits, char_traits>()
+#endif
+, int> = 0>
 constexpr size_t char_traits_find_last_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size, 
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (rsc_size != 0 && dest_size != 0) {
@@ -489,7 +513,13 @@ constexpr size_t char_traits_find_last_of(const char_traits_ptr_t<Traits> dest, 
     return static_cast<size_t>(-1);
 }
 
-template <typename Traits, enable_if_t<is_specialization_v<Traits, char_traits>, int> = 0>
+template <typename Traits, enable_if_t<
+#ifdef MSTL_VERSION_17__
+    is_specialization_v<Traits, char_traits>
+#else
+    is_specialization_v<Traits, char_traits>()
+#endif
+, int> = 0>
 constexpr size_t char_traits_find_first_not_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (start < dest_size) {
@@ -507,7 +537,13 @@ constexpr size_t char_traits_find_first_not_of(const char_traits_ptr_t<Traits> d
     return static_cast<size_t>(-1);
 }
 
-template <typename Traits, enable_if_t<!is_specialization_v<Traits, char_traits>, int> = 0>
+template <typename Traits, enable_if_t<
+#ifdef MSTL_VERSION_17__
+    !is_specialization_v<Traits, char_traits>
+#else
+    !is_specialization_v<Traits, char_traits>()
+#endif
+, int> = 0>
 constexpr size_t char_traits_find_first_not_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (start < dest_size) {
@@ -533,7 +569,13 @@ constexpr size_t char_traits_find_not_char(const char_traits_ptr_t<Traits> dest,
     return static_cast<size_t>(-1);
 }
 
-template <typename Traits, enable_if_t<is_specialization_v<Traits, char_traits>, int> = 0>
+template <typename Traits, enable_if_t<
+#ifdef MSTL_VERSION_17__
+    is_specialization_v<Traits, char_traits>
+#else
+    is_specialization_v<Traits, char_traits>()
+#endif
+, int> = 0>
 constexpr size_t char_traits_find_last_not_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (dest_size != 0) {
@@ -552,7 +594,13 @@ constexpr size_t char_traits_find_last_not_of(const char_traits_ptr_t<Traits> de
     return static_cast<size_t>(-1);
 }
 
-template <typename Traits, enable_if_t<!is_specialization_v<Traits, char_traits>, int> = 0>
+template <typename Traits, enable_if_t<
+#ifdef MSTL_VERSION_17__
+    !is_specialization_v<Traits, char_traits>
+#else
+    !is_specialization_v<Traits, char_traits>()
+#endif
+, int> = 0>
 constexpr size_t char_traits_find_last_not_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size, 
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (dest_size != 0) {
@@ -759,7 +807,7 @@ private:
     const_pointer data_;
     size_type size_;
 
-    static constexpr void range_check(const size_type n) {
+    constexpr void range_check(const size_type n) {
         MSTL_DEBUG_VERIFY__(size_ < n, "basic string view index out of ranges.");
     }
 
@@ -789,7 +837,7 @@ public:
 
     MSTL_NODISCARD constexpr size_type size() const noexcept { return size_; }
     MSTL_NODISCARD constexpr size_type max_size() const noexcept {
-        return MSTL::min(static_cast<size_t>(9223372036854775807LL), static_cast<size_t>(-1) / sizeof(CharT));
+        return (npos - sizeof(size_type) - sizeof(void*)) / sizeof(value_type) / 4;
     }
     MSTL_NODISCARD constexpr size_type length() const noexcept { return size_; }
     MSTL_NODISCARD constexpr bool empty() const noexcept { return size_ == 0; }
