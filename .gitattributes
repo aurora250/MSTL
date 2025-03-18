@@ -1,2 +1,9 @@
 *.ninja_log filter=lfs diff=lfs merge=lfs -text
 *.txt filter=lfs diff=lfs merge=lfs -text
+*.json filter=lfs diff=lfs merge=lfs -text
+*.cmake filter=lfs diff=lfs merge=lfs -text
+*.c filter=lfs diff=lfs merge=lfs -text
+*.cpp filter=lfs diff=lfs merge=lfs -text
+*.yaml filter=lfs diff=lfs merge=lfs -text
+*.ninja filter=lfs diff=lfs merge=lfs -text
+*.check_cache filter=lfs diff=lfs merge=lfs -text

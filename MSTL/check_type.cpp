@@ -1,18 +1,3 @@
-#include "check_type.h"
-MSTL_BEGIN_NAMESPACE__
-
-bool output::check_empty(const char* val) {
-    return (!val) || (val[0] == 0);
-}
-output::output(string& sr) : is_compact_(true), sr_(sr) {}
-output& output::operator()() { return (*this); }
-output& output::compact() {
-    this->is_compact_ = true;
-    return (*this);
-}
-
-at_destruct::at_destruct(output& out, const char* str) : out_(out), str_(str) {}
-at_destruct::~at_destruct() { out_(str_); }
-void at_destruct::set_str(const char* str) { str_ = str; }
-
-MSTL_END_NAMESPACE__
+version https://git-lfs.github.com/spec/v1
+oid sha256:db29fbe56967623b77d86185f9d0f8dec6a35483337fed9f5d447a4ee4f06e9c
+size 543

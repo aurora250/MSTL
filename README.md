@@ -36,13 +36,13 @@ concept与requires；
 
 标准库并发接口的使用(atomic/conditional_variable/thread/mutex/future/package_task等)。
 
-## 支持环境(拓展中)
+## 支持环境
 
-WINDOWS
+WINDOWS LINUX
 
 X64 X86
 
-MSVC GCC
+MSVC GCC CLANG
 
 C++ 14 17 20
 
@@ -244,13 +244,13 @@ Implement the vast majority of standard algorithms (including concurrency algori
 
 Use of standard concurrency interfaces (including atomic/conditional_variable/thread/mutex/future/package_task).
 
-## Supporting Environments (Expanding)
+## Supporting Environments
 
-WINDOWS
+WINDOWS LINUX
 
 X64 X86
 
-MSVC GCC
+MSVC GCC CLANG
 
 C++ 14 17 20
 
