@@ -4,23 +4,14 @@
 #include "type_traits.hpp"
 MSTL_BEGIN_NAMESPACE__
 
-// 0 ~ 2^16 - 1
 using mathus_t	= unsigned short;
-// -2^16 ~ 2^16 - 1
 using mathi_t	= int;
-// 0 ~ 2^32 - 1
 using mathui_t	= unsigned int;
-// -2^32 ~ 2^32 - 1
 using mathl_t	= MSTL_LLT;
-// 0 ~ 2^64 - 1
 using mathul_t	= unsigned MSTL_LLT;
-// 2.3E - 308 ~ 1.7E + 308
 using mathd_t	= double;
-// 3.4E - 4932 ~ 1.1E + 4932
 using mathld_t	= long double;
-// invalid
 using mathud_t	= void;
-// invalid
 using mathuld_t = void;
 
 namespace constants {
@@ -35,34 +26,32 @@ namespace constants {
 	static constexpr mathld_t LOW_PRECISE_TOLERANCE = TAYLOR_CONVERGENCE * PRECISE_TOLERANCE;
 	static constexpr mathul_t INFINITY_INT = 18446744073709551615ULL;
 	static constexpr mathld_t INFINITY_FLT = 1.7976931348623158e+308L;
-};
 
-static constexpr mathus_t LEONARDO_COUNT = 46;
-static constexpr mathui_t LEONARDO_LIST[LEONARDO_COUNT] = {
-	1,			1,			3,			5,			9, 
-	15,			25,			41,			67,			109,
-	177,		287,		465,		753,		1219,
-	1973,		3193,		5167,		8361,		13529,
-	21891,		35421,		57313,		92735,		150049, 
-	242785,		392835,		635621,		1028457,	1664079,
-	2692537,	4356617,	7049155,	11405773,	18454929,
-	29860703,	48315633,	78176337,	126491971,	204668309,
-	331160281,	535828591,	866988873,	1402817465, 2269806339u, 
-	3672623805u
-};
-
-constexpr size_t leonardo(const mathus_t n) {
-	if (n == 0 || n == 1) return 1;
-	return leonardo(n - 1) + leonardo(n - 2) + 1;
+	static constexpr mathus_t FIBONACCI_COUNT = 50;
+	static constexpr mathul_t FIBONACCI_LIST[FIBONACCI_COUNT] = {
+		0,			1,			1,			2,			3,
+		5,			8,			13,			21,			34,
+		55,			89,			144,		233,		377,
+		610,		987,		1597,		2584,		4181,
+		6765,		10946,		17711,		28657,		46368,
+		75025,		121393,		196418,		317811,		514229,
+		832040,		1346269,	2178309,	3524578,	5702887,
+		9227465,	14930352,	24157817,	39088169,	63245986,
+		102334155,	165580141,	267914296,	433494437,	701408733,
+		1134903170, 1836311903, 2971215073, 4807526976, 7778742049
+	};
 }
 
-constexpr size_t fibonacci(const mathus_t n) {
-	if (n == 0 || n == 1) return 1;
+constexpr mathul_t fibonacci(const mathus_t n) {
+	if (n < constants::FIBONACCI_COUNT) return constants::FIBONACCI_LIST[n];
 	return fibonacci(n - 1) + fibonacci(n - 2);
+}
+constexpr mathul_t leonardo(const mathus_t n) {
+	return 2 * fibonacci(n + 1) - 1;
 }
 
 constexpr mathld_t angular2radian(const mathld_t angular) noexcept {
-	return (angular * constants::PI / constants::SEMI_CIRCLE);
+	return angular * constants::PI / constants::SEMI_CIRCLE;
 }
 constexpr mathld_t radian2angular(const mathld_t radians) noexcept {
 	return radians * (constants::SEMI_CIRCLE / constants::PI);
@@ -88,7 +77,7 @@ constexpr decltype(auto) sum_n(First first, Rests... args) noexcept {
 
 template <typename... Args, enable_if_t<(sizeof...(Args) > 0), int> = 0>
 constexpr mathld_t average(Args... args) noexcept {
-	return sum_n(args...) * 1.0 / (sizeof...(Args));
+	return sum_n(args...) * 1.0 / sizeof...(Args);
 }
 
 template <typename T, enable_if_t<is_integral_v<T> && is_unsigned_v<T>, int> = 0>
@@ -105,10 +94,9 @@ constexpr T lcm(T m, T n) noexcept { // least common multiple
 	return m * n / MSTL::gcd(m, n);
 }
 
-inline mathld_t float_mod(mathld_t x, mathld_t y) {
-	if (y == 0) Exception(ValueError("zero can not be dividend."));
-	mathld_t qut = static_cast<int>(x / y);
-	mathld_t result = x - qut * y;
+inline mathld_t float_mod(const mathld_t x, const mathld_t y) {
+	if (y == 0) Exception(MathError("zero can not be dividend."));
+	const mathld_t result = x - static_cast<int>(x / y) * y;
 	return result;
 }
 
@@ -123,9 +111,8 @@ constexpr mathl_t power(T x, mathui_t n) noexcept {
 	mathl_t result = 1;
 	T base = x;
 	while (n > 0) {
-		if (n % 2 == 1) {
+		if (n % 2 == 1)
 			result *= base;
-		}
 		base *= base;
 		n /= 2;
 	}
@@ -137,9 +124,8 @@ constexpr mathld_t power(T x, mathui_t n) noexcept {
 	mathld_t result = 1.0;
 	T base = x;
 	while (n > 0) {
-		if (n % 2 == 1) {
+		if (n % 2 == 1)
 			result *= base;
-		}
 		base *= base;
 		n /= 2;
 	}
@@ -153,14 +139,14 @@ constexpr mathld_t exponential(const mathui_t n) noexcept {
 constexpr mathld_t logarithm_e(const mathld_t x) noexcept {
 	mathui_t N = constants::TAYLOR_CONVERGENCE;
 	const mathld_t a = (x - 1) / (x + 1);
-	const mathld_t a_sqar = a * a;
+	const mathld_t a_sqrt = a * a;
 	mathld_t nk = 2 * N + 1;
 	mathld_t y = 1.0 / nk;
 	while (N--) {
 		nk -= 2;
-		y = 1.0 / nk + a_sqar * y;
+		y = 1.0 / nk + a_sqrt * y;
 	}
-	return (2.0 * a * y);
+	return 2.0 * a * y;
 }
 
 constexpr mathld_t logarithm(const mathld_t x, const mathui_t base) noexcept {
@@ -260,14 +246,14 @@ inline bool around_zero(const mathld_t x, const mathld_t toler = constants::PREC
 }
 
 constexpr mathld_t remainder(const mathld_t x, const mathld_t y) noexcept {
-	return (x - y * (x / y));
+	return x - y * (x / y);
 }
 constexpr mathld_t float_part(const mathld_t x) noexcept {
 	return x - static_cast<mathl_t>(x);
 }
 constexpr mathld_t divided_float(mathld_t x, mathl_t* int_ptr) noexcept {
 	*int_ptr = static_cast<mathl_t>(x);
-	x -= (*int_ptr);
+	x -= *int_ptr;
 	return x;
 }
 
@@ -293,8 +279,8 @@ constexpr mathld_t cosine(const mathld_t x) noexcept {
 	return sine(constants::PI / 2.0 - x);
 }
 inline mathld_t tangent(const mathld_t x) {
-	if (around_pi(x - constants::PI / 2.0)) Exception(ValueError("Tangent Range Exceeded"));
-	return (sine(x) / cosine(x));
+	if (around_pi(x - constants::PI / 2.0)) Exception(MathError("Tangent Range Exceeded"));
+	return sine(x) / cosine(x);
 }
 inline mathld_t cotangent(const mathld_t x) {
 	return 1.0 / tangent(x);
@@ -303,7 +289,7 @@ inline mathld_t cotangent(const mathld_t x) {
 mathld_t arcsine(mathld_t x);
 
 inline mathld_t arccosine(const mathld_t x) {
-	if (x > 1 || x < -1) Exception(ValueError("Arccosine Range Exceeded"));
+	if (x > 1 || x < -1) Exception(MathError("Arccosine Range Exceeded"));
 	return constants::PI / 2.0 - arcsine(x);
 }
 

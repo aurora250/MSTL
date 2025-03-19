@@ -1,6 +1,6 @@
-#ifndef MSTL_CONTAINER_H__
-#define MSTL_CONTAINER_H__
-#include "check_type.h"
+#ifndef MSTL_DETAILOF_HPP__
+#define MSTL_DETAILOF_HPP__
+#include "check_type.hpp"
 #include "queue.hpp"
 #include "stack.hpp"
 MSTL_BEGIN_NAMESPACE__
@@ -69,48 +69,48 @@ template <typename Container>
 #ifdef MSTL_VERSION_20__
 	requires(is_detailable<Container>)
 #endif
-void detailof(const Container& c, std::ostream& _out = std::cout) {
-	split_line(_out);
-	_out << "type: " << MSTL::check_type<Container>() << '\n';
-	_out << "size: " << c.size() << '\n';
-	_out << "data: ";
-	show_data_only(c, _out);
-	_out << std::endl;
-	split_line(_out);
+void detailof(const Container& c, std::ostream& out = std::cout) {
+	split_line(out);
+	out << "type: " << MSTL::check_type<Container>() << '\n';
+	out << "size: " << c.size() << '\n';
+	out << "data: ";
+	show_data_only(c, out);
+	out << std::endl;
+	split_line(out);
 }
 
 template <typename T, typename Sequence>
-void detailof(const stack<T, Sequence>& stk, std::ostream& _out = std::cout) {
-	split_line(_out);
-	_out << "type: " << check_type<stack<T, Sequence>>() << '\n';
-	_out << "size: " << stk.size() << '\n';
-	_out << "data: ";
-	show_data_only(stk.seq_, _out);
-	_out << std::endl;
-	split_line(_out);
+void detailof(const stack<T, Sequence>& stk, std::ostream& out = std::cout) {
+	split_line(out);
+	out << "type: " << check_type<stack<T, Sequence>>() << '\n';
+	out << "size: " << stk.size() << '\n';
+	out << "data: ";
+	show_data_only(stk.seq_, out);
+	out << std::endl;
+	split_line(out);
 }
 
 template <typename T, typename Sequence>
-void detailof(const queue<T, Sequence>& pq, std::ostream& _out = std::cout) {
-	split_line(_out);
-	_out << "type: " << check_type<queue<T, Sequence>>() << '\n';
-	_out << "size: " << pq.size() << '\n';
-	_out << "data: ";
-	show_data_only(pq.seq_, _out);
-	_out << std::endl;
-	split_line(_out);
+void detailof(const queue<T, Sequence>& pq, std::ostream& out = std::cout) {
+	split_line(out);
+	out << "type: " << check_type<queue<T, Sequence>>() << '\n';
+	out << "size: " << pq.size() << '\n';
+	out << "data: ";
+	show_data_only(pq.seq_, out);
+	out << std::endl;
+	split_line(out);
 }
 
 template <typename T, typename Sequence, typename Compare>
-void detailof(const priority_queue<T, Sequence, Compare>& pq, std::ostream& _out = std::cout) {
-	split_line(_out);
-	_out << "type: " << check_type<priority_queue<T, Sequence, Compare>>() << '\n';
-	_out << "size: " << pq.size() << '\n';
-	_out << "data: ";
-	show_data_only(pq.pair_.value, _out);
-	_out << std::endl;
-	split_line(_out);
+void detailof(const priority_queue<T, Sequence, Compare>& pq, std::ostream& out = std::cout) {
+	split_line(out);
+	out << "type: " << check_type<priority_queue<T, Sequence, Compare>>() << '\n';
+	out << "size: " << pq.size() << '\n';
+	out << "data: ";
+	show_data_only(pq.pair_.value, out);
+	out << std::endl;
+	split_line(out);
 }
 
 MSTL_END_NAMESPACE__
-#endif // MSTL_CONTAINER_H__
+#endif // MSTL_DETAILOF_HPP__

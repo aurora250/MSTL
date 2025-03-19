@@ -52,19 +52,6 @@ noexcept(noexcept(a < b)) {
 	return a < b ? b : a;
 }
 
-template <typename T>
-MSTL_CONSTEXPR const T& max(std::initializer_list<T> ilist)
-noexcept(noexcept(*ilist.begin() < *ilist.begin())) {
-	MSTL_DEBUG_VERIFY__(ilist.size() > 0, "max empty");
-	const T* max_val = &*ilist.begin();
-	for (const auto& elem : ilist) {
-		if (*max_val < elem) {
-			max_val = &elem;
-		}
-	}
-	return *max_val;
-}
-
 template <typename T, typename Compare>
 MSTL_CONSTEXPR const T& min(const T& a, const T& b, Compare comp)
 noexcept(noexcept(comp(b, a))) {
@@ -142,6 +129,12 @@ MSTL_CONSTEXPR Iterator max_element(Iterator first, Iterator last) {
 	return MSTL::max_element(first, last, MSTL::less<iter_val_t<Iterator>>());
 }
 
+template <typename T>
+MSTL_CONSTEXPR const T& max(std::initializer_list<T> list) {
+	auto iter = MSTL::max_element(list.begin(), list.end());
+	return *iter;
+}
+
 template <typename Iterator, typename Compare, enable_if_t<
 	is_input_iter_v<Iterator>, int> = 0>
 MSTL_CONSTEXPR Iterator min_element(Iterator first, Iterator last, Compare comp) {
@@ -155,6 +148,11 @@ MSTL_CONSTEXPR Iterator min_element(Iterator first, Iterator last, Compare comp)
 template <typename Iterator>
 MSTL_CONSTEXPR Iterator min_element(Iterator first, Iterator last) {
 	return MSTL::min_element(first, last, MSTL::less<iter_val_t<Iterator>>());
+}
+
+template <typename T>
+MSTL_CONSTEXPR const T& min(std::initializer_list<T> list) {
+	return *MSTL::min_element(list.begin(), list.end());
 }
 
 template <typename Iterator, typename Compare, enable_if_t<

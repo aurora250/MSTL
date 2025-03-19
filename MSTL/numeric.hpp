@@ -1,6 +1,5 @@
 #ifndef MSTL_NUMERIC_HPP__
 #define MSTL_NUMERIC_HPP__
-#include <thread>
 #include "functor.hpp"
 #include "concepts.hpp"
 MSTL_BEGIN_NAMESPACE__

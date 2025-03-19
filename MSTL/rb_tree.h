@@ -1,11 +1,10 @@
 #ifndef MSTL_RB_TREE_H__
 #define MSTL_RB_TREE_H__
-#include "functor.hpp"
 #include "algo.hpp"
 MSTL_BEGIN_NAMESPACE__
 
-static MSTL_CONSTEXPR bool RB_TREE_RED__ = false;
-static MSTL_CONSTEXPR bool RB_TREE_BLACK__ = true;
+static constexpr bool RB_TREE_RED__ = false;
+static constexpr bool RB_TREE_BLACK__ = true;
 
 struct __rb_tree_node_base;
 struct __rb_tree_base_iterator;
@@ -151,7 +150,7 @@ public:
         increment();
         return *this;
     }
-    self& operator ++(int) noexcept {
+    self operator ++(int) noexcept {
         self tmp = *this;
         ++*this;
         return tmp;
@@ -221,12 +220,12 @@ private:
     }
 
     link_type& root() const noexcept { return (link_type &)header_->parent_; }
-    link_type& leftmost() const noexcept { return (link_type &)(header_->left_); }
-    link_type& rightmost() const noexcept { return (link_type &)(header_->right_); }
+    link_type& leftmost() const noexcept { return (link_type &)header_->left_; }
+    link_type& rightmost() const noexcept { return (link_type &)header_->right_; }
 
-    static link_type& left(link_type x) noexcept { return (link_type &)(x->left_); }
-    static link_type& right(link_type x) noexcept { return (link_type &)(x->right_); }
-    static link_type& parent(link_type x) noexcept { return (link_type &)(x->parent_); }
+    static link_type& left(link_type x) noexcept { return (link_type &)x->left_; }
+    static link_type& right(link_type x) noexcept { return (link_type &)x->right_; }
+    static link_type& parent(link_type x) noexcept { return (link_type &)x->parent_; }
     static const Key& key(link_type x) noexcept { return KeyOfValue()(x->data_); }
     static const Key& key(base_ptr x) noexcept { return KeyOfValue()(link_type(x)->data_); }
 
@@ -402,7 +401,7 @@ public:
 
     template <typename... Args>
     pair<iterator, bool> emplace_unique(Args&&... args) {
-        const link_type tmp = (create_node)(MSTL::forward<Args>(args)...);
+        link_type tmp = (create_node)(MSTL::forward<Args>(args)...);
         return (insert_unique_node)(tmp);
     }
     pair<iterator, bool> insert_unique(const value_type& v) {
@@ -494,7 +493,7 @@ public:
 
     size_type erase(const key_type& k) noexcept {
         pair<iterator, iterator> p = equal_range(k);
-        size_type n = MSTL::distance(p.first, p.second);
+        const size_type n = MSTL::distance(p.first, p.second);
         erase(p.first, p.second);
         return n;
     }

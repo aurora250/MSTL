@@ -68,8 +68,7 @@ MSTL_CONSTEXPR T initialize() noexcept(is_nothrow_default_constructible_v<T>) {
 	return T();
 }
 #define INITIALIZE_BASIC_FUNCTION__(OPT) \
-TEMNULL__ MSTL_CONSTEXPR OPT initialize<OPT>() noexcept { return static_cast<OPT>(0); }
-
+	template <> MSTL_CONSTEXPR OPT initialize<OPT>() noexcept { return static_cast<OPT>(0); }
 MSTL_MACRO_RANGE_CHARS(INITIALIZE_BASIC_FUNCTION__)
 MSTL_MACRO_RANGE_FLOAT(INITIALIZE_BASIC_FUNCTION__)
 MSTL_MACRO_RANGE_INT(INITIALIZE_BASIC_FUNCTION__)

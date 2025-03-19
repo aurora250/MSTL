@@ -890,7 +890,7 @@ template <typename Iterator, typename Generator, enable_if_t<
 void shuffle(Iterator first, Iterator last, Generator& rand) {
 	if (first == last) return;
 	for (Iterator i = MSTL::next(first); i != last; ++i) {
-		Iterator j = MSTL::next(first, rand((i - first) + 1));
+		Iterator j = MSTL::next(first, rand(i - first + 1));
 		MSTL::iter_swap(i, j);
 	}
 }

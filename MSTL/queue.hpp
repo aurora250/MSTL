@@ -1,7 +1,5 @@
 #ifndef MSTL_QUEUE_HPP__
 #define MSTL_QUEUE_HPP__
-#include <queue>
-
 #include "deque.hpp"
 #include "heap.hpp"
 MSTL_BEGIN_NAMESPACE__

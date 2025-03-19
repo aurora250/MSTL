@@ -4,12 +4,12 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <typename CharT, bool = is_character_v<CharT>>
-class string_bitmap {
+class __string_bitmap {
 private:
     bool matches_[256] = {};
 
 public:
-    MSTL_CONSTEXPR string_bitmap() = default;
+    MSTL_CONSTEXPR __string_bitmap() = default;
 
     MSTL_CONSTEXPR bool mark(const CharT* first, const CharT* const last) noexcept {
         for (; first != last; ++first) 
@@ -21,7 +21,7 @@ public:
     }
 };
 template <typename CharT>
-class string_bitmap<CharT, false> {};
+class __string_bitmap<CharT, false> {};
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_BITMAP_HPP__

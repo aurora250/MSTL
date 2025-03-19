@@ -3,8 +3,10 @@
 #include "memory.hpp"
 MSTL_BEGIN_NAMESPACE__
 
-constexpr size_t deque_buf_size(size_t n, size_t sz) noexcept {
-    return n != 0 ? n : (sz < size_t(256) ? size_t(256 / sz) : 1);
+static constexpr size_t MAX_DEQUE_BUFFER_SIZE = 256;
+
+constexpr size_t deque_buf_size(const size_t n, const size_t sz) noexcept {
+    return n != 0 ? n : sz < MAX_DEQUE_BUFFER_SIZE ? MAX_DEQUE_BUFFER_SIZE / sz : 1;
 }
 
 template <typename T, typename Alloc, size_t BufSize>

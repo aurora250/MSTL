@@ -190,7 +190,7 @@ is_ranges_iter_v<Iterator>;
 
 
 template <typename Iterator>
-constexpr bool is_ranges_input_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::input_iterator_tag>;
+constexpr bool is_ranges_input_iter_v = is_convertible_v<iter_cat_t<Iterator>, input_iterator_tag>;
 
 template <typename Iterator>
 constexpr bool is_input_iter_v =
@@ -201,7 +201,7 @@ is_ranges_input_iter_v<Iterator>;
 
 
 template <typename Iterator>
-constexpr bool is_ranges_fwd_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::forward_iterator_tag>;
+constexpr bool is_ranges_fwd_iter_v = is_convertible_v<iter_cat_t<Iterator>, forward_iterator_tag>;
 
 template <typename Iterator>
 constexpr bool is_fwd_iter_v = 
@@ -212,7 +212,7 @@ is_ranges_fwd_iter_v<Iterator>;
 
 
 template <typename Iterator>
-constexpr bool is_ranges_bid_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::bidirectional_iterator_tag>;
+constexpr bool is_ranges_bid_iter_v = is_convertible_v<iter_cat_t<Iterator>, bidirectional_iterator_tag>;
 
 template <typename Iterator>
 constexpr bool is_bid_iter_v =
@@ -223,7 +223,7 @@ is_ranges_bid_iter_v<Iterator>;
 
 
 template <typename Iterator>
-constexpr bool is_ranges_rnd_iter_v = is_convertible_v<iter_cat_t<Iterator>, std::random_access_iterator_tag>;
+constexpr bool is_ranges_rnd_iter_v = is_convertible_v<iter_cat_t<Iterator>, random_access_iterator_tag>;
 
 template <typename Iterator>
 constexpr bool is_rnd_iter_v =
@@ -236,7 +236,7 @@ is_ranges_rnd_iter_v<Iterator>;
 template <typename Iterator>
 constexpr bool is_ranges_cot_iter_v = 
 #ifdef MSTL_VERSION_20__
-is_convertible_v<iter_cat_t<Iterator>, std::contiguous_iterator_tag>;
+is_convertible_v<iter_cat_t<Iterator>, contiguous_iterator_tag>;
 #else
 is_pointer_v<Iterator>;
 #endif // MSTL_VERSION_20__

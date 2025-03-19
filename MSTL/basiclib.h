@@ -1,7 +1,6 @@
 #ifndef MSTL_BASICLIB_H__
 #define MSTL_BASICLIB_H__
 #include <iostream>
-#include <cassert>
 
 #if defined(WIN32) || defined(_WIN32) || defined(_WIN32_) || defined(_M_X86)
 	#define MSTL_PLATFORM_WINDOWS__		1
@@ -43,7 +42,7 @@
 #endif
 
 
-#if defined(DEBUG) || defined(_DEBUG) || defined(QT_QML_DEBUG)
+#if defined(DEBUG) || defined(_DEBUG) || !defined(NDEBUG) || defined(QT_QML_DEBUG)
 	#define MSTL_STATE_DEBUG__			1
 #else
 	#define MSTL_STATE_RELEASE__		1
@@ -134,8 +133,6 @@
 
 #define FOR_EACH(VALUE, CONTAINER) \
 	for(auto VALUE = CONTAINER.begin(); VALUE != CONTAINER.end(); ++VALUE)
-
-#define TEMNULL__ template<>
 
 #ifdef MSTL_STATE_DEBUG__
 	#define SIMPLE_LOG(MESG) \
@@ -324,9 +321,10 @@
 
 MSTL_BEGIN_NAMESPACE__
 
-using nullptr_t = decltype(nullptr);
-using byte_t	= unsigned char;
+using nullptr_t		= decltype(nullptr);
+using max_align_t	= double;
 
+using byte_t	= unsigned char;
 using int8_t	= signed char;
 using int16_t	= short;
 using int32_t	= int;
@@ -337,10 +335,10 @@ using uint32_t	= unsigned int;
 using uint64_t	= unsigned MSTL_LLT;
 
 #if defined(MSTL_PLATFORM_LINUX__)
-using uintptr_t = long unsigned int;
-using size_t	= long unsigned int;
-using ptrdiff_t = long int;
-using intptr_t	= long int;
+using uintptr_t = unsigned long;
+using size_t	= unsigned long;
+using ptrdiff_t = long;
+using intptr_t	= long;
 #elif defined(MSTL_PLATFORM_WIN64__)
 using uintptr_t = unsigned MSTL_LLT;
 using size_t	= unsigned MSTL_LLT;
@@ -361,6 +359,7 @@ using ccstring_t = const char* const;
 MSTL_INLINECSP constexpr uint32_t INT_MAX_SIZE = static_cast<uint32_t>(-1);
 MSTL_INLINECSP constexpr size_t SIZE_T_MAX_SIZE = static_cast<size_t>(-1);
 MSTL_INLINECSP constexpr uint64_t LONG_LONG_MAX_SIZE = static_cast<uint64_t>(-1);
+MSTL_INLINECSP constexpr uint64_t LONG_LONG_ZERO = 0ULL;
 MSTL_INLINECSP constexpr uint32_t MSTL_SPLIT_LENGTH = 15U;
 
 
@@ -403,7 +402,7 @@ int u8cslen(const char8_t*);
 char* strcpy(char*, const char*);
 int strcmp(const char*, const char*);
 const char* strstr(const char*, const char*);
-char* memstr(char*, int, char*);
+char* memstr(char*, int, const char*);
 
 void split_line(std::ostream& = std::cout, uint32_t = MSTL_SPLIT_LENGTH, char = '-');
 

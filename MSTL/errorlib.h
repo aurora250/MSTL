@@ -1,46 +1,55 @@
 #ifndef MSTL_ERRORLIB_H__
 #define MSTL_ERRORLIB_H__
 #include "basiclib.h"
+#include <cassert>
 MSTL_BEGIN_NAMESPACE__
 
+#define MSTL_ERROR_CONSTRUCTOR(THIS, BASE, INFO) \
+	MSTL_CONSTEXPR explicit THIS(ccstring_t info = INFO, ccstring_t type = __type__) noexcept \
+		: BASE(info, type) {}
+
+#define MSTL_ERROR_DESTRUCTOR(CLASS) \
+	virtual ~CLASS() = default;
+
+#define MSTL_ERROR_TYPE(CLASS) \
+	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(CLASS);
+
+#define MSTL_ERROR_BUILD_CLASS(THIS, BASE, INFO) \
+	struct THIS : BASE { \
+		MSTL_ERROR_CONSTRUCTOR(THIS, BASE, INFO) \
+		MSTL_ERROR_DESTRUCTOR(THIS) \
+		MSTL_ERROR_TYPE(THIS) \
+	};
+
+
 struct Error {
-	typedef Error self;
-	cstring_t _info;
-	cstring_t _type;
+	ccstring_t info_ = nullptr;
+	ccstring_t type_ = nullptr;
 
-	MSTL_CONSTEXPR explicit Error(cstring_t _info = __type__, cstring_t _type = __type__) noexcept 
-		: _info(_info), _type(_type) {}
-	virtual ~Error() = default;
-	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(Error);
+	MSTL_CONSTEXPR explicit Error(ccstring_t info = __type__, ccstring_t type = __type__) noexcept
+		: info_(info), type_(type) {}
+
+	MSTL_ERROR_DESTRUCTOR(Error)
+	MSTL_ERROR_TYPE(Error)
 };
 
-struct StopIterator : Error {  // 迭代器/索引越界
-	typedef StopIterator self;
-	MSTL_CONSTEXPR explicit StopIterator(cstring_t _info = "Iterator out of Range.") noexcept
-		: Error(_info, __type__) {}
-	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(StopIterator);
-};
+MSTL_ERROR_BUILD_CLASS(StopIterator, Error, "Iterator or Pointer Visit out of Range.")
+MSTL_ERROR_BUILD_CLASS(MemoryError, Error, "Memory Operation Failed.")
+MSTL_ERROR_BUILD_CLASS(ValueError, Error, "Function Argument Invalid.")
+MSTL_ERROR_BUILD_CLASS(MathError, ValueError, "Math Function Argument Invalid.")
 
-struct MemoryError : Error {   // 内存操作失败
-	typedef MemoryError self;
-	MSTL_CONSTEXPR explicit MemoryError(cstring_t _info = "Memory Operation Falied!") noexcept
-		: Error(_info, __type__) {}
-	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(MemoryError);
-};
+#undef MSTL_ERROR_CONSTRUCTOR
+#undef MSTL_ERROR_DESTRUCTOR
+#undef MSTL_ERROR_TYPE
+// only hold MSTL_ERROR_BUILD_CLASS
 
-struct ValueError : Error {   // 函数的参数非法
-	typedef ValueError self;
-	MSTL_CONSTEXPR explicit ValueError(cstring_t _info = "Function Refused This Value.") noexcept
-		: Error(_info, __type__) {}
-	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(ValueError);
-};
 
-inline void show_data_only(const Error& e, std::ostream& _out) {
-	_out << "Exception : (" << e._type << ") " << e._info << std::flush;
+inline void show_data_only(const Error& err, std::ostream& out) {
+	out << "Exception : (" << err.type_ << ") " << err.info_ << std::flush;
 }
-inline std::ostream& operator <<(std::ostream& _out, const Error& err) {
-	show_data_only(err, _out);
-	return _out;
+inline std::ostream& operator <<(std::ostream& out, const Error& err) {
+	show_data_only(err, out);
+	return out;
 }
 
 inline void Exception(const Error& err){
@@ -68,11 +77,11 @@ inline void Exception(const bool boolean, const Error& err = Error()) {
 
 // just allowing void(void) function be called before process exit
 inline void Exit(const bool abort = false, void(* func)() = nullptr){
-	if (func) {
+	if (func)
 		std::atexit(func);
-	}
 	else {
-		if (abort) std::abort();
+		if (abort)
+			std::abort();
 		std::exit(1);
 	}
 }

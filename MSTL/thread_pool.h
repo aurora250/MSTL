@@ -5,7 +5,6 @@
 #include <mutex>
 #include <condition_variable>
 #include <chrono>
-#include <functional>
 #include <future>
 #include "queue.hpp"
 #include "functional.hpp"
@@ -101,9 +100,7 @@ public:
 		if (pool_mode_ == POOL_MODE::MODE_CACHED
 			&& task_size_ > idle_thread_size_
 			&& threads_.size() < thread_size_thresh_hold_) {
-			auto ptr = MSTL::make_unique<__thread_aux>([this](auto&& PH1) {
-				thread_function(MSTL::forward<decltype(PH1)>(PH1));
-			});
+			auto ptr = MSTL::make_unique<__thread_aux>([this](const int id) { thread_function(id); });
 			int thread_id = ptr->get_id();
 			threads_.emplace(thread_id, MSTL::move(ptr));
 			threads_[thread_id]->start();

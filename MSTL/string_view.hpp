@@ -333,13 +333,13 @@ public:
 
 template <typename CharT>
 struct char_traits : public base_char_traits<CharT, int64_t> {};
-TEMNULL__ struct char_traits<char> : public narrow_char_traits<char, int32_t> {};
-TEMNULL__ struct char_traits<wchar_t> : public wide_char_traits<wchar_t> {};
+template <> struct char_traits<char> : public narrow_char_traits<char, int32_t> {};
+template <> struct char_traits<wchar_t> : public wide_char_traits<wchar_t> {};
 #ifdef MSTL_VERSION_20__
-TEMNULL__ struct char_traits<char8_t> : public narrow_char_traits<char8_t, uint32_t> {};
+template <> struct char_traits<char8_t> : public narrow_char_traits<char8_t, uint32_t> {};
 #endif
-TEMNULL__ struct char_traits<char16_t> : public wide_char_traits<char16_t> {};
-TEMNULL__ struct char_traits<char32_t> : public base_char_traits<char32_t, uint32_t> {};
+template <> struct char_traits<char16_t> : public wide_char_traits<char16_t> {};
+template <> struct char_traits<char32_t> : public base_char_traits<char32_t, uint32_t> {};
 
 
 template <typename Traits>
@@ -435,7 +435,7 @@ template <typename Traits, enable_if_t<
 constexpr size_t char_traits_find_first_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (rsc_size != 0 && start < dest_size) {
-        MSTL::string_bitmap<char_traits_char_t<Traits>> match;
+        MSTL::__string_bitmap<char_traits_char_t<Traits>> match;
         if (!match.mark(rsc, rsc + rsc_size)) {
             return (char_traits_find_first_of<Traits, false>)
                 (dest, dest_size, start, rsc, rsc_size);
@@ -478,7 +478,7 @@ template <typename Traits, enable_if_t<
 constexpr size_t char_traits_find_last_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (rsc_size != 0 && dest_size != 0) {
-        MSTL::string_bitmap<char_traits_char_t<Traits>> match;
+        MSTL::__string_bitmap<char_traits_char_t<Traits>> match;
         if (!match.mark(rsc, rsc + rsc_size))
             return (char_traits_find_last_of<Traits, false>)
             (dest, dest_size, start, rsc, rsc_size);
@@ -523,7 +523,7 @@ template <typename Traits, enable_if_t<
 constexpr size_t char_traits_find_first_not_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (start < dest_size) {
-        MSTL::string_bitmap<char_traits_char_t<Traits>> match;
+        MSTL::__string_bitmap<char_traits_char_t<Traits>> match;
         if (!match.mark(rsc, rsc + rsc_size))
             return (char_traits_find_first_not_of<Traits, false>)
             (dest, dest_size, start, rsc, rsc_size);
@@ -579,7 +579,7 @@ template <typename Traits, enable_if_t<
 constexpr size_t char_traits_find_last_not_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (dest_size != 0) {
-        MSTL::string_bitmap<char_traits_char_t<Traits>> match;
+        MSTL::__string_bitmap<char_traits_char_t<Traits>> match;
         if (!match.mark(rsc, rsc + rsc_size))
             return (char_traits_find_last_not_of<Traits, false>)
             (dest, dest_size, start, rsc, rsc_size);

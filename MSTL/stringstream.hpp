@@ -17,96 +17,95 @@ private:
 	basic_string<CharT> buffer_{};
 
 public:
-	basic_stringstream() = default;
+	MSTL_CONSTEXPR20 basic_stringstream() = default;
 
-	basic_stringstream(const self& str) : buffer_(str.buffer_) {}
-	basic_stringstream(self&& str) noexcept : buffer_(MSTL::move(str.buffer_)) {}
+	MSTL_CONSTEXPR20 basic_stringstream(const self& str) : buffer_(str.buffer_) {}
+	MSTL_CONSTEXPR20 basic_stringstream(self&& str) noexcept : buffer_(MSTL::move(str.buffer_)) {}
 
-	explicit basic_stringstream(const value_type& str) : buffer_(str) {}
-	explicit basic_stringstream(value_type&& str) noexcept : buffer_(MSTL::move(str)) {}
-	explicit basic_stringstream(const char_type* str) : buffer_(str) {}
+	MSTL_CONSTEXPR20 explicit basic_stringstream(const value_type& str) : buffer_(str) {}
+	MSTL_CONSTEXPR20 explicit basic_stringstream(value_type&& str) noexcept : buffer_(MSTL::move(str)) {}
+	MSTL_CONSTEXPR20 explicit basic_stringstream(const char_type* str) : buffer_(str) {}
 
-	~basic_stringstream() = default;
+	MSTL_CONSTEXPR20 ~basic_stringstream() = default;
 
-	explicit operator value_type() const { return buffer_; }
+	MSTL_CONSTEXPR20 explicit operator value_type() const { return buffer_; }
 
-	void str(value_type&& str) noexcept { buffer_ = MSTL::move(str); }
-	void str(const value_type& str) { buffer_ = str; }
-	void str(const char_type* str) { buffer_ = str; }
-	value_type str() const { return buffer_; }
-	view_type view() const { return view_type(buffer_.c_str()); }
+	MSTL_CONSTEXPR20 void str(value_type&& str) noexcept { buffer_ = MSTL::move(str); }
+	MSTL_CONSTEXPR20 void str(const value_type& str) { buffer_ = str; }
+	MSTL_CONSTEXPR20 void str(const char_type* str) { buffer_ = str; }
+	MSTL_CONSTEXPR20 value_type str() const { return buffer_; }
+	MSTL_CONSTEXPR20 view_type view() const { return view_type(buffer_.c_str()); }
 
-	void clear() { buffer_.clear(); }
+	MSTL_CONSTEXPR20 void clear() { buffer_.clear(); }
 
-
-	self& operator <<(bool x) {
+	MSTL_CONSTEXPR20 self& operator <<(bool x) {
 		buffer_.append(MSTL::move((__stream_to_string<CharT>)(static_cast<int>(x))));
 		return *this;
 	}
-	self& operator <<(int x) {
+	MSTL_CONSTEXPR20 self& operator <<(int x) {
 		buffer_.append(MSTL::move((__stream_to_string<CharT>)(x)));
 		return *this;
 	}
-	self& operator <<(unsigned int x) {
+	MSTL_CONSTEXPR20 self& operator <<(unsigned int x) {
 		buffer_.append(MSTL::move((__stream_to_string<CharT>)(x)));
 		return *this;
 	}
-	self& operator <<(long x) {
+	MSTL_CONSTEXPR20 self& operator <<(long x) {
 		buffer_.append(MSTL::move((__stream_to_string<CharT>)(x)));
 		return *this;
 	}
-	self& operator <<(unsigned long x) {
+	MSTL_CONSTEXPR20 self& operator <<(unsigned long x) {
 		buffer_.append(MSTL::move((__stream_to_string<CharT>)(x)));
 		return *this;
 	}
-	self& operator <<(MSTL_LLT x) {
+	MSTL_CONSTEXPR20 self& operator <<(MSTL_LLT x) {
 		buffer_.append(MSTL::move((__stream_to_string<CharT>)(x)));
 		return *this;
 	}
-	self& operator <<(unsigned MSTL_LLT x) {
+	MSTL_CONSTEXPR20 self& operator <<(unsigned MSTL_LLT x) {
 		buffer_.append(MSTL::move((__stream_to_string<CharT>)(x)));
 		return *this;
 	}
-	self& operator <<(float x) {
+	MSTL_CONSTEXPR20 self& operator <<(float x) {
 		buffer_.append(MSTL::move((__stream_to_string<CharT>)(x)));
 		return *this;
 	}
-	self& operator <<(double x) {
+	MSTL_CONSTEXPR20 self& operator <<(double x) {
 		buffer_.append(MSTL::move((__stream_to_string<CharT>)(x)));
 		return *this;
 	}
-	self& operator <<(long double x) {
+	MSTL_CONSTEXPR20 self& operator <<(long double x) {
 		buffer_.append(MSTL::move((__stream_to_string<CharT>)(x)));
 		return *this;
 	}
-	self& operator <<(char_type x) {
+	MSTL_CONSTEXPR20 self& operator <<(char_type x) {
 		buffer_.append(x);
 		return *this;
 	}
-	self& operator <<(const char_type* x) {
+	MSTL_CONSTEXPR20 self& operator <<(const char_type* x) {
 		buffer_.append(x);
 		return *this;
 	}
-	self& operator <<(const value_type& x) {
+	MSTL_CONSTEXPR20 self& operator <<(const value_type& x) {
 		buffer_.append(x);
 		return *this;
 	}
-	self& operator <<(value_type&& x) {
+	MSTL_CONSTEXPR20 self& operator <<(value_type&& x) {
 		buffer_.append(MSTL::move(x));
 		return *this;
 	}
 	template <typename T1, typename T2>
-	self& operator <<(const pair<T1, T2>& pir) {
+	MSTL_CONSTEXPR20 self& operator <<(const pair<T1, T2>& pir) {
 		*this << "{ " << pir.first << ", " << pir.second << " }";
 		return *this;
 	}
 	template <typename T>
-	self& operator <<(const shared_ptr<T>& ptr) {
+	MSTL_CONSTEXPR20 self& operator <<(const shared_ptr<T>& ptr) {
 		*this << ptr.get();
 		return *this;
 	}
 	template <typename T, typename Deleter>
-	self& operator <<(const unique_ptr<T, Deleter>& ptr) {
+	MSTL_CONSTEXPR20 self& operator <<(const unique_ptr<T, Deleter>& ptr) {
 		*this << ptr.get();
 		return *this;
 	}

@@ -11,7 +11,8 @@ using u8string = basic_string<char8_t>;
 using u16string = basic_string<char16_t>;
 using u32string = basic_string<char32_t>;
 
-TEMNULL__ struct hash<MSTL::string> {
+template <>
+struct hash<MSTL::string> {
     MSTL_NODISCARD size_t operator ()(const MSTL::string& s) const noexcept {
         return string_hash(s.c_str(), MSTL::strlen(s.c_str()), 0);
     }
@@ -23,7 +24,8 @@ struct hash<basic_string<CharT, Traits, Alloc>> {
         return FNV_hash(reinterpret_cast<const byte_t*>(str.c_str()), sizeof(CharT) * str.size());
     }
 };
-TEMNULL__ struct hash<std::string> {
+template <>
+struct hash<std::string> {
     MSTL_NODISCARD size_t operator ()(const std::string& s) const noexcept {
         return string_hash(s.c_str(), MSTL::strlen(s.c_str()), 0);
     }

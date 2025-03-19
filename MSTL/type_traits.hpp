@@ -1293,7 +1293,7 @@ struct __add_qualifier_aux {
 template <typename...>
 struct common_reference;
 template <typename... Types>
-using common_reference_t = common_reference<Types...>::type;
+using common_reference_t = typename common_reference<Types...>::type;
 
 template <>
 struct common_reference<> {};
@@ -1312,7 +1312,7 @@ struct common_reference_base_aux<T1, T2> {
 };
 
 template <typename T1, typename T2>
-using qualifier_extract = basic_common_reference<remove_cvref_t<T1>, remove_cvref_t<T2>,
+using qualifier_extract = typename basic_common_reference<remove_cvref_t<T1>, remove_cvref_t<T2>,
     __add_qualifier_aux<T1>::template apply_t, __add_qualifier_aux<T2>::template apply_t>::type;
 
 template <typename T1, typename T2>
@@ -1429,6 +1429,16 @@ struct ref_wrapper_constructable_from<T, U,
 template <typename T, typename U>
 constexpr bool ref_wrapper_constructable_from_v = ref_wrapper_constructable_from<T, U>::value;
 
+template <typename F, typename... Args>
+struct __invoke_result_aux;
+template <typename F, typename... Args>
+struct is_nothrow_invocable;
+
+template <typename Callable, typename... Args>
+constexpr typename __invoke_result_aux<Callable, Args...>::type
+invoke(Callable&& f, Args&&... args)
+noexcept(is_nothrow_invocable<Callable, Args...>::value);
+
 template <typename T>
 class reference_wrapper {
 public:
@@ -1456,9 +1466,9 @@ private:
 
 public:
     template <typename... Args>
-    MSTL_CONSTEXPR decltype(auto) operator()(Args&&... args) const
-        noexcept(noexcept((*ptr_)(MSTL::forward<Args>(args)...))) {
-        return (*ptr_)(MSTL::forward<Args>(args)...);
+    MSTL_CONSTEXPR20 typename __invoke_result_aux<T&, Args...>::type
+    operator()(Args&&... args) const noexcept(is_nothrow_invocable<T&, Args...>::value) {
+        return MSTL::invoke(get(), MSTL::forward<Args>(args)...);
     }
 };
 #if MSTL_SUPPORT_DEDUCTION_GUIDES__
@@ -1511,9 +1521,6 @@ struct unwrap_ref_decay {
 };
 
 
-template <typename Sign>
-struct invoke_result;
-
 inline namespace tags {
     struct invoke_memfun_ref_tag {
         constexpr explicit invoke_memfun_ref_tag() noexcept = default;
@@ -1531,6 +1538,9 @@ inline namespace tags {
         constexpr explicit invoke_other_tag() noexcept = default;
     };
 }
+
+template <typename Sign>
+struct invoke_result;
 
 template <typename T, typename Tag>
 struct invoke_result_true {
@@ -1948,11 +1958,12 @@ struct hash<T*> {
 };
 
 #define INT_HASH_STRUCT__(OPT) \
-    TEMNULL__ struct hash<OPT> { \
+    template <> struct hash<OPT> { \
         MSTL_NODISCARD constexpr size_t operator ()(OPT x) const noexcept { return static_cast<size_t>(x); } \
     };
 MSTL_MACRO_RANGE_CHARS(INT_HASH_STRUCT__)
 MSTL_MACRO_RANGE_INT(INT_HASH_STRUCT__)
+#undef INT_HASH_STRUCT__
 
 
 #if defined(MSTL_PLATFORM_WIN64__) || defined(MSTL_PLATFORM_LINUX64__)
@@ -1976,12 +1987,13 @@ constexpr size_t FNV_hash(const byte_t* first, size_t count) noexcept {
 }
 
 #define FLOAT_HASH_STRUCT__(OPT) \
-    TEMNULL__ struct hash<OPT> { \
+    template <> struct hash<OPT> { \
         MSTL_NODISCARD constexpr size_t operator ()(const OPT& x) const noexcept { \
             return x == 0.0f ? 0 : FNV_hash((const byte_t*)&x, sizeof(OPT)); \
         } \
     };
 MSTL_MACRO_RANGE_FLOAT(FLOAT_HASH_STRUCT__)
+#undef FLOAT_HASH_STRUCT__
 
 
 template <typename, typename = void>

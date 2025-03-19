@@ -102,7 +102,11 @@ C++ 14 17 20
 
 - [memory.hpp](/MSTL/memory.hpp)
 
-定义内存操作函数、临时缓存区类、分配器和智能指针。
+定义内存操作函数、临时缓存区类、分配器类和智能指针类。
+
+- [variant.hpp](/MSTL/variant.hpp)
+
+定义变体variant类。
 
 - [string_view.hpp](/MSTL/string_view.hpp)
 
@@ -310,7 +314,11 @@ Define comparison, range-copy and range-move algorithms.
 
 - [memory.hpp](/MSTL/memory.hpp)
 
-Define memory operation functions, temporary buffer type, allocators and smart pointer types.
+Define memory operation functions, temporary buffer type, allocator types and smart pointer types.
+
+- [variant.hpp](/MSTL/variant.hpp)
+
+Define variant type.
 
 - [string_view.hpp](/MSTL/string_view.hpp)
 
