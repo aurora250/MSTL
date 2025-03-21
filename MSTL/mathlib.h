@@ -4,6 +4,8 @@
 #include "type_traits.hpp"
 MSTL_BEGIN_NAMESPACE__
 
+MSTL_ERROR_BUILD_CLASS(MathError, ValueError, "Math Function Argument Invalid.")
+
 using mathus_t	= unsigned short;
 using mathi_t	= int;
 using mathui_t	= unsigned int;

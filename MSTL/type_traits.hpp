@@ -3,7 +3,7 @@
 #include "basiclib.h"
 MSTL_BEGIN_NAMESPACE__
 
-inline namespace tags {
+MSTL_INDEPENDENT_TAG_NAMESPACE_SETTING namespace tags {
     using input_iterator_tag            = std::input_iterator_tag;
     using output_iterator_tag           = std::output_iterator_tag;
     using forward_iterator_tag          = std::forward_iterator_tag;
@@ -410,7 +410,7 @@ template <typename T>
 using add_const_t = typename add_const<T>::type;
 
 template <typename T>
-MSTL_NODISCARD MSTL_CONSTEXPR add_const_t<T>& as_const(T& val) noexcept {
+MSTL_NODISCARD constexpr add_const_t<T>& as_const(T& val) noexcept {
     return val;
 }
 template <typename T>
@@ -1449,15 +1449,15 @@ public:
 
     template <typename U, enable_if_t<conjunction_v<negation<is_same<remove_cvref_t<U>, reference_wrapper>>,
         ref_wrapper_constructable_from<T, U>>, int> = 0>
-    MSTL_CONSTEXPR reference_wrapper(U&& x)
+    constexpr reference_wrapper(U&& x)
         noexcept(noexcept(MSTL::__ref_wrapper_construct_aux<T>(MSTL::declval<U>()))) {
         T& ref = static_cast<U&&>(x);
         ptr_ = MSTL::addressof(ref);
     }
-    MSTL_CONSTEXPR operator T& () const noexcept {
+    constexpr operator T& () const noexcept {
         return *ptr_;
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR T& get() const noexcept {
+    MSTL_NODISCARD constexpr T& get() const noexcept {
         return *ptr_;
     }
 
@@ -1477,26 +1477,26 @@ reference_wrapper(T&) -> reference_wrapper<T>;
 #endif
 
 template <typename T>
-MSTL_NODISCARD MSTL_CONSTEXPR reference_wrapper<T> ref(T& val) noexcept {
+MSTL_NODISCARD constexpr reference_wrapper<T> ref(T& val) noexcept {
     return reference_wrapper<T>(val);
 }
 template <typename T>
 void ref(const T&&) = delete;
 
 template <typename T>
-MSTL_NODISCARD MSTL_CONSTEXPR reference_wrapper<T> ref(reference_wrapper<T> wrapper) noexcept {
+MSTL_NODISCARD constexpr reference_wrapper<T> ref(reference_wrapper<T> wrapper) noexcept {
     return wrapper;
 }
 
 template <typename T>
-MSTL_NODISCARD MSTL_CONSTEXPR reference_wrapper<const T> cref(const T& val) noexcept {
+MSTL_NODISCARD constexpr reference_wrapper<const T> cref(const T& val) noexcept {
     return reference_wrapper<const T>(val);
 }
 template <typename T>
 void cref(const T&&) = delete;
 
 template <typename T>
-MSTL_NODISCARD MSTL_CONSTEXPR reference_wrapper<const T> cref(reference_wrapper<T> wrapper) noexcept {
+MSTL_NODISCARD constexpr reference_wrapper<const T> cref(reference_wrapper<T> wrapper) noexcept {
     return wrapper;
 }
 
@@ -1521,7 +1521,7 @@ struct unwrap_ref_decay {
 };
 
 
-inline namespace tags {
+MSTL_INDEPENDENT_TAG_NAMESPACE_SETTING namespace tags {
     struct invoke_memfun_ref_tag {
         constexpr explicit invoke_memfun_ref_tag() noexcept = default;
     };
@@ -1867,16 +1867,16 @@ template <typename>
 struct is_nothrow_swappable;
 
 template <typename T, enable_if_t<conjunction_v<is_move_constructible<T>, is_move_assignable<T>>, int> = 0>
-MSTL_CONSTEXPR void swap(T&, T&) 
+constexpr void swap(T&, T&) 
 noexcept(is_nothrow_move_constructible_v<T> && is_nothrow_move_assignable_v<T>);
 
 template <typename T, size_t Size, enable_if_t<is_swappable<T>::value, int> = 0>
-MSTL_CONSTEXPR void swap(T(&)[Size], T(&)[Size]) noexcept(is_nothrow_swappable<T>::value);
+constexpr void swap(T(&)[Size], T(&)[Size]) noexcept(is_nothrow_swappable<T>::value);
 
 void swap() = delete;
 
 template <typename T, typename U = T>
-MSTL_CONSTEXPR T exchange(T&, U&&) noexcept(conjunction_v<
+constexpr T exchange(T&, U&&) noexcept(conjunction_v<
     is_nothrow_move_constructible<T>, is_nothrow_assignable<T&, U>>);
 
 

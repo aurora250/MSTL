@@ -62,8 +62,10 @@
 #define MSTL_END_NAMESPACE__ }
 #define MSTL_ MSTL::
 
+#define MSTL_INDEPENDENT_TAG_NAMESPACE_SETTING inline
 
-#if (__cplusplus >= 202100L) || (_MSVC_LANG >= 202100L)
+
+#if _HAS_CXX23 || (__cplusplus >= 202100L) || (_MSVC_LANG >= 202100L)
 	#define MSTL_VERSION_23__	1
 #endif
 #if _HAS_CXX20 || (__cplusplus >= 202002L) || (_MSVC_LANG >= 202002L)
@@ -255,7 +257,6 @@
 	MAC(signed char) \
 	MAC(unsigned char) \
 
-
 #ifdef MSTL_VERSION_20__
 #define MSTL_MACRO_RANGES_UNICODE_CHARS(MAC) \
 	MAC(char8_t) \
@@ -292,6 +293,16 @@
 	MAC(float) \
 	MAC(double) \
 	MAC(long double)
+
+
+#define MSTL_BUILD_TYPE_ALIAS(TYPE) \
+	using value_type        = TYPE; \
+	using pointer           = TYPE*; \
+	using reference         = TYPE&; \
+	using const_pointer     = const TYPE*; \
+	using const_reference   = const TYPE&; \
+	using size_type         = size_t; \
+	using difference_type   = ptrdiff_t;
 
 
 #ifdef MSTL_COMPILE_CLANG__

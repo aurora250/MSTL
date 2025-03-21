@@ -780,26 +780,23 @@ public:
 
 template <typename CharT, typename Traits>
 class basic_string_view {
-public:
     static_assert(is_same_v<CharT, typename Traits::char_type>, 
         "char type of basic string view should be same with char traits.");
 
     static_assert(!is_array_v<CharT> && is_trivial_v<CharT> && is_standard_layout_v<CharT>,
         "basic string view only contains non-array trivial standard-layout types.");
 
-    using size_type         = size_t;
-    using difference_type   = ptrdiff_t;
+public:
+    MSTL_BUILD_TYPE_ALIAS(CharT)
+
     using traits_type       = Traits;
-    using value_type        = CharT;
-    using pointer           = value_type*;
-    using const_pointer     = const value_type*;
-    using reference         = value_type&;
-    using const_reference   = const value_type&;
+
     using const_iterator    = string_view_iterator<Traits>;
     using iterator          = const_iterator;
     using const_reverse_iterator = MSTL::reverse_iterator<const_iterator>;
     using reverse_iterator  = const_reverse_iterator;
-    using self              = basic_string_view<CharT, Traits>;
+
+    using self = basic_string_view<CharT, Traits>;
 
     static constexpr auto npos = static_cast<size_type>(-1);
 

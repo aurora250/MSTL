@@ -57,7 +57,7 @@ public:
 		return *this;
 	}
 
-	MSTL_CONSTEXPR ~vector_iterator() noexcept = default;
+	MSTL_CONSTEXPR20 ~vector_iterator() noexcept = default;
 
 	MSTL_NODISCARD MSTL_CONSTEXPR reference operator *() const noexcept { return *ptr_; }
 	MSTL_NODISCARD MSTL_CONSTEXPR pointer operator ->() const noexcept { return ptr_; }
@@ -136,16 +136,13 @@ class vector {
 	static_assert(is_object_v<T>, "vector only contains object types.");
 
 public:
-	using value_type				= T;
-	using pointer					= T*;
+	MSTL_BUILD_TYPE_ALIAS(T)
+
 	using iterator					= vector_iterator<T, T&, T*>;
 	using const_iterator			= vector_iterator<T, const T&, const T*>;
 	using reverse_iterator			= MSTL::reverse_iterator<iterator>;
 	using const_reverse_iterator	= MSTL::reverse_iterator<const_iterator>;
-	using reference					= T&;
-	using const_reference			= const T&;
-	using size_type					= size_t;
-	using difference_type			= ptrdiff_t;
+
 	using self						= vector<T, Alloc>;
 	using allocator_type			= Alloc;
 

@@ -315,22 +315,19 @@ template <typename Value, typename Key, typename HashFcn,
     typename ExtractKey, typename EqualKey, typename Alloc>
 class hashtable {
 public:
+    MSTL_BUILD_TYPE_ALIAS(Value)
+
     using key_type          = Key;
-    using value_type        = Value;
     using hasher            = HashFcn;
     using key_equal         = EqualKey;
-    using size_type         = size_t;
-    using difference_type   = ptrdiff_t;
-    using pointer           = value_type*;
-    using const_pointer     = const value_type*;
-    using reference         = value_type&;
-    using const_reference   = const value_type&;
     using node_type         = __hashtable_node<value_type>;
     using link_type         = node_type*;
-    using allocator_type    = Alloc;
+
     using iterator          = hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
     using const_iterator    = hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+
     using self              = hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+    using allocator_type    = Alloc;
 
     friend struct hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
     friend struct hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;

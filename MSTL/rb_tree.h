@@ -174,22 +174,19 @@ private:
     using base_ptr          = __rb_tree_node_base*;
     using node_type         = __rb_tree_node<Value>;
     using color_type        = bool;
-public:
-    using key_type          = Key;
-    using value_type        = Value;
-    using pointer           = value_type*;
-    using const_pointer     = const value_type*;
-    using reference         = value_type&;
-    using const_reference   = const value_type&;
     using link_type         = node_type*;
-    using size_type         = size_t;
-    using difference_type   = ptrdiff_t;
-    using allocator_type    = Alloc;
-    using self              = rb_tree<Key, Value, KeyOfValue, Compare, Alloc>;
+
+public:
+    MSTL_BUILD_TYPE_ALIAS(Value)
+    using key_type          = Key;
+
     using iterator          = rb_tree_iterator<value_type, reference, pointer>;
     using const_iterator    = rb_tree_iterator<value_type, const_reference, const_pointer>;
     using reverse_iterator  = MSTL::reverse_iterator<iterator>;
     using const_reverse_iterator = MSTL::reverse_iterator<const_iterator>;
+
+    using self              = rb_tree<Key, Value, KeyOfValue, Compare, Alloc>;
+    using allocator_type    = Alloc;
 
 private:
     link_type header_ = nullptr;

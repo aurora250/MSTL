@@ -3,12 +3,14 @@
 
 #include "functional.hpp"
 #include "tuple.hpp"
+#include "array.hpp"
 #include "list.hpp"
 #include "algorithm.hpp"
 #include "unordered_set.hpp"
 #include "map.hpp"
 #include "set.hpp"
 #include "variant.hpp"
+#include "optional.hpp"
 
 #include "detailof.hpp"
 #include "trace_memory.hpp"

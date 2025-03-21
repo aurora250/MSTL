@@ -4,21 +4,21 @@
 #include <cassert>
 MSTL_BEGIN_NAMESPACE__
 
-#define MSTL_ERROR_CONSTRUCTOR(THIS, BASE, INFO) \
+#define __MSTL_ERROR_CONSTRUCTOR(THIS, BASE, INFO) \
 	MSTL_CONSTEXPR explicit THIS(ccstring_t info = INFO, ccstring_t type = __type__) noexcept \
 		: BASE(info, type) {}
 
-#define MSTL_ERROR_DESTRUCTOR(CLASS) \
+#define __MSTL_ERROR_DESTRUCTOR(CLASS) \
 	virtual ~CLASS() = default;
 
-#define MSTL_ERROR_TYPE(CLASS) \
+#define __MSTL_ERROR_TYPE(CLASS) \
 	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(CLASS);
 
 #define MSTL_ERROR_BUILD_CLASS(THIS, BASE, INFO) \
 	struct THIS : BASE { \
-		MSTL_ERROR_CONSTRUCTOR(THIS, BASE, INFO) \
-		MSTL_ERROR_DESTRUCTOR(THIS) \
-		MSTL_ERROR_TYPE(THIS) \
+		__MSTL_ERROR_CONSTRUCTOR(THIS, BASE, INFO) \
+		__MSTL_ERROR_DESTRUCTOR(THIS) \
+		__MSTL_ERROR_TYPE(THIS) \
 	};
 
 
@@ -29,19 +29,13 @@ struct Error {
 	MSTL_CONSTEXPR explicit Error(ccstring_t info = __type__, ccstring_t type = __type__) noexcept
 		: info_(info), type_(type) {}
 
-	MSTL_ERROR_DESTRUCTOR(Error)
-	MSTL_ERROR_TYPE(Error)
+	__MSTL_ERROR_DESTRUCTOR(Error)
+	__MSTL_ERROR_TYPE(Error)
 };
 
 MSTL_ERROR_BUILD_CLASS(StopIterator, Error, "Iterator or Pointer Visit out of Range.")
 MSTL_ERROR_BUILD_CLASS(MemoryError, Error, "Memory Operation Failed.")
 MSTL_ERROR_BUILD_CLASS(ValueError, Error, "Function Argument Invalid.")
-MSTL_ERROR_BUILD_CLASS(MathError, ValueError, "Math Function Argument Invalid.")
-
-#undef MSTL_ERROR_CONSTRUCTOR
-#undef MSTL_ERROR_DESTRUCTOR
-#undef MSTL_ERROR_TYPE
-// only hold MSTL_ERROR_BUILD_CLASS
 
 
 inline void show_data_only(const Error& err, std::ostream& out) {
@@ -106,8 +100,8 @@ inline void Exit(const bool abort = false, void(* func)() = nullptr){
 		ACT; \
 		MSTL_EXEC_MEMORY__ \
 	};
-#define MSTL_CATCH_ERROR__ catch(const Error& error)
-#define MSTL_CATCH_ERROR_UNUSE__ catch(const Error&)
+#define MSTL_CATCH_ERROR__ catch(const MSTL::Error& error)
+#define MSTL_CATCH_ERROR_UNUSE__ catch(const MSTL::Error&)
 
 
 #define MSTL_REPORT_ERROR__(MESG) \

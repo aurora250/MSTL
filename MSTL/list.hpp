@@ -127,19 +127,18 @@ class list {
     static_assert(is_object_v<T>, "list only contains object types.");
 
 public:
-    using value_type        = T;
-    using reference         = T&;
-    using pointer           = T*;
-    using const_reference   = const T&;
+    MSTL_BUILD_TYPE_ALIAS(T)
+
     using node_type         = __list_node<T>;
     using link_type         = node_type*;
+
     using iterator          = list_iterator<T, T&, T*>;
     using const_iterator    = list_iterator<T, const T&, const T*>;
     using reverse_iterator  = MSTL::reverse_iterator<iterator>;
     using const_reverse_iterator = MSTL::reverse_iterator<const_iterator>;
-    using size_type         = size_t;
-    using allocator_type    = Alloc;
+
     using self              = list<T, Alloc>;
+    using allocator_type    = Alloc;
 
 private:
     link_type node_ = nullptr;

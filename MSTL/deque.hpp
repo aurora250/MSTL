@@ -203,22 +203,18 @@ class deque {
     static_assert(is_object_v<T>, "deque only contains object types.");
 
 public:
-    using value_type = T;
-    using pointer = value_type*;
-    using const_pointer = const value_type*;
-    using reference = value_type&;
-    using const_reference = const value_type&;
-    using size_type = size_t;
-    using difference_type = ptrdiff_t;
-    using self = deque<T, Alloc, BufSize>;
-    using allocator_type = Alloc;
-    using iterator = deque_iterator<T, T&, T*, BufSize>;
-    using const_iterator = deque_iterator<T, const T&, const T*, BufSize>;
-    using reverse_iterator = MSTL::reverse_iterator<iterator>;
-    using const_reverse_iterator = MSTL::reverse_iterator<const_iterator>;
+    MSTL_BUILD_TYPE_ALIAS(T)
+
+    using iterator                  = deque_iterator<T, T&, T*, BufSize>;
+    using const_iterator            = deque_iterator<T, const T&, const T*, BufSize>;
+    using reverse_iterator          = MSTL::reverse_iterator<iterator>;
+    using const_reverse_iterator    = MSTL::reverse_iterator<const_iterator>;
+
+    using self              = deque<T, Alloc, BufSize>;
+    using allocator_type    = Alloc;
 
 private:
-    using map_pointer = pointer*;
+    using map_pointer   = pointer*;
     using map_allocator = standard_allocator<pointer>;
 
     iterator start_;

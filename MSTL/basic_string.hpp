@@ -88,23 +88,19 @@ class basic_string {
         "basic string only contains non-array trivial standard-layout types.");
 
 public:
-    using size_type         = size_t;
-    using difference_type   = ptrdiff_t;
-    using traits_type       = Traits;
-    using allocator_type    = Alloc;
-    using value_type        = CharT;
-    using pointer           = CharT*;
-    using const_pointer     = const CharT*;
-    using reference         = CharT&;
-    using const_reference   = const CharT&;
-    using iterator          = basic_string_iterator<CharT, CharT&, CharT*>;
-    using const_iterator    = basic_string_iterator<CharT, const CharT&, const CharT*>;
-    using reverse_iterator  = MSTL::reverse_iterator<iterator>;
-    using const_reverse_iterator = MSTL::reverse_iterator<const_iterator>;
-    using self              = basic_string<CharT, Traits, Alloc>;
-    using view_type         = basic_string_view<CharT, Traits>;
+    MSTL_BUILD_TYPE_ALIAS(CharT)
 
-public:
+    using traits_type   = Traits;
+    using view_type     = basic_string_view<CharT, Traits>;
+
+    using iterator                  = basic_string_iterator<CharT, reference, pointer>;
+    using const_iterator            = basic_string_iterator<CharT, const_reference, const_pointer>;
+    using reverse_iterator          = MSTL::reverse_iterator<iterator>;
+    using const_reverse_iterator    = MSTL::reverse_iterator<const_iterator>;
+
+    using self              = basic_string<CharT, Traits, Alloc>;
+    using allocator_type    = Alloc;
+
     static constexpr size_type npos = static_cast<size_type>(-1);
 
 private:
