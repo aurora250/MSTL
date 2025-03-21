@@ -5,14 +5,14 @@
 MSTL_BEGIN_NAMESPACE__
 
 #define __MSTL_ERROR_CONSTRUCTOR(THIS, BASE, INFO) \
-	MSTL_CONSTEXPR explicit THIS(ccstring_t info = INFO, ccstring_t type = __type__) noexcept \
+	constexpr explicit THIS(ccstring_t info = INFO, ccstring_t type = __type__) noexcept \
 		: BASE(info, type) {}
 
 #define __MSTL_ERROR_DESTRUCTOR(CLASS) \
 	virtual ~CLASS() = default;
 
 #define __MSTL_ERROR_TYPE(CLASS) \
-	static MSTL_CONSTEXPR ccstring_t __type__ = TO_STRING(CLASS);
+	static constexpr ccstring_t __type__ = TO_STRING(CLASS);
 
 #define MSTL_ERROR_BUILD_CLASS(THIS, BASE, INFO) \
 	struct THIS : BASE { \
@@ -26,7 +26,7 @@ struct Error {
 	ccstring_t info_ = nullptr;
 	ccstring_t type_ = nullptr;
 
-	MSTL_CONSTEXPR explicit Error(ccstring_t info = __type__, ccstring_t type = __type__) noexcept
+	constexpr explicit Error(ccstring_t info = __type__, ccstring_t type = __type__) noexcept
 		: info_(info), type_(type) {}
 
 	__MSTL_ERROR_DESTRUCTOR(Error)

@@ -19,7 +19,7 @@ struct hash<MSTL::string> {
 };
 template <typename CharT, typename Traits, typename Alloc>
 struct hash<basic_string<CharT, Traits, Alloc>> {
-    MSTL_NODISCARD MSTL_CONSTEXPR size_t operator ()(
+    MSTL_NODISCARD size_t operator ()(
         const basic_string<CharT, Traits, Alloc>& str) const noexcept {
         return FNV_hash(reinterpret_cast<const byte_t*>(str.c_str()), sizeof(CharT) * str.size());
     }

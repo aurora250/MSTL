@@ -216,7 +216,7 @@ struct __ptr_traits_base {
     template <typename U>
     using rebind = typename get_rebind_type<Ptr, U>::type;
 
-    MSTL_NODISCARD static MSTL_CONSTEXPR pointer pointer_to(reference x)
+    MSTL_NODISCARD static constexpr pointer pointer_to(reference x)
         noexcept(noexcept(Ptr::pointer_to(x))) {
         return Ptr::pointer_to(x);
     }
@@ -248,13 +248,13 @@ struct pointer_traits<T*> {
     template <typename U>
     using rebind = U*;
 
-    MSTL_NODISCARD static MSTL_CONSTEXPR pointer pointer_to(reference x) noexcept {
+    MSTL_NODISCARD static constexpr pointer pointer_to(reference x) noexcept {
         return MSTL::addressof(x);
     }
 };
 
 template <typename Ptr>
-MSTL_CONSTEXPR decltype(auto) ptr_const_cast(Ptr ptr) noexcept {
+constexpr decltype(auto) ptr_const_cast(Ptr ptr) noexcept {
     using T = typename pointer_traits<Ptr>::element_type;
     using NonConst = remove_const_t<T>;
     using Dest = typename pointer_traits<Ptr>::template rebind<NonConst>;
@@ -262,7 +262,7 @@ MSTL_CONSTEXPR decltype(auto) ptr_const_cast(Ptr ptr) noexcept {
     return pointer_traits<Dest>::pointer_to(const_cast<NonConst&>(*ptr));
 }
 template <typename T>
-MSTL_CONSTEXPR decltype(auto) ptr_const_cast(T* ptr) noexcept {
+constexpr decltype(auto) ptr_const_cast(T* ptr) noexcept {
     return const_cast<remove_const_t<T>*>(ptr);
 }
 

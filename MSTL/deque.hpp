@@ -169,7 +169,7 @@ public:
         self temp = *this;
         return temp += n;
     }
-    MSTL_NODISCARD friend MSTL_CONSTEXPR self operator +(const difference_type n, const self& it) {
+    MSTL_NODISCARD friend self operator +(const difference_type n, const self& it) {
         return it + n;
     }
 

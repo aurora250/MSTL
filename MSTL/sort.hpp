@@ -452,7 +452,7 @@ void insertion_sort(Iterator first, Iterator last) {
 }
 
 
-MSTL_CONSTEXPR static size_t SORT_DISPATCH_THRESHOLD = 16;
+static constexpr size_t SORT_DISPATCH_THRESHOLD = 16;
 
 // introspective sort : Ot(NlogN) Om(logN) unstable
 template <typename Iterator, typename Compare, enable_if_t<

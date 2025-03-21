@@ -9,7 +9,7 @@ struct base_char_traits {
     using char_type = CharT;
     using int_type  = IntT;
 
-    static MSTL_CONSTEXPR char_type* copy(char_type* const dest,
+    static constexpr char_type* copy(char_type* const dest,
         const char_type* const srcs, const size_t count) noexcept {
 #if defined(MSTL_COMPILE_CLANG__)
         __builtin_memcpy(dest, srcs, count * sizeof(char_type));
@@ -26,7 +26,7 @@ struct base_char_traits {
         return dest;
     }
 
-    static MSTL_CONSTEXPR char_type* move(char_type* const dest,
+    static constexpr char_type* move(char_type* const dest,
         const char_type* const srcs, const size_t count) noexcept {
 #if defined(MSTL_COMPILE_CLANG__)
         __builtin_memmove(dest, srcs, count * sizeof(char_type));
@@ -56,7 +56,7 @@ struct base_char_traits {
         return dest;
     }
 
-    MSTL_NODISCARD static MSTL_CONSTEXPR int compare(const char_type* lh,
+    MSTL_NODISCARD static constexpr int compare(const char_type* lh,
         const char_type* str2, size_t count) noexcept {
         for (; 0 < count; --count, ++lh, ++str2) {
             if (*lh != *str2) 
@@ -65,7 +65,7 @@ struct base_char_traits {
         return 0;
     }
 
-    MSTL_NODISCARD static MSTL_CONSTEXPR size_t length(const char_type* str) noexcept {
+    MSTL_NODISCARD static constexpr size_t length(const char_type* str) noexcept {
         size_t count = 0;
         while (*str != char_type()) {
             ++count;
@@ -74,7 +74,7 @@ struct base_char_traits {
         return count;
     }
 
-    MSTL_NODISCARD static MSTL_CONSTEXPR const char_type* find(const char_type* str,
+    MSTL_NODISCARD static constexpr const char_type* find(const char_type* str,
         size_t count, const char_type& target) noexcept {
         for (; 0 < count; --count, ++str) {
             if (*str == target) return str;
@@ -82,35 +82,35 @@ struct base_char_traits {
         return nullptr;
     }
 
-    static MSTL_CONSTEXPR char_type* assign(char_type* const str, size_t count, const char_type chr) noexcept {
+    static constexpr char_type* assign(char_type* const str, size_t count, const char_type chr) noexcept {
         for (char_type* next = str; count > 0; --count, ++next) {
             *next = chr;
         }
         return str;
     }
-    static MSTL_CONSTEXPR void assign(char_type& lh, const char_type& rh) noexcept {
+    static constexpr void assign(char_type& lh, const char_type& rh) noexcept {
         lh = rh;
     }
 
-    MSTL_NODISCARD static MSTL_CONSTEXPR bool eq(const char_type lh, const char_type rh) noexcept {
+    MSTL_NODISCARD static constexpr bool eq(const char_type lh, const char_type rh) noexcept {
         return lh == rh;
     }
-    MSTL_NODISCARD static MSTL_CONSTEXPR bool lt(const char_type lh, const char_type rh) noexcept {
+    MSTL_NODISCARD static constexpr bool lt(const char_type lh, const char_type rh) noexcept {
         return lh < rh;
     }
-    MSTL_NODISCARD static MSTL_CONSTEXPR char_type to_char_type(const int_type str) noexcept {
+    MSTL_NODISCARD static constexpr char_type to_char_type(const int_type str) noexcept {
         return static_cast<char_type>(str);
     }
-    MSTL_NODISCARD static MSTL_CONSTEXPR int_type to_int_type(const char_type chr) noexcept {
+    MSTL_NODISCARD static constexpr int_type to_int_type(const char_type chr) noexcept {
         return static_cast<int_type>(chr);
     }
-    MSTL_NODISCARD static MSTL_CONSTEXPR bool eq_int_type(const int_type lh, const int_type rh) noexcept {
+    MSTL_NODISCARD static constexpr bool eq_int_type(const int_type lh, const int_type rh) noexcept {
         return lh == rh;
     }
-    MSTL_NODISCARD static MSTL_CONSTEXPR int_type not_eof(const int_type rsc) noexcept {
+    MSTL_NODISCARD static constexpr int_type not_eof(const int_type rsc) noexcept {
         return rsc != eof() ? rsc : !eof();
     }
-    MSTL_NODISCARD static MSTL_CONSTEXPR int_type eof() noexcept {
+    MSTL_NODISCARD static constexpr int_type eof() noexcept {
         return static_cast<int_type>(-1);
     }
 };
@@ -128,7 +128,7 @@ public:
     using base_type::move;
 
 public:
-    MSTL_NODISCARD static MSTL_CONSTEXPR int compare(const char_type* const lh,
+    MSTL_NODISCARD static constexpr int compare(const char_type* const lh,
         const char_type* const rh, const size_t n) noexcept {
 #if MSTL_VERSION_20__
         if (MSTL::is_constant_evaluated()) {
@@ -144,7 +144,7 @@ public:
             reinterpret_cast<const wchar_t*>(rh), n);
     }
 
-    MSTL_NODISCARD static MSTL_CONSTEXPR size_t length(const char_type* str) noexcept {
+    MSTL_NODISCARD static constexpr size_t length(const char_type* str) noexcept {
 #if MSTL_VERSION_20__
         if (MSTL::is_constant_evaluated()) {
             MSTL_IF_CONSTEXPR (is_same_v<char_type, wchar_t>) {
@@ -162,7 +162,7 @@ public:
         return MSTL::wcslen(reinterpret_cast<const wchar_t*>(str));
     }
 
-    MSTL_NODISCARD static MSTL_CONSTEXPR const char_type* find(
+    MSTL_NODISCARD static constexpr const char_type* find(
         const char_type* str, const size_t n, const char_type& chr) noexcept {
 #if MSTL_VERSION_20__
         if (MSTL::is_constant_evaluated()) {
@@ -178,7 +178,7 @@ public:
             MSTL::wmemchr(reinterpret_cast<const wchar_t*>(str), chr, n));
     }
 
-    static MSTL_CONSTEXPR char_type* assign(char_type* const str, size_t n, const char_type chr) noexcept {
+    static constexpr char_type* assign(char_type* const str, size_t n, const char_type chr) noexcept {
 #if MSTL_VERSION_20__
         if (MSTL::is_constant_evaluated()) {
             return base_type::assign(str, n, chr);
@@ -186,7 +186,7 @@ public:
 #endif // MSTL_VERSION_20__
         return reinterpret_cast<char_type*>(MSTL::wmemset(reinterpret_cast<wchar_t*>(str), chr, n));
     }
-    static MSTL_CONSTEXPR void assign(char_type& lh, const char_type& rh) noexcept {
+    static constexpr void assign(char_type& lh, const char_type& rh) noexcept {
 #if MSTL_VERSION_20__
         if (MSTL::is_constant_evaluated()) {
             return base_type::assign(lh, rh);
@@ -195,26 +195,26 @@ public:
         lh = rh;
     }
 
-    MSTL_NODISCARD static MSTL_CONSTEXPR bool eq(const char_type lh, const char_type rh) noexcept {
+    MSTL_NODISCARD static constexpr bool eq(const char_type lh, const char_type rh) noexcept {
         return lh == rh;
     }
-    MSTL_NODISCARD static MSTL_CONSTEXPR bool lt(const char_type lh, const char_type rh) noexcept {
+    MSTL_NODISCARD static constexpr bool lt(const char_type lh, const char_type rh) noexcept {
         return lh < rh;
     }
-    MSTL_NODISCARD static MSTL_CONSTEXPR char_type to_char_type(const int_type rsc) noexcept {
+    MSTL_NODISCARD static constexpr char_type to_char_type(const int_type rsc) noexcept {
         return rsc;
     }
-    MSTL_NODISCARD static MSTL_CONSTEXPR int_type to_int_type(const char_type chr) noexcept {
+    MSTL_NODISCARD static constexpr int_type to_int_type(const char_type chr) noexcept {
         return chr;
     }
-    MSTL_NODISCARD static MSTL_CONSTEXPR bool eq_int_type(const int_type lh, const int_type rh) noexcept {
+    MSTL_NODISCARD static constexpr bool eq_int_type(const int_type lh, const int_type rh) noexcept {
         return lh == rh;
     }
 
-    MSTL_NODISCARD static MSTL_CONSTEXPR int_type not_eof(const int_type rsc) noexcept {
+    MSTL_NODISCARD static constexpr int_type not_eof(const int_type rsc) noexcept {
         return rsc != eof() ? rsc : static_cast<int_type>(!eof());
     }
-    MSTL_NODISCARD static MSTL_CONSTEXPR int_type eof() noexcept {
+    MSTL_NODISCARD static constexpr int_type eof() noexcept {
         return 0xffff;
     }
 };
@@ -232,7 +232,7 @@ public:
     using base_type::move;
 
 public:
-    MSTL_NODISCARD static MSTL_CONSTEXPR int compare(const char_type* const lh,
+    MSTL_NODISCARD static constexpr int compare(const char_type* const lh,
         const char_type* const rh, const size_t n) noexcept {
 #if MSTL_VERSION_17__
         return __builtin_memcmp(lh, rh, n);
@@ -241,7 +241,7 @@ public:
 #endif
     }
 
-    MSTL_NODISCARD static MSTL_CONSTEXPR size_t length(const char_type* const str) noexcept {
+    MSTL_NODISCARD static constexpr size_t length(const char_type* const str) noexcept {
 #ifdef MSTL_VERSION_17__
 #ifdef MSTL_VERSION_20__
         MSTL_IF_CONSTEXPR (is_same_v<char_type, char8_t>) {
@@ -265,7 +265,7 @@ public:
 #endif // MSTL_VERSION_17__
     }
 
-    MSTL_NODISCARD static MSTL_CONSTEXPR const char_type* find(const char_type* const str,
+    MSTL_NODISCARD static constexpr const char_type* find(const char_type* const str,
         const size_t n, const char_type& chr) noexcept {
 #ifdef MSTL_VERSION_17__
 #ifdef MSTL_VERSION_20__
@@ -290,7 +290,7 @@ public:
 #endif // MSTL_VERSION_17__
     }
 
-    static MSTL_CONSTEXPR char_type* assign(char_type* const str, size_t n, const char_type chr) noexcept {
+    static constexpr char_type* assign(char_type* const str, size_t n, const char_type chr) noexcept {
 #ifdef MSTL_VERSION_20__
         if (MSTL::is_constant_evaluated()) {
             return base_type::assign(str, n, chr);
@@ -298,7 +298,7 @@ public:
 #endif // MSTL_VERSION_20__
         return static_cast<char_type*>(MSTL::memset(str, chr, n));
     }
-    static MSTL_CONSTEXPR void assign(char_type& lh, const char_type& rh) noexcept {
+    static constexpr void assign(char_type& lh, const char_type& rh) noexcept {
 #ifdef MSTL_VERSION_20__
         if (MSTL::is_constant_evaluated()) {
             return base_type::assign(lh, rh);
@@ -307,26 +307,26 @@ public:
         lh = rh;
     }
 
-    MSTL_NODISCARD static MSTL_CONSTEXPR bool eq(const char_type lh, const char_type rh) noexcept {
+    MSTL_NODISCARD static constexpr bool eq(const char_type lh, const char_type rh) noexcept {
         return lh == rh;
     }
-    MSTL_NODISCARD static MSTL_CONSTEXPR bool lt(const char_type lh, const char_type rh) noexcept {
+    MSTL_NODISCARD static constexpr bool lt(const char_type lh, const char_type rh) noexcept {
         return static_cast<unsigned char>(lh) < static_cast<unsigned char>(rh);
     }
-    MSTL_NODISCARD static MSTL_CONSTEXPR char_type to_char_type(const int_type rsc) noexcept {
+    MSTL_NODISCARD static constexpr char_type to_char_type(const int_type rsc) noexcept {
         return static_cast<char_type>(rsc);
     }
-    MSTL_NODISCARD static MSTL_CONSTEXPR int_type to_int_type(const char_type chr) noexcept {
+    MSTL_NODISCARD static constexpr int_type to_int_type(const char_type chr) noexcept {
         return static_cast<unsigned char>(chr);
     }
-    MSTL_NODISCARD static MSTL_CONSTEXPR bool eq_int_type(const int_type lh, const int_type rh) noexcept {
+    MSTL_NODISCARD static constexpr bool eq_int_type(const int_type lh, const int_type rh) noexcept {
         return lh == rh;
     }
 
-    MSTL_NODISCARD static MSTL_CONSTEXPR int_type not_eof(const int_type rsc) noexcept {
+    MSTL_NODISCARD static constexpr int_type not_eof(const int_type rsc) noexcept {
         return rsc != eof() ? rsc : !eof();
     }
-    MSTL_NODISCARD static MSTL_CONSTEXPR int_type eof() noexcept {
+    MSTL_NODISCARD static constexpr int_type eof() noexcept {
         return static_cast<int_type>(-1);
     }
 };
@@ -656,47 +656,47 @@ private:
 public:
     constexpr string_view_iterator() noexcept = default;
 
-    MSTL_CONSTEXPR string_view_iterator(const pointer data, const size_t size, const size_t off) noexcept
+    constexpr string_view_iterator(const pointer data, const size_t size, const size_t off) noexcept
         : data_(data), size_(size), idx_(off) {
     }
 
-    MSTL_NODISCARD MSTL_CONSTEXPR reference operator *() const noexcept {
+    MSTL_NODISCARD constexpr reference operator *() const noexcept {
         MSTL_DEBUG_VERIFY__(data_, "cannot dereference value-initialized string view iterator");
         MSTL_DEBUG_VERIFY__(idx_ < size_, "cannot dereference end string view iterator");
         return data_[idx_];
     }
 
-    MSTL_NODISCARD MSTL_CONSTEXPR pointer operator ->() const noexcept {
+    MSTL_NODISCARD constexpr pointer operator ->() const noexcept {
         return &(operator*());
     }
 
-    MSTL_CONSTEXPR string_view_iterator& operator ++() noexcept {
+    constexpr string_view_iterator& operator ++() noexcept {
         MSTL_DEBUG_VERIFY__(data_, "cannot increment value-initialized string_view iterator");
         MSTL_DEBUG_VERIFY__(idx_ < size_, "cannot increment string_view iterator past end");
         ++idx_;
         return *this;
     }
 
-    MSTL_CONSTEXPR string_view_iterator operator ++(int) noexcept {
+    constexpr string_view_iterator operator ++(int) noexcept {
         string_view_iterator tmp(*this);
         ++*this;
         return tmp;
     }
 
-    MSTL_CONSTEXPR string_view_iterator& operator --() noexcept {
+    constexpr string_view_iterator& operator --() noexcept {
         MSTL_DEBUG_VERIFY__(data_, "cannot decrement value-initialized string_view iterator");
         MSTL_DEBUG_VERIFY__(idx_ != 0, "cannot decrement string_view iterator before begin");
         --idx_;
         return *this;
     }
 
-    MSTL_CONSTEXPR string_view_iterator operator --(int) noexcept {
+    constexpr string_view_iterator operator --(int) noexcept {
         string_view_iterator tmp(*this);
         --*this;
         return tmp;
     }
 
-    MSTL_CONSTEXPR string_view_iterator& operator +=(const difference_type n) noexcept {
+    constexpr string_view_iterator& operator +=(const difference_type n) noexcept {
         if (n != 0)
             MSTL_DEBUG_VERIFY__(data_, "cannot seek value-initialized string_view iterator");
         if (n < 0) {
@@ -709,19 +709,19 @@ public:
         return *this;
     }
 
-    MSTL_NODISCARD MSTL_CONSTEXPR string_view_iterator operator +(const difference_type n) const noexcept {
+    MSTL_NODISCARD constexpr string_view_iterator operator +(const difference_type n) const noexcept {
         string_view_iterator tmp(*this);
         tmp += n;
         return tmp;
     }
 
-    MSTL_NODISCARD friend MSTL_CONSTEXPR string_view_iterator operator +(
+    MSTL_NODISCARD friend constexpr string_view_iterator operator +(
         const difference_type n, string_view_iterator iter) noexcept {
         iter += n;
         return iter;
     }
 
-    MSTL_CONSTEXPR string_view_iterator& operator -=(const difference_type n) noexcept {
+    constexpr string_view_iterator& operator -=(const difference_type n) noexcept {
         if (n != 0) {
             MSTL_DEBUG_VERIFY__(data_, "cannot seek value-initialized string_view iterator");
         }
@@ -738,41 +738,41 @@ public:
         return *this;
     }
 
-    MSTL_NODISCARD MSTL_CONSTEXPR string_view_iterator operator -(const difference_type n) const noexcept {
+    MSTL_NODISCARD constexpr string_view_iterator operator -(const difference_type n) const noexcept {
         string_view_iterator tmp(*this);
         tmp -= n;
         return tmp;
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR difference_type operator -(const string_view_iterator& iter) const noexcept {
+    MSTL_NODISCARD constexpr difference_type operator -(const string_view_iterator& iter) const noexcept {
         MSTL_DEBUG_VERIFY__(data_ == iter.data_ && size_ == iter.size_,
             "cannot subtract incompatible string_view iterators");
         return static_cast<difference_type>(idx_ - iter.idx_);
     }
 
-    MSTL_NODISCARD MSTL_CONSTEXPR reference operator [](const difference_type n) const noexcept {
+    MSTL_NODISCARD constexpr reference operator [](const difference_type n) const noexcept {
         return *(*this + n);
     }
 
-    MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(const string_view_iterator& iter) const noexcept {
+    MSTL_NODISCARD constexpr bool operator ==(const string_view_iterator& iter) const noexcept {
         MSTL_DEBUG_VERIFY__(data_ == iter.data_ && size_ == iter.size_,
             "cannot compare incompatible string_view iterators for equality");
         return idx_ == iter.idx_;
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(const string_view_iterator& iter) const noexcept {
+    MSTL_NODISCARD constexpr bool operator !=(const string_view_iterator& iter) const noexcept {
         return !(*this == iter);
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR bool operator <(const string_view_iterator& iter) const noexcept {
+    MSTL_NODISCARD constexpr bool operator <(const string_view_iterator& iter) const noexcept {
         MSTL_DEBUG_VERIFY__(data_ == iter.data_ && size_ == iter.size_,
             "cannot compare incompatible string_view iterators");
         return idx_ < iter.idx_;
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR bool operator >(const string_view_iterator& iter) const noexcept {
+    MSTL_NODISCARD constexpr bool operator >(const string_view_iterator& iter) const noexcept {
         return iter < *this;
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR bool operator <=(const string_view_iterator& iter) const noexcept {
+    MSTL_NODISCARD constexpr bool operator <=(const string_view_iterator& iter) const noexcept {
         return !(iter < *this);
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR bool operator >=(const string_view_iterator& iter) const noexcept {
+    MSTL_NODISCARD constexpr bool operator >=(const string_view_iterator& iter) const noexcept {
         return !(*this < iter);
     }
 };
@@ -874,20 +874,20 @@ public:
         *this = tmp;
     }
 
-    MSTL_CONSTEXPR size_type copy(CharT* const str, size_type count, const size_type off = 0) const {
+    constexpr size_type copy(CharT* const str, size_type count, const size_type off = 0) const {
         range_check(off);
         count = clamp_size(off, count);
         Traits::copy(str, data_ + off, count);
         return count;
     }
 
-    MSTL_NODISCARD MSTL_CONSTEXPR self substr(const size_type off = 0, size_type count = npos) const {
+    MSTL_NODISCARD constexpr self substr(const size_type off = 0, size_type count = npos) const {
         range_check(off);
         count = clamp_size(off, count);
         return self(data_ + off, count);
     }
 
-    MSTL_NODISCARD MSTL_CONSTEXPR bool equal_to(const self view) const noexcept {
+    MSTL_NODISCARD constexpr bool equal_to(const self view) const noexcept {
         return (char_traits_equal<Traits>)(data_, size_, view.data_, view.size_);
     }
 
@@ -1301,7 +1301,7 @@ struct hash<MSTL::string_view> {
 };
 template <typename CharT, typename Traits>
 struct hash<basic_string_view<CharT, Traits>> {
-    MSTL_NODISCARD MSTL_CONSTEXPR size_t operator ()(
+    MSTL_NODISCARD constexpr size_t operator ()(
         const basic_string_view<CharT, Traits> str) const noexcept {
         return FNV_hash(reinterpret_cast<const byte_t*>(str.data()), sizeof(CharT) * str.size());
     }

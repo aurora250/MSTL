@@ -252,9 +252,9 @@ public:
 
 #ifdef MSTL_DATA_BUS_WIDTH_64__
 
-static MSTL_CONSTEXPR uint16_t HASH_PRIMER_COUNT = 99;
+static constexpr uint16_t HASH_PRIMER_COUNT = 99;
 
-static MSTL_CONSTEXPR size_t HASH_PRIME_LIST[HASH_PRIMER_COUNT] = {
+static constexpr size_t HASH_PRIME_LIST[HASH_PRIMER_COUNT] = {
     101,                    173,                        263,                        397,
     599,                    907,                        1361,                       2053, 
     3083,                   4637,                       6959,                       10453, 
@@ -291,9 +291,9 @@ MSTL_NODISCARD inline size_t hashtable_next_prime(size_t n) {
 
 #else
 
-static MSTL_CONSTEXPR uint16_t HASH_PRIMER_COUNT = 28;
+static constexpr uint16_t HASH_PRIMER_COUNT = 28;
 
-static MSTL_CONSTEXPR uint32_t HASH_PRIME_LIST[HASH_PRIMER_COUNT] = {
+static constexpr uint32_t HASH_PRIME_LIST[HASH_PRIMER_COUNT] = {
     53,         97,           193,         389,       769,
     1543,       3079,         6151,        12289,     24593,
     49157,      98317,        196613,      393241,    786433,

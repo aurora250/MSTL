@@ -7,7 +7,7 @@ MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator1, typename Iterator2, typename BinaryPredicate, enable_if_t<
 	is_input_iter_v<Iterator1> && is_input_iter_v<Iterator2>, int> = 0>
-MSTL_NODISCARD MSTL_CONSTEXPR bool equal(Iterator1 first1, Iterator1 last1,
+MSTL_NODISCARD constexpr bool equal(Iterator1 first1, Iterator1 last1,
 	Iterator2 first2, BinaryPredicate binary_pred) {
 	for (; first1 != last1; ++first1, ++first2) {
 		if (!binary_pred(*first1, *first2)) return false;
@@ -16,50 +16,50 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool equal(Iterator1 first1, Iterator1 last1,
 }
 
 template <typename Iterator1, typename Iterator2>
-MSTL_NODISCARD MSTL_CONSTEXPR bool equal(Iterator1 first1, Iterator1 last1, Iterator2 first2) {
+MSTL_NODISCARD constexpr bool equal(Iterator1 first1, Iterator1 last1, Iterator2 first2) {
 	return MSTL::equal(first1, last1, first2, MSTL::equal_to<iter_val_t<Iterator1>>());
 }
 
 template <typename Iterator, typename T, enable_if_t<
 	is_input_iter_v<Iterator>, int> = 0>
-MSTL_CONSTEXPR void fill(Iterator first, Iterator last, const T& value) {
+constexpr void fill(Iterator first, Iterator last, const T& value) {
 	for (; first != last; ++first) *first = value;
 }
 
 template <typename Iterator, typename T, enable_if_t<
 	is_input_iter_v<Iterator>, int> = 0>
-MSTL_CONSTEXPR Iterator fill_n(Iterator first, size_t n, const T& value) {
+constexpr Iterator fill_n(Iterator first, size_t n, const T& value) {
 	for (; n > 0; --n, ++first) *first = value;
 	return first;
 }
 
 template <typename Iterator1, typename Iterator2, enable_if_t<
 	is_input_iter_v<Iterator1> && is_input_iter_v<Iterator2>, int> = 0>
-MSTL_CONSTEXPR void iter_swap(Iterator1 a, Iterator2 b)
+constexpr void iter_swap(Iterator1 a, Iterator2 b)
 noexcept(noexcept(MSTL::swap(*a, *b))) {
 	MSTL::swap(*a, *b);
 }
 
 template <typename T, typename Compare>
-MSTL_CONSTEXPR const T& max(const T& a, const T& b, Compare comp)
+constexpr const T& max(const T& a, const T& b, Compare comp)
 noexcept(noexcept(comp(a, b))) {
 	return comp(a, b) ? b : a;
 }
 
 template <typename T>
-MSTL_CONSTEXPR const T& max(const T& a, const T& b) 
+constexpr const T& max(const T& a, const T& b) 
 noexcept(noexcept(a < b)) {
 	return a < b ? b : a;
 }
 
 template <typename T, typename Compare>
-MSTL_CONSTEXPR const T& min(const T& a, const T& b, Compare comp)
+constexpr const T& min(const T& a, const T& b, Compare comp)
 noexcept(noexcept(comp(b, a))) {
 	return comp(b, a) ? b : a;
 }
 
 template <typename T>
-MSTL_CONSTEXPR const T& min(const T& a, const T& b) 
+constexpr const T& min(const T& a, const T& b) 
 noexcept(noexcept(b < a)) {
 	return b < a ? b : a;
 }
@@ -67,7 +67,7 @@ noexcept(noexcept(b < a)) {
 template <typename Iterator, typename Compare, enable_if_t<
 	is_input_iter_v<Iterator>, int> = 0>
 pair<iter_val_t<Iterator>, iter_val_t<Iterator>>
-MSTL_CONSTEXPR minmax(Iterator first, Iterator last, Compare comp) {
+constexpr minmax(Iterator first, Iterator last, Compare comp) {
 	using T = iter_val_t<Iterator>;
 	if (first == last) {
 		return MSTL::make_pair(T(), T());
@@ -86,12 +86,12 @@ MSTL_CONSTEXPR minmax(Iterator first, Iterator last, Compare comp) {
 }
 
 template <typename Iterator>
-MSTL_CONSTEXPR pair<iter_val_t<Iterator>, iter_val_t<Iterator>> minmax(Iterator first, Iterator last) {
+constexpr pair<iter_val_t<Iterator>, iter_val_t<Iterator>> minmax(Iterator first, Iterator last) {
 	return MSTL::minmax(first, last, MSTL::less<iter_val_t<Iterator>>());
 }
 
 template <typename T, typename Compare>
-MSTL_CONSTEXPR const T& median(const T& a, const T& b, const T& c, Compare comp) 
+constexpr const T& median(const T& a, const T& b, const T& c, Compare comp) 
 noexcept(noexcept(comp(a, b))) {
 	if (comp(a, b))
 		if (comp(b, c))
@@ -109,14 +109,14 @@ noexcept(noexcept(comp(a, b))) {
 }
 
 template <typename T>
-MSTL_CONSTEXPR const T& median(const T& a, const T& b, const T& c) 
+constexpr const T& median(const T& a, const T& b, const T& c) 
 noexcept(noexcept(MSTL::median(a, b, c, MSTL::less<T>()))) {
 	return MSTL::median(a, b, c, MSTL::less<T>());
 }
 
 template <typename Iterator, typename Compare, enable_if_t<
 	is_input_iter_v<Iterator>, int> = 0>
-MSTL_CONSTEXPR Iterator max_element(Iterator first, Iterator last, Compare comp) {
+constexpr Iterator max_element(Iterator first, Iterator last, Compare comp) {
 	if (first == last) return first;
 	Iterator result = first;
 	while (++first != last)
@@ -125,19 +125,19 @@ MSTL_CONSTEXPR Iterator max_element(Iterator first, Iterator last, Compare comp)
 }
 
 template <typename Iterator>
-MSTL_CONSTEXPR Iterator max_element(Iterator first, Iterator last) {
+constexpr Iterator max_element(Iterator first, Iterator last) {
 	return MSTL::max_element(first, last, MSTL::less<iter_val_t<Iterator>>());
 }
 
 template <typename T>
-MSTL_CONSTEXPR const T& max(std::initializer_list<T> list) {
+constexpr const T& max(std::initializer_list<T> list) {
 	auto iter = MSTL::max_element(list.begin(), list.end());
 	return *iter;
 }
 
 template <typename Iterator, typename Compare, enable_if_t<
 	is_input_iter_v<Iterator>, int> = 0>
-MSTL_CONSTEXPR Iterator min_element(Iterator first, Iterator last, Compare comp) {
+constexpr Iterator min_element(Iterator first, Iterator last, Compare comp) {
 	if (first == last) return first;
 	Iterator result = first;
 	while (++first != last)
@@ -146,30 +146,30 @@ MSTL_CONSTEXPR Iterator min_element(Iterator first, Iterator last, Compare comp)
 }
 
 template <typename Iterator>
-MSTL_CONSTEXPR Iterator min_element(Iterator first, Iterator last) {
+constexpr Iterator min_element(Iterator first, Iterator last) {
 	return MSTL::min_element(first, last, MSTL::less<iter_val_t<Iterator>>());
 }
 
 template <typename T>
-MSTL_CONSTEXPR const T& min(std::initializer_list<T> list) {
+constexpr const T& min(std::initializer_list<T> list) {
 	return *MSTL::min_element(list.begin(), list.end());
 }
 
 template <typename Iterator, typename Compare, enable_if_t<
 	is_input_iter_v<Iterator>, int> = 0>
-MSTL_CONSTEXPR pair<Iterator, Iterator> minmax_element(Iterator first, Iterator last, Compare comp) {
+constexpr pair<Iterator, Iterator> minmax_element(Iterator first, Iterator last, Compare comp) {
 	Iterator min = MSTL::min_element(first, last, comp);
 	Iterator max = MSTL::max_element(first, last, comp);
 	return MSTL::make_pair(min, max);
 }
 
 template <typename Iterator>
-MSTL_CONSTEXPR pair<Iterator, Iterator> minmax_element(Iterator first, Iterator last) {
+constexpr pair<Iterator, Iterator> minmax_element(Iterator first, Iterator last) {
 	return MSTL::minmax_element(first, last, MSTL::less<iter_val_t<Iterator>>());
 }
 
 template <typename T, typename Compare>
-MSTL_CONSTEXPR const T& clamp(const T& value, const T& lower, const T& upper, Compare comp)
+constexpr const T& clamp(const T& value, const T& lower, const T& upper, Compare comp)
 noexcept(noexcept(comp(value, lower))) {
 	if (comp(value, lower))
 		return lower;
@@ -179,14 +179,14 @@ noexcept(noexcept(comp(value, lower))) {
 }
 
 template <typename T>
-MSTL_CONSTEXPR const T& clamp(const T& value, const T& lower, const T& upper)
+constexpr const T& clamp(const T& value, const T& lower, const T& upper)
 noexcept(noexcept(MSTL::clamp(value, lower, upper, MSTL::less<T>()))) {
 	return MSTL::clamp(value, lower, upper, MSTL::less<T>());
 }
 
 template <typename Iterator1, typename Iterator2, typename Compare, enable_if_t<
 	is_input_iter_v<Iterator1> && is_input_iter_v<Iterator2>, int> = 0>
-MSTL_NODISCARD MSTL_CONSTEXPR bool lexicographical_compare(
+MSTL_NODISCARD constexpr bool lexicographical_compare(
 	Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2, Compare comp) {
 	for (; first1 != last1 && first2 != last2; ++first1, ++first2) {
 		if (comp(*first1, *first2)) return true;
@@ -197,7 +197,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool lexicographical_compare(
 
 template <typename Iterator1, typename Iterator2, enable_if_t<
 	is_cot_iter_v<Iterator1> && is_cot_iter_v<Iterator2>, int> = 0>
-MSTL_NODISCARD MSTL_CONSTEXPR bool __lexicographical_compare_aux(
+MSTL_NODISCARD constexpr bool __lexicographical_compare_aux(
 	Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2) {
 	const auto len1 = static_cast<size_t>(last1 - first1);
 	const auto len2 = static_cast<size_t>(last2 - first2);
@@ -210,14 +210,14 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool __lexicographical_compare_aux(
 
 template <typename Iterator1, typename Iterator2, enable_if_t<
 	!(is_cot_iter_v<Iterator1> && is_cot_iter_v<Iterator2>), int> = 0>
-MSTL_NODISCARD MSTL_CONSTEXPR bool __lexicographical_compare_aux(
+MSTL_NODISCARD constexpr bool __lexicographical_compare_aux(
 	Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2) {
 	return MSTL::lexicographical_compare(first1, last1, first2, last2, MSTL::less<iter_val_t<Iterator1>>());
 }
 
 template <typename Iterator1, typename Iterator2, enable_if_t<
 	is_input_iter_v<Iterator1> && is_input_iter_v<Iterator2>, int> = 0>
-MSTL_NODISCARD MSTL_CONSTEXPR bool lexicographical_compare(
+MSTL_NODISCARD constexpr bool lexicographical_compare(
 	Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2) {
 	return __lexicographical_compare_aux(first1, last1, first2, last2);
 }
@@ -226,7 +226,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool lexicographical_compare(
 template <typename Iterator1, typename Iterator2, typename Compare, enable_if_t<
 	is_input_iter_v<Iterator1> && is_input_iter_v<Iterator2>, int> = 0>
 pair<Iterator1, Iterator2>
-MSTL_CONSTEXPR mismatch(Iterator1 first1, Iterator1 last1, Iterator2 first2, Compare comp) {
+constexpr mismatch(Iterator1 first1, Iterator1 last1, Iterator2 first2, Compare comp) {
 	while (first1 != last1 && comp(*first1, *first2)) {
 		++first1; ++first2;
 	}
@@ -234,7 +234,7 @@ MSTL_CONSTEXPR mismatch(Iterator1 first1, Iterator1 last1, Iterator2 first2, Com
 }
 
 template <typename Iterator1, typename Iterator2>
-MSTL_CONSTEXPR pair<Iterator1, Iterator2> mismatch(Iterator1 first1, Iterator1 last1, Iterator2 first2) {
+constexpr pair<Iterator1, Iterator2> mismatch(Iterator1 first1, Iterator1 last1, Iterator2 first2) {
 	return MSTL::mismatch(first1, last1, first2, MSTL::equal_to<iter_val_t<Iterator1>>());
 }
 

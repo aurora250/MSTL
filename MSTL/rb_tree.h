@@ -614,37 +614,37 @@ public:
     }
 };
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
-MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(
+MSTL_NODISCARD bool operator ==(
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& lh,
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& rh) noexcept {
     return lh.size() == rh.size() && MSTL::equal(lh.cbegin(), lh.cend(), rh.cbegin());
 }
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
-MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(
+MSTL_NODISCARD bool operator !=(
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& lh,
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& rh) noexcept {
     return !(lh == rh);
 }
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
-MSTL_NODISCARD MSTL_CONSTEXPR bool operator <(
+MSTL_NODISCARD bool operator <(
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& lh,
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& rh) noexcept {
     return MSTL::lexicographical_compare(lh.cbegin(), lh.cend(), rh.cbegin(), rh.cend());
 }
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
-MSTL_NODISCARD MSTL_CONSTEXPR bool operator >(
+MSTL_NODISCARD bool operator >(
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& lh,
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& rh) noexcept {
     return rh < lh;
 }
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
-MSTL_NODISCARD MSTL_CONSTEXPR bool operator <=(
+MSTL_NODISCARD bool operator <=(
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& lh,
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& rh) noexcept {
     return !(lh > rh);
 }
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
-MSTL_NODISCARD MSTL_CONSTEXPR bool operator >=(
+MSTL_NODISCARD bool operator >=(
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& lh,
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& rh) noexcept {
     return !(lh < rh);

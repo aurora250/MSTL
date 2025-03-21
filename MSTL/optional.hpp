@@ -395,7 +395,8 @@ optional(T) -> optional<T>;
 #endif
 
 template <typename T, enable_if_t<is_move_constructible_v<T> && is_swappable_v<T>, int> = 0>
-MSTL_CONSTEXPR20 void swap(optional<T>& lh, optional<T>& rh) noexcept {
+MSTL_CONSTEXPR20 void swap(optional<T>& lh, optional<T>& rh)
+noexcept(noexcept(lh.swap(rh))) {
     lh.swap(rh);
 }
 

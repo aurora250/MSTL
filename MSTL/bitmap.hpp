@@ -9,14 +9,14 @@ private:
     bool matches_[256] = {};
 
 public:
-    MSTL_CONSTEXPR __string_bitmap() = default;
+    constexpr __string_bitmap() = default;
 
-    MSTL_CONSTEXPR bool mark(const CharT* first, const CharT* const last) noexcept {
+    constexpr bool mark(const CharT* first, const CharT* const last) noexcept {
         for (; first != last; ++first) 
             matches_[static_cast<unsigned char>(*first)] = true;
         return true;
     }
-    MSTL_CONSTEXPR bool match(const CharT chr) const noexcept {
+    constexpr bool match(const CharT chr) const noexcept {
         return matches_[static_cast<unsigned char>(chr)];
     }
 };

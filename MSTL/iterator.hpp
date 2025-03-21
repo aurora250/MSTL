@@ -5,17 +5,17 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator>
-MSTL_TRAITS_DEPRE MSTL_NODISCARD MSTL_CONSTEXPR iter_cat_t<Iterator>
+MSTL_TRAITS_DEPRE MSTL_NODISCARD constexpr iter_cat_t<Iterator>
 iterator_category(const Iterator&) noexcept {
     return iter_cat_t<Iterator>();
 }
 template <typename Iterator>
-MSTL_TRAITS_DEPRE MSTL_NODISCARD MSTL_CONSTEXPR iter_dif_t<Iterator>*
+MSTL_TRAITS_DEPRE MSTL_NODISCARD constexpr iter_dif_t<Iterator>*
 distance_type(const Iterator&) noexcept {
     return static_cast<iter_dif_t<Iterator>*>(0);
 }
 template <typename Iterator>
-MSTL_TRAITS_DEPRE MSTL_NODISCARD MSTL_CONSTEXPR
+MSTL_TRAITS_DEPRE MSTL_NODISCARD constexpr
 iter_val_t<Iterator>* value_type(const Iterator&) noexcept {
     return static_cast<iter_val_t<Iterator>*>(0);
 }
@@ -23,20 +23,20 @@ iter_val_t<Iterator>* value_type(const Iterator&) noexcept {
 
 #ifndef MSTL_VERSION_17__
 template <typename Ptr, enable_if_t<is_pointer_v<Ptr>, int> = 0>
-MSTL_CONSTEXPR iter_ptr_t<Ptr> __to_pointer_aux(Ptr iter) {
+constexpr iter_ptr_t<Ptr> __to_pointer_aux(Ptr iter) {
     return iter;
 }
 template <typename Iterator, enable_if_t<!is_pointer_v<Iterator>, int> = 0>
-MSTL_CONSTEXPR iter_ptr_t<Iterator> __to_pointer_aux(Iterator iter) {
+constexpr iter_ptr_t<Iterator> __to_pointer_aux(Iterator iter) {
     return iter.operator->();
 }
 template <typename Iterator>
-MSTL_CONSTEXPR iter_ptr_t<Iterator> to_pointer(Iterator iter) {
+constexpr iter_ptr_t<Iterator> to_pointer(Iterator iter) {
     return MSTL::__to_pointer_aux(iter);
 }
 #else
 template <typename Iterator>
-MSTL_CONSTEXPR iter_ptr_t<Iterator> to_pointer(Iterator tmp) {
+constexpr iter_ptr_t<Iterator> to_pointer(Iterator tmp) {
     if constexpr (is_pointer_v<Iterator>)
         return tmp;
     else
@@ -137,25 +137,25 @@ public:
     using reference         = void;
     using self              = back_insert_iterator<Container>;
 
-    MSTL_CONSTEXPR explicit back_insert_iterator(Container& x) noexcept
+    constexpr explicit back_insert_iterator(Container& x) noexcept
         : container(MSTL::addressof(x)) {}
-    MSTL_CONSTEXPR self& operator =(const typename Container::value_type& value) {
+    constexpr self& operator =(const typename Container::value_type& value) {
         container->push_back(value);
         return *this;
     }
-    MSTL_CONSTEXPR self& operator =(typename Container::value_type&& value) {
+    constexpr self& operator =(typename Container::value_type&& value) {
         container->push_back(MSTL::move(value));
         return *this;
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR self& operator *() noexcept { return *this; }
-    MSTL_CONSTEXPR self& operator ++() noexcept { return *this; }
-    MSTL_CONSTEXPR self& operator ++(int) noexcept { return *this; }
+    MSTL_NODISCARD constexpr self& operator *() noexcept { return *this; }
+    constexpr self& operator ++() noexcept { return *this; }
+    constexpr self& operator ++(int) noexcept { return *this; }
 
 private:
     Container* container;
 };
 template <typename Container>
-MSTL_NODISCARD MSTL_CONSTEXPR back_insert_iterator<Container> back_inserter(Container& x) noexcept {
+MSTL_NODISCARD constexpr back_insert_iterator<Container> back_inserter(Container& x) noexcept {
     return back_insert_iterator<Container>(x);
 }
 
@@ -169,25 +169,25 @@ public:
     using reference         = void;
     using self              = front_insert_iterator<Container>;
 
-    MSTL_CONSTEXPR explicit front_insert_iterator(Container& x) noexcept
+    constexpr explicit front_insert_iterator(Container& x) noexcept
         : container(MSTL::addressof(x)) {}
-    MSTL_CONSTEXPR self& operator =(const typename Container::value_type& value) {
+    constexpr self& operator =(const typename Container::value_type& value) {
         container->push_front(value);
         return *this;
     }
-    MSTL_CONSTEXPR self& operator =(typename Container::value_type&& value) {
+    constexpr self& operator =(typename Container::value_type&& value) {
         container->push_front(MSTL::move(value));
         return *this;
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR self& operator *() noexcept { return *this; }
-    MSTL_CONSTEXPR self& operator ++() noexcept { return *this; }
-    MSTL_CONSTEXPR self& operator ++(int) noexcept { return *this; }
+    MSTL_NODISCARD constexpr self& operator *() noexcept { return *this; }
+    constexpr self& operator ++() noexcept { return *this; }
+    constexpr self& operator ++(int) noexcept { return *this; }
 
 private:
     Container* container;
 };
 template <typename Container>
-MSTL_NODISCARD MSTL_CONSTEXPR front_insert_iterator<Container> front_inserter(Container& x) noexcept {
+MSTL_NODISCARD constexpr front_insert_iterator<Container> front_inserter(Container& x) noexcept {
     return front_insert_iterator<Container>(x);
 }
 
@@ -201,28 +201,28 @@ public:
     using reference         = void;
     using self              = insert_iterator<Container>;
 
-    MSTL_CONSTEXPR insert_iterator(Container& x, typename Container::iterator it) noexcept
+    constexpr insert_iterator(Container& x, typename Container::iterator it) noexcept
         : container(MSTL::addressof(x)), iter(MSTL::move(it)) {}
-    MSTL_CONSTEXPR self& operator =(const typename Container::value_type& value) {
+    constexpr self& operator =(const typename Container::value_type& value) {
         iter = container->insert(iter, value);
         ++iter;
         return *this;
     }
-    MSTL_CONSTEXPR self& operator =(typename Container::value_type&& value) {
+    constexpr self& operator =(typename Container::value_type&& value) {
         iter = container->insert(iter, MSTL::move(value));
         ++iter;
         return *this;
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR self& operator *() noexcept { return *this; }
-    MSTL_CONSTEXPR self& operator ++() noexcept { return *this; }
-    MSTL_CONSTEXPR self& operator ++(int) noexcept { return *this; }
+    MSTL_NODISCARD constexpr self& operator *() noexcept { return *this; }
+    constexpr self& operator ++() noexcept { return *this; }
+    constexpr self& operator ++(int) noexcept { return *this; }
 
 private:
     Container* container;
     typename Container::iterator iter;
 };
 template <typename Container>
-MSTL_NODISCARD MSTL_CONSTEXPR insert_iterator<Container> 
+MSTL_NODISCARD constexpr insert_iterator<Container> 
 inserter(Container& x, typename Container::iterator it) noexcept {
     return insert_iterator<Container>(x, it);
 }
@@ -244,9 +244,9 @@ private:
     Iterator current;
 
 public:
-    MSTL_CONSTEXPR reverse_iterator() = default;
+    constexpr reverse_iterator() = default;
 
-    MSTL_CONSTEXPR explicit reverse_iterator(Iterator x)
+    constexpr explicit reverse_iterator(Iterator x)
         noexcept(is_nothrow_move_constructible_v<Iterator>)
         : current(MSTL::move(x)) {}
 
@@ -254,7 +254,7 @@ public:
 #ifdef MSTL_VERSION_20__
         requires(!same_as<U, Iterator> && convertible_to<const U&, Iterator>)
 #endif // MSTL_VERSION_20__
-    MSTL_CONSTEXPR explicit reverse_iterator(const reverse_iterator<U>& x)
+    constexpr explicit reverse_iterator(const reverse_iterator<U>& x)
         noexcept(is_nothrow_constructible_v<Iterator, const U&>)
         : current(x.current) {}
 
@@ -263,23 +263,23 @@ public:
         requires(!same_as<U, Iterator> && convertible_to<const U&, Iterator> 
     && assignable_from<Iterator&, const U&>)
 #endif // MSTL_VERSION_20__
-    MSTL_CONSTEXPR self& operator =(const reverse_iterator<U>& x)
+    constexpr self& operator =(const reverse_iterator<U>& x)
         noexcept(is_nothrow_assignable_v<self&, const U&>) {
         current = x.current;
         return *this;
     }
 
-    MSTL_NODISCARD MSTL_CONSTEXPR Iterator base() const
+    MSTL_NODISCARD constexpr Iterator base() const
         noexcept(is_nothrow_copy_constructible_v<Iterator>) {
         return current;
     }
 
-    MSTL_NODISCARD MSTL_CONSTEXPR reference operator *() const
+    MSTL_NODISCARD constexpr reference operator *() const
         noexcept(is_nothrow_copy_assignable_v<Iterator> && noexcept(*--(MSTL::declval<Iterator&>()))) {
         Iterator iter = current;
         return *--iter;
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR pointer operator ->() const
+    MSTL_NODISCARD constexpr pointer operator ->() const
         noexcept(is_nothrow_copy_constructible_v<Iterator> && noexcept(--(MSTL::declval<Iterator&>()))
             && is_nothrow_arrow<Iterator&, pointer>)
 #ifdef MSTL_VERSION_20__
@@ -291,59 +291,59 @@ public:
         return MSTL::to_pointer(tmp);
     }
 
-    MSTL_CONSTEXPR self& operator ++()
+    constexpr self& operator ++()
          noexcept(noexcept(--current)) {
         --current;
         return *this;
     }
-    MSTL_CONSTEXPR self operator ++(int)
+    constexpr self operator ++(int)
         noexcept(is_nothrow_copy_constructible_v<Iterator> && noexcept(--current)) {
         self tmp = *this;
         --current;
         return tmp;
     }
-    MSTL_CONSTEXPR self& operator --()
+    constexpr self& operator --()
         noexcept(noexcept(++current)) {
         ++current;
         return *this;
     }
-    MSTL_CONSTEXPR self operator --(int)
+    constexpr self operator --(int)
         noexcept(is_nothrow_copy_constructible_v<Iterator> && noexcept(++current)) {
         self tmp = *this;
         ++current;
         return tmp;
     }
 
-    MSTL_CONSTEXPR self operator +(const difference_type n) const 
+    constexpr self operator +(const difference_type n) const 
         noexcept(noexcept(self(current - n))) {
         return self(current - n);
     }
-    MSTL_CONSTEXPR self& operator +=(const difference_type n) 
+    constexpr self& operator +=(const difference_type n) 
         noexcept(noexcept(current -= n)) {
         current -= n;
         return *this;
     }
-    MSTL_CONSTEXPR self operator -(const difference_type n) const 
+    constexpr self operator -(const difference_type n) const 
         noexcept(noexcept(self(current + n))) {
         return self(current + n);
     }
-    MSTL_CONSTEXPR self& operator -=(const difference_type n)
+    constexpr self& operator -=(const difference_type n)
         noexcept(noexcept(current += n)) {
         current += n;
         return *this;
     }
 
-    MSTL_CONSTEXPR reference operator[](const difference_type n) const
+    constexpr reference operator[](const difference_type n) const
         noexcept(noexcept(MSTL::declcopy<reference>(self(current - n)))) {
         return *(*this + n);
     }
 
-    MSTL_NODISCARD MSTL_CONSTEXPR const Iterator& get_current() const noexcept {
+    MSTL_NODISCARD constexpr const Iterator& get_current() const noexcept {
         return current;
     }
 };
 template <typename Iterator1, typename Iterator2>
-MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(
+MSTL_NODISCARD constexpr bool operator ==(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
     noexcept(noexcept(MSTL::declcopy<bool>(x.get_current() == y.get_current()))) 
 #ifdef MSTL_VERSION_20__
@@ -353,7 +353,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool operator ==(
     return x.get_current() == y.get_current();
 }
 template <typename Iterator1, typename Iterator2>
-MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(
+MSTL_NODISCARD constexpr bool operator !=(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
     noexcept(noexcept(MSTL::declcopy<bool>(x.get_current() != y.get_current())))
 #ifdef MSTL_VERSION_20__
@@ -363,7 +363,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool operator !=(
     return x.get_current() != y.get_current();
 }
 template <typename Iterator1, typename Iterator2>
-MSTL_NODISCARD MSTL_CONSTEXPR bool operator <(
+MSTL_NODISCARD constexpr bool operator <(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
     noexcept(noexcept(MSTL::declcopy<bool>(x.get_current() > y.get_current())))
 #ifdef MSTL_VERSION_20__
@@ -373,7 +373,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool operator <(
     return x.get_current() > y.get_current();
 }
 template <typename Iterator1, typename Iterator2>
-MSTL_NODISCARD MSTL_CONSTEXPR bool operator >(
+MSTL_NODISCARD constexpr bool operator >(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
     noexcept(noexcept(MSTL::declcopy<bool>(x.get_current() < y.get_current())))
 #ifdef MSTL_VERSION_20__
@@ -383,7 +383,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool operator >(
     return x.get_current() < y.get_current();
 }
 template <typename Iterator1, typename Iterator2>
-MSTL_NODISCARD MSTL_CONSTEXPR bool operator <=(
+MSTL_NODISCARD constexpr bool operator <=(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
     noexcept(noexcept(MSTL::declcopy<bool>(x.get_current() >= y.get_current())))
 #ifdef MSTL_VERSION_20__
@@ -393,7 +393,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool operator <=(
     return x.get_current() >= y.get_current();
 }
 template <typename Iterator1, typename Iterator2>
-MSTL_NODISCARD MSTL_CONSTEXPR bool operator >=(
+MSTL_NODISCARD constexpr bool operator >=(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
     noexcept(noexcept(MSTL::declcopy<bool>(x.get_current() <= y.get_current())))
 #ifdef MSTL_VERSION_20__
@@ -404,19 +404,19 @@ MSTL_NODISCARD MSTL_CONSTEXPR bool operator >=(
 }
 
 template <typename Iterator1, typename Iterator2>
-MSTL_NODISCARD MSTL_CONSTEXPR decltype(auto) operator -(
+MSTL_NODISCARD constexpr decltype(auto) operator -(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
     noexcept(noexcept(y.get_current() - x.get_current())) {
     return y.get_current() - x.get_current();
 }
 template <typename Iterator>
-MSTL_CONSTEXPR reverse_iterator<Iterator> operator +(
+constexpr reverse_iterator<Iterator> operator +(
     iter_dif_t<Iterator> n, const reverse_iterator<Iterator>& x)
     noexcept(noexcept(x + n)) {
     return x + n;
 }
 template <typename Iterator>
-MSTL_NODISCARD MSTL_CONSTEXPR reverse_iterator<Iterator> 
+MSTL_NODISCARD constexpr reverse_iterator<Iterator> 
 make_reverse_iterator(Iterator it) noexcept(is_nothrow_move_constructible_v<Iterator>) {
     return reverse_iterator<Iterator>(MSTL::move(it));
 }
