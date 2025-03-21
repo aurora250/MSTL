@@ -1,6 +1,6 @@
 # MSTL
 
-本项目旨在建立一套供C++初学者学习并使用的、阅读性强的、较为健全的简易STL库，同时提供多种功能性接口。
+本项目旨在建立一套供C++初学者学习并使用的、阅读性强的、较为健全的除并发库外的STL库，同时提供多种功能性接口。
 本项目尽最大可能减少除并发库外的标准库的使用，尝试实现简化版本。
 欢迎各位issue，star。鄙人才疏学浅，如有不足，还望斧正。
 
@@ -100,13 +100,17 @@ C++ 14 17 20
 
 定义比较、复制和移动算法。
 
+- [optional.hpp](/MSTL/optional.hpp)
+
+定义自选optional类，可以托管一个类型并设置空值nullopt。
+
 - [memory.hpp](/MSTL/memory.hpp)
 
 定义内存操作函数、临时缓存区类、分配器类和智能指针类。
 
 - [variant.hpp](/MSTL/variant.hpp)
 
-定义变体variant类。
+定义变体variant类，可在同一块内存同时托管多个类型。
 
 - [string_view.hpp](/MSTL/string_view.hpp)
 
@@ -212,7 +216,7 @@ C++ 14 17 20
 
 # MSTL
 
-The purpose of this project is to build a set of simple STL library which is readable and relatively sound for C++ beginners to learn and use, and provide a variety of functional interfaces.
+The purpose of this project is to build a set of STL library (without concurrency libraries but used) which is readable and relatively sound for C++ beginners to learn and use, and provide a variety of functional interfaces.
 This project tries to reduce the use of standard libraries as much as possible, and tries to implement a simplified version.
 Welcome everyone to issue or star. Contemptible talents, if there is a deficiency, but also hope to correct.
 
@@ -312,13 +316,17 @@ Define tuple type with constexpr property, its auxility functions and its hash f
 
 Define comparison, range-copy and range-move algorithms.
 
+- [optional.hpp](/MSTL/optional.hpp)
+
+Define optional type which can host a type and set empty by nullopt.
+
 - [memory.hpp](/MSTL/memory.hpp)
 
 Define memory operation functions, temporary buffer type, allocator types and smart pointer types.
 
 - [variant.hpp](/MSTL/variant.hpp)
 
-Define variant type.
+Define variant type which can host multiple types at the same time on the same block of memory.
 
 - [string_view.hpp](/MSTL/string_view.hpp)
 
