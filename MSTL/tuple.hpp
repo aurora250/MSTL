@@ -479,6 +479,40 @@ constexpr decltype(auto) apply(F&& f, Tuple&& t)
 noexcept(__apply_unpack_tuple<MSTL::is_nothrow_invocable, F, Tuple>::value);
 
 
+template <typename, typename, typename, size_t, typename...>
+struct __tuple_cat_aux;
+
+template <typename Tuple, size_t... ElementIdx, size_t... TupleIdx, size_t NextTuple>
+struct __tuple_cat_aux<Tuple, index_sequence<ElementIdx...>, index_sequence<TupleIdx...>, NextTuple> {
+	using Ret			= tuple<tuple_element_t<ElementIdx, remove_cvref_t<tuple_element_t<TupleIdx, Tuple>>>...>;
+	using ElementIdxSeq = index_sequence<ElementIdx...>;
+	using TupleIdxSeq	= index_sequence<TupleIdx...>;
+};
+
+template <typename Tuple, size_t... ElementIdx, size_t... TupleIdx, size_t NextTuple, size_t... NextElement, typename... Rest>
+struct __tuple_cat_aux<Tuple, index_sequence<ElementIdx...>, index_sequence<TupleIdx...>, NextTuple, index_sequence<NextElement...>, Rest...>
+	: __tuple_cat_aux<Tuple, index_sequence<ElementIdx..., NextElement...>,
+		index_sequence<TupleIdx..., (NextTuple + 0 * NextElement)...>, NextTuple + 1, Rest...> {};
+
+template <typename... Tuples>
+using __tuple_cat_bind_t = __tuple_cat_aux<tuple<Tuples&&...>, index_sequence<>, index_sequence<>, 0,
+	make_index_sequence<tuple_size_v<remove_cvref_t<Tuples>>>...>;
+
+template <typename Ret, size_t... ElementIdx, size_t... TupleIdx, typename Tuple>
+constexpr Ret __tuple_cat_in_turn(index_sequence<ElementIdx...>, index_sequence<TupleIdx...>, Tuple tup) {
+	return Ret{ MSTL::get<ElementIdx>(MSTL::get<TupleIdx>(MSTL::move(tup)))... };
+}
+
+template <typename... Tuples>
+MSTL_NODISCARD constexpr typename __tuple_cat_bind_t<Tuples...>::Ret tuple_cat(Tuples&&... tuples) {
+	using CatImpl		= __tuple_cat_bind_t<Tuples...>;
+	using Ret			= typename CatImpl::Ret;
+	using ElementIdxSeq	= typename CatImpl::ElementIdxSeq;
+	using TupleIdxSeq	= typename CatImpl::TupleIdxSeq;
+	return __tuple_cat_in_turn<Ret>(ElementIdxSeq{}, TupleIdxSeq{}, MSTL::forward_as_tuple(MSTL::forward<Tuples>(tuples)...));
+}
+
+
 #if !defined(MSTL_VERSION_17__)
 template <typename Tuple, size_t Index>
 struct __broadern_tuple_hash_aux {
@@ -514,6 +548,7 @@ private:
 		return __broadern_tuple_hash_aux<Tuple, sizeof...(Idx)>::hash(tup);
 #endif // MSTL_VERSION_17__
 	}
+
 public:
 	MSTL_NODISCARD constexpr size_t operator()(const MSTL::tuple<Args...>& tup) const noexcept {
 		return this->broaden_tuple(tup, MSTL::index_sequence_for<Args...>());
