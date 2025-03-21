@@ -8,8 +8,9 @@ class array_iterator {
 public:
 #ifdef MSTL_VERSION_20__
     using iterator_category = contiguous_iterator_tag;
-#endif
+#else
     using iterator_category = random_access_iterator_tag;
+#endif
     using value_type        = T;
     using difference_type   = ptrdiff_t;
     using pointer           = Ptr;
