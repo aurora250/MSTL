@@ -23,11 +23,11 @@ template <typename T1, typename T2>
 #ifdef MSTL_VERSION_20__
 	requires(is_printable<T1> && is_printable<T2>)
 #endif // MSTL_VERSION_20__
-void show_data_only(const MSTL::pair<T1, T2>& p, std::ostream& _out) {
+void show_data_only(const _MSTL pair<T1, T2>& p, std::ostream& _out) {
 	_out << "{ " << p.first << ", " << p.second << " }" << std::flush;
 }
 template <typename T1, typename T2>
-std::ostream& operator <<(std::ostream& _out, const MSTL::pair<T1, T2>& _p) {
+std::ostream& operator <<(std::ostream& _out, const _MSTL pair<T1, T2>& _p) {
 	show_data_only(_p, _out);
 	return _out;
 }
@@ -71,7 +71,7 @@ template <typename Container>
 #endif
 void detailof(const Container& c, std::ostream& out = std::cout) {
 	split_line(out);
-	out << "type: " << MSTL::check_type<Container>() << '\n';
+	out << "type: " << _MSTL check_type<Container>() << '\n';
 	out << "size: " << c.size() << '\n';
 	out << "data: ";
 	show_data_only(c, out);

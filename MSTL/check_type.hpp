@@ -84,7 +84,7 @@ struct check {
         const char* typeid_name = typeid(T).name();
 #if defined(MSTL_COMPILE_GNUC__)
         auto deleter = [](char* p) { if (p) free(p); };
-        MSTL::unique_ptr<char, decltype(deleter)> real_name {
+        _MSTL unique_ptr<char, decltype(deleter)> real_name {
             ::abi::__cxa_demangle(typeid_name, nullptr, nullptr, nullptr), deleter
         };
         out_(real_name.get());

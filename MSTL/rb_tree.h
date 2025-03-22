@@ -107,7 +107,7 @@ public:
 
     rb_tree_iterator(const iterator& it) { node_ = it.node_; }
     self& operator =(const iterator& it) {
-        if(MSTL::addressof(it) == this) return *this;
+        if(_MSTL addressof(it) == this) return *this;
         node_ = it.node_;
         return *this;
     }
@@ -117,7 +117,7 @@ public:
         it.node_ = nullptr;
     }
     self& operator =(iterator&& it) {
-        if(MSTL::addressof(it) == this) return *this;
+        if(_MSTL addressof(it) == this) return *this;
         node_ = it.node_;
         it.node_ = nullptr;
         return *this;
@@ -125,7 +125,7 @@ public:
 
     rb_tree_iterator(const const_iterator& it) { node_ = it.node_; }
     self& operator =(const const_iterator& it) {
-        if(MSTL::addressof(it) == this) return *this;
+        if(_MSTL addressof(it) == this) return *this;
         node_ = it.node_;
         return *this;
     }
@@ -135,7 +135,7 @@ public:
         it.node_ = nullptr;
     }
     self& operator =(const_iterator&& it) {
-        if(MSTL::addressof(it) == this) return *this;
+        if(_MSTL addressof(it) == this) return *this;
         node_ = it.node_;
         it.node_ = nullptr;
         return *this;
@@ -182,8 +182,8 @@ public:
 
     using iterator          = rb_tree_iterator<value_type, reference, pointer>;
     using const_iterator    = rb_tree_iterator<value_type, const_reference, const_pointer>;
-    using reverse_iterator  = MSTL::reverse_iterator<iterator>;
-    using const_reverse_iterator = MSTL::reverse_iterator<const_iterator>;
+    using reverse_iterator  = _MSTL reverse_iterator<iterator>;
+    using const_reverse_iterator = _MSTL reverse_iterator<const_iterator>;
 
     using self              = rb_tree<Key, Value, KeyOfValue, Compare, Alloc>;
     using allocator_type    = Alloc;
@@ -198,7 +198,7 @@ private:
     link_type create_node(Args... args) {
         link_type tmp = size_pair_.get_base().allocate();
         MSTL_TRY__{
-            MSTL::construct(&tmp->data_, MSTL::forward<Args>(args)...);
+            _MSTL construct(&tmp->data_, _MSTL forward<Args>(args)...);
         }
         MSTL_CATCH_UNWIND_THROW_M__(destroy_node(tmp));
         return tmp;
@@ -354,7 +354,7 @@ public:
         copy_from(x);
     }
     self& operator =(const self& x) {
-        if (MSTL::addressof(x) == this) return *this;
+        if (_MSTL addressof(x) == this) return *this;
         clear();
         copy_from(x);
         return *this;
@@ -362,11 +362,11 @@ public:
 
     rb_tree(self&& x) 
         noexcept(is_nothrow_move_constructible_v<Compare> && is_nothrow_move_constructible_v<KeyOfValue>)
-        : header_(MSTL::move(x.header_)), key_compare_(MSTL::move(x.key_compare_)), extracter_(MSTL::move(x.extracter_)),
+        : header_(_MSTL move(x.header_)), key_compare_(_MSTL move(x.key_compare_)), extracter_(_MSTL move(x.extracter_)),
         size_pair_(x.size_pair_) {}
 
     self& operator =(self&& x) noexcept(noexcept(swap(x))) {
-        if (MSTL::addressof(x) == this) return *this;
+        if (_MSTL addressof(x) == this) return *this;
         clear();
         swap(x);
         return *this;
@@ -398,18 +398,18 @@ public:
 
     template <typename... Args>
     pair<iterator, bool> emplace_unique(Args&&... args) {
-        link_type tmp = (create_node)(MSTL::forward<Args>(args)...);
+        link_type tmp = (create_node)(_MSTL forward<Args>(args)...);
         return (insert_unique_node)(tmp);
     }
     pair<iterator, bool> insert_unique(const value_type& v) {
         return (emplace_unique)(v);
     }
     pair<iterator, bool> insert_unique(value_type&& v) {
-        return (emplace_unique)(MSTL::move(v));
+        return (emplace_unique)(_MSTL move(v));
     }
     template <typename... Args>
     iterator emplace_unique_hint(iterator position, Args&&... args) {
-        link_type tmp = (create_node)(MSTL::forward<Args>(args)...);
+        link_type tmp = (create_node)(_MSTL forward<Args>(args)...);
         if (position.node_ == header_->left_) {
             if (size() > 0 && key_compare_(key(tmp), key(position.node_)))
                 return insert_node_into(position.node_, position.node_, tmp);
@@ -434,7 +434,7 @@ public:
         return (emplace_unique_hint)(position, v);
     }
     iterator insert_unique(iterator position, value_type&& v) {
-        return (emplace_unique_hint)(position, MSTL::move(v));
+        return (emplace_unique_hint)(position, _MSTL move(v));
     }
     template <typename Iterator, enable_if_t<
         is_input_iter_v<Iterator>, int> = 0>
@@ -444,18 +444,18 @@ public:
 
     template <typename... Args>
     iterator emplace_equal(Args&&... args) {
-        link_type tmp = (create_node)(MSTL::forward<Args>(args)...);
+        link_type tmp = (create_node)(_MSTL forward<Args>(args)...);
         return (insert_equal_node)(tmp);
     }
     iterator insert_equal(const value_type& v) {
         return (emplace_equal)(v);
     }
     iterator insert_equal(value_type&& v) {
-        return (emplace_equal)(MSTL::move(v));
+        return (emplace_equal)(_MSTL move(v));
     }
     template <typename... Args>
     iterator emplace_equal_hint(iterator position, Args&&... args) {
-        link_type tmp = (create_node)(MSTL::forward<Args>(args)...);
+        link_type tmp = (create_node)(_MSTL forward<Args>(args)...);
         if (position.node_ == header_->left_) {
             if (size() > 0 && key_compare_(key(tmp), key(position.node_)))
                 return insert_node_into(position.node_, position.node_, tmp);
@@ -480,7 +480,7 @@ public:
         return (emplace_equal_hint)(position, v);
     }
     iterator insert_equal(iterator position, value_type&& v) {
-        return (emplace_equal_hint)(position, MSTL::move(v));
+        return (emplace_equal_hint)(position, _MSTL move(v));
     }
     template <typename Iterator, enable_if_t<
         is_input_iter_v<Iterator>, int> = 0>
@@ -490,7 +490,7 @@ public:
 
     size_type erase(const key_type& k) noexcept {
         pair<iterator, iterator> p = equal_range(k);
-        const size_type n = MSTL::distance(p.first, p.second);
+        const size_type n = _MSTL distance(p.first, p.second);
         erase(p.first, p.second);
         return n;
     }
@@ -517,10 +517,10 @@ public:
     }
 
     void swap(self& x) noexcept(is_nothrow_swappable_v<Compare> && is_nothrow_swappable_v<KeyOfValue>) {
-        MSTL::swap(header_, x.header_);
+        _MSTL swap(header_, x.header_);
         size_pair_.swap(x.size_pair_);
-        MSTL::swap(key_compare_, x.key_compare_);
-        MSTL::swap(extracter_, x.extracter_);
+        _MSTL swap(key_compare_, x.key_compare_);
+        _MSTL swap(extracter_, x.extracter_);
     }
 
     MSTL_NODISCARD iterator find(const key_type& k) {
@@ -552,7 +552,7 @@ public:
 
     MSTL_NODISCARD size_type count(const key_type& k) const {
         pair<const_iterator, const_iterator> p = equal_range(k);
-        const size_type n = MSTL::distance(p.first, p.second);
+        const size_type n = _MSTL distance(p.first, p.second);
         return n;
     }
 
@@ -617,7 +617,7 @@ template <typename Key, typename Value, typename KeyOfValue, typename Compare, t
 MSTL_NODISCARD bool operator ==(
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& lh,
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& rh) noexcept {
-    return lh.size() == rh.size() && MSTL::equal(lh.cbegin(), lh.cend(), rh.cbegin());
+    return lh.size() == rh.size() && _MSTL equal(lh.cbegin(), lh.cend(), rh.cbegin());
 }
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 MSTL_NODISCARD bool operator !=(
@@ -629,7 +629,7 @@ template <typename Key, typename Value, typename KeyOfValue, typename Compare, t
 MSTL_NODISCARD bool operator <(
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& lh,
     const rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& rh) noexcept {
-    return MSTL::lexicographical_compare(lh.cbegin(), lh.cend(), rh.cbegin(), rh.cend());
+    return _MSTL lexicographical_compare(lh.cbegin(), lh.cend(), rh.cbegin(), rh.cend());
 }
 template <typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 MSTL_NODISCARD bool operator >(

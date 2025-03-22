@@ -8,7 +8,7 @@ MSTL_BEGIN_NAMESPACE__
 template <typename Iterator, enable_if_t<is_rnd_iter_v<Iterator>, int> = 0>
 bool is_heap(Iterator first, Iterator last) {
 	using Distance = iter_dif_t<Iterator>;
-	Distance n = MSTL::distance(first, last);
+	Distance n = _MSTL distance(first, last);
 	Distance parent = 0;
 	for (Distance child = 1; child < n; ++child) {
 		if (*(first + parent) < *(first + child)) 
@@ -21,7 +21,7 @@ bool is_heap(Iterator first, Iterator last) {
 template <typename Iterator, typename Compare, enable_if_t<is_rnd_iter_v<Iterator>, int> = 0>
 bool is_heap(Iterator first, Iterator last, Compare comp) {
 	using Distance = iter_dif_t<Iterator>;
-	Distance n = MSTL::distance(first, last);
+	Distance n = _MSTL distance(first, last);
 	Distance parent = 0;
 	for (Distance child = 1; child < n; ++child) {
 		if (comp(*(first + parent), *(first + child)))
@@ -35,7 +35,7 @@ bool is_heap(Iterator first, Iterator last, Compare comp) {
 template <typename Iterator, enable_if_t<is_rnd_iter_v<Iterator>, int> = 0>
 Iterator is_heap_until(Iterator first, Iterator last) {
 	using Distance = iter_dif_t<Iterator>;
-	Distance n = MSTL::distance(first, last);
+	Distance n = _MSTL distance(first, last);
 	Distance parent = 0;
 	for (Distance child = 1; child < n; ++child) {
 		if (*(first + parent) < *(first + child)) {
@@ -49,7 +49,7 @@ Iterator is_heap_until(Iterator first, Iterator last) {
 template <typename Iterator, typename Compare, enable_if_t<is_rnd_iter_v<Iterator>, int> = 0>
 Iterator is_heap_until(Iterator first, Iterator last, Compare comp) {
 	using Distance = iter_dif_t<Iterator>;
-	Distance n = MSTL::distance(first, last);
+	Distance n = _MSTL distance(first, last);
 	Distance parent = 0;
 	for (Distance child = 1; child < n; ++child) {
 		if (comp(*(first + parent), *(first + child))) {
@@ -75,7 +75,7 @@ void push_heap_aux(Iterator first, Distance hole_index, Distance top_index, T va
 template <typename Iterator, enable_if_t<is_rnd_iter_v<Iterator>, int> = 0>
 inline void push_heap(Iterator first, Iterator last) {
 	using Distance = iter_dif_t<Iterator>;
-	MSTL::push_heap_aux(first, Distance((last - first) - 1), Distance(0), *(last - 1));
+	_MSTL push_heap_aux(first, Distance((last - first) - 1), Distance(0), *(last - 1));
 }
 
 template <typename Iterator, typename Distance, typename T, typename Compare,
@@ -93,7 +93,7 @@ void push_heap_aux(Iterator first, Distance hole_index, Distance top_index, T va
 template <typename Iterator, typename Compare, enable_if_t<is_rnd_iter_v<Iterator>, int> = 0>
 inline void push_heap(Iterator first, Iterator last, Compare comp) {
 	using Distance = iter_dif_t<Iterator>;
-	MSTL::push_heap_aux(first, Distance(last - first - 1), Distance(0), *(last - 1), comp);
+	_MSTL push_heap_aux(first, Distance(last - first - 1), Distance(0), *(last - 1), comp);
 }
 // adjust heap
 template <typename Iterator, typename Distance, typename T, enable_if_t<is_rnd_iter_v<Iterator>, int> = 0>
@@ -110,7 +110,7 @@ void adjust_heap(Iterator first, Distance hole_index, Distance len, T value) {
 		*(first + hole_index) = *(first + (second_child - 1));
 		hole_index = second_child - 1;
 	}
-	MSTL::push_heap_aux(first, hole_index, top_index, value);
+	_MSTL push_heap_aux(first, hole_index, top_index, value);
 }
 
 template <typename Iterator, typename Distance, typename T, typename Compare,
@@ -129,45 +129,45 @@ void adjust_heap(Iterator first, Distance holeIndex, Distance len, T value, Comp
 		*(first + holeIndex) = *(first + (secondChild - 1));
 		holeIndex = secondChild - 1;
 	}
-	MSTL::push_heap_aux(first, holeIndex, topIndex, value, comp);
+	_MSTL push_heap_aux(first, holeIndex, topIndex, value, comp);
 }
 // pop heap
 template <typename Iterator, typename T, enable_if_t<is_rnd_iter_v<Iterator>, int> = 0>
 void pop_heap_aux(Iterator first, Iterator last, Iterator result, T value) {
 	using Distance = iter_dif_t<Iterator>;
 	*result = *first;
-	MSTL::adjust_heap(first, Distance(0), Distance(last - first), value);
+	_MSTL adjust_heap(first, Distance(0), Distance(last - first), value);
 }
 
 template <typename Iterator, enable_if_t<is_rnd_iter_v<Iterator>, int> = 0>
 void pop_heap(Iterator first, Iterator last) {
 	--last;
-	MSTL::pop_heap_aux(first, last, last, *last);
+	_MSTL pop_heap_aux(first, last, last, *last);
 }
 
 template <typename Iterator, typename T, typename Compare, enable_if_t<is_rnd_iter_v<Iterator>, int> = 0>
 void pop_heap_aux(Iterator first, Iterator last, Iterator result, T value, Compare comp) {
 	using Distance = iter_dif_t<Iterator>;
 	*result = *first;
-	MSTL::adjust_heap(first, Distance(0), Distance(last - first), value, comp);
+	_MSTL adjust_heap(first, Distance(0), Distance(last - first), value, comp);
 }
 
 template <typename Iterator, typename Compare, enable_if_t<is_rnd_iter_v<Iterator>, int> = 0>
 void pop_heap(Iterator first, Iterator last, Compare comp) {
 	--last;
-	MSTL::pop_heap_aux(first, last, last, *last, comp);
+	_MSTL pop_heap_aux(first, last, last, *last, comp);
 }
 // sort heap
 template <typename Iterator, enable_if_t<is_rnd_iter_v<Iterator>, int> = 0>
 void sort_heap(Iterator first, Iterator last) {
 	while (last - first > 1) 
-		MSTL::pop_heap(first, last--);
+		_MSTL pop_heap(first, last--);
 }
 
 template <typename Iterator, typename Compare, enable_if_t<is_rnd_iter_v<Iterator>, int> = 0>
 void sort_heap(Iterator first, Iterator last, Compare comp) {
 	while (last - first > 1)
-		MSTL::pop_heap(first, last--, comp);
+		_MSTL pop_heap(first, last--, comp);
 }
 // make heap
 template <typename Iterator, enable_if_t<is_rnd_iter_v<Iterator>, int> = 0>
@@ -177,7 +177,7 @@ void make_heap(Iterator first, Iterator last) {
 	Distance len = last - first;
 	Distance parent = (len - 2) / 2;
 	while (true) {
-		MSTL::adjust_heap(first, parent, len, *(first + parent));
+		_MSTL adjust_heap(first, parent, len, *(first + parent));
 		if (parent == 0) return;
 		--parent;
 	}
@@ -190,7 +190,7 @@ void make_heap(Iterator first, Iterator last, Compare comp) {
 	Distance len = last - first;
 	Distance parent = (len - 2) / 2;
 	while (true) {
-		MSTL::adjust_heap(first, parent, len, *(first + parent), comp);
+		_MSTL adjust_heap(first, parent, len, *(first + parent), comp);
 		if (parent == 0) return;
 		--parent;
 	}
@@ -210,7 +210,7 @@ void adjust_leonardo_heap(Iterator first, size_t current_heap, int level_index, 
 				if (*(first + prev_heap) < *(first + child_heap1)) break;
 				if (*(first + prev_heap) < *(first + child_heap2)) break;
 			}
-			MSTL::iter_swap(first + current_heap, first + prev_heap);
+			_MSTL iter_swap(first + current_heap, first + prev_heap);
 			current_heap = prev_heap;
 			--level_index;
 		}
@@ -228,12 +228,12 @@ void adjust_leonardo_heap(Iterator first, size_t current_heap, int level_index, 
 		if (*(first + max_child) < *(first + child_heap2)) max_child = child_heap2;
 
 		if (max_child == child_heap1) {
-			MSTL::iter_swap(first + current_heap, first + child_heap1);
+			_MSTL iter_swap(first + current_heap, first + child_heap1);
 			current_heap = child_heap1;
 			--current_level;
 		}
 		else if (max_child == child_heap2) {
-			MSTL::iter_swap(first + current_heap, first + child_heap2);
+			_MSTL iter_swap(first + current_heap, first + child_heap2);
 			current_heap = child_heap2;
 			current_level -= 2;
 		}
@@ -246,7 +246,7 @@ void adjust_leonardo_heap(Iterator first, size_t current_heap, int level_index, 
 template <typename Iterator, enable_if_t<is_rnd_iter_v<Iterator>, int> = 0>
 void push_leonardo_heap(Iterator first, Iterator last) {
 	if (first == last) return;
-	const size_t size = MSTL::distance(first, last);
+	const size_t size = _MSTL distance(first, last);
 	vector<int> levels = { 1 };
 	int toplevel = 0;
 	for (size_t i = 1; i < size - 1; ++i) {
@@ -275,13 +275,13 @@ void push_leonardo_heap(Iterator first, Iterator last) {
 		++toplevel;
 		levels.push_back(0);
 	}
-	MSTL::adjust_leonardo_heap(first, size - 1, toplevel, levels);
+	_MSTL adjust_leonardo_heap(first, size - 1, toplevel, levels);
 }
 
 template <typename Iterator, enable_if_t<is_rnd_iter_v<Iterator>, int> = 0>
 void pop_leonardo_heap(Iterator first, Iterator last) {
 	if (first == last) return;
-	const size_t size = MSTL::distance(first, last);
+	const size_t size = _MSTL distance(first, last);
 	vector<int> levels = { 1 };
 	int toplevel = 0;
 	for (size_t i = 1; i < size; ++i) {
@@ -297,7 +297,7 @@ void pop_leonardo_heap(Iterator first, Iterator last) {
 			++toplevel;
 			levels.push_back(0);
 		}
-		MSTL::adjust_leonardo_heap(first, i, toplevel, levels);
+		_MSTL adjust_leonardo_heap(first, i, toplevel, levels);
 	}
 	if (levels[toplevel] <= 1) {
 		--toplevel;
@@ -306,15 +306,15 @@ void pop_leonardo_heap(Iterator first, Iterator last) {
 		--levels[toplevel];
 		levels.push_back(levels[toplevel] - 1);
 		++toplevel;
-		MSTL::adjust_leonardo_heap(first, size - 2 - leonardo(levels[toplevel]), toplevel - 1, levels);
-		MSTL::adjust_leonardo_heap(first, size - 2, toplevel, levels);
+		_MSTL adjust_leonardo_heap(first, size - 2 - leonardo(levels[toplevel]), toplevel - 1, levels);
+		_MSTL adjust_leonardo_heap(first, size - 2, toplevel, levels);
 	}
 }
 
 template <typename Iterator, enable_if_t<is_rnd_iter_v<Iterator>, int> = 0>
 void sort_leonardo_heap(Iterator first, Iterator last) {
 	if (first == last) return;
-	const size_t size = MSTL::distance(first, last);
+	const size_t size = _MSTL distance(first, last);
 	vector<int> levels = { 1 };
 	int toplevel = 0;
 	for (size_t i = 1; i < size; ++i) {
@@ -330,7 +330,7 @@ void sort_leonardo_heap(Iterator first, Iterator last) {
 			++toplevel;
 			levels.push_back(0);
 		}
-		MSTL::adjust_leonardo_heap(first, i, toplevel, levels);
+		_MSTL adjust_leonardo_heap(first, i, toplevel, levels);
 	}
 	for (size_t i = size - 2; i > 0; --i) {
 		if (levels[toplevel] <= 1) {
@@ -341,8 +341,8 @@ void sort_leonardo_heap(Iterator first, Iterator last) {
 			levels.push_back(levels[toplevel] - 1);
 			++toplevel;
 
-			MSTL::adjust_leonardo_heap(first, i - leonardo(levels[toplevel]), toplevel - 1, levels);
-			MSTL::adjust_leonardo_heap(first, i, toplevel, levels);
+			_MSTL adjust_leonardo_heap(first, i - leonardo(levels[toplevel]), toplevel - 1, levels);
+			_MSTL adjust_leonardo_heap(first, i, toplevel, levels);
 		}
 	}
 }
@@ -350,7 +350,7 @@ void sort_leonardo_heap(Iterator first, Iterator last) {
 template <typename Iterator, enable_if_t<is_rnd_iter_v<Iterator>, int> = 0>
 void make_leonardo_heap(Iterator first, Iterator last) {
 	if (first == last) return;
-	const size_t size = MSTL::distance(first, last);
+	const size_t size = _MSTL distance(first, last);
 	vector<int> levels = { 1 };
 	int toplevel = 0;
 
@@ -367,7 +367,7 @@ void make_leonardo_heap(Iterator first, Iterator last) {
 			++toplevel;
 			levels.push_back(0);
 		}
-		MSTL::adjust_leonardo_heap(first, i, toplevel, levels);
+		_MSTL adjust_leonardo_heap(first, i, toplevel, levels);
 	}
 }
 

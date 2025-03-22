@@ -15,13 +15,13 @@ struct base_char_traits {
         __builtin_memcpy(dest, srcs, count * sizeof(char_type));
 #else
 #ifdef MSTL_VERSION_20__
-        if (MSTL::is_constant_evaluated()) {
+        if (_MSTL is_constant_evaluated()) {
             for (size_t i = 0; i != count; ++i) 
                 dest[i] = srcs[i];
             return dest;
         }
 #endif // MSTL_VERSION_20__
-        MSTL::memcpy(dest, srcs, count * sizeof(char_type));
+        _MSTL memcpy(dest, srcs, count * sizeof(char_type));
 #endif // MSTL_SUPPORT_MEM_INTRINSICS__
         return dest;
     }
@@ -32,7 +32,7 @@ struct base_char_traits {
         __builtin_memmove(dest, srcs, count * sizeof(char_type));
 #else 
 #if MSTL_VERSION_20__
-        if (MSTL::is_constant_evaluated()) {
+        if (_MSTL is_constant_evaluated()) {
             bool not_same = true;
             for (const char_type* src = srcs; src != srcs + count; ++src) {
                 if (dest == src) {
@@ -51,7 +51,7 @@ struct base_char_traits {
             return dest;
         }
 #endif // MSTL_VERSION_20__
-        MSTL::memmove(dest, srcs, count * sizeof(char_type));
+        _MSTL memmove(dest, srcs, count * sizeof(char_type));
 #endif // MSTL_SUPPORT_MEM_INTRINSICS__
         return dest;
     }
@@ -131,7 +131,7 @@ public:
     MSTL_NODISCARD static constexpr int compare(const char_type* const lh,
         const char_type* const rh, const size_t n) noexcept {
 #if MSTL_VERSION_20__
-        if (MSTL::is_constant_evaluated()) {
+        if (_MSTL is_constant_evaluated()) {
             MSTL_IF_CONSTEXPR (is_same_v<char_type, wchar_t>) {
                 return __builtin_wmemcmp(lh, rh, n);
             }
@@ -140,18 +140,18 @@ public:
             }
         }
 #endif // MSTL_VERSION_20__
-        return MSTL::wmemcmp(reinterpret_cast<const wchar_t*>(lh),
+        return _MSTL wmemcmp(reinterpret_cast<const wchar_t*>(lh),
             reinterpret_cast<const wchar_t*>(rh), n);
     }
 
     MSTL_NODISCARD static constexpr size_t length(const char_type* str) noexcept {
 #if MSTL_VERSION_20__
-        if (MSTL::is_constant_evaluated()) {
+        if (_MSTL is_constant_evaluated()) {
             MSTL_IF_CONSTEXPR (is_same_v<char_type, wchar_t>) {
 #if defined(MSTL_COMPILE_MSVC__) || defined(MSTL_COMPILE_CLANG__)
                 return __builtin_wcslen(str);
 #else
-                return MSTL::wcslen(str);
+                return _MSTL wcslen(str);
 #endif
             }
             else {
@@ -159,13 +159,13 @@ public:
             }
         }
 #endif // MSTL_VERSION_20__
-        return MSTL::wcslen(reinterpret_cast<const wchar_t*>(str));
+        return _MSTL wcslen(reinterpret_cast<const wchar_t*>(str));
     }
 
     MSTL_NODISCARD static constexpr const char_type* find(
         const char_type* str, const size_t n, const char_type& chr) noexcept {
 #if MSTL_VERSION_20__
-        if (MSTL::is_constant_evaluated()) {
+        if (_MSTL is_constant_evaluated()) {
             MSTL_IF_CONSTEXPR (is_same_v<char_type, wchar_t>) {
                 return __builtin_wmemchr(str, chr, n);
             }
@@ -175,20 +175,20 @@ public:
         }
 #endif // MSTL_VERSION_20__
         return reinterpret_cast<const char_type*>(
-            MSTL::wmemchr(reinterpret_cast<const wchar_t*>(str), chr, n));
+            _MSTL wmemchr(reinterpret_cast<const wchar_t*>(str), chr, n));
     }
 
     static constexpr char_type* assign(char_type* const str, size_t n, const char_type chr) noexcept {
 #if MSTL_VERSION_20__
-        if (MSTL::is_constant_evaluated()) {
+        if (_MSTL is_constant_evaluated()) {
             return base_type::assign(str, n, chr);
         }
 #endif // MSTL_VERSION_20__
-        return reinterpret_cast<char_type*>(MSTL::wmemset(reinterpret_cast<wchar_t*>(str), chr, n));
+        return reinterpret_cast<char_type*>(_MSTL wmemset(reinterpret_cast<wchar_t*>(str), chr, n));
     }
     static constexpr void assign(char_type& lh, const char_type& rh) noexcept {
 #if MSTL_VERSION_20__
-        if (MSTL::is_constant_evaluated()) {
+        if (_MSTL is_constant_evaluated()) {
             return base_type::assign(lh, rh);
         }
 #endif // MSTL_VERSION_20__
@@ -237,19 +237,19 @@ public:
 #if MSTL_VERSION_17__
         return __builtin_memcmp(lh, rh, n);
 #else
-        return MSTL::memcmp(lh, rh, n);
+        return MSTL_ memcmp(lh, rh, n);
 #endif
     }
 
     MSTL_NODISCARD static constexpr size_t length(const char_type* const str) noexcept {
 #ifdef MSTL_VERSION_17__
 #ifdef MSTL_VERSION_20__
-        MSTL_IF_CONSTEXPR (is_same_v<char_type, char8_t>) {
+        if constexpr (is_same_v<char_type, char8_t>) {
 #if defined(MSTL_VERSION_20__) && !defined(MSTL_COMPILE_CLANG__) && !defined(MSTL_COMPILE_WITH_EDG__)
 #ifdef MSTL_COMPILE_MSVC__
             return __builtin_u8strlen(str);
 #else
-            return MSTL::u8cslen(str);
+            return _MSTL u8cslen(str);
 #endif
 #else
             return base_type::length(str);
@@ -261,7 +261,7 @@ public:
             return __builtin_strlen(str);
         }
 #else
-        return MSTL::strlen(reinterpret_cast<const char*>(str));
+        return MSTL_ strlen(reinterpret_cast<const char*>(str));
 #endif // MSTL_VERSION_17__
     }
 
@@ -269,7 +269,7 @@ public:
         const size_t n, const char_type& chr) noexcept {
 #ifdef MSTL_VERSION_17__
 #ifdef MSTL_VERSION_20__
-        MSTL_IF_CONSTEXPR (is_same_v<char_type, char8_t>) {
+        if constexpr (is_same_v<char_type, char8_t>) {
 #if defined(MSTL_VERSION_20__) && !defined(MSTL_COMPILE_CLANG__) && !defined(MSTL_COMPILE_WITH_EDG__)
             return __builtin_u8memchr(str, chr, n);
 #else
@@ -286,21 +286,21 @@ public:
 #endif
         }
 #else
-        return static_cast<const char_type*>(MSTL::memchr(str, chr, n));
+        return static_cast<const char_type*>(MSTL_ memchr(str, chr, n));
 #endif // MSTL_VERSION_17__
     }
 
     static constexpr char_type* assign(char_type* const str, size_t n, const char_type chr) noexcept {
 #ifdef MSTL_VERSION_20__
-        if (MSTL::is_constant_evaluated()) {
+        if (_MSTL is_constant_evaluated()) {
             return base_type::assign(str, n, chr);
         }
 #endif // MSTL_VERSION_20__
-        return static_cast<char_type*>(MSTL::memset(str, chr, n));
+        return static_cast<char_type*>(_MSTL memset(str, chr, n));
     }
     static constexpr void assign(char_type& lh, const char_type& rh) noexcept {
 #ifdef MSTL_VERSION_20__
-        if (MSTL::is_constant_evaluated()) {
+        if (_MSTL is_constant_evaluated()) {
             return base_type::assign(lh, rh);
         }
 #endif // MSTL_VERSION_20__
@@ -348,6 +348,28 @@ template <typename Traits>
 using char_traits_ptr_t = const typename Traits::char_type*;
 
 
+template <typename CharT, bool = is_character_v<CharT>>
+class __string_bitmap {
+private:
+    bool matches_[256] = {};
+
+public:
+    constexpr __string_bitmap() = default;
+
+    constexpr bool mark(const CharT* first, const CharT* const last) noexcept {
+        for (; first != last; ++first)
+            matches_[static_cast<unsigned char>(*first)] = true;
+        return true;
+    }
+    constexpr bool match(const CharT chr) const noexcept {
+        return matches_[static_cast<unsigned char>(chr)];
+    }
+};
+
+template <typename CharT>
+class __string_bitmap<CharT, false> {};
+
+
 template <typename Traits>
 constexpr bool char_traits_equal(const char_traits_ptr_t<Traits> lh, const size_t lh_size,
     const char_traits_ptr_t<Traits> rh, const size_t rh_size) noexcept {
@@ -360,7 +382,7 @@ constexpr bool char_traits_equal(const char_traits_ptr_t<Traits> lh, const size_
 template <typename Traits>
 constexpr int char_traits_compare(const char_traits_ptr_t<Traits> lh, const size_t lh_size,
     const char_traits_ptr_t<Traits> rh, const size_t rh_size) noexcept {
-    const int state = Traits::compare(lh, rh, MSTL::min(lh_size, rh_size));
+    const int state = Traits::compare(lh, rh, _MSTL min(lh_size, rh_size));
     if (state != 0) return state;
 
     if (lh_size < rh_size) return -1;
@@ -398,10 +420,10 @@ constexpr size_t char_traits_find_char(const char_traits_ptr_t<Traits> dest, con
 template <typename Traits>
 constexpr size_t char_traits_rfind(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
-    if (rsc_size == 0) return MSTL::min(start, dest_size);
+    if (rsc_size == 0) return _MSTL min(start, dest_size);
 
     if (rsc_size <= dest_size) {
-        for (auto if_match = dest + MSTL::min(start, dest_size - rsc_size);; --if_match) {
+        for (auto if_match = dest + _MSTL min(start, dest_size - rsc_size);; --if_match) {
             if (Traits::eq(*if_match, *rsc) && Traits::compare(if_match, rsc, rsc_size) == 0) 
                 return static_cast<size_t>(if_match - dest);
             
@@ -415,7 +437,7 @@ template <typename Traits>
 constexpr size_t char_traits_rfind_char(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_char_t<Traits> chr) noexcept {
     if (dest_size != 0) {
-        for (auto if_match = dest + MSTL::min(start, dest_size - 1);; --if_match) {
+        for (auto if_match = dest + _MSTL min(start, dest_size - 1);; --if_match) {
             if (Traits::eq(*if_match, chr)) 
                 return static_cast<size_t>(if_match - dest);
             
@@ -435,7 +457,7 @@ template <typename Traits, enable_if_t<
 constexpr size_t char_traits_find_first_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (rsc_size != 0 && start < dest_size) {
-        MSTL::__string_bitmap<char_traits_char_t<Traits>> match;
+        _MSTL __string_bitmap<char_traits_char_t<Traits>> match;
         if (!match.mark(rsc, rsc + rsc_size)) {
             return (char_traits_find_first_of<Traits, false>)
                 (dest, dest_size, start, rsc, rsc_size);
@@ -478,12 +500,12 @@ template <typename Traits, enable_if_t<
 constexpr size_t char_traits_find_last_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (rsc_size != 0 && dest_size != 0) {
-        MSTL::__string_bitmap<char_traits_char_t<Traits>> match;
+        _MSTL __string_bitmap<char_traits_char_t<Traits>> match;
         if (!match.mark(rsc, rsc + rsc_size))
             return (char_traits_find_last_of<Traits, false>)
             (dest, dest_size, start, rsc, rsc_size);
 
-        for (auto if_match = dest + MSTL::min(start, dest_size - 1);; --if_match) {
+        for (auto if_match = dest + _MSTL min(start, dest_size - 1);; --if_match) {
             if (match.match(*if_match))
                 return static_cast<size_t>(if_match - dest);
 
@@ -503,7 +525,7 @@ template <typename Traits, enable_if_t<
 constexpr size_t char_traits_find_last_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size, 
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (rsc_size != 0 && dest_size != 0) {
-        for (auto if_match = dest + MSTL::min(start, dest_size - 1);; --if_match) {
+        for (auto if_match = dest + _MSTL min(start, dest_size - 1);; --if_match) {
             if (Traits::find(rsc, rsc_size, *if_match))
                 return static_cast<size_t>(if_match - dest);
 
@@ -523,7 +545,7 @@ template <typename Traits, enable_if_t<
 constexpr size_t char_traits_find_first_not_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (start < dest_size) {
-        MSTL::__string_bitmap<char_traits_char_t<Traits>> match;
+        _MSTL __string_bitmap<char_traits_char_t<Traits>> match;
         if (!match.mark(rsc, rsc + rsc_size))
             return (char_traits_find_first_not_of<Traits, false>)
             (dest, dest_size, start, rsc, rsc_size);
@@ -579,12 +601,12 @@ template <typename Traits, enable_if_t<
 constexpr size_t char_traits_find_last_not_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (dest_size != 0) {
-        MSTL::__string_bitmap<char_traits_char_t<Traits>> match;
+        _MSTL __string_bitmap<char_traits_char_t<Traits>> match;
         if (!match.mark(rsc, rsc + rsc_size))
             return (char_traits_find_last_not_of<Traits, false>)
             (dest, dest_size, start, rsc, rsc_size);
 
-        for (auto if_match = dest + MSTL::min(start, dest_size - 1);; --if_match) {
+        for (auto if_match = dest + _MSTL min(start, dest_size - 1);; --if_match) {
             if (!match.match(*if_match))
                 return static_cast<size_t>(if_match - dest);
 
@@ -604,7 +626,7 @@ template <typename Traits, enable_if_t<
 constexpr size_t char_traits_find_last_not_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size, 
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (dest_size != 0) {
-        for (auto if_match = dest + MSTL::min(start, dest_size - 1);; --if_match) {
+        for (auto if_match = dest + _MSTL min(start, dest_size - 1);; --if_match) {
             if (!Traits::find(rsc, rsc_size, *if_match))
                 return static_cast<size_t>(if_match - dest);
 
@@ -618,7 +640,7 @@ template <typename Traits>
 constexpr size_t char_traits_rfind_not_char(const char_traits_ptr_t<Traits> dest, const size_t dest_size, 
     const size_t start, const char_traits_char_t<Traits> chr) noexcept {
     if (dest_size != 0) {
-        for (auto if_match = dest + MSTL::min(start, dest_size - 1);; --if_match) {
+        for (auto if_match = dest + _MSTL min(start, dest_size - 1);; --if_match) {
             if (!Traits::eq(*if_match, chr)) 
                 return static_cast<size_t>(if_match - dest);
 
@@ -793,7 +815,7 @@ public:
 
     using const_iterator    = string_view_iterator<Traits>;
     using iterator          = const_iterator;
-    using const_reverse_iterator = MSTL::reverse_iterator<const_iterator>;
+    using const_reverse_iterator = _MSTL reverse_iterator<const_iterator>;
     using reverse_iterator  = const_reverse_iterator;
 
     using self = basic_string_view<CharT, Traits>;
@@ -809,7 +831,7 @@ private:
     }
 
     MSTL_NODISCARD constexpr size_type clamp_size(const size_type position, const size_type size) const noexcept {
-        return MSTL::min(size, size_ - position);
+        return _MSTL min(size, size_ - position);
     }
 
 public:
@@ -1236,7 +1258,7 @@ inline pair<size_t, size_t> MurmurHash_x64(const char* key, size_t len, uint32_t
     h2 = hash_mix_x64(h2);
     h1 += h2;
     h2 += h1;
-    return MSTL::make_pair(h1, h2);
+    return _MSTL make_pair(h1, h2);
 }
 
 #endif
@@ -1257,13 +1279,13 @@ inline size_t string_hash(const char* s, size_t len, uint32_t seed) noexcept {
 template <>
  struct hash<char*> {
     MSTL_NODISCARD size_t operator ()(const char* str) const noexcept {
-        return string_hash(str, MSTL::strlen(str), 0);
+        return string_hash(str, _MSTL strlen(str), 0);
     }
 }; 
 template <>
  struct hash<const char*> {
     MSTL_NODISCARD size_t operator ()(const char* str) const noexcept {
-        return string_hash(str, MSTL::strlen(str), 0);
+        return string_hash(str, _MSTL strlen(str), 0);
     }
 };
 template <>
@@ -1294,8 +1316,8 @@ struct hash<const OPT*> { \
 MSTL_MACRO_RANGES_UNICODE_CHARS(CHAR_PTR_HASH_STRUCTS__)
 
 template <>
-struct hash<MSTL::string_view> {
-    MSTL_NODISCARD size_t operator ()(const MSTL::string_view str) const noexcept {
+struct hash<_MSTL string_view> {
+    MSTL_NODISCARD size_t operator ()(const _MSTL string_view str) const noexcept {
         return string_hash(str.data(), str.size(), 0);
     }
 };

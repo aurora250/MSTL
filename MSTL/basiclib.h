@@ -57,10 +57,12 @@
 #endif
 
 
-#define USE_MSTL using namespace MSTL;
-#define MSTL_BEGIN_NAMESPACE__ namespace MSTL {
+#define __MSTL_GLOBAL_NAMESPACE__ MSTL
+
+#define USE_MSTL using namespace __MSTL_GLOBAL_NAMESPACE__;
+#define MSTL_BEGIN_NAMESPACE__ namespace __MSTL_GLOBAL_NAMESPACE__ {
 #define MSTL_END_NAMESPACE__ }
-#define MSTL_ MSTL::
+#define _MSTL __MSTL_GLOBAL_NAMESPACE__::
 
 #define MSTL_INDEPENDENT_TAG_NAMESPACE_SETTING inline
 
@@ -158,7 +160,7 @@
 #endif // MSTL_VERSION_20__
 #ifdef MSTL_VERSION_17__
 	#define MSTL_CONSTEXPR17 MSTL_CONSTEXPR
-	#define MSTL_INLINECSP inline 
+	#define MSTL_INLINE17 inline
 #else
 	#define MSTL_CONSTEXPR17 inline
 	#define MSTL_INLINECSP
@@ -367,23 +369,23 @@ using cstring_t = const char*;
 using ccstring_t = const char* const;
 
 
-MSTL_INLINECSP constexpr uint32_t INT_MAX_SIZE = static_cast<uint32_t>(-1);
-MSTL_INLINECSP constexpr size_t SIZE_T_MAX_SIZE = static_cast<size_t>(-1);
-MSTL_INLINECSP constexpr uint64_t LONG_LONG_MAX_SIZE = static_cast<uint64_t>(-1);
-MSTL_INLINECSP constexpr uint64_t LONG_LONG_ZERO = 0ULL;
-MSTL_INLINECSP constexpr uint32_t MSTL_SPLIT_LENGTH = 15U;
+MSTL_INLINE17 constexpr uint32_t INT_MAX_SIZE = static_cast<uint32_t>(-1);
+MSTL_INLINE17 constexpr size_t SIZE_T_MAX_SIZE = static_cast<size_t>(-1);
+MSTL_INLINE17 constexpr uint64_t LONG_LONG_MAX_SIZE = static_cast<uint64_t>(-1);
+MSTL_INLINE17 constexpr uint64_t LONG_LONG_ZERO = 0ULL;
+MSTL_INLINE17 constexpr uint32_t MSTL_SPLIT_LENGTH = 15U;
 
 
-MSTL_INLINECSP constexpr size_t MEMORY_ALIGN_THRESHHOLD = 16ULL;
-MSTL_INLINECSP constexpr size_t MEMORY_BIG_ALLOC_ALIGN = 32ULL;
-MSTL_INLINECSP constexpr size_t MEMORY_BIG_ALLOC_THRESHHOLD = 4096ULL;
+MSTL_INLINE17 constexpr size_t MEMORY_ALIGN_THRESHHOLD = 16ULL;
+MSTL_INLINE17 constexpr size_t MEMORY_BIG_ALLOC_ALIGN = 32ULL;
+MSTL_INLINE17 constexpr size_t MEMORY_BIG_ALLOC_THRESHHOLD = 4096ULL;
 #ifdef MSTL_STATE_DEBUG__
-MSTL_INLINECSP constexpr size_t MEMORY_NO_USER_SIZE = 2 * sizeof(void*) + MEMORY_BIG_ALLOC_ALIGN - 1;
+MSTL_INLINE17 constexpr size_t MEMORY_NO_USER_SIZE = 2 * sizeof(void*) + MEMORY_BIG_ALLOC_ALIGN - 1;
 #else
 MSTL_INLINECSP constexpr size_t MEMORY_NO_USER_SIZE = sizeof(void*) + MEMORY_BIG_ALLOC_ALIGN - 1;
 #endif
 #ifdef MSTL_DATA_BUS_WIDTH_64__
-MSTL_INLINECSP constexpr size_t MEMORY_BIG_ALLOC_SENTINEL = 0xFAFAFAFAFAFAFAFAULL;
+MSTL_INLINE17 constexpr size_t MEMORY_BIG_ALLOC_SENTINEL = 0xFAFAFAFAFAFAFAFAULL;
 #else
 MSTL_INLINECSP constexpr size_t MEMORY_BIG_ALLOC_SENTINEL = 0xFAFAFAFAUL;
 #endif

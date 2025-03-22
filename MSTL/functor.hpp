@@ -23,7 +23,7 @@ struct plus {
 	using result_type MSTL_FUNCADP_DEPRE			= T;
 
 	MSTL_NODISCARD constexpr T operator()(const T& x, const T& y) const
-		noexcept(noexcept(MSTL::declcopy<T>(x + y))) {
+		noexcept(noexcept(_MSTL declcopy<T>(x + y))) {
 		return x + y;
 	}
 };
@@ -44,7 +44,7 @@ struct minus {
 	using result_type MSTL_FUNCADP_DEPRE			= T;
 
 	MSTL_NODISCARD constexpr T operator()(const T& x, const T& y) const 
-		noexcept(noexcept(MSTL::declcopy<T>(x - y))) {
+		noexcept(noexcept(_MSTL declcopy<T>(x - y))) {
 		return x - y;
 	}
 };
@@ -65,7 +65,7 @@ struct multiplies {
 	using result_type MSTL_FUNCADP_DEPRE			= T;
 
 	MSTL_NODISCARD constexpr T operator()(const T& x, const T& y) const 
-		noexcept(noexcept(MSTL::declcopy<T>(x * y))) {
+		noexcept(noexcept(_MSTL declcopy<T>(x * y))) {
 		return x * y;
 	}
 };
@@ -86,7 +86,7 @@ struct divides {
 	using result_type MSTL_FUNCADP_DEPRE			= T;
 
 	MSTL_NODISCARD constexpr T operator()(const T& x, const T& y) const
-		noexcept(noexcept(MSTL::declcopy<T>(x / y))) {
+		noexcept(noexcept(_MSTL declcopy<T>(x / y))) {
 		return x / y;
 	}
 };
@@ -107,7 +107,7 @@ struct modulus {
 	using result_type MSTL_FUNCADP_DEPRE			= T;
 
 	MSTL_NODISCARD constexpr T operator()(const T& x, const T& y) const
-		noexcept(noexcept(MSTL::declcopy<T>(x % y))) {
+		noexcept(noexcept(_MSTL declcopy<T>(x % y))) {
 		return x % y;
 	}
 };
@@ -127,7 +127,7 @@ struct negate {
 	using result_type MSTL_FUNCADP_DEPRE	= T;
 
 	MSTL_NODISCARD constexpr T operator()(const T& x) const
-		noexcept(noexcept(MSTL::declcopy<T>(-x))) {
+		noexcept(noexcept(_MSTL declcopy<T>(-x))) {
 		return -x;
 	}
 };
@@ -149,7 +149,7 @@ struct equal_to {
 	using result_type MSTL_FUNCADP_DEPRE			= bool;
 
 	MSTL_NODISCARD constexpr bool operator()(const T& x, const T& y) const 
-		noexcept(noexcept(MSTL::declcopy<bool>(x == y))) {
+		noexcept(noexcept(_MSTL declcopy<bool>(x == y))) {
 		return x == y;
 	}
 };
@@ -170,7 +170,7 @@ struct not_equal_to {
 	using result_type MSTL_FUNCADP_DEPRE			= bool;
 
 	MSTL_NODISCARD constexpr bool operator()(const T& x, const T& y) const
-		noexcept(noexcept(MSTL::declcopy<bool>(x != y))) {
+		noexcept(noexcept(_MSTL declcopy<bool>(x != y))) {
 		return x != y;
 	}
 };
@@ -191,7 +191,7 @@ struct greater {
 	using result_type MSTL_FUNCADP_DEPRE			= bool;
 
 	MSTL_NODISCARD constexpr bool operator()(const T& x, const T& y) const
-		noexcept(noexcept(MSTL::declcopy<bool>(x > y))) {
+		noexcept(noexcept(_MSTL declcopy<bool>(x > y))) {
 		return x > y;
 	}
 };
@@ -212,7 +212,7 @@ struct less {
 	using result_type MSTL_FUNCADP_DEPRE			= bool;
 
 	MSTL_NODISCARD constexpr bool operator()(const T& x, const T& y) const
-		noexcept(noexcept(MSTL::declcopy<bool>(x < y))) {
+		noexcept(noexcept(_MSTL declcopy<bool>(x < y))) {
 		return x < y;
 	}
 };
@@ -233,7 +233,7 @@ struct greater_equal {
 	using result_type MSTL_FUNCADP_DEPRE			= bool;
 
 	MSTL_NODISCARD constexpr bool operator()(const T& x, const T& y) const
-		noexcept(noexcept(MSTL::declcopy<bool>(x >= y))) {
+		noexcept(noexcept(_MSTL declcopy<bool>(x >= y))) {
 		return x >= y;
 	}
 };
@@ -254,7 +254,7 @@ struct less_equal {
 	using result_type MSTL_FUNCADP_DEPRE			= bool;
 
 	MSTL_NODISCARD constexpr bool operator()(const T& x, const T& y) const
-		noexcept(noexcept(MSTL::declcopy<bool>(x <= y))) {
+		noexcept(noexcept(_MSTL declcopy<bool>(x <= y))) {
 		return x <= y;
 	}
 };
@@ -273,7 +273,7 @@ template <typename T>
 struct identity {
 	template <typename U = T>
 	MSTL_NODISCARD constexpr U&& operator()(U&& x) const noexcept {
-		return MSTL::forward<U>(x);
+		return _MSTL forward<U>(x);
 	}
 };
 

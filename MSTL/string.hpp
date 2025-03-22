@@ -12,9 +12,9 @@ using u16string = basic_string<char16_t>;
 using u32string = basic_string<char32_t>;
 
 template <>
-struct hash<MSTL::string> {
-    MSTL_NODISCARD size_t operator ()(const MSTL::string& s) const noexcept {
-        return string_hash(s.c_str(), MSTL::strlen(s.c_str()), 0);
+struct hash<_MSTL string> {
+    MSTL_NODISCARD size_t operator ()(const _MSTL string& s) const noexcept {
+        return string_hash(s.c_str(), _MSTL strlen(s.c_str()), 0);
     }
 };
 template <typename CharT, typename Traits, typename Alloc>
@@ -27,7 +27,7 @@ struct hash<basic_string<CharT, Traits, Alloc>> {
 template <>
 struct hash<std::string> {
     MSTL_NODISCARD size_t operator ()(const std::string& s) const noexcept {
-        return string_hash(s.c_str(), MSTL::strlen(s.c_str()), 0);
+        return string_hash(s.c_str(), _MSTL strlen(s.c_str()), 0);
     }
 };
 
@@ -91,7 +91,7 @@ MSTL_NODISCARD CharT* uint_to_buff(CharT* riter, UT ux) {
 #ifdef MSTL_DATA_BUS_WIDTH_64__
     auto holder = ux;
 #else
-    MSTL::__uint_to_buff_aux(riter, ux);
+    MSTL_ __uint_to_buff_aux(riter, ux);
     auto holder = static_cast<unsigned long>(ux);
 #endif
     do {
@@ -210,11 +210,11 @@ MSTL_NODISCARD inline wstring to_wstring(long double x) {
 
 template <typename CharT, typename T, enable_if_t<is_same_v<CharT, char>, int> = 0>
 MSTL_NODISCARD basic_string<CharT> __stream_to_string(T x) {
-    return MSTL::to_string(x);
+    return _MSTL to_string(x);
 }
 template <typename CharT, typename T, enable_if_t<is_same_v<CharT, wchar_t>, int> = 0>
 MSTL_NODISCARD basic_string<CharT> __stream_to_string(T x) {
-    return MSTL::to_wstring(x);
+    return _MSTL to_wstring(x);
 }
 
 MSTL_END_NAMESPACE__

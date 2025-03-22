@@ -49,9 +49,9 @@ public:
     unordered_map(const self& ht) : ht_(ht.ht_) {}
     self& operator =(const self& x) = default;
 
-    unordered_map(self&& x) noexcept(noexcept(ht_.swap(x.ht_))) : ht_(MSTL::forward<base_type>(x.ht_)) {}
+    unordered_map(self&& x) noexcept(noexcept(ht_.swap(x.ht_))) : ht_(_MSTL forward<base_type>(x.ht_)) {}
     self& operator =(self&& x) noexcept(noexcept(ht_.swap(x.ht_))) {
-        ht_ = MSTL::forward<self>(x.ht_);
+        ht_ = _MSTL forward<self>(x.ht_);
         return *this;
     }
 
@@ -112,14 +112,14 @@ public:
 
     template <typename... Args>
     pair<iterator, bool> emplace(Args&&... args) {
-        return ht_.emplace_unique(MSTL::forward<Args>(args)...);
+        return ht_.emplace_unique(_MSTL forward<Args>(args)...);
     }
 
     pair<iterator, bool> insert(const value_type& obj) {
         return ht_.insert_unique(obj);
     }
     pair<iterator, bool> insert(value_type&& obj) { 
-        return ht_.insert_unique(MSTL::forward<value_type>(obj));
+        return ht_.insert_unique(_MSTL forward<value_type>(obj));
     }
     template <typename Iterator>
     void insert(Iterator first, Iterator last) { ht_.insert_unique(first, last); }
@@ -246,9 +246,9 @@ public:
     unordered_multimap(const self& ht) : ht_(ht.ht_) {}
     self& operator =(const self& x) = default;
 
-    unordered_multimap(self&& x) noexcept(noexcept(ht_.swap(x.ht_))) : ht_(MSTL::forward<base_type>(x.ht_)) {}
+    unordered_multimap(self&& x) noexcept(noexcept(ht_.swap(x.ht_))) : ht_(_MSTL forward<base_type>(x.ht_)) {}
     self& operator =(self&& x) noexcept(noexcept(ht_.swap(x.ht_))) {
-        ht_ = MSTL::forward<self>(x.ht_);
+        ht_ = _MSTL forward<self>(x.ht_);
         return *this;
     }
 
@@ -309,14 +309,14 @@ public:
 
     template <typename... Args>
     iterator emplace(Args&&... args) {
-        return ht_.emplace_equal(MSTL::forward<Args>(args)...);
+        return ht_.emplace_equal(_MSTL forward<Args>(args)...);
     }
 
     iterator insert(const value_type& obj) {
         return ht_.insert_equal(obj);
     }
     iterator insert(value_type&& obj) {
-        return ht_.insert_equal(MSTL::move(obj));
+        return ht_.insert_equal(_MSTL move(obj));
     }
     template <typename Iterator>
     void insert(Iterator first, Iterator last) { ht_.insert_equal(first, last); }

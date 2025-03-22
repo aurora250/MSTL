@@ -35,23 +35,23 @@ constexpr void swap(T(& lh)[Size], T(& rh)[Size]) noexcept(is_nothrow_swappable<
 	T* last1 = first1 + Size;
 	T* first2 = rh;
 	for (; first1 != last1; ++first1, ++first2) {
-		MSTL::swap(*first1, *first2);
+		_MSTL swap(*first1, *first2);
 	}
 }
 
 template <typename T, enable_if_t<conjunction_v<is_move_constructible<T>, is_move_assignable<T>>, int>>
 constexpr void swap(T& lh, T& rh)
 noexcept(is_nothrow_move_constructible_v<T> && is_nothrow_move_assignable_v<T>) {
-    T tmp = MSTL::move(lh);
-    lh = MSTL::move(rh);
-    rh = MSTL::move(tmp);
+    T tmp = _MSTL move(lh);
+    lh = _MSTL move(rh);
+    rh = _MSTL move(tmp);
 }
 
 template <typename T, typename U>
 constexpr T exchange(T& val, U&& new_val) noexcept(conjunction_v<
 	is_nothrow_move_constructible<T>, is_nothrow_assignable<T&, U>>) {
-	T old_val = MSTL::move(val);
-	val = MSTL::forward<U>(new_val);
+	T old_val = _MSTL move(val);
+	val = _MSTL forward<U>(new_val);
 	return old_val;
 }
 
@@ -76,9 +76,8 @@ MSTL_MACRO_RANGE_INT(INITIALIZE_BASIC_FUNCTION__)
 
 
 MSTL_INDEPENDENT_TAG_NAMESPACE_SETTING namespace tags {
-	struct allocator_arg_tag {
-		constexpr allocator_arg_tag() noexcept = default;
-	};
+	using allocator_arg_tag = std::allocator_arg_t;
+
 	// construct without arguments
 	struct default_construct_tag {
 		constexpr explicit default_construct_tag() noexcept = default;
@@ -109,18 +108,18 @@ public:
 	T2 value;
 
 	constexpr compressed_pair(const compressed_pair& pir) : value(pir.value) {}
-	constexpr compressed_pair(compressed_pair&& pir)  noexcept : value(MSTL::move(pir.value)) {}
+	constexpr compressed_pair(compressed_pair&& pir)  noexcept : value(_MSTL move(pir.value)) {}
 
 	template <typename... Args>
 	constexpr compressed_pair(default_construct_tag, Args&&... args)
 		noexcept(conjunction_v<is_nothrow_default_constructible<T1>, is_nothrow_constructible<T2, Args...>>)
-		: T1(), value(MSTL::forward<Args>(args)...) {
+		: T1(), value(_MSTL forward<Args>(args)...) {
 	}
 
 	template <typename U1, typename... U2>
 	constexpr compressed_pair(exact_arg_construct_tag, U1&& first, U2&&... args)
 		noexcept(conjunction_v<is_nothrow_constructible<T1, U1>, is_nothrow_constructible<T2, U2...>>)
-		: T1(MSTL::forward<U1>(first)), value(MSTL::forward<U2>(args)...) {
+		: T1(_MSTL forward<U1>(first)), value(_MSTL forward<U2>(args)...) {
 	}
 
 	constexpr T1& get_base() noexcept {
@@ -132,7 +131,7 @@ public:
 
 	constexpr void swap(compressed_pair& rh)
 		noexcept(is_nothrow_swappable_v<T2>) {
-		MSTL::swap(value, rh.value);
+		_MSTL swap(value, rh.value);
 	};
 };
 
@@ -152,19 +151,19 @@ public:
 		: no_compressed(pir.no_compressed), value(pir.value) {
 	}
 	constexpr compressed_pair(compressed_pair&& pir) noexcept
-		: no_compressed(MSTL::move(pir.no_compressed)), value(MSTL::move(pir.value)) {
+		: no_compressed(_MSTL move(pir.no_compressed)), value(_MSTL move(pir.value)) {
 	}
 
 	template <typename... Args>
 	constexpr compressed_pair(default_construct_tag, Args&&... args)
 		noexcept(conjunction_v<is_nothrow_default_constructible<T1>, is_nothrow_constructible<T2, Args...>>)
-		: no_compressed(), value(MSTL::forward<Args>(args)...) {
+		: no_compressed(), value(_MSTL forward<Args>(args)...) {
 	}
 
 	template <typename U1, typename... U2>
 	constexpr compressed_pair(exact_arg_construct_tag, U1&& first, U2&&... args)
 		noexcept(conjunction_v<is_nothrow_constructible<T1, U1>, is_nothrow_constructible<T2, U2...>>)
-		: no_compressed(MSTL::forward<U1>(first)), value(MSTL::forward<U2>(args)...) {
+		: no_compressed(_MSTL forward<U1>(first)), value(_MSTL forward<U2>(args)...) {
 	}
 
 	constexpr T1& get_base() noexcept {
@@ -176,8 +175,8 @@ public:
 
 	constexpr void swap(compressed_pair& rh)
 		noexcept(conjunction_v<is_nothrow_swappable<T1>, is_nothrow_swappable<T2>>) {
-		MSTL::swap(value, rh.value);
-		MSTL::swap(no_compressed, rh.no_compressed);
+		_MSTL swap(value, rh.value);
+		_MSTL swap(no_compressed, rh.no_compressed);
 	};
 };
 
@@ -246,7 +245,7 @@ struct pair {
 	constexpr explicit(!conjunction_v<is_convertible<U1, T1>, is_convertible<U2, T2>>)
 		pair(U1&& a, U2&& b) noexcept(conjunction_v<
 			is_nothrow_constructible<T1, U1>, is_nothrow_constructible<T2, U2>>)
-		: first(MSTL::forward<U1>(a)), second(MSTL::forward<U2>(b)) {}
+		: first(_MSTL forward<U1>(a)), second(_MSTL forward<U2>(b)) {}
 
 	template <typename U1, typename U2, enable_if_t<
 		conjunction_v<is_constructible<T1, const U1&>, is_constructible<T2, const U2&>>, int> = 0>
@@ -261,11 +260,11 @@ struct pair {
 		is_convertible<U1, T1>, is_convertible<U2, T2>>)
 		pair(pair<U1, U2>&& p) noexcept(conjunction_v<
 			is_nothrow_constructible<T1, U1>, is_nothrow_constructible<T2, U2>>)
-		: first(MSTL::forward<U1>(p.first)), second(MSTL::forward<U2>(p.second)) {}
+		: first(_MSTL forward<U1>(p.first)), second(_MSTL forward<U2>(p.second)) {}
 #else
 	template <typename U1 = T1, typename U2 = T2, enable_if_t<
 		conjunction_v<is_default_constructible<U1>, is_default_constructible<U2>> &&
-		!conjunction_v<is_implicitly_default_constructible<U1>, 
+		!conjunction_v<is_implicitly_default_constructible<U1>,
 		is_implicitly_default_constructible<U2>>, int> = 0>
 	explicit pair() noexcept(conjunction_v<
 		is_nothrow_default_constructible<U1>, is_nothrow_default_constructible<U2>>)
@@ -273,7 +272,7 @@ struct pair {
 
 	template <typename U1 = T1, typename U2 = T2, enable_if_t<
 		conjunction_v<is_default_constructible<U1>, is_default_constructible<U2>>&&
-		conjunction_v<is_implicitly_default_constructible<U1>, 
+		conjunction_v<is_implicitly_default_constructible<U1>,
 		is_implicitly_default_constructible<U2>>, int> = 0>
 	pair() noexcept(conjunction_v<
 		is_nothrow_default_constructible<U1>, is_nothrow_default_constructible<U2>>)
@@ -298,14 +297,14 @@ struct pair {
 		!conjunction_v<is_convertible<U1, T1>, is_convertible<U2, T2>>, int> = 0>
 	explicit pair(U1&& a, U2&& b) noexcept(conjunction_v<
 		is_nothrow_constructible<T1, U1>, is_nothrow_constructible<T2, U2>>)
-		: first(MSTL::forward<U1>(a)), second(MSTL::forward<U2>(b)) {}
+		: first(MSTL_ forward<U1>(a)), second(MSTL_ forward<U2>(b)) {}
 
 	template <typename U1, typename U2, enable_if_t<
 		conjunction_v<is_constructible<T1, U1>, is_constructible<T2, U2>> &&
 		conjunction_v<is_convertible<U1, T1>, is_convertible<U2, T2>>, int> = 0>
 	pair(U1&& a, U2&& b) noexcept(conjunction_v<
 		is_nothrow_constructible<T1, U1>, is_nothrow_constructible<T2, U2>>)
-		: first(MSTL::forward<U1>(a)), second(MSTL::forward<U2>(b)) {}
+		: first(MSTL_ forward<U1>(a)), second(MSTL_ forward<U2>(b)) {}
 
 	template <typename U1, typename U2, enable_if_t<
 		conjunction_v<is_constructible<T1, const U1&>, is_constructible<T2, const U2&>> &&
@@ -326,14 +325,14 @@ struct pair {
 		!conjunction_v<is_convertible<U1, T1>, is_convertible<U2, T2>>, int> = 0>
 	explicit pair(pair<U1, U2>&& p) noexcept(conjunction_v<
 		is_nothrow_constructible<T1, U1>, is_nothrow_constructible<T2, U2>>)
-		: first(MSTL::forward<U1>(p.first)), second(MSTL::forward<U2>(p.second)) {}
+		: first(MSTL_ forward<U1>(p.first)), second(MSTL_ forward<U2>(p.second)) {}
 
 	template <typename U1, typename U2, enable_if_t<
 		conjunction_v<is_constructible<T1, U1>, is_constructible<T2, U2>>&&
 		conjunction_v<is_convertible<U1, T1>, is_convertible<U2, T2>>, int> = 0>
 	pair(pair<U1, U2>&& p) noexcept(conjunction_v<
 		is_nothrow_constructible<T1, U1>, is_nothrow_constructible<T2, U2>>)
-		: first(MSTL::forward<U1>(p.first)), second(MSTL::forward<U2>(p.second)) {}
+		: first(MSTL_ forward<U1>(p.first)), second(MSTL_ forward<U2>(p.second)) {}
 #endif
 
 	pair(const pair& p) = default;
@@ -341,8 +340,8 @@ struct pair {
 
 	template <typename Tuple1, typename Tuple2, size_t... Index1, size_t... Index2>
 	constexpr pair(Tuple1& t1, Tuple2& t2, index_sequence<Index1...>, index_sequence<Index2...>)
-		: first(MSTL::pair_get_from_tuple<Index1>(MSTL::move(t1))...),
-		second(MSTL::pair_get_from_tuple<Index2>(MSTL::move(t2))...) {}
+		: first(_MSTL pair_get_from_tuple<Index1>(_MSTL move(t1))...),
+		second(_MSTL pair_get_from_tuple<Index2>(_MSTL move(t2))...) {}
 
 	// construct from tuple
 	template <typename... Types1, typename... Types2>
@@ -365,8 +364,8 @@ struct pair {
 		is_move_assignable<typename self::first_type>, is_move_assignable<typename self::second_type>>, int> = 0>
 	constexpr pair& operator =(type_identity_t<self&&> p) noexcept(conjunction_v<
 		is_nothrow_move_assignable<T1>, is_nothrow_move_assignable<T2>>) {
-		first = MSTL::forward<T1>(p.first);
-		second = MSTL::forward<T2>(p.second);
+		first = _MSTL forward<T1>(p.first);
+		second = _MSTL forward<T2>(p.second);
 		return *this;
 	}
 
@@ -383,8 +382,8 @@ struct pair {
 		is_same<pair, pair<U1, U2>>>, is_assignable<T1&, U1>, is_assignable<T2&, U2>>, int> = 0>
 	constexpr pair& operator =(pair<U1, U2>&& p) noexcept(conjunction_v<
 		is_nothrow_assignable<T1&, U1>, is_nothrow_assignable<T2&, U2>>) {
-		first = MSTL::forward<U1>(p.first);
-		second = MSTL::forward<U2>(p.second);
+		first = _MSTL forward<U1>(p.first);
+		second = _MSTL forward<U2>(p.second);
 		return *this;
 	}
 
@@ -392,8 +391,8 @@ struct pair {
 
 	constexpr void swap(pair& p) noexcept(conjunction_v<
 		is_nothrow_swappable<T1>, is_nothrow_swappable<T2>>) {
-		MSTL::swap(first, p.first);
-		MSTL::swap(second, p.second);
+		_MSTL swap(first, p.first);
+		_MSTL swap(second, p.second);
 	}
 };
 #if MSTL_SUPPORT_DEDUCTION_GUIDES__
@@ -437,13 +436,13 @@ constexpr pair<unwrap_ref_decay_t<T1>, unwrap_ref_decay_t<T2>> make_pair(T1&& x,
 noexcept(conjunction_v<is_nothrow_constructible<unwrap_ref_decay_t<T1>, T1>,
 	is_nothrow_constructible<unwrap_ref_decay_t<T2>, T2>>) {
 	using unwrap_pair = pair<unwrap_ref_decay_t<T1>, unwrap_ref_decay_t<T2>>;
-	return unwrap_pair(MSTL::forward<T1>(x), MSTL::forward<T2>(y));
+	return unwrap_pair(_MSTL forward<T1>(x), _MSTL forward<T2>(y));
 }
 
 
 template <typename T1, typename T2>
-struct hash<MSTL::pair<T1, T2>> {
-	MSTL_NODISCARD size_t operator() (const MSTL::pair<T1, T2>& pair) const noexcept {
+struct hash<_MSTL pair<T1, T2>> {
+	MSTL_NODISCARD size_t operator() (const _MSTL pair<T1, T2>& pair) const noexcept {
 		return hash<remove_cvref_t<T1>>()(pair.first) ^ hash<remove_cvref_t<T2>>()(pair.second);
 	}
 };
@@ -486,21 +485,21 @@ template <size_t Index, typename T1, typename T2>
 struct __pair_get_helper;
 template <typename T1, typename T2>
 struct __pair_get_helper<0, T1, T2> {
-	MSTL_NODISCARD constexpr static tuple_element_t<0, pair<T1, T2>>& 
+	MSTL_NODISCARD constexpr static tuple_element_t<0, pair<T1, T2>>&
 		get(pair<T1, T2>& pir) noexcept {
 		return pir.first;
 	}
-	MSTL_NODISCARD constexpr static const tuple_element_t<0, pair<T1, T2>>& 
+	MSTL_NODISCARD constexpr static const tuple_element_t<0, pair<T1, T2>>&
 		get(const pair<T1, T2>& pir) noexcept {
 		return pir.first;
 	}
 	MSTL_NODISCARD constexpr static tuple_element_t<0, pair<T1, T2>>&&
 		get(pair<T1, T2>&& pir) noexcept {
-		return MSTL::forward<T1>(pir.first);
+		return MSTL_ forward<T1>(pir.first);
 	}
 	MSTL_NODISCARD constexpr static const tuple_element_t<0, pair<T1, T2>>&&
 		get(const pair<T1, T2>&& pir) noexcept {
-		return MSTL::forward<const T1>(pir.first);
+		return MSTL_ forward<const T1>(pir.first);
 	}
 };
 template <typename T1, typename T2>
@@ -515,11 +514,11 @@ struct __pair_get_helper<1, T1, T2> {
 	}
 	MSTL_NODISCARD constexpr static tuple_element_t<1, pair<T1, T2>>&&
 		get(pair<T1, T2>&& pir) noexcept {
-		return MSTL::forward<T2>(pir.second);
+		return MSTL_ forward<T2>(pir.second);
 	}
 	MSTL_NODISCARD constexpr static const tuple_element_t<1, pair<T1, T2>>&&
 		get(const pair<T1, T2>&& pir) noexcept {
-		return MSTL::forward<const T2>(pir.second);
+		return MSTL_ forward<const T2>(pir.second);
 	}
 };
 #endif // !MSTL_VERSION_17__
@@ -528,9 +527,9 @@ struct __pair_get_helper<1, T1, T2> {
 #ifdef MSTL_VERSION_17__
 template <size_t Index, typename T1, typename T2>
 MSTL_NODISCARD constexpr tuple_element_t<Index, pair<T1, T2>>& get(pair<T1, T2>& pir) noexcept {
-	if constexpr (Index == 0) 
+	if constexpr (Index == 0)
 		return pir.first;
-	else 
+	else
 		return pir.second;
 }
 #else
@@ -554,14 +553,14 @@ MSTL_NODISCARD constexpr T2& get(pair<T1, T2>& pir) noexcept {
 template <size_t Index, typename T1, typename T2>
 MSTL_NODISCARD constexpr const tuple_element_t<Index, pair<T1, T2>>&
 get(const pair<T1, T2>& pir) noexcept {
-	if constexpr (Index == 0) 
+	if constexpr (Index == 0)
 		return pir.first;
-	else 
+	else
 		return pir.second;
 }
 #else
 template <size_t Index, typename T1, typename T2>
-MSTL_NODISCARD constexpr const tuple_element_t<Index, pair<T1, T2>>& 
+MSTL_NODISCARD constexpr const tuple_element_t<Index, pair<T1, T2>>&
 get(const pair<T1, T2>& pir) noexcept {
 	return __pair_get_helper<Index, T1, T2>::get(pir);
 }
@@ -580,26 +579,26 @@ MSTL_NODISCARD constexpr const T2& get(const pair<T1, T2>& pir) noexcept {
 template <size_t Index, typename T1, typename T2>
 MSTL_NODISCARD constexpr tuple_element_t<Index, pair<T1, T2>>&&
 get(pair<T1, T2>&& pir) noexcept {
-	if constexpr (Index == 0) 
-		return MSTL::forward<T1>(pir.first);
-	else 
-		return MSTL::forward<T2>(pir.second);
+	if constexpr (Index == 0)
+		return _MSTL forward<T1>(pir.first);
+	else
+		return _MSTL forward<T2>(pir.second);
 }
 #else
 template <size_t Index, typename T1, typename T2>
-MSTL_NODISCARD constexpr tuple_element_t<Index, pair<T1, T2>>&& 
+MSTL_NODISCARD constexpr tuple_element_t<Index, pair<T1, T2>>&&
 get(pair<T1, T2>&& pir) noexcept {
-	return MSTL::forward<tuple_element_t<Index, pair<T1, T2>>>(
-		__pair_get_helper<Index, T1, T2>::get(MSTL::forward<pair<T1, T2>>(pir)));
+	return MSTL_ forward<tuple_element_t<Index, pair<T1, T2>>>(
+		__pair_get_helper<Index, T1, T2>::get(MSTL_ forward<pair<T1, T2>>(pir)));
 }
 #endif // MSTL_VERSION_17__
 template <typename T1, typename T2>
 MSTL_NODISCARD constexpr T1&& get(pair<T1, T2>&& pir) noexcept {
-	return MSTL::forward<T1>(pir.first);
+	return _MSTL forward<T1>(pir.first);
 }
 template <typename T2, typename T1>
 MSTL_NODISCARD constexpr T2&& get(pair<T1, T2>&& pir) noexcept {
-	return MSTL::forward<T2>(pir.second);
+	return _MSTL forward<T2>(pir.second);
 }
 
 
@@ -607,33 +606,33 @@ MSTL_NODISCARD constexpr T2&& get(pair<T1, T2>&& pir) noexcept {
 template <size_t Index, typename T1, typename T2>
 MSTL_NODISCARD constexpr const tuple_element_t<Index, pair<T1, T2>>&&
 get(const pair<T1, T2>&& pir) noexcept {
-	if constexpr (Index == 0) 
-		return MSTL::forward<const T1>(pir.first);
-	else 
-		return MSTL::forward<const T2>(pir.second);
+	if constexpr (Index == 0)
+		return _MSTL forward<const T1>(pir.first);
+	else
+		return _MSTL forward<const T2>(pir.second);
 }
 #else
 template <size_t Index, typename T1, typename T2>
 MSTL_NODISCARD constexpr const tuple_element_t<Index, pair<T1, T2>>&&
 get(const pair<T1, T2>&& pir) noexcept {
-	return MSTL::forward<const tuple_element_t<Index, pair<T1, T2>>>(
-		__pair_get_helper<Index, T1, T2>::get(MSTL::forward<const pair<T1, T2>>(pir)));
+	return MSTL_ forward<const tuple_element_t<Index, pair<T1, T2>>>(
+		__pair_get_helper<Index, T1, T2>::get(MSTL_ forward<const pair<T1, T2>>(pir)));
 }
 #endif // MSTL_VERSION_17__
 template <typename T1, typename T2>
 MSTL_NODISCARD constexpr const T1&& get(const pair<T1, T2>&& pir) noexcept {
-	return MSTL::forward<const T1>(pir.first);
+	return _MSTL forward<const T1>(pir.first);
 }
 template <typename T2, typename T1>
 MSTL_NODISCARD constexpr const T2&& get(const pair<T1, T2>&& pir) noexcept {
-	return MSTL::forward<const T2>(pir.second);
+	return _MSTL forward<const T2>(pir.second);
 }
 
 
 template <typename T, typename... Args>
 MSTL_CONSTEXPR20 void construct(T* const ptr, Args&&... args)
 noexcept(is_nothrow_constructible_v<T, Args...>) {
-	::new (static_cast<void*>(ptr)) T(MSTL::forward<Args>(args)...);
+	::new (static_cast<void*>(ptr)) T(_MSTL forward<Args>(args)...);
 }
 
 
@@ -646,7 +645,7 @@ template <typename Iterator, enable_if_t<
 	is_iter_v<Iterator> && !is_trivially_destructible_v<iter_val_t<Iterator>>, int> = 0>
 MSTL_CONSTEXPR20 void destroy(Iterator first, Iterator last)
 noexcept(is_nothrow_destructible_v<iter_val_t<Iterator>>) {
-	for (; first < last; ++first) MSTL::destroy(&*first);
+	for (; first < last; ++first) _MSTL destroy(&*first);
 }
 
 template <typename Iterator, enable_if_t<

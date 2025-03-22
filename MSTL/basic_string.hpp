@@ -95,8 +95,8 @@ public:
 
     using iterator                  = basic_string_iterator<CharT, reference, pointer>;
     using const_iterator            = basic_string_iterator<CharT, const_reference, const_pointer>;
-    using reverse_iterator          = MSTL::reverse_iterator<iterator>;
-    using const_reverse_iterator    = MSTL::reverse_iterator<const_iterator>;
+    using reverse_iterator          = _MSTL reverse_iterator<iterator>;
+    using const_reverse_iterator    = _MSTL reverse_iterator<const_iterator>;
 
     using self              = basic_string<CharT, Traits, Alloc>;
     using allocator_type    = Alloc;
@@ -113,7 +113,7 @@ private:
     }
 
     MSTL_NODISCARD MSTL_CONSTEXPR20 size_type clamp_size(const size_type position, const size_type size) const noexcept {
-        return MSTL::min(size, size_ - position);
+        return _MSTL min(size, size_ - position);
     }
 
     MSTL_CONSTEXPR20 void set_empty() noexcept {
@@ -125,8 +125,8 @@ private:
     template <typename Iterator, enable_if_t<
         is_iter_v<Iterator> && !is_fwd_iter_v<Iterator>, int> = 0>
     MSTL_CONSTEXPR20 void construct_from_iter(Iterator first, Iterator last) {
-        size_type n = MSTL::distance(first, last);
-        const size_type init_size = MSTL::max(MEMORY_ALIGN_THRESHHOLD, n + 1);
+        size_type n = _MSTL distance(first, last);
+        const size_type init_size = _MSTL max(MEMORY_ALIGN_THRESHHOLD, n + 1);
         MSTL_TRY__{
             data_ = alloc_pair_.get_base().allocate(init_size);
             size_ = n;
@@ -138,19 +138,19 @@ private:
 
     template <typename Iterator, enable_if_t<is_fwd_iter_v<Iterator>, int> = 0>
     MSTL_CONSTEXPR20 void construct_from_iter(Iterator first, Iterator last) {
-        const size_type n = MSTL::distance(first, last);
-        const size_type init_size = MSTL::max(MEMORY_ALIGN_THRESHHOLD, n + 1);
+        const size_type n = _MSTL distance(first, last);
+        const size_type init_size = _MSTL max(MEMORY_ALIGN_THRESHHOLD, n + 1);
         MSTL_TRY__{
             data_ = alloc_pair_.get_base().allocate(init_size);
             size_ = n;
             alloc_pair_.value = init_size;
-            MSTL::uninitialized_copy(first, last, data_);
+            _MSTL uninitialized_copy(first, last, data_);
         }
         MSTL_CATCH_UNWIND_THROW_M__(destroy_buffer())
     }
 
     MSTL_CONSTEXPR20 void construct_from_ptr(const_pointer str, size_type position, size_type n) {
-        const size_type init_size = MSTL::max(MEMORY_ALIGN_THRESHHOLD, n + 1);
+        const size_type init_size = _MSTL max(MEMORY_ALIGN_THRESHHOLD, n + 1);
         data_ = alloc_pair_.get_base().allocate(init_size);
         traits_type::copy(data_, str + position, n);
         traits_type::assign(data_ + n, 1, initialize<CharT>());
@@ -189,8 +189,8 @@ private:
     template <typename Iterator, enable_if_t<
         is_iter_v<Iterator> && is_same_v<iter_val_t<Iterator>, value_type>, int> = 0>
     MSTL_CONSTEXPR20 basic_string& replace_copy(iterator first1, iterator last1, Iterator first2, Iterator last2) {
-        size_type len1 = MSTL::distance(first1, last1);
-        size_type len2 = MSTL::distance(first2, last2);
+        size_type len1 = _MSTL distance(first1, last1);
+        size_type len2 = _MSTL distance(first2, last2);
         if (len1 < len2) {
             const size_type diff = len2 - len1;
             MSTL_DEBUG_VERIFY__(size_ + diff < max_size(), "basic_string replace_copy index out of range.");
@@ -211,11 +211,11 @@ private:
     }
     template <typename Iterator>
     MSTL_CONSTEXPR20 basic_string& replace_copy(iterator first1, const size_type n1, Iterator first2, const size_type n2) {
-        return replace_copy(first1, first1 + n1, first2, MSTL::next(first2, n2));
+        return replace_copy(first1, first1 + n1, first2, _MSTL next(first2, n2));
     }
 
     MSTL_CONSTEXPR20 void reallocate(size_type n) {
-        const size_t new_cap = MSTL::max(alloc_pair_.value + n, alloc_pair_.value + (alloc_pair_.value >> 1));
+        const size_t new_cap = _MSTL max(alloc_pair_.value + n, alloc_pair_.value + (alloc_pair_.value >> 1));
         pointer new_buffer = alloc_pair_.get_base().allocate(new_cap);
         traits_type::move(new_buffer, data_, size_);
         alloc_pair_.get_base().deallocate(data_, alloc_pair_.value);
@@ -226,7 +226,7 @@ private:
     MSTL_CONSTEXPR20 iterator reallocate_and_fill(iterator position, size_type n, value_type chr) {
         const difference_type diff = (&*position) - data_;
         const size_t old_cap = alloc_pair_.value;
-        const size_t new_cap = MSTL::max(old_cap + n, old_cap + (old_cap >> 1));
+        const size_t new_cap = _MSTL max(old_cap + n, old_cap + (old_cap >> 1));
         pointer new_buffer = alloc_pair_.get_base().allocate(new_cap);
         pointer end1 = traits_type::move(new_buffer, data_, diff) + diff;
         pointer end2 = traits_type::assign(end1, n, chr) + n;
@@ -240,11 +240,11 @@ private:
     MSTL_CONSTEXPR20 iterator reallocate_and_copy(iterator position, const_iterator first, const_iterator last) {
         const difference_type diff = position - data_;
         const size_type old_cap = alloc_pair_.value;
-        const size_type n = MSTL::distance(first, last);
-        const size_t new_cap = MSTL::max(old_cap + n, old_cap + (old_cap >> 1));
+        const size_type n = _MSTL distance(first, last);
+        const size_t new_cap = _MSTL max(old_cap + n, old_cap + (old_cap >> 1));
         pointer new_buffer = alloc_pair_.get_base().allocate(new_cap);
         pointer end1 = traits_type::move(new_buffer, data_, diff) + diff;
-        pointer end2 = MSTL::uninitialized_copy_n(first, n, end1) + n;
+        pointer end2 = _MSTL uninitialized_copy_n(first, n, end1) + n;
         traits_type::move(end2, data_ + diff, size_ - diff);
         alloc_pair_.get_base().deallocate(data_, old_cap);
         data_ = new_buffer;
@@ -264,7 +264,7 @@ public:
     }
 
     MSTL_CONSTEXPR20 basic_string(size_type n, value_type chr) {
-        const size_type init_size = MSTL::max(MEMORY_ALIGN_THRESHHOLD, n + 1);
+        const size_type init_size = _MSTL max(MEMORY_ALIGN_THRESHHOLD, n + 1);
         data_ = alloc_pair_.get_base().allocate(init_size);
         traits_type::assign(data_, n, chr);
         size_ = n;
@@ -286,18 +286,18 @@ public:
         construct_from_ptr(str.data_, 0, str.size_);
     }
     MSTL_CONSTEXPR20 self& operator =(const self& str) {
-        if (MSTL::addressof(str) == this) return *this;
+        if (_MSTL addressof(str) == this) return *this;
         construct_from_ptr(str.data_, 0, str.size_);
         return *this;
     }
 
     MSTL_CONSTEXPR20 basic_string(self&& str) noexcept
-        : data_(MSTL::move(str.data_)), size_(str.size_),
+        : data_(_MSTL move(str.data_)), size_(str.size_),
         alloc_pair_(default_construct_tag{}, str.alloc_pair_.value) {
         str.set_empty();
     }
     MSTL_CONSTEXPR20 self& operator =(self&& str) noexcept {
-        if (MSTL::addressof(str) == this) return *this;
+        if (_MSTL addressof(str) == this) return *this;
         clear();
         swap(str);
         return *this;
@@ -452,18 +452,18 @@ public:
 
     template <typename Iterator>
     MSTL_CONSTEXPR20 iterator insert(iterator position, Iterator first, Iterator last) {
-        const size_type len = MSTL::distance(first, last);
+        const size_type len = _MSTL distance(first, last);
         if (len == 0) return position;
 
         if (alloc_pair_.value - size_ < len)
             return reallocate_and_copy(position, first, last);
         if (position == end()) {
-            MSTL::uninitialized_copy(first, last, end());
+            _MSTL uninitialized_copy(first, last, end());
             size_ += len;
             return position;
         }
         traits_type::move(position + len, position, len);
-        MSTL::uninitialized_copy(first, last, position);
+        _MSTL uninitialized_copy(first, last, position);
         size_ += len;
         return position;
     }
@@ -506,9 +506,9 @@ public:
         str.destroy_buffer();
         return *this;
     }
-    MSTL_CONSTEXPR20 self& append(self&& str) { return append(MSTL::move(str), 0, str.size_); }
+    MSTL_CONSTEXPR20 self& append(self&& str) { return append(_MSTL move(str), 0, str.size_); }
     MSTL_CONSTEXPR20 self& append(self&& str, size_type position) {
-        return append(MSTL::move(str), position, str.size_ - position);
+        return append(_MSTL move(str), position, str.size_ - position);
     }
 
     MSTL_CONSTEXPR20 self& append(view_type str, size_type n) {
@@ -528,11 +528,11 @@ public:
 
     template <typename Iterator, enable_if_t<is_iter_v<Iterator>, int> = 0>
     MSTL_CONSTEXPR20 self& append(Iterator first, Iterator last) {
-        const size_type n = MSTL::distance(first, last);
+        const size_type n = _MSTL distance(first, last);
         MSTL_DEBUG_VERIFY__(size_ + n < max_size(), "basic_string append iterator out of ranges.");
         if (alloc_pair_.value - size_ < n)
             reallocate(n);
-        MSTL::uninitialized_copy_n(first, n, data_ + size_);
+        _MSTL uninitialized_copy_n(first, n, data_ + size_);
         size_ += n;
         return *this;
     }
@@ -542,7 +542,7 @@ public:
     }
 
     MSTL_CONSTEXPR20 self& operator +=(const self& str) { return append(str); }
-    MSTL_CONSTEXPR20 self& operator +=(self&& str) { return append(MSTL::move(str)); }
+    MSTL_CONSTEXPR20 self& operator +=(self&& str) { return append(_MSTL move(str)); }
     MSTL_CONSTEXPR20 self& operator +=(value_type chr) { return append(chr); }
     MSTL_CONSTEXPR20 self& operator +=(const_pointer str) { return append(str, str + traits_type::length(str)); }
     MSTL_CONSTEXPR20 self& operator +=(std::initializer_list<value_type> lls) { return append(lls); }
@@ -657,14 +657,14 @@ public:
 
     MSTL_CONSTEXPR20 void reverse() noexcept {
         if (size() < 2) return;
-        for (iterator first = begin(), last = end(); first < last; ) 
-            MSTL::iter_swap(first++, --last);
+        for (iterator first = begin(), last = end(); first < last; )
+            _MSTL iter_swap(first++, --last);
     }
 
     MSTL_CONSTEXPR20 void swap(self& x) noexcept {
-        if (MSTL::addressof(x) == this) return;
-        MSTL::swap(data_, x.data_);
-        MSTL::swap(size_, x.size_);
+        if (_MSTL addressof(x) == this) return;
+        _MSTL swap(data_, x.data_);
+        _MSTL swap(size_, x.size_);
         alloc_pair_.swap(x.alloc_pair_);
     }
 
@@ -765,7 +765,7 @@ public:
         auto* buf = new value_type[4096];
         _in >> buf;
         self tmp(buf);
-        _str = MSTL::move(tmp);
+        _str = _MSTL move(tmp);
         delete[] buf;
         return _in;
     }
@@ -781,7 +781,7 @@ public:
 };
 #ifdef MSTL_SUPPORT_DEDUCTION_GUIDES__
 template <typename Iterator, typename Alloc = standard_allocator<iter_val_t<Iterator>>>
-basic_string(Iterator, Iterator, Alloc = Alloc()) 
+basic_string(Iterator, Iterator, Alloc = Alloc())
 -> basic_string<iter_val_t<Iterator>, char_traits<iter_val_t<Iterator>>, Alloc>;
 
 template <typename CharT, typename Traits, typename Alloc = standard_allocator<CharT>>
@@ -833,19 +833,19 @@ MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
 template <typename CharT, typename Traits, typename Alloc>
 MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     basic_string<CharT, Traits, Alloc>&& lh, const basic_string<CharT, Traits, Alloc>& rh) {
-    return MSTL::move(lh.append(rh));
+    return _MSTL move(lh.append(rh));
 }
 template <typename CharT, typename Traits, typename Alloc>
 MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     const basic_string<CharT, Traits, Alloc>& lh, basic_string<CharT, Traits, Alloc>&& rh) {
-    return MSTL::move(rh.append(lh));
+    return _MSTL move(rh.append(lh));
 }
 template <typename CharT, typename Traits, typename Alloc>
 MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     basic_string<CharT, Traits, Alloc>&& lh, basic_string<CharT, Traits, Alloc>&& rh) {
-    MSTL_DEBUG_VERIFY__(MSTL::addressof(lh) != MSTL::addressof(rh),
+    MSTL_DEBUG_VERIFY__(_MSTL addressof(lh) != _MSTL addressof(rh),
         "cannot concatenate the same moved string to itself.");
-    basic_string<CharT, Traits, Alloc> tmp(MSTL::move(lh));
+    basic_string<CharT, Traits, Alloc> tmp(_MSTL move(lh));
     tmp.append(rh);
     return tmp;
 }
@@ -853,22 +853,22 @@ MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
 template <typename CharT, typename Traits, typename Alloc>
 MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     const CharT* lh, basic_string<CharT, Traits, Alloc>&& rh) {
-    return MSTL::move(rh.append(lh));
+    return _MSTL move(rh.append(lh));
 }
 template <typename CharT, typename Traits, typename Alloc>
 MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     basic_string<CharT, Traits, Alloc>&& lh, const CharT* rh) {
-    return MSTL::move(lh.append(rh));
+    return _MSTL move(lh.append(rh));
 }
 template <typename CharT, typename Traits, typename Alloc>
 MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     CharT lh, basic_string<CharT, Traits, Alloc>&& rh) {
-    return MSTL::move(rh.append(1, lh));
+    return _MSTL move(rh.append(1, lh));
 }
 template <typename CharT, typename Traits, typename Alloc>
 MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     basic_string<CharT, Traits, Alloc>&& lh, CharT rh) {
-    return MSTL::move(lh.append(1, rh));
+    return _MSTL move(lh.append(1, rh));
 }
 
 template <typename CharT, typename Traits, typename Alloc>

@@ -19,8 +19,8 @@ concept common_reference_with = requires {
 template <typename T1, typename T2>
 concept common_with = requires { typename common_type_t<T1, T2>; typename common_type_t<T2, T1>; }
 && same_as<common_type_t<T1, T2>, common_type_t<T2, T1>> && requires {
-	static_cast<common_type_t<T1, T2>>(MSTL::declval<T1>());
-	static_cast<common_type_t<T1, T2>>(MSTL::declval<T2>());
+	static_cast<common_type_t<T1, T2>>(_MSTL declval<T1>());
+	static_cast<common_type_t<T1, T2>>(_MSTL declval<T2>());
 } && common_reference_with<add_lvalue_reference_t<const T1>, add_lvalue_reference_t<const T2>>
 && common_reference_with<add_lvalue_reference_t<common_type_t<T1, T2>>,
 	common_reference_t<add_lvalue_reference_t<const T1>, add_lvalue_reference_t<const T2>>>;
@@ -127,7 +127,7 @@ concept is_detailable = requires(const T& c) {
 	{ c.cbegin() } -> convertible_to<typename T::const_iterator>;
 	{ c.cend() } -> convertible_to<typename T::const_iterator>;
 	{ c.size() } -> convertible_to<size_t>;
-		requires is_printable<typename iterator_traits<typename T::const_iterator>::value_type>;
+	requires is_printable<typename iterator_traits<typename T::const_iterator>::value_type>;
 };
 
 
@@ -140,27 +140,26 @@ concept iterator_typedef = requires() {
 	typename iterator_traits<T>::reference;
 };
 
-template<typename Iterator>
-concept input_iterator = both_equality_comparable<Iterator, Iterator> && iterator_typedef<Iterator> 
-&& requires(Iterator it1, Iterator it2) {
-	{ *it1 } -> convertible_to<typename iterator_traits<Iterator>::value_type>;
-	{ ++it1 } -> same_as<Iterator&>;
-	{ it1++ } -> same_as<Iterator>;
+template <typename Iterator>
+concept input_iterator = both_equality_comparable<Iterator, Iterator>
+&& iterator_typedef<Iterator> && requires(Iterator it) {
+	{ *it } -> convertible_to<typename iterator_traits<Iterator>::value_type>;
+	{ ++it } -> same_as<Iterator&>;
+	{ it++ } -> same_as<Iterator>;
 };
-template<typename Iterator>
-concept forward_iterator = both_ordered_with<Iterator, Iterator> && semiregular<Iterator> && 
-input_iterator<Iterator> && requires(Iterator it1, Iterator it2) {
+template <typename Iterator>
+concept forward_iterator = both_ordered_with<Iterator, Iterator> && semiregular<Iterator>
+&& input_iterator<Iterator> && requires(Iterator it1, Iterator it2) {
 	{ (it1 - it2) } -> convertible_to<typename iterator_traits<Iterator>::difference_type>;
 };
-template<typename Iterator>
+template <typename Iterator>
 concept bidirectional_iterator = forward_iterator<Iterator> && requires(Iterator it) {
 	{ --it } -> same_as<Iterator&>;
 	{ it-- } -> same_as<Iterator>;
 };
-template<typename Iterator>
-concept random_access_iterator = bidirectional_iterator<Iterator> &&
-	requires(Iterator it1, Iterator it2, typename iterator_traits<Iterator>::difference_type n)
-{
+template <typename Iterator>
+concept random_access_iterator = bidirectional_iterator<Iterator>
+&& requires(Iterator it1, Iterator it2, typename iterator_traits<Iterator>::difference_type n) {
 	{ it1 + n } -> convertible_to<Iterator>;
 	{ n + it1 } -> convertible_to<Iterator>;
 	{ it1 - n } -> convertible_to<Iterator>;
@@ -173,13 +172,13 @@ concept random_access_iterator = bidirectional_iterator<Iterator> &&
 
 
 template <typename, typename = void>
-constexpr bool is_iterator_with_cate_v = false;
+constexpr bool __is_iterator_with_cate_v = false;
 template <typename Iterator>
-constexpr bool is_iterator_with_cate_v<Iterator, void_t<iter_cat_t<Iterator>>> = true;
+constexpr bool __is_iterator_with_cate_v<Iterator, void_t<iter_cat_t<Iterator>>> = true;
 
 
 template <typename Iterator>
-constexpr bool is_ranges_iter_v = is_iterator_with_cate_v<Iterator>;
+constexpr bool is_ranges_iter_v = __is_iterator_with_cate_v<Iterator>;
 
 template <typename Iterator>
 constexpr bool is_iter_v =
@@ -246,8 +245,8 @@ constexpr bool is_cot_iter_v =
 #ifdef MSTL_VERSION_20__
 random_access_iterator<Iterator> && 
 #endif // MSTL_VERSION_20__
-is_lvalue_reference_v<decltype(*MSTL::declval<Iterator&>())> && is_same_v<remove_cv_t<Iterator>, Iterator>
-&& is_ranges_cot_iter_v<Iterator>;
+is_lvalue_reference_v<decltype(*_MSTL declval<Iterator&>())> && is_same_v<remove_cv_t<Iterator>, Iterator>
+&& is_pod_v<iter_val_t<Iterator>> && is_ranges_cot_iter_v<Iterator>;
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_CONCEPTS_HPP__

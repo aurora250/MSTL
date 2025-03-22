@@ -114,8 +114,8 @@ public:
 
     using iterator       = array_iterator<T, Size, pointer, reference>;
     using const_iterator = array_iterator<T, Size, const_pointer, const_reference>;
-    using reverse_iterator       = MSTL::reverse_iterator<iterator>;
-    using const_reverse_iterator = MSTL::reverse_iterator<const_iterator>;
+    using reverse_iterator       = _MSTL reverse_iterator<iterator>;
+    using const_reverse_iterator = _MSTL reverse_iterator<const_iterator>;
 
 private:
     T array_[Size];
@@ -190,10 +190,10 @@ public:
     }
 
     MSTL_CONSTEXPR20 void fill(const T& _Value) {
-        MSTL::fill_n(array_, Size, _Value);
+        _MSTL fill_n(array_, Size, _Value);
     }
     MSTL_CONSTEXPR20 void swap(array& _Other) noexcept(is_nothrow_swappable_v<T>) {
-        MSTL::swap(array_, _Other.array_);
+        _MSTL swap(array_, _Other.array_);
     }
 };
 
@@ -212,8 +212,8 @@ public:
     
     using iterator               = array_iterator<T, 0, reference, pointer>;
     using const_iterator         = array_iterator<T, 0, const_reference, const_pointer>;
-    using reverse_iterator       = MSTL::reverse_iterator<iterator>;
-    using const_reverse_iterator = MSTL::reverse_iterator<const_iterator>;
+    using reverse_iterator       = _MSTL reverse_iterator<iterator>;
+    using const_reverse_iterator = _MSTL reverse_iterator<const_iterator>;
 
 private:
     conditional_t<disjunction_v<is_default_constructible<T>, is_implicitly_default_constructible<T>>,
@@ -320,7 +320,7 @@ MSTL_CONSTEXPR20 void swap(array<T, Size>& lh, array<T, Size>& rh) noexcept(noex
 
 template <class T, size_t Size>
 MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator ==(const array<T, Size>& lh, const array<T, Size>& rh) {
-    return MSTL::equal(lh.data(), lh.data() + Size, rh.data());
+    return _MSTL equal(lh.data(), lh.data() + Size, rh.data());
 }
 template <class T, size_t Size>
 MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator !=(const array<T, Size>& lh, const array<T, Size>& rh) {
@@ -328,7 +328,7 @@ MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator !=(const array<T, Size>& lh, const
 }
 template <class T, size_t Size>
 MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator <(const array<T, Size>& lh, const array<T, Size>& rh) {
-    return MSTL::lexicographical_compare(lh.data(), lh.data() + Size, rh.data(), rh.data() + Size);
+    return _MSTL lexicographical_compare(lh.data(), lh.data() + Size, rh.data(), rh.data() + Size);
 }
 template <class T, size_t Size>
 MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator >(const array<T, Size>& lh, const array<T, Size>& rh) {
@@ -357,12 +357,12 @@ MSTL_NODISCARD constexpr const T& get(const array<T, Size>& arr) noexcept {
 template <size_t Idx, class T, size_t Size>
 MSTL_NODISCARD constexpr T&& get(array<T, Size>&& arr) noexcept {
     static_assert(Idx < Size, "array index out of bounds");
-    return MSTL::move(arr[Idx]);
+    return _MSTL move(arr[Idx]);
 }
 template <size_t Idx, class T, size_t Size>
 MSTL_NODISCARD constexpr const T&& get(const array<T, Size>&& arr) noexcept {
     static_assert(Idx < Size, "array index out of bounds");
-    return MSTL::move(arr[Idx]);
+    return _MSTL move(arr[Idx]);
 }
 
 MSTL_END_NAMESPACE__

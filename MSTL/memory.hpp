@@ -8,7 +8,7 @@ MSTL_BEGIN_NAMESPACE__
 template <typename Iterator1, typename Iterator2, enable_if_t<
     is_trivially_copy_assignable_v<iter_val_t<Iterator1>>, int> = 0>
 MSTL_CONSTEXPR20 Iterator2 __uninitialized_copy_aux(Iterator1 first, Iterator1 last, Iterator2 result) {
-    return MSTL::copy(first, last, result);
+    return _MSTL copy(first, last, result);
 }
 
 template <typename Iterator1, typename Iterator2, enable_if_t<
@@ -17,16 +17,16 @@ MSTL_CONSTEXPR20 Iterator2 __uninitialized_copy_aux(Iterator1 first, Iterator1 l
     Iterator2 cur = result;
     MSTL_TRY__{
     for (; first != last; ++first, ++cur)
-        MSTL::construct(&*cur, *first);
+        _MSTL construct(&*cur, *first);
     }
-    MSTL_CATCH_UNWIND_THROW_M__(for (; result != cur; --cur) MSTL::destroy(&*cur); )
+    MSTL_CATCH_UNWIND_THROW_M__(for (; result != cur; --cur) destroy(&*cur); )
     return cur;
 }
 
 template <typename Iterator1, typename Iterator2, enable_if_t<
     is_input_iter_v<Iterator1> && is_fwd_iter_v<Iterator2>, int> = 0>
 MSTL_CONSTEXPR20 Iterator2 uninitialized_copy(Iterator1 first, Iterator1 last, Iterator2 result) {
-    return MSTL::__uninitialized_copy_aux(first, last, result);
+    return _MSTL __uninitialized_copy_aux(first, last, result);
 }
 
 
@@ -36,9 +36,9 @@ MSTL_CONSTEXPR20 pair<Iterator1, Iterator2> __uninitialized_copy_n_aux(
     Iterator2 cur = result;
     MSTL_TRY__{
         for (; count > 0; --count, ++first, ++cur)
-            MSTL::construct(&*cur, *first); 
+            _MSTL construct(&*cur, *first);
     }
-    MSTL_CATCH_UNWIND_THROW_M__(for (; result != cur; --cur) MSTL::destroy(&*cur); )
+    MSTL_CATCH_UNWIND_THROW_M__(for (; result != cur; --cur) destroy(&*cur); )
     return pair<Iterator1, Iterator2>(first, cur);
 }
 
@@ -46,21 +46,21 @@ template <typename Iterator1, typename Iterator2, enable_if_t<is_rnd_iter_v<Iter
 MSTL_CONSTEXPR20 pair<Iterator1, Iterator2> __uninitialized_copy_n_aux(
     Iterator1 first, size_t count, Iterator2 result) {
     Iterator1 last = first + count;
-    return MSTL::make_pair(last, MSTL::uninitialized_copy(first, last, result));
+    return _MSTL make_pair(last, _MSTL uninitialized_copy(first, last, result));
 }
 
 template <typename Iterator1, typename Iterator2, enable_if_t<
     is_input_iter_v<Iterator1> && is_fwd_iter_v<Iterator2>, int> = 0>
 MSTL_CONSTEXPR20 pair<Iterator1, Iterator2> uninitialized_copy_n(
     Iterator1 first, size_t count, Iterator2 result) {
-    return MSTL::__uninitialized_copy_n_aux(first, count, result);
+    return _MSTL __uninitialized_copy_n_aux(first, count, result);
 }
 
 
 template <typename Iterator, typename T, enable_if_t<
     is_trivially_copy_assignable_v<iter_val_t<Iterator>>, int> = 0>
 MSTL_CONSTEXPR20 void __uninitialized_fill_aux(Iterator first, Iterator last, const T& x) {
-    MSTL::fill(first, last, x);
+    _MSTL fill(first, last, x);
 }
 
 template <typename Iterator, typename T, enable_if_t<
@@ -69,21 +69,21 @@ MSTL_CONSTEXPR20 void __uninitialized_fill_aux(Iterator first, Iterator last, co
     Iterator cur = first;
     MSTL_TRY__{
         for (; cur != last; ++cur)
-            MSTL::construct(&*cur, x);
+            _MSTL construct(&*cur, x);
     }
-    MSTL_CATCH_UNWIND_THROW_M__(for (; cur != first; --cur) MSTL::destroy(&*cur); )
+    MSTL_CATCH_UNWIND_THROW_M__(for (; cur != first; --cur) destroy(&*cur); )
 }
 
 template <typename Iterator, typename T, enable_if_t<is_fwd_iter_v<Iterator>, int> = 0>
 MSTL_CONSTEXPR20 void uninitialized_fill(Iterator first, Iterator last, const T& x) {
-    MSTL::__uninitialized_fill_aux(first, last, x);
+    _MSTL __uninitialized_fill_aux(first, last, x);
 }
 
 
 template <typename Iterator, typename T, enable_if_t<
     is_trivially_copy_assignable_v<iter_val_t<Iterator>>, int> = 0>
 MSTL_CONSTEXPR20 Iterator __uninitialized_fill_n_aux(Iterator first, size_t n, const T& x) {
-    return MSTL::fill_n(first, n, x);
+    return _MSTL fill_n(first, n, x);
 }
 
 template <typename Iterator, typename T, enable_if_t<
@@ -92,22 +92,22 @@ MSTL_CONSTEXPR20 Iterator __uninitialized_fill_n_aux(Iterator first, size_t n, c
     Iterator cur = first;
     MSTL_TRY__{
         for (; n > 0; --n, ++cur)
-            MSTL::construct(&*cur, x);
+            _MSTL construct(&*cur, x);
     }
-    MSTL_CATCH_UNWIND_THROW_M__(for (; cur != first; --cur) MSTL::destroy(&*cur); )
+    MSTL_CATCH_UNWIND_THROW_M__(for (; cur != first; --cur) destroy(&*cur); )
     return cur;
 }
 
 template <typename Iterator, typename T, enable_if_t<is_fwd_iter_v<Iterator>, int> = 0>
 MSTL_CONSTEXPR20 Iterator uninitialized_fill_n(Iterator first, size_t n, const T& x) {
-    return MSTL::__uninitialized_fill_n_aux(first, n, x);
+    return _MSTL __uninitialized_fill_n_aux(first, n, x);
 }
 
 
 template <typename Iterator1, typename Iterator2, enable_if_t<
     is_trivially_copy_assignable_v<iter_val_t<Iterator1>>, int> = 0>
 MSTL_CONSTEXPR20 Iterator2 __uninitialized_move_aux(Iterator1 first, Iterator1 last, Iterator2 result) {
-    return MSTL::move(first, last, result);
+    return _MSTL move(first, last, result);
 }
 
 template <typename Iterator1, typename Iterator2, enable_if_t<
@@ -116,16 +116,16 @@ MSTL_CONSTEXPR20 Iterator2 __uninitialized_move_aux(Iterator1 first, Iterator1 l
     Iterator2 cur = result;
     MSTL_TRY__{
         for (; first != last; ++first, ++cur)
-            MSTL::construct(&*cur, MSTL::move(*first));
+            _MSTL construct(&*cur, _MSTL move(*first));
     }
-    MSTL_CATCH_UNWIND_THROW_M__(for (; result != cur; --cur) MSTL::destroy(&*cur); )
+    MSTL_CATCH_UNWIND_THROW_M__(for (; result != cur; --cur) destroy(&*cur); )
     return cur;
 }
 
 template <typename Iterator1, typename Iterator2, enable_if_t<
     is_input_iter_v<Iterator1> && is_fwd_iter_v<Iterator2>, int> = 0>
 MSTL_CONSTEXPR20 Iterator2 uninitialized_move(Iterator1 first, Iterator1 last, Iterator2 result) {
-    return MSTL::__uninitialized_move_aux(first, last, result);
+    return _MSTL __uninitialized_move_aux(first, last, result);
 }
 
 
@@ -135,9 +135,9 @@ MSTL_CONSTEXPR20 pair<Iterator1, Iterator2> __uninitialized_move_n_aux(
     Iterator2 cur = result;
     MSTL_TRY__{
         for (; count > 0; --count, ++first, ++cur)
-            MSTL::construct(&*cur, MSTL::move(*first));
+            _MSTL construct(&*cur, _MSTL move(*first));
     }
-    MSTL_CATCH_UNWIND_THROW_M__(for (; result != cur; --cur) MSTL::destroy(&*cur); )
+    MSTL_CATCH_UNWIND_THROW_M__(for (; result != cur; --cur) destroy(&*cur); )
     return pair<Iterator1, Iterator2>(first, cur);
 }
 
@@ -145,14 +145,14 @@ template <typename Iterator1, typename Iterator2, enable_if_t<is_rnd_iter_v<Iter
 MSTL_CONSTEXPR20 pair<Iterator1, Iterator2> __uninitialized_move_n_aux(
     Iterator1 first, size_t count, Iterator2 result) {
     Iterator1 last = first + count;
-    return MSTL::make_pair(last, MSTL::uninitialized_move(first, last, result));
+    return _MSTL make_pair(last, _MSTL uninitialized_move(first, last, result));
 }
 
 template <typename Iterator1, typename Iterator2, enable_if_t<
     is_input_iter_v<Iterator1> && is_fwd_iter_v<Iterator2>, int> = 0>
 MSTL_CONSTEXPR20 pair<Iterator1, Iterator2> uninitialized_move_n(
     Iterator1 first, size_t count, Iterator2 result) {
-    return MSTL::__uninitialized_move_n_aux(first, count, result);
+    return _MSTL __uninitialized_move_n_aux(first, count, result);
 }
 
 
@@ -180,7 +180,7 @@ private:
     MSTL_CONSTEXPR20 void initialize_buffer(const U&) {}
     template <typename U = T, enable_if_t<!is_trivially_copy_assignable_v<U>, int> = 0>
     MSTL_CONSTEXPR20 void initialize_buffer(const U& val) {
-        MSTL::uninitialized_fill_n(buffer_, len_, val);
+        _MSTL uninitialized_fill_n(buffer_, len_, val);
     }
 
 public:
@@ -193,14 +193,14 @@ public:
     void operator =(const temporary_buffer&) = delete;
     MSTL_CONSTEXPR20 temporary_buffer(Iterator first, Iterator last) {
         MSTL_TRY__{
-            len_ = MSTL::distance(first, last);
+            len_ = _MSTL distance(first, last);
             allocate_buffer();
             if (len_ > 0) initialize_buffer(*first);
         }
         MSTL_CATCH_UNWIND_THROW_M__(std::free(buffer_); buffer_ = 0; len_ = 0);
     }
     MSTL_CONSTEXPR20 ~temporary_buffer() {
-        MSTL::destroy(buffer_, buffer_ + len_);
+        _MSTL destroy(buffer_, buffer_ + len_);
         std::free(buffer_);
     }
 };
@@ -249,7 +249,7 @@ struct pointer_traits<T*> {
     using rebind = U*;
 
     MSTL_NODISCARD static constexpr pointer pointer_to(reference x) noexcept {
-        return MSTL::addressof(x);
+        return _MSTL addressof(x);
     }
 };
 
@@ -346,9 +346,9 @@ MSTL_DECLALLOC MSTL_CONSTEXPR20 void* __allocate_aux(const size_t bytes) {
 #ifdef MSTL_VERSION_17__
 template <size_t Align, enable_if_t<(Align > MEMORY_ALIGN_THRESHHOLD) ,int> = 0>
 MSTL_DECLALLOC MSTL_CONSTEXPR20 void* __allocate_dispatch(const size_t bytes) {
-    size_t align = MSTL::max(Align, MEMORY_BIG_ALLOC_ALIGN);
+    size_t align = _MSTL max(Align, MEMORY_BIG_ALLOC_ALIGN);
 #if defined(MSTL_COMPILE_CLANG__) && defined(MSTL_VERSION_20__)
-    if (MSTL::is_constant_evaluated())
+    if (MSTL_ is_constant_evaluated())
         return ::operator new(bytes);
     else
 #endif
@@ -356,7 +356,7 @@ MSTL_DECLALLOC MSTL_CONSTEXPR20 void* __allocate_dispatch(const size_t bytes) {
 }
 template <size_t Align, enable_if_t<Align <= MEMORY_ALIGN_THRESHHOLD, int> = 0>
 MSTL_DECLALLOC MSTL_CONSTEXPR20 void* __allocate_dispatch(const size_t bytes) {
-    return MSTL::__allocate_aux<Align>(bytes);
+    return _MSTL __allocate_aux<Align>(bytes);
 }
 #endif
 
@@ -364,14 +364,14 @@ template <size_t Align>
 MSTL_DECLALLOC MSTL_CONSTEXPR20 void* allocate(const size_t bytes) {
     if (bytes == 0) return nullptr;
 #if MSTL_VERSION_20__
-    if (MSTL::is_constant_evaluated())
+    if (_MSTL is_constant_evaluated())
         return ::operator new(bytes);
 #endif // MSTL_VERSION_20__
 
 #ifdef MSTL_VERSION_17__
-    return MSTL::__allocate_dispatch<Align>(bytes);
+    return _MSTL __allocate_dispatch<Align>(bytes);
 #else
-    return MSTL::__allocate_aux<Align>(bytes);
+    return MSTL_ __allocate_aux<Align>(bytes);
 #endif // MSTL_VERSION_17__
 }
 
@@ -405,7 +405,7 @@ MSTL_CONSTEXPR20 void __deallocate_aux(void* ptr, size_t bytes) noexcept {
 #ifdef MSTL_VERSION_17__
 template <size_t Align, enable_if_t<(Align > MEMORY_ALIGN_THRESHHOLD), int> = 0>
 MSTL_CONSTEXPR20 void __deallocate_dispatch(void* ptr, const size_t bytes) noexcept {
-    size_t align = MSTL::max(Align, MEMORY_BIG_ALLOC_ALIGN);
+    size_t align = _MSTL max(Align, MEMORY_BIG_ALLOC_ALIGN);
 #ifdef MSTL_PLATFORM_LINUX__
     ::operator delete(ptr, std::align_val_t{ align });
 #else
@@ -414,29 +414,29 @@ MSTL_CONSTEXPR20 void __deallocate_dispatch(void* ptr, const size_t bytes) noexc
 }
 template <size_t Align, enable_if_t<Align <= MEMORY_ALIGN_THRESHHOLD, int> = 0>
 MSTL_CONSTEXPR20 void __deallocate_dispatch(void* ptr, const size_t bytes) noexcept {
-    MSTL::__deallocate_aux<Align>(ptr, bytes);
+    _MSTL __deallocate_aux<Align>(ptr, bytes);
 }
 #endif // MSTL_VERSION_17__
 
 template <size_t Align>
 MSTL_CONSTEXPR20 void deallocate(void* ptr, size_t bytes) noexcept {
 #if MSTL_VERSION_20__
-    if (MSTL::is_constant_evaluated()) {
+    if (_MSTL is_constant_evaluated()) {
         ::operator delete(ptr);
         return;
     }
 #endif // MSTL_VERSION_20__
 
 #ifdef MSTL_VERSION_17__
-    MSTL::__deallocate_dispatch<Align>(ptr, bytes);
+    _MSTL __deallocate_dispatch<Align>(ptr, bytes);
 #else
-    MSTL::__deallocate_aux<Align>(ptr, bytes);
+    MSTL_ __deallocate_aux<Align>(ptr, bytes);
 #endif // MSTL_VERSION_17__
 }
 
 
 template <typename T>
-constexpr size_t FINAL_ALIGN_SIZE = MSTL::max(alignof(T), MEMORY_ALIGN_THRESHHOLD);
+constexpr size_t FINAL_ALIGN_SIZE = _MSTL max(alignof(T), MEMORY_ALIGN_THRESHHOLD);
 
 
 template <typename T>
@@ -469,7 +469,7 @@ public:
         static_assert(value_size > 0, "value type must be complete before allocation called.");
         const size_t alloc_size = value_size * n;
         MSTL_DEBUG_VERIFY__(alloc_size <= INT_MAX_SIZE, "allocation will cause memory overflow.");
-        return static_cast<T*>(MSTL::allocate<FINAL_ALIGN_SIZE<T>>(alloc_size));
+        return static_cast<T*>(_MSTL allocate<FINAL_ALIGN_SIZE<T>>(alloc_size));
     }
     MSTL_ALLOCNODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate() {
         return allocate(1);
@@ -477,7 +477,7 @@ public:
     static MSTL_CONSTEXPR20 void deallocate(pointer p, const size_type n) noexcept {
         constexpr size_t value_size = sizeof(value_type);
         MSTL_DEBUG_VERIFY__(p != nullptr || n == 0, "pointer invalid.");
-        MSTL::deallocate<FINAL_ALIGN_SIZE<T>>(p, n * value_size);
+        _MSTL deallocate<FINAL_ALIGN_SIZE<T>>(p, n * value_size);
     }
     static MSTL_CONSTEXPR20 void deallocate(pointer p) noexcept {
         deallocate(p, 1);
@@ -645,7 +645,7 @@ public:
     using pointer = typename inner_ptr<T, Deleter>::type;
 
 private:
-    MSTL::tuple<pointer, Deleter> tup{};
+    _MSTL tuple<pointer, Deleter> tup{};
 
     static_assert(!is_rvalue_reference_v<Deleter>,
         "deleter type of unique_ptr must be a function object type or an lvalue reference type");
@@ -656,21 +656,21 @@ public:
 
     template <typename Del>
     MSTL_CONSTEXPR23 __unique_ptr_impl(pointer ptr, Del&& del)
-	: tup(ptr, MSTL::forward<Del>(del)) {}
+	: tup(ptr, _MSTL forward<Del>(del)) {}
 
     MSTL_CONSTEXPR23 __unique_ptr_impl(__unique_ptr_impl&& ptr) noexcept
-    : tup(MSTL::move(ptr.tup)) { ptr.get_ptr() = nullptr; }
+    : tup(_MSTL move(ptr.tup)) { ptr.get_ptr() = nullptr; }
 
     MSTL_CONSTEXPR23 __unique_ptr_impl& operator =(__unique_ptr_impl&& x) noexcept {
 	    reset(x.release());
-	    get_deleter() = MSTL::forward<Deleter>(x.get_deleter());
+	    get_deleter() = _MSTL forward<Deleter>(x.get_deleter());
 	    return *this;
     }
 
-    MSTL_CONSTEXPR23 pointer& get_ptr() noexcept { return MSTL::get<0>(tup); }
-    MSTL_CONSTEXPR23 pointer get_ptr() const noexcept { return MSTL::get<0>(tup); }
-    MSTL_CONSTEXPR23 Deleter& get_deleter() noexcept { return MSTL::get<1>(tup); }
-    MSTL_CONSTEXPR23 const Deleter& get_deleter() const noexcept { return MSTL::get<1>(tup); }
+    MSTL_CONSTEXPR23 pointer& get_ptr() noexcept { return _MSTL get<0>(tup); }
+    MSTL_CONSTEXPR23 pointer get_ptr() const noexcept { return _MSTL get<0>(tup); }
+    MSTL_CONSTEXPR23 Deleter& get_deleter() noexcept { return _MSTL get<1>(tup); }
+    MSTL_CONSTEXPR23 const Deleter& get_deleter() const noexcept { return _MSTL get<1>(tup); }
 
     MSTL_CONSTEXPR23 void reset(pointer ptr) noexcept {
 	    const pointer old = get_ptr();
@@ -686,8 +686,8 @@ public:
     }
 
     MSTL_CONSTEXPR23 void swap(__unique_ptr_impl& x) noexcept {
-	    MSTL::swap(get_ptr(), x.get_ptr());
-	    MSTL::swap(get_deleter(), x.get_deleter());
+	    _MSTL swap(get_ptr(), x.get_ptr());
+	    _MSTL swap(get_deleter(), x.get_deleter());
     }
 };
 
@@ -702,7 +702,7 @@ struct __unique_ptr_data : __unique_ptr_impl<T, Deleter> {
     MSTL_CONSTEXPR23 __unique_ptr_data(pointer ptr) : base_type(ptr) {}
 
     template <typename Del>
-    MSTL_CONSTEXPR23 __unique_ptr_data(pointer ptr, Del&& del) : base_type(ptr, MSTL::forward<Del>(del)) {}
+    MSTL_CONSTEXPR23 __unique_ptr_data(pointer ptr, Del&& del) : base_type(ptr, _MSTL forward<Del>(del)) {}
 
     __unique_ptr_data(__unique_ptr_data&&) = default;
     __unique_ptr_data& operator =(__unique_ptr_data&&) = default;
@@ -717,7 +717,7 @@ struct __unique_ptr_data<T, Deleter, true, false> : __unique_ptr_impl<T, Deleter
     MSTL_CONSTEXPR23 __unique_ptr_data(pointer ptr) : base_type(ptr) {}
 
     template <typename Del>
-    MSTL_CONSTEXPR23 __unique_ptr_data(pointer ptr, Del&& del) : base_type(ptr, MSTL::forward<Del>(del)) {}
+    MSTL_CONSTEXPR23 __unique_ptr_data(pointer ptr, Del&& del) : base_type(ptr, _MSTL forward<Del>(del)) {}
 
     __unique_ptr_data(__unique_ptr_data&&) = default;
     __unique_ptr_data& operator =(__unique_ptr_data&&) = delete;
@@ -732,7 +732,7 @@ struct __unique_ptr_data<T, Deleter, false, true> : __unique_ptr_impl<T, Deleter
     MSTL_CONSTEXPR23 __unique_ptr_data(pointer ptr) : base_type(ptr) {}
 
     template <typename Del>
-    MSTL_CONSTEXPR23 __unique_ptr_data(pointer ptr, Del&& del) : base_type(ptr, MSTL::forward<Del>(del)) {}
+    MSTL_CONSTEXPR23 __unique_ptr_data(pointer ptr, Del&& del) : base_type(ptr, _MSTL forward<Del>(del)) {}
 
     __unique_ptr_data(__unique_ptr_data&&) = delete;
     __unique_ptr_data& operator =(__unique_ptr_data&&) = default;
@@ -747,7 +747,7 @@ struct __unique_ptr_data<T, Deleter, false, false> : __unique_ptr_impl<T, Delete
     MSTL_CONSTEXPR23 __unique_ptr_data(pointer ptr) : base_type(ptr) {}
 
     template <typename Del>
-    MSTL_CONSTEXPR23 __unique_ptr_data(pointer ptr, Del&& del) : base_type(ptr, MSTL::forward<Del>(del)) {}
+    MSTL_CONSTEXPR23 __unique_ptr_data(pointer ptr, Del&& del) : base_type(ptr, _MSTL forward<Del>(del)) {}
 
     __unique_ptr_data(__unique_ptr_data&&) = delete;
     __unique_ptr_data& operator =(__unique_ptr_data&&) = delete;
@@ -780,7 +780,7 @@ public:
     MSTL_CONSTEXPR23 unique_ptr(pointer ptr, const deleter_type& del) noexcept : data_(ptr, del) {}
 
     template <typename Del = deleter_type, enable_if_t<is_move_constructible_v<Del>, int> = 0>
-    MSTL_CONSTEXPR23 unique_ptr(pointer ptr, Del&& del) noexcept : data_(ptr, MSTL::move(del)) {}
+    MSTL_CONSTEXPR23 unique_ptr(pointer ptr, Del&& del) noexcept : data_(ptr, _MSTL move(del)) {}
 
     template<typename Del = deleter_type, typename DelMoveRef = remove_reference_t<Del>>
     MSTL_CONSTEXPR23 unique_ptr(pointer, enable_if_t<is_lvalue_reference_v<Del>, DelMoveRef&&>) = delete;
@@ -793,13 +793,13 @@ public:
     template <typename U, typename E, enable_if_t<conjunction_v<safe_conversion<U, E>,
         conditional_t<is_reference_v<Deleter>, is_same<E, Deleter>, is_convertible<E, Deleter>>>, int> = 0>
     MSTL_CONSTEXPR23 unique_ptr(unique_ptr<U, E>&& x) noexcept
-	    : data_(x.release(), MSTL::forward<E>(x.get_deleter())) {}
+	    : data_(x.release(), _MSTL forward<E>(x.get_deleter())) {}
 
     ~unique_ptr() noexcept {
 	    static_assert(is_invocable_v<deleter_type&, pointer>, "deleter of unique_ptr must be invocable with a pointer");
 	    auto& ptr = data_.get_ptr();
 	    if (ptr != nullptr)
-	        get_deleter()(MSTL::move(ptr));
+	        get_deleter()(_MSTL move(ptr));
 	    ptr = pointer();
     }
 
@@ -809,7 +809,7 @@ public:
         safe_conversion<U, E>, is_assignable<deleter_type&, E&&>>, int> = 0>
 	MSTL_CONSTEXPR23 unique_ptr& operator =(unique_ptr<U, E>&& x) noexcept {
 	    reset(x.release());
-	    get_deleter() = MSTL::forward<E>(x.get_deleter());
+	    get_deleter() = _MSTL forward<E>(x.get_deleter());
 	    return *this;
 	}
 
@@ -819,12 +819,12 @@ public:
     }
 
     MSTL_CONSTEXPR23 add_lvalue_reference_t<element_type> operator *() const
-    noexcept(noexcept(*MSTL::declval<pointer>())) {
-	    MSTL_DEBUG_VERIFY__(get() != pointer(), "MSTL::add_lvalue_reference_t<element_type> failed");
+    noexcept(noexcept(*_MSTL declval<pointer>())) {
+	    MSTL_DEBUG_VERIFY__(get() != pointer(), "MSTL_ add_lvalue_reference_t<element_type> failed");
 	    return *get();
     }
     MSTL_CONSTEXPR23 pointer operator ->() const noexcept {
-	    MSTL_DEBUG_VERIFY__(get() != pointer(), "MSTL::operator->() failed");
+	    MSTL_DEBUG_VERIFY__(get() != pointer(), "MSTL_ operator->() failed");
 	    return get();
     }
 
@@ -840,7 +840,7 @@ public:
     MSTL_CONSTEXPR23 void reset(pointer ptr = pointer()) noexcept {
 	    static_assert(is_invocable_v<deleter_type&, pointer>,
 	        "deleter of unique_ptr must be invocable with a pointer");
-	    data_.reset(MSTL::move(ptr));
+	    data_.reset(_MSTL move(ptr));
     }
 
     MSTL_CONSTEXPR23 void swap(unique_ptr& x) noexcept {
@@ -886,7 +886,7 @@ public:
     template <typename U, typename Del = deleter_type,
         enable_if_t<conjunction_v<safe_conversion_raw<U>, is_move_constructible<Del>>, int> = 0>
     MSTL_CONSTEXPR23 unique_ptr(U ptr, enable_if_t<!is_lvalue_reference_v<Del>, Del&&> del) noexcept
-    	: data_(MSTL::move(ptr), MSTL::move(del)) {}
+    	: data_(_MSTL move(ptr), _MSTL move(del)) {}
 
     template <typename U, typename Del = deleter_type, typename DelMoveRef = remove_reference_t<Del>,
         enable_if_t<safe_conversion_raw<U>::value, int> = 0>
@@ -900,7 +900,7 @@ public:
     template <typename U, typename E, enable_if_t<conjunction_v<safe_conversion<U, E>,
 	       conditional_t<is_reference_v<Deleter>, is_same<E, Deleter>, is_convertible<E, Deleter>>>, int> = 0>
     MSTL_CONSTEXPR23 unique_ptr(unique_ptr<U, E>&& x) noexcept
-	    : data_(x.release(), MSTL::forward<E>(x.get_deleter())) {}
+	    : data_(x.release(), _MSTL forward<E>(x.get_deleter())) {}
 
     MSTL_CONSTEXPR20 ~unique_ptr() {
 	    auto& ptr = data_.get_ptr();
@@ -915,7 +915,7 @@ public:
         safe_conversion<U, E>, is_assignable<deleter_type&, E&&>, int>> = 0>
     MSTL_CONSTEXPR23 unique_ptr& operator =(unique_ptr<U, E>&& x) noexcept {
 	    reset(x.release());
-	    get_deleter() = MSTL::forward<E>(x.get_deleter());
+	    get_deleter() = _MSTL forward<E>(x.get_deleter());
 	    return *this;
 	}
 
@@ -925,7 +925,7 @@ public:
     }
 
     MSTL_CONSTEXPR23 add_lvalue_reference_t<element_type> operator [](size_t idx) const {
-	    MSTL_DEBUG_VERIFY__(get() != pointer(), "MSTL::add_lvalue_reference_t<element_type> failed");
+	    MSTL_DEBUG_VERIFY__(get() != pointer(), "MSTL_ add_lvalue_reference_t<element_type> failed");
 	    return get()[idx];
     }
 
@@ -940,7 +940,7 @@ public:
     MSTL_CONSTEXPR23 pointer release() noexcept { return data_.release(); }
     template <typename U, enable_if_t<conjunction_v<disjunction<is_same<U, pointer>, conjunction<
         is_same<pointer, element_type*>, is_pointer<U>, is_convertible<remove_pointer_t<U>(*)[],element_type(*)[]>>>>, int> = 0>
-    MSTL_CONSTEXPR23 void reset(U ptr) noexcept { data_.reset(MSTL::move(ptr)); }
+    MSTL_CONSTEXPR23 void reset(U ptr) noexcept { data_.reset(_MSTL move(ptr)); }
     MSTL_CONSTEXPR23 void reset(nullptr_t = nullptr) noexcept { reset(pointer()); }
 
     MSTL_CONSTEXPR23 void swap(unique_ptr& x) noexcept {
@@ -993,17 +993,17 @@ template <typename T, typename D, typename U, typename E>
 MSTL_NODISCARD MSTL_CONSTEXPR23 bool operator <(
     const unique_ptr<T, D>& lh, const unique_ptr<U, E>& rh) {
     using common_t = common_type_t<typename unique_ptr<T, D>::pointer, typename unique_ptr<U, E>::pointer>;
-    return MSTL::less<common_t>()(lh.get(), rh.get());
+    return _MSTL less<common_t>()(lh.get(), rh.get());
 }
 template <typename T, typename D>
 MSTL_NODISCARD MSTL_CONSTEXPR23 bool operator <(
     const unique_ptr<T, D>& lh, nullptr_t) {
-    return MSTL::less<typename unique_ptr<T, D>::pointer>()(lh.get(), nullptr);
+    return _MSTL less<typename unique_ptr<T, D>::pointer>()(lh.get(), nullptr);
 }
 template <typename T, typename D>
 MSTL_NODISCARD MSTL_CONSTEXPR23 bool operator <(
     nullptr_t, const unique_ptr<T, D>& rh) {
-    return MSTL::less<typename unique_ptr<T, D>::pointer>()(nullptr, rh.get());
+    return _MSTL less<typename unique_ptr<T, D>::pointer>()(nullptr, rh.get());
 }
 
 template <typename T, typename D, typename U, typename E>
@@ -1014,12 +1014,12 @@ MSTL_NODISCARD MSTL_CONSTEXPR23 bool operator >(
 template <typename T, typename D>
 MSTL_NODISCARD MSTL_CONSTEXPR23 bool operator >(
     const unique_ptr<T, D>& lh, nullptr_t) {
-    return MSTL::less<typename unique_ptr<T, D>::pointer>()(nullptr, lh.get());
+    return _MSTL less<typename unique_ptr<T, D>::pointer>()(nullptr, lh.get());
 }
 template <typename T, typename D>
 MSTL_NODISCARD MSTL_CONSTEXPR23 bool operator >(
     nullptr_t, const unique_ptr<T, D>& rh) {
-    return MSTL::less<typename unique_ptr<T, D>::pointer>()(rh.get(), nullptr);
+    return _MSTL less<typename unique_ptr<T, D>::pointer>()(rh.get(), nullptr);
 }
 
 template <typename T, typename D, typename U, typename E>
@@ -1057,8 +1057,8 @@ MSTL_NODISCARD MSTL_CONSTEXPR23 bool operator >=(
 template <typename T, typename Deleter>
 struct hash<unique_ptr<T, Deleter>> {
     MSTL_CONSTEXPR23 size_t operator ()(const unique_ptr<T, Deleter>& ptr) const
-    noexcept(noexcept(MSTL::declval<MSTL::hash<
-        typename unique_ptr<T, Deleter>::pointer>>()(MSTL::declval<typename unique_ptr<T, Deleter>::pointer>()))) {
+    noexcept(noexcept(_MSTL declval<_MSTL hash<
+        typename unique_ptr<T, Deleter>::pointer>>()(_MSTL declval<typename unique_ptr<T, Deleter>::pointer>()))) {
         return hash<T>()(ptr.get());
     }
 };
@@ -1066,7 +1066,7 @@ struct hash<unique_ptr<T, Deleter>> {
 
 template <class T, class... Args, enable_if_t<!(is_unbounded_array_v<T> || is_bounded_array_v<T>), int> = 0>
 unique_ptr<T> make_unique(Args&&... args) {
-    return unique_ptr<T>(new T(MSTL::forward<Args>(args)...));
+    return unique_ptr<T>(new T(_MSTL forward<Args>(args)...));
 }
 template <class T, enable_if_t<is_unbounded_array_v<T>, int> = 0>
 unique_ptr<T> make_unique(const size_t len) {
@@ -1116,7 +1116,7 @@ struct __smart_ptr_counter_impl final : __smart_ptr_counter {
     explicit __smart_ptr_counter_impl(T* ptr) noexcept : ptr_(ptr) {}
 
     explicit __smart_ptr_counter_impl(T* ptr, Deleter deleter) noexcept
-        : ptr_(ptr), deleter_(MSTL::move(deleter)) {}
+        : ptr_(ptr), deleter_(_MSTL move(deleter)) {}
 
     ~__smart_ptr_counter_impl() noexcept override {
         deleter_(ptr_);
@@ -1130,7 +1130,7 @@ struct __smart_ptr_counter_impl_fused final : __smart_ptr_counter {
     MSTL_NO_UNIADS Deleter deleter_;
 
     explicit __smart_ptr_counter_impl_fused(T* ptr, void* mem, Deleter deleter) noexcept
-        : ptr_(ptr), mem_(mem), deleter_(MSTL::move(deleter)) {}
+        : ptr_(ptr), mem_(mem), deleter_(_MSTL move(deleter)) {}
 
     ~__smart_ptr_counter_impl_fused() noexcept override {
         deleter_(ptr_);
@@ -1139,7 +1139,7 @@ struct __smart_ptr_counter_impl_fused final : __smart_ptr_counter {
     void operator delete(void* mem) noexcept {
 #if MSTL_VERSION_17__
         ::operator delete(mem, static_cast<std::align_val_t>(
-            MSTL::max(alignof(T), alignof(__smart_ptr_counter_impl_fused))));
+            _MSTL max(alignof(T), alignof(__smart_ptr_counter_impl_fused))));
 #else
         ::operator delete(mem);
 #endif
@@ -1180,15 +1180,15 @@ public:
     explicit shared_ptr(nullptr_t) noexcept {}
 
     template <class U, enable_if_t<is_convertible_v<U*, T*>, int> = 0>
-    explicit shared_ptr(U* ptr) 
+    explicit shared_ptr(U* ptr)
         : ptr_(ptr), owner_(new __smart_ptr_counter_impl<U, default_delete<U>>(ptr)) {
-        MSTL::__setup_enable_shared_from<T>(ptr_, owner_);
+        _MSTL __setup_enable_shared_from<T>(ptr_, owner_);
     }
 
     template <class U, class Deleter, enable_if_t<is_convertible_v<U*, T*>, int> = 0>
     explicit shared_ptr(U* ptr, Deleter deleter)
-        : ptr_(ptr), owner_(new __smart_ptr_counter_impl<U, Deleter>(ptr, MSTL::move(deleter))) {
-        MSTL::__setup_enable_shared_from<T>(ptr_, owner_);
+        : ptr_(ptr), owner_(new __smart_ptr_counter_impl<U, Deleter>(ptr, _MSTL move(deleter))) {
+        _MSTL __setup_enable_shared_from<T>(ptr_, owner_);
     }
 
     template <class U, class Deleter, enable_if_t<is_convertible_v<U*, T*>, int> = 0>
@@ -1199,7 +1199,7 @@ public:
         if (owner_) owner_->incref();
     }
     self& operator =(const self& x) noexcept {
-        if (MSTL::addressof(x) == this) return *this;
+        if (_MSTL addressof(x) == this) return *this;
         if (owner_) owner_->decref();
         ptr_ = x.ptr_;
         owner_ = x.owner_;
@@ -1216,7 +1216,7 @@ public:
         x.owner_ = nullptr;
     }
     self& operator =(self&& x) noexcept {
-        if (MSTL::addressof(x) == this) return *this;
+        if (_MSTL addressof(x) == this) return *this;
         if (owner_) owner_->decref();
         ptr_ = x.ptr_;
         owner_ = x.owner_;
@@ -1242,7 +1242,7 @@ public:
 
     template <class U, enable_if_t<is_convertible_v<U*, T*>, int> = 0>
     shared_ptr& operator =(const shared_ptr<U>& x) noexcept {
-        if (MSTL::addressof(x) == this) return *this;
+        if (_MSTL addressof(x) == this) return *this;
         if (owner_) owner_->decref();
         ptr_ = x.ptr_;
         owner_ = x.owner_;
@@ -1251,7 +1251,7 @@ public:
     }
     template <class U, enable_if_t<is_convertible_v<U*, T*>, int> = 0>
     shared_ptr& operator =(shared_ptr<U>&& x) noexcept {
-        if (MSTL::addressof(x) == this) return *this;
+        if (_MSTL addressof(x) == this) return *this;
         if (owner_) owner_->decref();
         ptr_ = x.ptr_;
         owner_ = x.owner_;
@@ -1276,7 +1276,7 @@ public:
         owner_ = nullptr;
         ptr_ = ptr;
         owner_ = new __smart_ptr_counter_impl<U, default_delete<U>>(ptr);
-        MSTL::__setup_enable_shared_from<T>(ptr_, owner_);
+        _MSTL __setup_enable_shared_from<T>(ptr_, owner_);
     }
     template <class U, class Deleter>
     void reset(U* ptr, Deleter deleter) {
@@ -1284,8 +1284,8 @@ public:
         ptr_ = nullptr;
         owner_ = nullptr;
         ptr_ = ptr;
-        owner_ = new __smart_ptr_counter_impl<U, Deleter>(ptr, MSTL::move(deleter));
-        MSTL::__setup_enable_shared_from<T>(ptr_, owner_);
+        owner_ = new __smart_ptr_counter_impl<U, Deleter>(ptr, _MSTL move(deleter));
+        _MSTL __setup_enable_shared_from<T>(ptr_, owner_);
     }
 
     MSTL_NODISCARD long use_count() const noexcept {
@@ -1296,9 +1296,9 @@ public:
     }
 
     void swap(shared_ptr& x) noexcept {
-        if (MSTL::addressof(x) == this) return;
-        MSTL::swap(ptr_, x.ptr_);
-        MSTL::swap(owner_, x.owner_);
+        if (_MSTL addressof(x) == this) return;
+        _MSTL swap(ptr_, x.ptr_);
+        _MSTL swap(owner_, x.owner_);
     }
 
     MSTL_NODISCARD T* get() const noexcept {
@@ -1417,7 +1417,7 @@ shared_ptr<T> make_shared(Args&&... args) {
 #endif
     T* object = reinterpret_cast<T*>(reinterpret_cast<char*>(counter) + offset);
     MSTL_TRY__{
-        new (object) T(MSTL::forward<Args>(args)...);
+        new (object) T(_MSTL forward<Args>(args)...);
     }
     MSTL_CATCH_UNWIND__{
 #if MSTL_VERSION_17__

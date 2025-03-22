@@ -22,7 +22,7 @@ private:
 
     size_t index_;
 
-    alignas(MSTL::max({ alignof(Types)... })) char union_[MSTL::max({ sizeof(Types)... })]{};
+    alignas(_MSTL max({ alignof(Types)... })) char union_[_MSTL max({ sizeof(Types)... })]{};
 
     using destruct_function = void(*)(char*);
 
@@ -62,7 +62,7 @@ private:
     static move_construct_function* move_constructors_table() noexcept {
         static move_construct_function function_ptrs[sizeof...(Types)] = {
             [](char* union_dst, const char* union_src) noexcept {
-                new (union_dst) Types(MSTL::move(*reinterpret_cast<Types const*>(union_src)));
+                new (union_dst) Types(_MSTL move(*reinterpret_cast<Types const*>(union_src)));
             }...
         };
         return function_ptrs;
@@ -73,7 +73,7 @@ private:
     static move_assignment_function* move_assigment_functions_table() noexcept {
         static move_assignment_function function_ptrs[sizeof...(Types)] = {
             [](char* union_dst, const char* union_src) noexcept {
-                *reinterpret_cast<Types*>(union_dst) = MSTL::move(*reinterpret_cast<Types*>(union_src));
+                *reinterpret_cast<Types*>(union_dst) = _MSTL move(*reinterpret_cast<Types*>(union_src));
             }...
         };
         return function_ptrs;
@@ -81,26 +81,26 @@ private:
 
     template <typename Lambda>
     using const_visitor_function = common_type_t<
-        MSTL::invoke_result_t<Lambda, Types const&>...>(*)(char const*, Lambda&&);
+        _MSTL invoke_result_t<Lambda, Types const&>...>(*)(char const*, Lambda&&);
 
     template <typename Lambda>
     static const_visitor_function<Lambda>* const_visitors_table() noexcept {
         static const_visitor_function<Lambda> function_ptrs[sizeof...(Types)] = {
-            [](char const* union_p, Lambda&& lambda) -> MSTL::invoke_result_t<Lambda, Types const&> {
-                return MSTL::invoke(MSTL::forward<Lambda>(lambda), *reinterpret_cast<Types const*>(union_p));
+            [](char const* union_p, Lambda&& lambda) -> _MSTL invoke_result_t<Lambda, Types const&> {
+                return _MSTL invoke(_MSTL forward<Lambda>(lambda), *reinterpret_cast<Types const*>(union_p));
             }...
         };
         return function_ptrs;
     }
 
     template <typename Lambda>
-    using visitor_function = common_type_t<MSTL::invoke_result_t<Lambda, Types&>...>(*)(char*, Lambda&&);
+    using visitor_function = common_type_t<_MSTL invoke_result_t<Lambda, Types&>...>(*)(char*, Lambda&&);
 
     template <typename Lambda>
     static visitor_function<Lambda>* visitors_table() noexcept {
         static visitor_function<Lambda> function_ptrs[sizeof...(Types)] = {
-            [](char* union_p, Lambda&& lambda) -> common_type_t<MSTL::invoke_result_t<Lambda, Types&>...> {
-                return MSTL::invoke(MSTL::forward<Lambda>(lambda), *reinterpret_cast<Types*>(union_p));
+            [](char* union_p, Lambda&& lambda) -> common_type_t<_MSTL invoke_result_t<Lambda, Types&>...> {
+                return _MSTL invoke(_MSTL forward<Lambda>(lambda), *reinterpret_cast<Types*>(union_p));
             }...
         };
         return function_ptrs;
@@ -118,7 +118,7 @@ public:
     noexcept(is_nothrow_move_constructible_v<T>)
     : index_(variant_index_v<variant, T>) {
         T* p = reinterpret_cast<T*>(union_);
-        new (p) T(MSTL::move(value));
+        new (p) T(_MSTL move(value));
     }
     template <typename T, enable_if_t<disjunction_v<is_same<T, Types>...>, int> = 0>
     MSTL_CONSTEXPR20 variant(const T& value)
@@ -133,7 +133,7 @@ public:
         copy_constructors_table()[index()](union_, x.union_);
     }
     MSTL_CONSTEXPR20 self& operator =(const self& x) {
-        if(MSTL::addressof(x) == this) return *this;
+        if(_MSTL addressof(x) == this) return *this;
         index_ = x.index_;
         copy_assigment_functions_table()[index()](union_, x.union_);
         return *this;
@@ -143,7 +143,7 @@ public:
         move_constructors_table()[index()](union_, x.union_);
     }
     MSTL_CONSTEXPR20 self& operator =(self&& x) noexcept {
-        if(MSTL::addressof(x) == this) return *this;
+        if(_MSTL addressof(x) == this) return *this;
         index_ = x.index_;
         move_assigment_functions_table()[index()](union_, x.union_);
         return *this;
@@ -154,7 +154,7 @@ public:
     MSTL_CONSTEXPR20 explicit variant(inplace_construct_tag, Args&&... args)
     noexcept(is_nothrow_constructible_v<variant_alternative_t<variant, Idx>, Args...>)
     : index_(Idx) {
-        new (union_) variant_alternative_t<variant, Idx>(MSTL::forward<Args>(args)...);
+        new (union_) variant_alternative_t<variant, Idx>(_MSTL forward<Args>(args)...);
     }
 
     template <size_t Idx, typename U, typename... Args,
@@ -162,23 +162,23 @@ public:
     MSTL_CONSTEXPR20 explicit variant(inplace_construct_tag, std::initializer_list<U> ilist, Args&&... args)
     noexcept(is_nothrow_constructible_v<variant_alternative_t<variant, Idx>, std::initializer_list<U>&, Args...>)
     : index_(Idx) {
-        new (union_) variant_alternative_t<variant, Idx>(ilist, MSTL::forward<Args>(args)...);
+        new (union_) variant_alternative_t<variant, Idx>(ilist, _MSTL forward<Args>(args)...);
     }
 
 #ifdef MSTL_VERSION_20__
     template <typename... Args, enable_if_t<disjunction_v<is_constructible<Types, Args...>...>, int> = 0>
     variant(Args&&... args) {
-        static auto construct = [&]<size_t... Idx>(MSTL::index_sequence<Idx...>) {
+        static auto construct = [&]<size_t... Idx>(_MSTL index_sequence<Idx...>) {
             ((is_constructible_v<variant_alternative_t<variant, Idx>, Args...> && [&]() {
                 if constexpr (is_constructible_v<variant_alternative_t<variant, Idx>, Args...>) {
                     index_ = Idx;
-                    new (union_) variant_alternative_t<variant, Idx>(MSTL::forward<Args>(args)...);
+                    new (union_) variant_alternative_t<variant, Idx>(_MSTL forward<Args>(args)...);
                     return true;
                 }
                 return false;
             }()) || ...);
         };
-        construct(MSTL::make_index_sequence<sizeof...(Types)>{});
+        construct(_MSTL make_index_sequence<sizeof...(Types)>{});
     }
 #endif
 
@@ -190,13 +190,13 @@ public:
         enable_if_t<conjunction_v<is_invocable<Lambda, Types&>...>, int> = 0>
     MSTL_CONSTEXPR20 common_type_t<invoke_result_t<Lambda, Types&>...> visit(Lambda&& lambda)
     noexcept(conjunction_v<is_nothrow_invocable<Lambda, Types&>...>) {
-        return visitors_table<Lambda>()[index()](union_, MSTL::forward<Lambda>(lambda));
+        return visitors_table<Lambda>()[index()](union_, _MSTL forward<Lambda>(lambda));
     }
     template <typename Lambda,
         enable_if_t<conjunction_v<is_invocable<Lambda, const Types&>...>, int> = 0>
     MSTL_CONSTEXPR20 common_type_t<invoke_result_t<Lambda, const Types&>...> visit(Lambda&& lambda) const
     noexcept(conjunction_v<is_nothrow_invocable<Lambda, const Types&>...>) {
-        return const_visitors_table<Lambda>()[index()](union_, MSTL::forward<Lambda>(lambda));
+        return const_visitors_table<Lambda>()[index()](union_, _MSTL forward<Lambda>(lambda));
     }
 
     MSTL_NODISCARD MSTL_CONSTEXPR20  size_t index() const noexcept {
@@ -251,21 +251,21 @@ public:
     noexcept(is_nothrow_constructible_v<variant_alternative_t<variant, Idx>, Args...>) {
         destructors_table()[index()](union_);
         index_ = Idx;
-        new (union_) variant_alternative_t<variant, Idx>(MSTL::forward<Args>(args)...);
+        new (union_) variant_alternative_t<variant, Idx>(_MSTL forward<Args>(args)...);
     }
 
     template <typename T, typename... Args, enable_if_t<is_constructible_v<T, Args...>, int> = 0>
     MSTL_CONSTEXPR20 void emplace(Args&&... args)
     noexcept(is_nothrow_constructible_v<T, Args...>) {
-        emplace<variant_index_v<variant, T>>(MSTL::forward<Args>(args)...);
+        emplace<variant_index_v<variant, T>>(_MSTL forward<Args>(args)...);
     }
 
     MSTL_CONSTEXPR20 void swap(variant& x) noexcept {
-        if (MSTL::addressof(x) == this) return;
+        if (_MSTL addressof(x) == this) return;
 
         size_t this_index = index_;
         const size_t other_index = x.index_;
-        alignas(MSTL::max({ alignof(Types)... })) char temp_union[MSTL::max({ sizeof(Types)... })];
+        alignas(_MSTL max({ alignof(Types)... })) char temp_union[_MSTL max({ sizeof(Types)... })];
         move_constructors_table()[this_index](reinterpret_cast<char*>(temp_union), union_);
         destructors_table()[this_index](union_);
 
@@ -371,36 +371,36 @@ MSTL_CONSTEXPR20 const T* get_if(const variant<Types...>* v) noexcept {
 
 template <typename Lambda, typename... Types>
 MSTL_CONSTEXPR20 decltype(auto) visit(Lambda&& lambda, variant<Types...>& var)
-noexcept(noexcept(static_cast<variant<Types...>&>(var).visit(MSTL::forward<Lambda>(lambda)))) {
+noexcept(noexcept(static_cast<variant<Types...>&>(var).visit(_MSTL forward<Lambda>(lambda)))) {
     using variant_type = variant<Types...>;
-    return static_cast<variant_type&>(var).visit(MSTL::forward<Lambda>(lambda));
+    return static_cast<variant_type&>(var).visit(_MSTL forward<Lambda>(lambda));
 }
 template <typename Lambda, typename... Types>
 MSTL_CONSTEXPR20 decltype(auto) visit(Lambda&& lambda, const variant<Types...>& var)
-noexcept(noexcept(static_cast<const variant<Types...>&>(var).visit(MSTL::forward<Lambda>(lambda)))) {
+noexcept(noexcept(static_cast<const variant<Types...>&>(var).visit(_MSTL forward<Lambda>(lambda)))) {
     using variant_type = variant<Types...>;
-    return static_cast<const variant_type&>(var).visit(MSTL::forward<Lambda>(lambda));
+    return static_cast<const variant_type&>(var).visit(_MSTL forward<Lambda>(lambda));
 }
 template <typename Lambda, typename... Types>
 MSTL_CONSTEXPR20 decltype(auto) visit(Lambda&& lambda, variant<Types...>&& var)
-noexcept(noexcept(static_cast<variant<Types...>&&>(var).visit(MSTL::forward<Lambda>(lambda)))) {
+noexcept(noexcept(static_cast<variant<Types...>&&>(var).visit(_MSTL forward<Lambda>(lambda)))) {
     using variant_type = variant<Types...>;
-    return static_cast<variant_type&&>(var).visit(MSTL::forward<Lambda>(lambda));
+    return static_cast<variant_type&&>(var).visit(_MSTL forward<Lambda>(lambda));
 }
 template <typename Lambda, typename... Types>
 MSTL_CONSTEXPR20 decltype(auto) visit(Lambda&& lambda, const variant<Types...>&& var)
-noexcept(noexcept(static_cast<const variant<Types...>&&>(var).visit(MSTL::forward<Lambda>(lambda)))){
+noexcept(noexcept(static_cast<const variant<Types...>&&>(var).visit(_MSTL forward<Lambda>(lambda)))){
     using variant_type = variant<Types...>;
-    return static_cast<const variant_type&&>(var).visit(MSTL::forward<Lambda>(lambda));
+    return static_cast<const variant_type&&>(var).visit(_MSTL forward<Lambda>(lambda));
 }
 
 template <typename... Types>
-struct hash<MSTL::variant<Types...>> {
+struct hash<_MSTL variant<Types...>> {
     static constexpr auto hasher = [](const auto& value) -> size_t {
         return hash<decay_t<decltype(value)>>{}(value);
     };
 
-    MSTL_CONSTEXPR20 size_t operator()(const MSTL::variant<Types...>& var) const
+    MSTL_CONSTEXPR20 size_t operator()(const _MSTL variant<Types...>& var) const
     noexcept(noexcept(var.visit(hasher))) {
         return var.visit(hasher);
     }

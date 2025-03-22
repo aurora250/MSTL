@@ -10,15 +10,15 @@ constexpr U&& __invoke_forward(remove_reference_t<T>& t) noexcept {
 
 template <typename Res, typename F, typename... Args>
 constexpr Res __invoke_dispatch(invoke_other_tag, F&& f, Args&&... args) {
-    return MSTL::forward<F>(f)(MSTL::forward<Args>(args)...);
+    return _MSTL forward<F>(f)(_MSTL forward<Args>(args)...);
 }
 template <typename Res, typename MemFun, typename T, typename... Args>
 constexpr Res __invoke_dispatch(invoke_memfun_ref_tag, MemFun&& f, T&& t, Args&&... args) {
-    return (__invoke_forward<T>(t).*f)(MSTL::forward<Args>(args)...);
+    return (__invoke_forward<T>(t).*f)(_MSTL forward<Args>(args)...);
 }
 template <typename Res, typename MemFun, typename T, typename... Args>
 constexpr Res __invoke_dispatch(invoke_memfun_deref_tag, MemFun&& f, T&& t, Args&&... args){
-    return (*MSTL::forward<T>(t).*f)(MSTL::forward<Args>(args)...);
+    return (*_MSTL forward<T>(t).*f)(_MSTL forward<Args>(args)...);
 }
 template <typename Res, typename MemPtr, typename T>
 constexpr Res __invoke_dispatch(invoke_memobj_ref_tag, MemPtr&& f, T&& t) {
@@ -26,7 +26,7 @@ constexpr Res __invoke_dispatch(invoke_memobj_ref_tag, MemPtr&& f, T&& t) {
 }
 template <typename Res, typename MemPtr, typename T>
 constexpr Res __invoke_dispatch(invoke_memobj_deref_tag, MemPtr&& f, T&& t) {
-    return *MSTL::forward<T>(t).*f;
+    return *_MSTL forward<T>(t).*f;
 }
 
 template <typename Callable, typename... Args>
@@ -36,8 +36,8 @@ noexcept(is_nothrow_invocable<Callable, Args...>::value) {
     using result = __invoke_result_aux<Callable, Args...>;
     using type = typename result::type;
     using tag = typename result::invoke_type;
-    return MSTL::__invoke_dispatch<type>(tag{},
-        MSTL::forward<Callable>(f), MSTL::forward<Args>(args)...);
+    return _MSTL __invoke_dispatch<type>(tag{},
+        _MSTL forward<Callable>(f), _MSTL forward<Args>(args)...);
 }
 
 template <typename Res, typename Callable, typename... Args>
@@ -48,45 +48,45 @@ noexcept(is_nothrow_invocable_v<Callable, Args...>) {
     using type = typename result::type;
     using tag = typename result::invoke_type;
     MSTL_IF_CONSTEXPR (is_void_v<Res>) {
-        MSTL::__invoke_dispatch<type>(tag{},
-            MSTL::forward<Callable>(f), MSTL::forward<Args>(args)...);
+        _MSTL __invoke_dispatch<type>(tag{},
+            _MSTL forward<Callable>(f), _MSTL forward<Args>(args)...);
         return;
     }
     else
-        return MSTL::__invoke_dispatch<type>(tag{},
-            MSTL::forward<Callable>(f), MSTL::forward<Args>(args)...);
+        return _MSTL __invoke_dispatch<type>(tag{},
+            _MSTL forward<Callable>(f), _MSTL forward<Args>(args)...);
 }
 
 
 template <template <typename...> class, typename, typename>
-MSTL_INLINECSP constexpr bool __apply_unpack_tuple_v = false;
+MSTL_INLINE17 constexpr bool __apply_unpack_tuple_v = false;
 
 template <template <typename...> class Trait, typename T, typename... U>
-MSTL_INLINECSP constexpr bool __apply_unpack_tuple_v<Trait, T, tuple<U...>> = Trait<T, U...>::value;
+MSTL_INLINE17 constexpr bool __apply_unpack_tuple_v<Trait, T, tuple<U...>> = Trait<T, U...>::value;
 
 template <template <typename...> class Trait, typename T, typename... U>
-MSTL_INLINECSP constexpr bool __apply_unpack_tuple_v<Trait, T, tuple<U...>&> = Trait<T, U&...>::value;
+MSTL_INLINE17 constexpr bool __apply_unpack_tuple_v<Trait, T, tuple<U...>&> = Trait<T, U&...>::value;
 
 template <template <typename...> class Trait, typename T, typename... U>
-MSTL_INLINECSP constexpr bool __apply_unpack_tuple_v<Trait, T, const tuple<U...>> = Trait<T, const U...>::value;
+MSTL_INLINE17 constexpr bool __apply_unpack_tuple_v<Trait, T, const tuple<U...>> = Trait<T, const U...>::value;
 
 template<template<typename...> class Trait, typename T, typename... U>
-MSTL_INLINECSP constexpr bool __apply_unpack_tuple_v<Trait, T, const tuple<U...>&> = Trait<T, const U&...>::value;
+MSTL_INLINE17 constexpr bool __apply_unpack_tuple_v<Trait, T, const tuple<U...>&> = Trait<T, const U&...>::value;
 
 template <template <typename...> class Trait, typename T, typename Tuple>
 struct __apply_unpack_tuple : bool_constant<__apply_unpack_tuple_v<Trait, T, Tuple>> {};
 
 
 template <typename F, typename Tuple, size_t... Idx>
-constexpr decltype(auto) __apply_impl(F&& f, Tuple&& t, MSTL::index_sequence<Idx...>) {
-    return MSTL::invoke(MSTL::forward<F>(f), MSTL::get<Idx>(MSTL::forward<Tuple>(t))...);
+constexpr decltype(auto) __apply_impl(F&& f, Tuple&& t, _MSTL index_sequence<Idx...>) {
+    return _MSTL invoke(_MSTL forward<F>(f), _MSTL get<Idx>(_MSTL forward<Tuple>(t))...);
 }
 
 template <typename F, typename Tuple>
 constexpr decltype(auto) apply(F&& f, Tuple&& t)
-noexcept(__apply_unpack_tuple<MSTL::is_nothrow_invocable, F, Tuple>::value) {
+noexcept(__apply_unpack_tuple<_MSTL is_nothrow_invocable, F, Tuple>::value) {
     using Indices = make_index_sequence<tuple_size_v<remove_reference_t<Tuple>>>;
-    return MSTL::__apply_impl(MSTL::forward<F>(f), MSTL::forward<Tuple>(t), Indices{});
+    return _MSTL __apply_impl(_MSTL forward<F>(f), _MSTL forward<Tuple>(t), Indices{});
 }
 
 
@@ -139,7 +139,7 @@ public:
 		static F* get_pointer(const storage_data& src) noexcept {
 			MSTL_IF_CONSTEXPR (stored_) {
 				const F& f = src.access<F>();
-				return const_cast<F*>(MSTL::addressof(f));
+				return const_cast<F*>(_MSTL addressof(f));
 			}
 			else
 				return src.access<F*>();
@@ -148,11 +148,11 @@ public:
     private:
 		template <typename Fn>
 		static void create(storage_data& data, Fn&& f, true_type) {
-			::new(data.access()) F(MSTL::forward<Fn>(f));
+			::new(data.access()) F(_MSTL forward<Fn>(f));
 		}
 		template <typename Fn>
 		static void create(storage_data& data, Fn&& f, false_type) {
-			data.access<F*>() = new F(MSTL::forward<Fn>(f));
+			data.access<F*>() = new F(_MSTL forward<Fn>(f));
 		}
 
 		static void destroy(storage_data& data, true_type) {
@@ -184,11 +184,11 @@ public:
 		template <typename Fn>
     	static void init_func(storage_data& func, Fn&& f)
 		noexcept(conjunction_v<storage_, is_nothrow_constructible<F, Fn>>) {
-			__manager_base::create(func, MSTL::forward<Fn>(f), storage_());
+			__manager_base::create(func, _MSTL forward<Fn>(f), storage_());
 		}
 
 		template <typename Sign>
-		static bool not_empty_function(const MSTL::function<Sign>& f) noexcept {
+		static bool not_empty_function(const _MSTL function<Sign>& f) noexcept {
 			return static_cast<bool>(f);
 		}
 		template <typename T>
@@ -245,7 +245,7 @@ public:
 	}
 
 	static Res invoke(const storage_data& f, Args&&... args) {
-      	return MSTL::invoke_r<Res>(*base_type::get_pointer(f), MSTL::forward<Args>(args)...);
+      	return _MSTL invoke_r<Res>(*base_type::get_pointer(f), _MSTL forward<Args>(args)...);
 	}
 
 	template <typename Fn>
@@ -314,7 +314,7 @@ public:
 
 		using handler = handler_t<F>;
 		if (handler::not_empty_function(f)) {
-			handler::init_func(func_, MSTL::forward<F>(f));
+			handler::init_func(func_, _MSTL forward<F>(f));
 			invoker_ = &handler::invoke;
 			manager_ = &handler::manage;
 	    }
@@ -325,7 +325,7 @@ public:
 		return *this;
 	}
 	function& operator =(function&& x) noexcept {
-		function(MSTL::move(x)).swap(*this);
+		function(_MSTL move(x)).swap(*this);
 		return *this;
 	}
 	function& operator =(nullptr_t) noexcept {
@@ -339,7 +339,7 @@ public:
 
 	template <typename F, enable_if_t<callable_t<F>::value, int> = 0>
 	function& operator =(F&& f) noexcept(handler_t<F>::template _S_nothrow_init<F>()) {
-		function(MSTL::forward<F>(f)).swap(*this);
+		function(_MSTL forward<F>(f)).swap(*this);
 		return *this;
 	}
 	template <typename F>
@@ -349,16 +349,16 @@ public:
 	}
 
 	void swap(function& x) noexcept {
-		MSTL::swap(func_, x.func_);
-		MSTL::swap(manager_, x.manager_);
-		MSTL::swap(invoker_, x.invoker_);
+		_MSTL swap(func_, x.func_);
+		_MSTL swap(manager_, x.manager_);
+		_MSTL swap(invoker_, x.invoker_);
 	}
 
 	explicit operator bool() const noexcept { return !empty(); }
 
 	Res operator ()(Args&&... args) const {
 		if (empty()) Exception(MemoryError("pointer null."));
-		return invoker_(func_, MSTL::forward<Args>(args)...);
+		return invoker_(func_, _MSTL forward<Args>(args)...);
 	}
 
 	MSTL_NODISCARD const std::type_info& target_type() const noexcept {

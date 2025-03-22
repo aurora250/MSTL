@@ -52,10 +52,10 @@ public:
 	self& operator =(const self& x) = default;
 
 	set(self&& x) noexcept(is_nothrow_move_constructible_v<base_type>)
-		: tree_(MSTL::move(x.tree_)) {}
+		: tree_(_MSTL move(x.tree_)) {}
 
 	self& operator =(self&& x) noexcept(noexcept(swap(x))) {
-		tree_ = MSTL::move(x.tree_);
+		tree_ = _MSTL move(x.tree_);
 		return *this;
 	}
 
@@ -98,24 +98,24 @@ public:
 
 	template <typename... Args>
 	pair<iterator, bool> emplace(Args&&... args) {
-		return tree_.emplace_unique(MSTL::forward<Args>(args)...);
+		return tree_.emplace_unique(_MSTL forward<Args>(args)...);
 	}
 	pair<iterator, bool> insert(const value_type& x) {
 		return tree_.insert_unique(x);
 	}
 	pair<iterator, bool> insert(value_type&& x) {
-		return tree_.insert_unique(MSTL::move(x));
+		return tree_.insert_unique(_MSTL move(x));
 	}
 
 	template <typename... Args>
 	iterator emplace_hint(iterator position, Args&&... args) {
-		return tree_.emplace_unique_hint(position, MSTL::forward<Args>(args)...);
+		return tree_.emplace_unique_hint(position, _MSTL forward<Args>(args)...);
 	}
 	iterator insert(iterator position, const value_type& x) {
 		return tree_.insert_unique(position, x);
 	}
 	iterator insert(iterator position, value_type&& x) {
-		return tree_.insert_unique(position, MSTL::move(x));
+		return tree_.insert_unique(position, _MSTL move(x));
 	}
 
 	template <typename Iterator>
@@ -252,11 +252,11 @@ public:
 	self& operator =(const self& x) = default;
 
 	multiset(self&& x) noexcept(is_nothrow_move_constructible_v<base_type>)
-		: tree_(MSTL::move(x.tree_)) {
+		: tree_(_MSTL move(x.tree_)) {
 	}
 
 	self& operator =(self&& x) noexcept(noexcept(swap(x))) {
-		tree_ = MSTL::move(x.tree_);
+		tree_ = _MSTL move(x.tree_);
 		return *this;
 	}
 
@@ -299,24 +299,24 @@ public:
 
 	template <typename... Args>
 	iterator emplace(Args&&... args) {
-		return tree_.emplace_equal(MSTL::forward<Args>(args)...);
+		return tree_.emplace_equal(_MSTL forward<Args>(args)...);
 	}
 	iterator insert(const value_type& x) {
 		return tree_.insert_equal(x);
 	}
 	iterator insert(value_type&& x) {
-		return tree_.insert_equal(MSTL::move(x));
+		return tree_.insert_equal(_MSTL move(x));
 	}
 
 	template <typename... Args>
 	iterator emplace_hint(iterator position, Args&&... args) {
-		return tree_.emplace_equal_hint(position, MSTL::forward<Args>(args)...);
+		return tree_.emplace_equal_hint(position, _MSTL forward<Args>(args)...);
 	}
 	iterator insert(iterator position, const value_type& x) {
 		return tree_.insert_equal(position, x);
 	}
 	iterator insert(iterator position, value_type&& x) {
-		return tree_.insert_equal(position, MSTL::move(x));
+		return tree_.insert_equal(position, _MSTL move(x));
 	}
 
 	template <typename Iterator>

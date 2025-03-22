@@ -72,10 +72,6 @@ C++ 14 17 20
 
 定义常用的约束。
 
-- [bitmap.hpp](/MSTL/bitmap.hpp)
-
-定义位图类。(未完成)
-
 - [mathlib.h](/MSTL/mathlib.h)
 
 定义常用的constexpr的数学函数。
@@ -127,6 +123,10 @@ C++ 14 17 20
 - [deque.hpp](/MSTL/deque.hpp)
 
 定义双端队列类deque。
+
+- [bitmap.hpp](/MSTL/bitmap.hpp)
+
+定义位图类，但不将其作为vector的bool特化。
 
 - [vector.hpp](/MSTL/vector.hpp)
 
@@ -288,10 +288,6 @@ Define functors and functor adapters (Deprecated).
 
 Define commonly used concepts.
 
-- [bitmap.hpp](/MSTL/bitmap.hpp)
-
-Define bitmap (Unfinished).
-
 - [mathlib.h](/MSTL/mathlib.h)
 
 Define commonly used math functions with constexpr property.
@@ -343,6 +339,10 @@ Define list type.
 - [deque.hpp](/MSTL/deque.hpp)
 
 Define deque type.
+
+- [bitmap.hpp](/MSTL/bitmap.hpp)
+
+Define bitmap type, but don't specialize it as bool for vector type.
 
 - [vector.hpp](/MSTL/vector.hpp)
 

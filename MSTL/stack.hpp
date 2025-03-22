@@ -26,7 +26,7 @@ public:
     stack() = default;
     explicit stack(const Sequence& seq) : seq_(seq) {}
     explicit stack(Sequence&& seq) noexcept(is_nothrow_move_constructible_v<Sequence>) 
-        : seq_(MSTL::move(seq)) {}
+        : seq_(_MSTL move(seq)) {}
     ~stack() = default;
 
     MSTL_NODISCARD size_type size() const noexcept(noexcept(seq_.size())) { return seq_.size(); }
@@ -36,15 +36,15 @@ public:
     MSTL_NODISCARD const_reference top() const noexcept(noexcept(seq_.back())) { return seq_.back(); }
 
     template <typename... Args>
-    decltype(auto) emplace(Args&&... args) { return seq_.emplace(MSTL::forward<Args>(args)...); }
+    decltype(auto) emplace(Args&&... args) { return seq_.emplace(_MSTL forward<Args>(args)...); }
 
     void push(const value_type& x) { seq_.push_back(x); }
-    void push(value_type&& x) { seq_.push_back(MSTL::move(x)); }
+    void push(value_type&& x) { seq_.push_back(_MSTL move(x)); }
 
     void pop() noexcept(noexcept(seq_.pop_back())) { seq_.pop_back(); }
 
     void swap(self& x) noexcept(is_nothrow_swappable_v<Sequence>) {
-        MSTL::swap(seq_, x.seq_);
+        _MSTL swap(seq_, x.seq_);
     }
 
     MSTL_NODISCARD const Sequence& get_container() const noexcept { return seq_; }

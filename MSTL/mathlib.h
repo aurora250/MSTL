@@ -1,6 +1,6 @@
 #ifndef MSTL_MATHLIB_H__
 #define MSTL_MATHLIB_H__
-#include "errorlib.h"
+#include "errorlib.hpp"
 #include "type_traits.hpp"
 MSTL_BEGIN_NAMESPACE__
 
@@ -93,7 +93,7 @@ constexpr T gcd(T m, T n) noexcept { // greatest common divisor
 }
 template <typename T, enable_if_t<is_integral_v<T> && is_unsigned_v<T>, int> = 0>
 constexpr T lcm(T m, T n) noexcept { // least common multiple
-	return m * n / MSTL::gcd(m, n);
+	return m * n / _MSTL gcd(m, n);
 }
 
 inline mathld_t float_mod(const mathld_t x, const mathld_t y) {
@@ -105,7 +105,7 @@ inline mathld_t float_mod(const mathld_t x, const mathld_t y) {
 template <typename T>
 constexpr T square(T x) noexcept { return x * x; }
 template <typename T>
-constexpr T cube(T x) noexcept { return MSTL::square(x) * x; }
+constexpr T cube(T x) noexcept { return _MSTL square(x) * x; }
 
 template <typename T, enable_if_t<is_integral_v<T>, int> = 0>
 constexpr mathl_t power(T x, mathui_t n) noexcept {

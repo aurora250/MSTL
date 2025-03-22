@@ -1,7 +1,7 @@
 #ifndef MSTL_ITERATOR_HPP__
 #define MSTL_ITERATOR_HPP__
 #include "concepts.hpp"
-#include "errorlib.h"
+#include "errorlib.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator>
@@ -32,7 +32,7 @@ constexpr iter_ptr_t<Iterator> __to_pointer_aux(Iterator iter) {
 }
 template <typename Iterator>
 constexpr iter_ptr_t<Iterator> to_pointer(Iterator iter) {
-    return MSTL::__to_pointer_aux(iter);
+    return MSTL_ __to_pointer_aux(iter);
 }
 #else
 template <typename Iterator>
@@ -62,7 +62,7 @@ MSTL_CONSTEXPR17 void __advance_aux(Iterator& i, Distance n, std::input_iterator
 }
 template <typename Iterator, typename Distance, enable_if_t<is_iter_v<Iterator>, int> = 0>
 MSTL_CONSTEXPR17 void advance(Iterator& i, Distance n) {
-    MSTL::__advance_aux(i, n, iter_cat_t<Iterator>());
+    MSTL_ __advance_aux(i, n, iter_cat_t<Iterator>());
 }
 #else
 template <typename Iterator, typename Distance, enable_if_t<is_iter_v<Iterator>, int> = 0>
@@ -86,12 +86,12 @@ MSTL_CONSTEXPR17 void advance(Iterator& i, Distance n) {
 
 template <typename Iterator>
 MSTL_CONSTEXPR17 Iterator prev(Iterator iter, iter_dif_t<Iterator> n = -1) {
-    MSTL::advance(iter, n);
+    _MSTL advance(iter, n);
     return iter;
 }
 template <typename Iterator>
 MSTL_CONSTEXPR17 Iterator next(Iterator iter, iter_dif_t<Iterator> n = 1) {
-    MSTL::advance(iter, n);
+    _MSTL advance(iter, n);
     return iter;
 }
 
@@ -111,7 +111,7 @@ MSTL_CONSTEXPR17 iter_dif_t<Iterator> __distance_aux(
 }
 template <typename Iterator, enable_if_t<is_iter_v<Iterator>, int> = 0>
 MSTL_CONSTEXPR17 iter_dif_t<Iterator> distance(Iterator first, Iterator last) {
-    return MSTL::__distance_aux(first, last, iter_cat_t<Iterator>());
+    return MSTL_ __distance_aux(first, last, iter_cat_t<Iterator>());
 }
 #else
 template <typename Iterator, enable_if_t<is_iter_v<Iterator>, int> = 0>
@@ -138,13 +138,13 @@ public:
     using self              = back_insert_iterator<Container>;
 
     constexpr explicit back_insert_iterator(Container& x) noexcept
-        : container(MSTL::addressof(x)) {}
+        : container(_MSTL addressof(x)) {}
     constexpr self& operator =(const typename Container::value_type& value) {
         container->push_back(value);
         return *this;
     }
     constexpr self& operator =(typename Container::value_type&& value) {
-        container->push_back(MSTL::move(value));
+        container->push_back(_MSTL move(value));
         return *this;
     }
     MSTL_NODISCARD constexpr self& operator *() noexcept { return *this; }
@@ -170,13 +170,13 @@ public:
     using self              = front_insert_iterator<Container>;
 
     constexpr explicit front_insert_iterator(Container& x) noexcept
-        : container(MSTL::addressof(x)) {}
+        : container(_MSTL addressof(x)) {}
     constexpr self& operator =(const typename Container::value_type& value) {
         container->push_front(value);
         return *this;
     }
     constexpr self& operator =(typename Container::value_type&& value) {
-        container->push_front(MSTL::move(value));
+        container->push_front(_MSTL move(value));
         return *this;
     }
     MSTL_NODISCARD constexpr self& operator *() noexcept { return *this; }
@@ -202,14 +202,14 @@ public:
     using self              = insert_iterator<Container>;
 
     constexpr insert_iterator(Container& x, typename Container::iterator it) noexcept
-        : container(MSTL::addressof(x)), iter(MSTL::move(it)) {}
+        : container(_MSTL addressof(x)), iter(_MSTL move(it)) {}
     constexpr self& operator =(const typename Container::value_type& value) {
         iter = container->insert(iter, value);
         ++iter;
         return *this;
     }
     constexpr self& operator =(typename Container::value_type&& value) {
-        iter = container->insert(iter, MSTL::move(value));
+        iter = container->insert(iter, _MSTL move(value));
         ++iter;
         return *this;
     }
@@ -248,7 +248,7 @@ public:
 
     constexpr explicit reverse_iterator(Iterator x)
         noexcept(is_nothrow_move_constructible_v<Iterator>)
-        : current(MSTL::move(x)) {}
+        : current(_MSTL move(x)) {}
 
     template <typename U>
 #ifdef MSTL_VERSION_20__
@@ -275,12 +275,12 @@ public:
     }
 
     MSTL_NODISCARD constexpr reference operator *() const
-        noexcept(is_nothrow_copy_assignable_v<Iterator> && noexcept(*--(MSTL::declval<Iterator&>()))) {
+        noexcept(is_nothrow_copy_assignable_v<Iterator> && noexcept(*--(_MSTL declval<Iterator&>()))) {
         Iterator iter = current;
         return *--iter;
     }
     MSTL_NODISCARD constexpr pointer operator ->() const
-        noexcept(is_nothrow_copy_constructible_v<Iterator> && noexcept(--(MSTL::declval<Iterator&>()))
+        noexcept(is_nothrow_copy_constructible_v<Iterator> && noexcept(--(_MSTL declval<Iterator&>()))
             && is_nothrow_arrow<Iterator&, pointer>)
 #ifdef MSTL_VERSION_20__
         requires (is_pointer_v<Iterator> || requires(const Iterator it) { it.operator->(); })
@@ -288,7 +288,7 @@ public:
     {
         Iterator tmp = current;
         --tmp;
-        return MSTL::to_pointer(tmp);
+        return _MSTL to_pointer(tmp);
     }
 
     constexpr self& operator ++()
@@ -334,7 +334,7 @@ public:
     }
 
     constexpr reference operator[](const difference_type n) const
-        noexcept(noexcept(MSTL::declcopy<reference>(self(current - n)))) {
+        noexcept(noexcept(_MSTL declcopy<reference>(self(current - n)))) {
         return *(*this + n);
     }
 
@@ -345,7 +345,7 @@ public:
 template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD constexpr bool operator ==(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
-    noexcept(noexcept(MSTL::declcopy<bool>(x.get_current() == y.get_current()))) 
+    noexcept(noexcept(_MSTL declcopy<bool>(x.get_current() == y.get_current()))) 
 #ifdef MSTL_VERSION_20__
     requires requires { { x.get_current() == y.get_current() } -> convertible_to<bool>; }
 #endif // MSTL_VERSION_20__
@@ -355,7 +355,7 @@ MSTL_NODISCARD constexpr bool operator ==(
 template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD constexpr bool operator !=(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
-    noexcept(noexcept(MSTL::declcopy<bool>(x.get_current() != y.get_current())))
+    noexcept(noexcept(_MSTL declcopy<bool>(x.get_current() != y.get_current())))
 #ifdef MSTL_VERSION_20__
     requires requires { { x.get_current() != y.get_current() } -> convertible_to<bool>; }
 #endif // MSTL_VERSION_20__
@@ -365,7 +365,7 @@ MSTL_NODISCARD constexpr bool operator !=(
 template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD constexpr bool operator <(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
-    noexcept(noexcept(MSTL::declcopy<bool>(x.get_current() > y.get_current())))
+    noexcept(noexcept(_MSTL declcopy<bool>(x.get_current() > y.get_current())))
 #ifdef MSTL_VERSION_20__
     requires requires { { x.get_current() > y.get_current() } -> convertible_to<bool>; }
 #endif
@@ -375,7 +375,7 @@ MSTL_NODISCARD constexpr bool operator <(
 template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD constexpr bool operator >(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
-    noexcept(noexcept(MSTL::declcopy<bool>(x.get_current() < y.get_current())))
+    noexcept(noexcept(_MSTL declcopy<bool>(x.get_current() < y.get_current())))
 #ifdef MSTL_VERSION_20__
     requires requires { { x.get_current() < y.get_current() } -> convertible_to<bool>; }
 #endif // MSTL_VERSION_20__
@@ -385,7 +385,7 @@ MSTL_NODISCARD constexpr bool operator >(
 template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD constexpr bool operator <=(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
-    noexcept(noexcept(MSTL::declcopy<bool>(x.get_current() >= y.get_current())))
+    noexcept(noexcept(_MSTL declcopy<bool>(x.get_current() >= y.get_current())))
 #ifdef MSTL_VERSION_20__
     requires requires { { x.get_current() >= y.get_current() } -> convertible_to<bool>; }
 #endif // MSTL_VERSION_20__
@@ -395,7 +395,7 @@ MSTL_NODISCARD constexpr bool operator <=(
 template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD constexpr bool operator >=(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
-    noexcept(noexcept(MSTL::declcopy<bool>(x.get_current() <= y.get_current())))
+    noexcept(noexcept(_MSTL declcopy<bool>(x.get_current() <= y.get_current())))
 #ifdef MSTL_VERSION_20__
     requires requires { { x.get_current() <= y.get_current() } -> convertible_to<bool>; }
 #endif // MSTL_VERSION_20__
@@ -418,7 +418,7 @@ constexpr reverse_iterator<Iterator> operator +(
 template <typename Iterator>
 MSTL_NODISCARD constexpr reverse_iterator<Iterator> 
 make_reverse_iterator(Iterator it) noexcept(is_nothrow_move_constructible_v<Iterator>) {
-    return reverse_iterator<Iterator>(MSTL::move(it));
+    return reverse_iterator<Iterator>(_MSTL move(it));
 }
 
 MSTL_END_NAMESPACE__

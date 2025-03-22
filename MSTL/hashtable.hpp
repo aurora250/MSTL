@@ -47,7 +47,7 @@ struct hashtable_iterator {
     friend struct hashtable_iterator;
 
 public:
-    using hashtable         = MSTL::hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+    using hashtable         = _MSTL hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
     using iterator          = hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
     using const_iterator    = hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
     using node              = __hashtable_node<Value>;
@@ -69,7 +69,7 @@ public:
 
     hashtable_iterator(const iterator& it) : cur_(it.cur_), ht_(it.ht_) {}
     self& operator =(const iterator& it) {
-        if(MSTL::addressof(it) == this) return *this;
+        if(_MSTL addressof(it) == this) return *this;
         cur_ = it.cur_;
         ht_ = it.ht_;
         return *this;
@@ -80,7 +80,7 @@ public:
         it.ht_ = nullptr;
     }
     self& operator =(iterator&& it) noexcept {
-        if(MSTL::addressof(it) == this) return *this;
+        if(_MSTL addressof(it) == this) return *this;
         cur_ = it.cur_;
         ht_ = it.ht_;
         it.cur_ = nullptr;
@@ -91,7 +91,7 @@ public:
     hashtable_iterator(const const_iterator& it)
         : cur_(const_cast<node*>(it.cur_)), ht_(const_cast<hashtable*>(it.ht_)) {}
     self& operator =(const const_iterator& it) {
-        if(MSTL::addressof(it) == this) return *this;
+        if(_MSTL addressof(it) == this) return *this;
         cur_ = const_cast<node*>(it.cur_);
         ht_ = const_cast<hashtable*>(it.ht_);
         return *this;
@@ -103,7 +103,7 @@ public:
         it.ht_ = nullptr;
     }
     self& operator =(const_iterator&& it) {
-        if(MSTL::addressof(it) == this) return *this;
+        if(_MSTL addressof(it) == this) return *this;
         cur_ = const_cast<node*>(it.cur_);
         ht_ = const_cast<hashtable*>(it.ht_);
         it.cur_ = nullptr;
@@ -177,7 +177,7 @@ public:
 
     hashtable_const_iterator(const const_iterator& it) : cur_(it.cur_), ht_(it.ht_) {}
     self& operator =(const const_iterator& it) {
-        if(MSTL::addressof(it) == this) return *this;
+        if(_MSTL addressof(it) == this) return *this;
         cur_ = it.cur_;
         ht_ = it.ht_;
         return *this;
@@ -188,7 +188,7 @@ public:
         it.ht_ = nullptr;
     }
     self& operator =(const_iterator&& it) noexcept {
-        if(MSTL::addressof(it) == this) return *this;
+        if(_MSTL addressof(it) == this) return *this;
         cur_ = it.cur_;
         ht_ = it.ht_;
         it.cur_ = nullptr;
@@ -199,7 +199,7 @@ public:
     hashtable_const_iterator(const iterator& it)
         : cur_(const_cast<const node*>(it.cur_)), ht_(const_cast<const hashtable*>(it.ht_)) {}
     self& operator =(const iterator& it) {
-        if(MSTL::addressof(it) == this) return *this;
+        if(_MSTL addressof(it) == this) return *this;
         cur_ = const_cast<const node*>(it.cur_);
         ht_ = const_cast<const hashtable*>(it.ht_);
         return *this;
@@ -211,7 +211,7 @@ public:
         it.ht_ = nullptr;
     }
     self& operator =(iterator&& it) {
-        if(MSTL::addressof(it) == this) return *this;
+        if(_MSTL addressof(it) == this) return *this;
         cur_ = const_cast<const node*>(it.cur_);
         ht_ = const_cast<const hashtable*>(it.ht_);
         it.cur_ = nullptr;
@@ -285,7 +285,7 @@ static constexpr size_t HASH_PRIME_LIST[HASH_PRIMER_COUNT] = {
 MSTL_NODISCARD inline size_t hashtable_next_prime(size_t n) {
     const size_t* first = HASH_PRIME_LIST;
     const size_t* last = HASH_PRIME_LIST + HASH_PRIMER_COUNT;
-    const size_t* pos = MSTL::lower_bound(first, last, n);
+    const size_t* pos = _MSTL lower_bound(first, last, n);
     return pos == last ? *(last - 1) : *pos;
 }
 
@@ -305,7 +305,7 @@ static constexpr uint32_t HASH_PRIME_LIST[HASH_PRIMER_COUNT] = {
 MSTL_NODISCARD inline size_t hashtable_next_prime(size_t n) {
     const uint32_t* first = HASH_PRIME_LIST;
     const uint32_t* last = HASH_PRIME_LIST + HASH_PRIMER_COUNT;
-    const uint32_t* pos = MSTL::lower_bound(first, last, n);
+    const uint32_t* pos = MSTL_ lower_bound(first, last, n);
     return pos == last ? size_t(*(last - 1)) : size_t(*pos);
 }
 
@@ -368,13 +368,13 @@ private:
         node_type* n = pair_.get_base().allocate();
         n->next_ = nullptr;
         MSTL_TRY__{
-            MSTL::construct(&n->data_, MSTL::forward<Args>(args)...);
+            _MSTL construct(&n->data_, _MSTL forward<Args>(args)...);
         }
         MSTL_CATCH_UNWIND_THROW_U__(delete_node(n));
         return n;
     }
     void delete_node(node_type* n) noexcept {
-        MSTL::destroy(&n->data_);
+        _MSTL destroy(&n->data_);
         pair_.get_base().deallocate(n);
     }
 
@@ -472,7 +472,7 @@ private:
     template <typename Iterator, enable_if_t<
         is_fwd_iter_v<Iterator>, int> = 0>
     void insert_unique_aux(Iterator first, Iterator last) {
-        size_type n = MSTL::distance(first, last);
+        size_type n = _MSTL distance(first, last);
         rehash(size_ + n);
         for (; n > 0; --n, ++first) {
             node_type* tmp = (new_node)(*first);
@@ -490,7 +490,7 @@ private:
     template <typename Iterator, enable_if_t<
         is_fwd_iter_v<Iterator>, int> = 0>
     void insert_equal_aux(Iterator first, Iterator last) {
-        size_type n = MSTL::distance(first, last);
+        size_type n = _MSTL distance(first, last);
         rehash(size_ + n);
         for (; n > 0; --n, ++first) {
             node_type* tmp = (new_node)(*first);
@@ -519,7 +519,7 @@ public:
         copy_from(ht);
     }
     self& operator =(const self& ht) {
-        if (MSTL::addressof(ht) == this) return *this;
+        if (_MSTL addressof(ht) == this) return *this;
         clear();
         hasher_ = ht.hasher_;
         equals_ = ht.equals_;
@@ -532,7 +532,7 @@ public:
         swap(ht);
     }
     self& operator =(self&& ht) noexcept(noexcept(swap(ht))) {
-        if (MSTL::addressof(ht) == this) return *this;
+        if (_MSTL addressof(ht) == this) return *this;
         clear();
         swap(ht);
         return *this;
@@ -627,19 +627,19 @@ public:
     }
 
     void reserve(size_type max_count) {
-        rehash(static_cast<size_type>(MSTL::ceil(static_cast<float>(max_count) / pair_.value, 0)));
+        rehash(static_cast<size_type>(_MSTL ceil(static_cast<float>(max_count) / pair_.value, 0)));
     }
 
     template <typename... Args>
     pair<iterator, bool> emplace_unique(Args&&... args) {
         rehash(size_ + 1);
-        node_type* node = (new_node)(MSTL::forward<Args>(args)...);
+        node_type* node = (new_node)(_MSTL forward<Args>(args)...);
         return (insert_unique_noresize)(node);
     }
     template <typename... Args>
     iterator emplace_equal(Args&&... args) {
         rehash(size_ + 1);
-        node_type* node = (new_node)(MSTL::forward<Args>(args)...);
+        node_type* node = (new_node)(_MSTL forward<Args>(args)...);
         return (insert_equal_noresize)(node);
     }
 
@@ -647,13 +647,13 @@ public:
         return (emplace_unique)(x);
     }
     pair<iterator, bool> insert_unique(value_type&& x) {
-        return (emplace_unique)(MSTL::move(x));
+        return (emplace_unique)(_MSTL move(x));
     }
     iterator insert_equal(const value_type& x) {
         return (emplace_equal)(x);
     }
     iterator insert_equal(value_type&& x) {
-        return (emplace_equal)(MSTL::move(x));
+        return (emplace_equal)(_MSTL move(x));
     }
 
     template <typename Iterator, enable_if_t<is_iter_v<Iterator>, int> = 0>
@@ -767,12 +767,12 @@ public:
     }
 
     void swap(self& ht) noexcept(is_nothrow_swappable_v<HashFcn> && is_nothrow_swappable_v<EqualKey>) {
-        if (MSTL::addressof(ht) == this) return;
-        MSTL::swap(hasher_, ht.hasher_);
-        MSTL::swap(equals_, ht.equals_);
-        MSTL::swap(extracter_, ht.extracter_);
+        if (_MSTL addressof(ht) == this) return;
+        _MSTL swap(hasher_, ht.hasher_);
+        _MSTL swap(equals_, ht.equals_);
+        _MSTL swap(extracter_, ht.extracter_);
         buckets_.swap(ht.buckets_);
-        MSTL::swap(size_, ht.size_);
+        _MSTL swap(size_, ht.size_);
         pair_.swap(ht.pair_);
     }
 

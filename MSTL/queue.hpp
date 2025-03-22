@@ -28,7 +28,7 @@ public:
     queue() = default;
     explicit queue(const Sequence& x) : seq_(x) {}
     explicit queue(Sequence&& x) noexcept(is_nothrow_move_constructible_v<Sequence>)
-        : seq_(MSTL::move(x)) {}
+        : seq_(_MSTL move(x)) {}
     ~queue() = default;
 
     MSTL_NODISCARD size_type size() const noexcept(noexcept(seq_.size())) { return seq_.size(); }
@@ -40,15 +40,15 @@ public:
     MSTL_NODISCARD const_reference back() const noexcept(noexcept(seq_.back())) { return seq_.back(); }
 
     void push(const T& x) { seq_.push_back(x); }
-    void push(T&& x) { seq_.push_back(MSTL::move(x)); }
+    void push(T&& x) { seq_.push_back(_MSTL move(x)); }
 
     void pop() noexcept(noexcept(seq_.pop_front())) { seq_.pop_front(); }
 
     template <typename... Args>
-    decltype(auto) emplace(Args&&... args) { return seq_.emplace_back(MSTL::forward<Args>(args)...); }
+    decltype(auto) emplace(Args&&... args) { return seq_.emplace_back(_MSTL forward<Args>(args)...); }
 
     void swap(self& x) noexcept(is_nothrow_swappable_v<Sequence>) {
-        MSTL::swap(seq_, x.seq_);
+        _MSTL swap(seq_, x.seq_);
     }
 
     MSTL_NODISCARD const Sequence& get_container() const noexcept { return seq_; }
@@ -115,7 +115,7 @@ private:
     friend void detailof(const priority_queue<T1, Sequence1, Compare1>&, std::ostream&);
 
     void make_heap_inside() {
-        MSTL::make_heap(pair_.value.begin(), pair_.value.end(), pair_.get_base());
+        _MSTL make_heap(pair_.value.begin(), pair_.value.end(), pair_.get_base());
     }
 
 public:
@@ -132,7 +132,7 @@ public:
 
     priority_queue(const Compare& comp, Sequence&& seq)
         noexcept(is_nothrow_move_constructible_v<Sequence> && is_nothrow_copy_constructible_v<Compare>)
-        : pair_(exact_arg_construct_tag{}, comp, MSTL::move(seq)) {
+        : pair_(exact_arg_construct_tag{}, comp, _MSTL move(seq)) {
         make_heap_inside();
     }
 
@@ -164,34 +164,34 @@ public:
 
     template <typename Iterator>
     priority_queue(Iterator first, Iterator last, const Compare& comp, Sequence&& seq) 
-        : pair_(exact_arg_construct_tag{}, comp, MSTL::move(seq)) {
+        : pair_(exact_arg_construct_tag{}, comp, _MSTL move(seq)) {
         pair_.value.insert(pair_.value.end(), first, last);
         make_heap_inside();
     }
 
-    MSTL_NODISCARD bool empty() const noexcept(noexcept(MSTL::declval<Sequence>().empty())) { return pair_.value.empty(); }
-    MSTL_NODISCARD size_type size() const noexcept(noexcept(MSTL::declval<Sequence>().size())) { return pair_.value.size(); }
+    MSTL_NODISCARD bool empty() const noexcept(noexcept(_MSTL declval<Sequence>().empty())) { return pair_.value.empty(); }
+    MSTL_NODISCARD size_type size() const noexcept(noexcept(_MSTL declval<Sequence>().size())) { return pair_.value.size(); }
 
-    MSTL_NODISCARD const_reference top() const noexcept(noexcept(MSTL::declval<Sequence>().front())) { return pair_.value.front(); }
+    MSTL_NODISCARD const_reference top() const noexcept(noexcept(_MSTL declval<Sequence>().front())) { return pair_.value.front(); }
 
     void push(const value_type& x) {
         pair_.value.push_back(x);
-        MSTL::push_heap(pair_.value.begin(), pair_.value.end(), pair_.get_base());
+        _MSTL push_heap(pair_.value.begin(), pair_.value.end(), pair_.get_base());
     }
     void push(value_type&& x) {
-        pair_.value.push_back(MSTL::move(x));
-        MSTL::push_heap(pair_.value.begin(), pair_.value.end(), pair_.get_base());
+        pair_.value.push_back(_MSTL move(x));
+        _MSTL push_heap(pair_.value.begin(), pair_.value.end(), pair_.get_base());
     }
 
     void pop() {
-        MSTL::pop_heap(pair_.value.begin(), pair_.value.end(), pair_.get_base());
+        _MSTL pop_heap(pair_.value.begin(), pair_.value.end(), pair_.get_base());
         pair_.value.pop_back();
     }
 
     template <typename... Args>
     void emplace(Args&&... args) {
-        pair_.value.emplace_back(MSTL::forward<Args>(args)...);
-        MSTL::push_heap(pair_.value.begin(), pair_.value.end(), pair_.get_base());
+        pair_.value.emplace_back(_MSTL forward<Args>(args)...);
+        _MSTL push_heap(pair_.value.begin(), pair_.value.end(), pair_.get_base());
     }
 
     void swap(self& x) noexcept(is_nothrow_swappable_v<Sequence> && is_nothrow_swappable_v<Compare>) {

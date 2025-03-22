@@ -22,7 +22,7 @@ enum class POOL_MODE {
 
 class __thread_aux {
 private:
-	using ThreadFunc = MSTL::function<void(int)>;
+	using ThreadFunc = _MSTL function<void(int)>;
 
 	ThreadFunc func_;
 	static int generateId_;
@@ -38,15 +38,15 @@ public:
 
 class ThreadPool {
 private:
-	using Task = MSTL::function<void()>;
+	using Task = _MSTL function<void()>;
 
-	MSTL::unordered_map<int, MSTL::unique_ptr<__thread_aux>> threads_;
+	_MSTL unordered_map<int, _MSTL unique_ptr<__thread_aux>> threads_;
 
 	uint32_t init_thread_size_;
 	size_t thread_size_thresh_hold_;
 
-	MSTL::queue<Task> task_queue_;
-	MSTL::queue<Task> finished_queue_;
+	_MSTL queue<Task> task_queue_;
+	_MSTL queue<Task> finished_queue_;
 	std::atomic_uint task_size_;
 	std::atomic_uint idle_thread_size_;
 	size_t task_queue_max_thresh_hold_;
@@ -56,7 +56,7 @@ private:
 	std::condition_variable not_empty_;
 	std::condition_variable exit_cond_;
 
-	MSTL::POOL_MODE pool_mode_;
+	_MSTL POOL_MODE pool_mode_;
 	std::atomic_bool is_running_;
 
 private:
@@ -80,9 +80,9 @@ public:
 	template <typename Func, typename... Args>
 	decltype(auto) submit_task(Func&& func, Args&&... args) {
 		using Result = decltype(func(args...));
-		auto task = MSTL::make_shared<std::packaged_task<Result()>>(
-			[func = MSTL::forward<Func>(func), args = MSTL::make_tuple(MSTL::forward<Args>(args)...)]() mutable {
-				return MSTL::apply(func, args);
+		auto task = _MSTL make_shared<std::packaged_task<Result()>>(
+			[func = _MSTL forward<Func>(func), args = _MSTL make_tuple(_MSTL forward<Args>(args)...)]() mutable {
+				return _MSTL apply(func, args);
 			}
 		);
 		std::future<Result> res = task->get_future();
@@ -90,7 +90,7 @@ public:
 		std::unique_lock<std::mutex> lock(task_queue_mtx_);
 		if (!not_full_.wait_for(lock, std::chrono::seconds(1),
 			[&]()->bool { return task_queue_.size() < task_queue_max_thresh_hold_; })) {
-			auto task_ = MSTL::make_shared<std::packaged_task<Result()>>([]() -> Result { return Result(); });
+			auto task_ = _MSTL make_shared<std::packaged_task<Result()>>([]() -> Result { return Result(); });
 			(*task_)();
 			return task_->get_future();
 		}
@@ -100,9 +100,9 @@ public:
 		if (pool_mode_ == POOL_MODE::MODE_CACHED
 			&& task_size_ > idle_thread_size_
 			&& threads_.size() < thread_size_thresh_hold_) {
-			auto ptr = MSTL::make_unique<__thread_aux>([this](const int id) { thread_function(id); });
+			auto ptr = _MSTL make_unique<__thread_aux>([this](const int id) { thread_function(id); });
 			int thread_id = ptr->get_id();
-			threads_.emplace(thread_id, MSTL::move(ptr));
+			threads_.emplace(thread_id, _MSTL move(ptr));
 			threads_[thread_id]->start();
 			++idle_thread_size_;
 		}

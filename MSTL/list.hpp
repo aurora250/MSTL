@@ -58,27 +58,27 @@ public:
 
     list_iterator(const iterator& x) noexcept : node_(x.node_) {}
     self& operator =(const iterator& x) noexcept {
-    	if(MSTL::addressof(x) == this) return *this;
+    	if(_MSTL addressof(x) == this) return *this;
 		node_ = x.node_;
 		return *this;
 	}
     list_iterator(const const_iterator& x) noexcept : node_(const_cast<link_type>(x.node_)) {}
     self& operator =(const const_iterator& x) noexcept {
-        if(MSTL::addressof(x) == this) return *this;
+        if(_MSTL addressof(x) == this) return *this;
         node_ = const_cast<link_type*>(x.node_);
         return *this;
     }
 
     list_iterator(iterator&& x) noexcept : node_(x.node_) { x.node_ = nullptr; }
     self& operator =(iterator&& x) noexcept {
-        if(MSTL::addressof(x) == this) return *this;
+        if(_MSTL addressof(x) == this) return *this;
         node_ = x.node_;
         x.node_ = nullptr;
         return *this;
     }
     list_iterator(const_iterator&& x) noexcept : node_(const_cast<link_type>(x.node_)) { x.node_ = nullptr; }
     self& operator =(const_iterator&& x) noexcept {
-        if(MSTL::addressof(x) == this) return *this;
+        if(_MSTL addressof(x) == this) return *this;
         node_ = const_cast<link_type*>(x.node_);
         x.node_ = nullptr;
         return *this;
@@ -89,13 +89,23 @@ public:
     MSTL_NODISCARD reference operator *() const noexcept { return node_->data_; }
     MSTL_NODISCARD pointer operator->() const noexcept { return &(operator*()); }
 
+    MSTL_NODISCARD friend difference_type operator -(const self& lh, const self& rh) noexcept {
+        difference_type result = 0;
+        self current = rh;
+        while (current != lh) {
+            ++current;
+            ++result;
+        }
+        return result;
+    }
+
     self& operator ++() noexcept {
         node_ = node_->next_;
         return *this;
     }
     self operator ++(int) noexcept {
         self _old = *this;
-        ++(*this);
+        ++*this;
         return _old;
     }
 
@@ -134,8 +144,8 @@ public:
 
     using iterator          = list_iterator<T, T&, T*>;
     using const_iterator    = list_iterator<T, const T&, const T*>;
-    using reverse_iterator  = MSTL::reverse_iterator<iterator>;
-    using const_reverse_iterator = MSTL::reverse_iterator<const_iterator>;
+    using reverse_iterator  = _MSTL reverse_iterator<iterator>;
+    using const_reverse_iterator = _MSTL reverse_iterator<const_iterator>;
 
     using self              = list<T, Alloc>;
     using allocator_type    = Alloc;
@@ -149,7 +159,7 @@ private:
     }
 
     void range_check(iterator position) const noexcept {
-        MSTL_DEBUG_VERIFY__(MSTL::distance(const_iterator(position), cend()) >= 0,
+        MSTL_DEBUG_VERIFY__(_MSTL distance(const_iterator(position), cend()) >= 0,
             "list iterator out of ranges."
         );
     }
@@ -157,11 +167,11 @@ private:
     template <typename... Args>
     link_type create_node(Args&&... args) {
         link_type p = pair_.get_base().allocate();
-        MSTL::construct(&p->data_, MSTL::forward<Args>(args)...);
+        _MSTL construct(&p->data_, _MSTL forward<Args>(args)...);
         return p;
     }
     void destroy_node(link_type p) noexcept {
-        MSTL::destroy(p);
+        _MSTL destroy(p);
         pair_.get_base().deallocate(p);
     }
 
@@ -205,7 +215,7 @@ public:
     list(const self& x) : list(x.cbegin(), x.cend()) {}
 
     self& operator =(const self& x) {
-        if (MSTL::addressof(x) == this) return *this;
+        if (_MSTL addressof(x) == this) return *this;
         clear();
         link_type p = x.node_->next_;
         while (p != x.node_) {
@@ -225,7 +235,7 @@ public:
         swap(x);
     }
     self& operator =(self&& x) noexcept {
-        if (MSTL::addressof(x) == this) return *this;
+        if (_MSTL addressof(x) == this) return *this;
         clear();
         swap(x);
         return *this;
@@ -278,7 +288,7 @@ public:
     template <typename... U>
     iterator emplace(iterator position, U&&... args) {
         range_check(position);
-        link_type temp = (create_node)(MSTL::forward<U>(args)...);
+        link_type temp = (create_node)(_MSTL forward<U>(args)...);
         temp->next_ = position.node_;
         temp->prev_ = position.node_->prev_;
         position.node_->prev_->next_ = temp;
@@ -289,17 +299,17 @@ public:
 
     template <typename... Args>
     iterator emplace_back(Args&&... args) {
-        return (emplace)(end(), MSTL::forward<Args>(args)...);
+        return (emplace)(end(), _MSTL forward<Args>(args)...);
     }
     template <typename... Args>
     iterator emplace_front(Args&&... args) {
-        return (emplace)(begin(), MSTL::forward<Args>(args)...);
+        return (emplace)(begin(), _MSTL forward<Args>(args)...);
     }
 
     void push_front(const T& x) { insert(begin(), x); }
-    void push_front(T&& x) { insert(begin(), MSTL::forward<T>(x)); }
+    void push_front(T&& x) { insert(begin(), _MSTL forward<T>(x)); }
     void push_back(const T& x) { insert(end(), x); }
-    void push_back(T&& x) { insert(end(), MSTL::forward<T>(x)); }
+    void push_back(T&& x) { insert(end(), _MSTL forward<T>(x)); }
 
     void pop_front() noexcept { erase(begin()); }
     void pop_back() noexcept { erase(node_->prev_); }
@@ -324,13 +334,13 @@ public:
         return (emplace)(position, x);
     }
     iterator insert(iterator position, T&& x) {
-        return (emplace)(position, MSTL::forward<T>(x));
+        return (emplace)(position, _MSTL forward<T>(x));
     }
 
     template <typename InputIterator>
     void insert(iterator position, InputIterator first, InputIterator last) {
         range_check(position);
-        Exception(MSTL::distance(first, last) >= 0, StopIterator("deque insert out of ranges."));
+        Exception(_MSTL distance(first, last) >= 0, StopIterator("deque insert out of ranges."));
         for (--last; first != last; --last)
             position = insert(position, *last);
         insert(position, *last);
@@ -365,7 +375,7 @@ public:
         return ret;
     }
     iterator erase(iterator first, iterator last) noexcept {
-        Exception(MSTL::distance(first, last) >= 0, StopIterator("list erase out of ranges."));
+        Exception(_MSTL distance(first, last) >= 0, StopIterator("list erase out of ranges."));
         while (first != last) 
             first = erase(first);
         return first;
@@ -383,7 +393,7 @@ public:
     }
 
     void swap(self& x) noexcept {
-        MSTL::swap(node_, x.node_);
+        _MSTL swap(node_, x.node_);
         pair_.swap(x.pair_);
     }
 
@@ -391,7 +401,7 @@ public:
         range_check(position);
         range_check(first);
         range_check(last);
-        Exception(MSTL::distance(first, last) >= 0, StopIterator("list transfer index out of ranges."));
+        Exception(_MSTL distance(first, last) >= 0, StopIterator("list transfer index out of ranges."));
         if (position == last) return;
         last.node_->prev_->next_ = position.node_;
         first.node_->prev_->next_ = last.node_;
@@ -448,7 +458,7 @@ public:
         }
     }
     void merge(self& x) {
-        this->merge(x, MSTL::less<T>());
+        this->merge(x, _MSTL less<T>());
     }
     template <typename Pred>
     void merge(self&& x, Pred pred) {
@@ -471,7 +481,7 @@ public:
         x.clear();
     }
     void merge(self&& x) {
-        this->merge(MSTL::forward<self>(x), MSTL::less<T>());
+        this->merge(_MSTL forward<self>(x), _MSTL less<T>());
     }
 
     void reverse() noexcept {
@@ -499,7 +509,7 @@ public:
         }
     }
     void unique() noexcept {
-        unique(MSTL::equal_to<T>());
+        unique(_MSTL equal_to<T>());
     }
 
     template <typename Pred>
@@ -518,7 +528,7 @@ public:
         }
     }
     void sort() {
-        sort(MSTL::less<T>());
+        sort(_MSTL less<T>());
     }
 
     MSTL_NODISCARD const_reference at(size_type position) const {
@@ -546,7 +556,7 @@ list(Iterator, Iterator, Alloc = Alloc()) -> list<iter_val_t<Iterator>, Alloc>;
 
 template <typename T, typename Alloc>
 MSTL_NODISCARD bool operator ==(const list<T, Alloc>& lh, const list<T, Alloc>& rh) noexcept {
-    return lh.size() == rh.size() && MSTL::equal(lh.cbegin(), lh.cend(), rh.cbegin());
+    return lh.size() == rh.size() && _MSTL equal(lh.cbegin(), lh.cend(), rh.cbegin());
 }
 template <typename T, typename Alloc>
 MSTL_NODISCARD bool operator !=(const list<T, Alloc>& lh, const list<T, Alloc>& rh) noexcept {
@@ -554,7 +564,7 @@ MSTL_NODISCARD bool operator !=(const list<T, Alloc>& lh, const list<T, Alloc>& 
 }
 template <typename T, typename Alloc>
 MSTL_NODISCARD bool operator <(const list<T, Alloc>& lh, const list<T, Alloc>& rh) noexcept {
-    return MSTL::lexicographical_compare(lh.cbegin(), lh.cend(), rh.cbegin(), rh.cend());
+    return _MSTL lexicographical_compare(lh.cbegin(), lh.cend(), rh.cbegin(), rh.cend());
 }
 template <typename T, typename Alloc>
 MSTL_NODISCARD bool operator >(const list<T, Alloc>& lh, const list<T, Alloc>& rh) noexcept {
