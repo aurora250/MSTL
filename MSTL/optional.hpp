@@ -10,8 +10,9 @@ MSTL_INDEPENDENT_TAG_NAMESPACE_SETTING namespace tags {
     struct nullopt_t {
         constexpr explicit nullopt_t() noexcept = default;
     };
-    constexpr nullopt_t nullopt;
 }
+
+MSTL_INLINE17 constexpr nullopt_t nullopt;
 
 template <class T>
 struct optional {

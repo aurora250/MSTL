@@ -246,14 +246,14 @@ MSTL_CONSTEXPR20 Iterator search_n(Iterator first, Iterator last, const size_t c
 template <typename Iterator1, typename Iterator2>
 MSTL_CONSTEXPR20 Iterator1 __find_end_aux(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2,
 	std::bidirectional_iterator_tag, std::bidirectional_iterator_tag) {
-	using reviter1 = typename MSTL_ reverse_iterator<Iterator1>;
-	using reviter2 = typename MSTL_ reverse_iterator<Iterator2>;
+	using reviter1 = typename _MSTL reverse_iterator<Iterator1>;
+	using reviter2 = typename _MSTL reverse_iterator<Iterator2>;
 	reviter1 rlast1(first1);
 	reviter2 rlast2(first2);
-	reviter1 rresult = MSTL_ search(reviter1(last1), rlast1, reviter2(last2), rlast2);
+	reviter1 rresult = _MSTL search(reviter1(last1), rlast1, reviter2(last2), rlast2);
 	if (rresult == rlast1) return last1;
 	Iterator1 result = rresult.base();
-	MSTL_ advance(result, -distance(first2, last2));
+	_MSTL advance(result, -distance(first2, last2));
 	return result;
 }
 template <typename Iterator1, typename Iterator2>
@@ -261,7 +261,7 @@ MSTL_CONSTEXPR20 Iterator1 __find_end_aux(Iterator1 first1, Iterator1 last1, Ite
 	std::forward_iterator_tag, std::forward_iterator_tag) {
 	Iterator1 result = last1;
 	while (true) {
-		Iterator1 new_result = MSTL_ search(first1, last1, first2, last2);
+		Iterator1 new_result = _MSTL search(first1, last1, first2, last2);
 		if (new_result == last1) return result;
 		result = new_result;
 		first1 = new_result;
@@ -272,7 +272,7 @@ template <typename Iterator1, typename Iterator2,
 	enable_if_t<is_fwd_iter_v<Iterator1>&& is_fwd_iter_v<Iterator2>, int> = 0>
 MSTL_CONSTEXPR20 Iterator1 find_end(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2) {
 	if (first2 == last2) return last1;
-	return MSTL_ __find_end_aux(first1, last1, first2, last2, 
+	return _MSTL __find_end_aux(first1, last1, first2, last2, 
 		iter_cat_t<Iterator1>(), iter_cat_t<Iterator2>());
 }
 #else
@@ -503,7 +503,7 @@ template <typename Iterator, enable_if_t<is_rnd_iter_v<Iterator>, int> = 0>
 void __reverse_aux(Iterator first, Iterator last) {
 	while (first < last) {
 		--last;
-		MSTL_ iter_swap(first, last);
+		_MSTL iter_swap(first, last);
 		++first;
 	}
 }
@@ -513,14 +513,14 @@ void __reverse_aux(Iterator first, Iterator last) {
 		if (first == last || first == --last) return;
 		else {
 			--last;
-			MSTL_ iter_swap(first, last);
+			_MSTL iter_swap(first, last);
 			++first;
 		}
 	}
 }
 template <typename Iterator, enable_if_t<is_bid_iter_v<Iterator>, int> = 0>
 void reverse(Iterator first, Iterator last) {
-	MSTL_ __reverse_aux(first, last);
+	_MSTL __reverse_aux(first, last);
 }
 #else
 template <typename Iterator, enable_if_t<is_bid_iter_v<Iterator>, int> = 0>
@@ -545,9 +545,9 @@ MSTL_CONSTEXPR20 void reverse(Iterator first, Iterator last) {
 
 #ifndef MSTL_VERSION_17__
 template <typename Iterator, enable_if_t<!is_bid_iter_v<Iterator>, int> = 0>
-void __rotate_aux(Iterator first, Iterator middle, Iterator last) {
+void __rotate_aux_dispatch(Iterator first, Iterator middle, Iterator last) {
 	for (Iterator i = middle; ;) {
-		MSTL_ iter_swap(first, i);
+		_MSTL iter_swap(first, i);
 		++first;
 		++i;
 		if (first == middle) {
@@ -559,15 +559,14 @@ void __rotate_aux(Iterator first, Iterator middle, Iterator last) {
 	}
 }
 template <typename Iterator, enable_if_t<is_bid_iter_v<Iterator>, int> = 0>
-void __rotate_aux(Iterator first, Iterator middle, Iterator last) {
-	MSTL_ reverse(first, middle);
-	MSTL_ reverse(middle, last);
-	MSTL_ reverse(first, last);
+void __rotate_aux_dispatch(Iterator first, Iterator middle, Iterator last) {
+	_MSTL reverse(first, middle);
+	_MSTL reverse(middle, last);
+	_MSTL reverse(first, last);
 }
-template <typename Iterator, enable_if_t<is_fwd_iter_v<Iterator>, int> = 0>
-void rotate(Iterator first, Iterator middle, Iterator last) {
-	if (first == middle || middle == last) return;
-	MSTL_ __rotate_aux(first, middle, last);
+template <typename Iterator, enable_if_t<!is_rnd_iter_v<Iterator>, int> = 0>
+void __rotate_aux(Iterator first, Iterator middle, Iterator last) {
+	_MSTL __rotate_aux_dispatch(first, middle, last);
 }
 #else
 template <typename Iterator, enable_if_t<!is_rnd_iter_v<Iterator>, int> = 0>

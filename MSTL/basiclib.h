@@ -126,11 +126,7 @@
 #endif
 #if defined(MSTL_VERSION_20__) && !defined(MSTL_COMPILE_CLANG__) && !defined(MSTL_COMPILE_WITH_EDG__)
 	#define MSTL_SUPPORT_U8_INTRINSICS__	1
-#endif 
-
-
-// to libraries : boost / mysql
-#define MSTL_DLL_LINK__	0
+#endif
 
 
 #define TO_STRING(VALUE) #VALUE
@@ -163,14 +159,14 @@
 	#define MSTL_INLINE17 inline
 #else
 	#define MSTL_CONSTEXPR17 inline
-	#define MSTL_INLINECSP
+	#define MSTL_INLINE17
 #endif // MSTL_VERSION_17__
 #else
 	#define MSTL_CONSTEXPR inline
 	#define MSTL_CONSTEXPR23 inline
 	#define MSTL_CONSTEXPR20 inline
 	#define MSTL_CONSTEXPR17 inline
-	#define MSTL_INLINECSP inline
+	#define MSTL_INLINE17 inline
 #endif // MSTL_SUPPORT_CONSTEXPR__
 
 
@@ -416,8 +412,6 @@ char* strcpy(char*, const char*);
 int strcmp(const char*, const char*);
 const char* strstr(const char*, const char*);
 char* memstr(char*, int, const char*);
-
-void split_line(std::ostream& = std::cout, uint32_t = MSTL_SPLIT_LENGTH, char = '-');
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_BASICLIB_H__

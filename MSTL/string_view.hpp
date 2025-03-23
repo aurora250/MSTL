@@ -237,7 +237,7 @@ public:
 #if MSTL_VERSION_17__
         return __builtin_memcmp(lh, rh, n);
 #else
-        return MSTL_ memcmp(lh, rh, n);
+        return _MSTL memcmp(lh, rh, n);
 #endif
     }
 
@@ -261,7 +261,7 @@ public:
             return __builtin_strlen(str);
         }
 #else
-        return MSTL_ strlen(reinterpret_cast<const char*>(str));
+        return _MSTL strlen(reinterpret_cast<const char*>(str));
 #endif // MSTL_VERSION_17__
     }
 
@@ -286,7 +286,7 @@ public:
 #endif
         }
 #else
-        return static_cast<const char_type*>(MSTL_ memchr(str, chr, n));
+        return static_cast<const char_type*>(_MSTL memchr(str, chr, n));
 #endif // MSTL_VERSION_17__
     }
 

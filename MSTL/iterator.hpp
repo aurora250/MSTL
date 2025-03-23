@@ -32,7 +32,7 @@ constexpr iter_ptr_t<Iterator> __to_pointer_aux(Iterator iter) {
 }
 template <typename Iterator>
 constexpr iter_ptr_t<Iterator> to_pointer(Iterator iter) {
-    return MSTL_ __to_pointer_aux(iter);
+    return _MSTL __to_pointer_aux(iter);
 }
 #else
 template <typename Iterator>
@@ -62,7 +62,7 @@ MSTL_CONSTEXPR17 void __advance_aux(Iterator& i, Distance n, std::input_iterator
 }
 template <typename Iterator, typename Distance, enable_if_t<is_iter_v<Iterator>, int> = 0>
 MSTL_CONSTEXPR17 void advance(Iterator& i, Distance n) {
-    MSTL_ __advance_aux(i, n, iter_cat_t<Iterator>());
+    _MSTL __advance_aux(i, n, iter_cat_t<Iterator>());
 }
 #else
 template <typename Iterator, typename Distance, enable_if_t<is_iter_v<Iterator>, int> = 0>
@@ -111,7 +111,7 @@ MSTL_CONSTEXPR17 iter_dif_t<Iterator> __distance_aux(
 }
 template <typename Iterator, enable_if_t<is_iter_v<Iterator>, int> = 0>
 MSTL_CONSTEXPR17 iter_dif_t<Iterator> distance(Iterator first, Iterator last) {
-    return MSTL_ __distance_aux(first, last, iter_cat_t<Iterator>());
+    return _MSTL __distance_aux(first, last, iter_cat_t<Iterator>());
 }
 #else
 template <typename Iterator, enable_if_t<is_iter_v<Iterator>, int> = 0>
@@ -345,7 +345,7 @@ public:
 template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD constexpr bool operator ==(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
-    noexcept(noexcept(_MSTL declcopy<bool>(x.get_current() == y.get_current()))) 
+    noexcept(noexcept(_MSTL declcopy<bool>(x.get_current() == y.get_current())))
 #ifdef MSTL_VERSION_20__
     requires requires { { x.get_current() == y.get_current() } -> convertible_to<bool>; }
 #endif // MSTL_VERSION_20__

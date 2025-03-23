@@ -76,7 +76,9 @@ MSTL_MACRO_RANGE_INT(INITIALIZE_BASIC_FUNCTION__)
 
 
 MSTL_INDEPENDENT_TAG_NAMESPACE_SETTING namespace tags {
-	using allocator_arg_tag = std::allocator_arg_t;
+	struct allocator_arg_tag {
+		constexpr explicit allocator_arg_tag() noexcept = default;
+	};
 
 	// construct without arguments
 	struct default_construct_tag {
@@ -297,14 +299,14 @@ struct pair {
 		!conjunction_v<is_convertible<U1, T1>, is_convertible<U2, T2>>, int> = 0>
 	explicit pair(U1&& a, U2&& b) noexcept(conjunction_v<
 		is_nothrow_constructible<T1, U1>, is_nothrow_constructible<T2, U2>>)
-		: first(MSTL_ forward<U1>(a)), second(MSTL_ forward<U2>(b)) {}
+		: first(_MSTL forward<U1>(a)), second(_MSTL forward<U2>(b)) {}
 
 	template <typename U1, typename U2, enable_if_t<
 		conjunction_v<is_constructible<T1, U1>, is_constructible<T2, U2>> &&
 		conjunction_v<is_convertible<U1, T1>, is_convertible<U2, T2>>, int> = 0>
 	pair(U1&& a, U2&& b) noexcept(conjunction_v<
 		is_nothrow_constructible<T1, U1>, is_nothrow_constructible<T2, U2>>)
-		: first(MSTL_ forward<U1>(a)), second(MSTL_ forward<U2>(b)) {}
+		: first(_MSTL forward<U1>(a)), second(_MSTL forward<U2>(b)) {}
 
 	template <typename U1, typename U2, enable_if_t<
 		conjunction_v<is_constructible<T1, const U1&>, is_constructible<T2, const U2&>> &&
@@ -325,14 +327,14 @@ struct pair {
 		!conjunction_v<is_convertible<U1, T1>, is_convertible<U2, T2>>, int> = 0>
 	explicit pair(pair<U1, U2>&& p) noexcept(conjunction_v<
 		is_nothrow_constructible<T1, U1>, is_nothrow_constructible<T2, U2>>)
-		: first(MSTL_ forward<U1>(p.first)), second(MSTL_ forward<U2>(p.second)) {}
+		: first(_MSTL forward<U1>(p.first)), second(_MSTL forward<U2>(p.second)) {}
 
 	template <typename U1, typename U2, enable_if_t<
 		conjunction_v<is_constructible<T1, U1>, is_constructible<T2, U2>>&&
 		conjunction_v<is_convertible<U1, T1>, is_convertible<U2, T2>>, int> = 0>
 	pair(pair<U1, U2>&& p) noexcept(conjunction_v<
 		is_nothrow_constructible<T1, U1>, is_nothrow_constructible<T2, U2>>)
-		: first(MSTL_ forward<U1>(p.first)), second(MSTL_ forward<U2>(p.second)) {}
+		: first(_MSTL forward<U1>(p.first)), second(_MSTL forward<U2>(p.second)) {}
 #endif
 
 	pair(const pair& p) = default;
@@ -495,11 +497,11 @@ struct __pair_get_helper<0, T1, T2> {
 	}
 	MSTL_NODISCARD constexpr static tuple_element_t<0, pair<T1, T2>>&&
 		get(pair<T1, T2>&& pir) noexcept {
-		return MSTL_ forward<T1>(pir.first);
+		return _MSTL forward<T1>(pir.first);
 	}
 	MSTL_NODISCARD constexpr static const tuple_element_t<0, pair<T1, T2>>&&
 		get(const pair<T1, T2>&& pir) noexcept {
-		return MSTL_ forward<const T1>(pir.first);
+		return _MSTL forward<const T1>(pir.first);
 	}
 };
 template <typename T1, typename T2>
@@ -514,11 +516,11 @@ struct __pair_get_helper<1, T1, T2> {
 	}
 	MSTL_NODISCARD constexpr static tuple_element_t<1, pair<T1, T2>>&&
 		get(pair<T1, T2>&& pir) noexcept {
-		return MSTL_ forward<T2>(pir.second);
+		return _MSTL forward<T2>(pir.second);
 	}
 	MSTL_NODISCARD constexpr static const tuple_element_t<1, pair<T1, T2>>&&
 		get(const pair<T1, T2>&& pir) noexcept {
-		return MSTL_ forward<const T2>(pir.second);
+		return _MSTL forward<const T2>(pir.second);
 	}
 };
 #endif // !MSTL_VERSION_17__
@@ -588,8 +590,8 @@ get(pair<T1, T2>&& pir) noexcept {
 template <size_t Index, typename T1, typename T2>
 MSTL_NODISCARD constexpr tuple_element_t<Index, pair<T1, T2>>&&
 get(pair<T1, T2>&& pir) noexcept {
-	return MSTL_ forward<tuple_element_t<Index, pair<T1, T2>>>(
-		__pair_get_helper<Index, T1, T2>::get(MSTL_ forward<pair<T1, T2>>(pir)));
+	return _MSTL forward<tuple_element_t<Index, pair<T1, T2>>>(
+		__pair_get_helper<Index, T1, T2>::get(_MSTL forward<pair<T1, T2>>(pir)));
 }
 #endif // MSTL_VERSION_17__
 template <typename T1, typename T2>
@@ -615,8 +617,8 @@ get(const pair<T1, T2>&& pir) noexcept {
 template <size_t Index, typename T1, typename T2>
 MSTL_NODISCARD constexpr const tuple_element_t<Index, pair<T1, T2>>&&
 get(const pair<T1, T2>&& pir) noexcept {
-	return MSTL_ forward<const tuple_element_t<Index, pair<T1, T2>>>(
-		__pair_get_helper<Index, T1, T2>::get(MSTL_ forward<const pair<T1, T2>>(pir)));
+	return _MSTL forward<const tuple_element_t<Index, pair<T1, T2>>>(
+		__pair_get_helper<Index, T1, T2>::get(_MSTL forward<const pair<T1, T2>>(pir)));
 }
 #endif // MSTL_VERSION_17__
 template <typename T1, typename T2>

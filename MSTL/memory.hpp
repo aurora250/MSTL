@@ -348,7 +348,7 @@ template <size_t Align, enable_if_t<(Align > MEMORY_ALIGN_THRESHHOLD) ,int> = 0>
 MSTL_DECLALLOC MSTL_CONSTEXPR20 void* __allocate_dispatch(const size_t bytes) {
     size_t align = _MSTL max(Align, MEMORY_BIG_ALLOC_ALIGN);
 #if defined(MSTL_COMPILE_CLANG__) && defined(MSTL_VERSION_20__)
-    if (MSTL_ is_constant_evaluated())
+    if (_MSTL is_constant_evaluated())
         return ::operator new(bytes);
     else
 #endif
@@ -371,7 +371,7 @@ MSTL_DECLALLOC MSTL_CONSTEXPR20 void* allocate(const size_t bytes) {
 #ifdef MSTL_VERSION_17__
     return _MSTL __allocate_dispatch<Align>(bytes);
 #else
-    return MSTL_ __allocate_aux<Align>(bytes);
+    return _MSTL __allocate_aux<Align>(bytes);
 #endif // MSTL_VERSION_17__
 }
 
@@ -430,7 +430,7 @@ MSTL_CONSTEXPR20 void deallocate(void* ptr, size_t bytes) noexcept {
 #ifdef MSTL_VERSION_17__
     _MSTL __deallocate_dispatch<Align>(ptr, bytes);
 #else
-    MSTL_ __deallocate_aux<Align>(ptr, bytes);
+    _MSTL __deallocate_aux<Align>(ptr, bytes);
 #endif // MSTL_VERSION_17__
 }
 
@@ -820,11 +820,11 @@ public:
 
     MSTL_CONSTEXPR23 add_lvalue_reference_t<element_type> operator *() const
     noexcept(noexcept(*_MSTL declval<pointer>())) {
-	    MSTL_DEBUG_VERIFY__(get() != pointer(), "MSTL_ add_lvalue_reference_t<element_type> failed");
+	    MSTL_DEBUG_VERIFY__(get() != pointer(), "_MSTL add_lvalue_reference_t<element_type> failed");
 	    return *get();
     }
     MSTL_CONSTEXPR23 pointer operator ->() const noexcept {
-	    MSTL_DEBUG_VERIFY__(get() != pointer(), "MSTL_ operator->() failed");
+	    MSTL_DEBUG_VERIFY__(get() != pointer(), "_MSTL operator->() failed");
 	    return get();
     }
 
@@ -925,7 +925,7 @@ public:
     }
 
     MSTL_CONSTEXPR23 add_lvalue_reference_t<element_type> operator [](size_t idx) const {
-	    MSTL_DEBUG_VERIFY__(get() != pointer(), "MSTL_ add_lvalue_reference_t<element_type> failed");
+	    MSTL_DEBUG_VERIFY__(get() != pointer(), "_MSTL add_lvalue_reference_t<element_type> failed");
 	    return get()[idx];
     }
 

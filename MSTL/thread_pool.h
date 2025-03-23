@@ -15,7 +15,7 @@ static constexpr size_t MSTL_TASK_MAX_THRESHHOLD__ = INT32_MAX;
 static constexpr MSTL_LLT MSTL_THREAD_MAX_IDLE_SECONDS__ = 60;
 static const size_t MSTL_THREAD_MAX_THRESHHOLD__ = std::thread::hardware_concurrency();
 
-enum class POOL_MODE {
+enum class THREAD_POOL_MODE {
 	MODE_FIXED,  // static number
 	MODE_CACHED  // dynamic number
 };
@@ -56,7 +56,7 @@ private:
 	std::condition_variable not_empty_;
 	std::condition_variable exit_cond_;
 
-	_MSTL POOL_MODE pool_mode_;
+	_MSTL THREAD_POOL_MODE pool_mode_;
 	std::atomic_bool is_running_;
 
 private:
@@ -71,13 +71,13 @@ public:
 	ThreadPool& operator =(const ThreadPool&) = delete;
 	ThreadPool& operator =(ThreadPool&&) = delete;
 
-	void set_mode(POOL_MODE);
+	void set_mode(THREAD_POOL_MODE);
 	void set_taskque_max_thresh_hold(size_t);
 	void set_thread_size_thresh_hold(size_t);
 	MSTL_NODISCARD static size_t max_thread_size();
 	void start(unsigned int = 2);
 
-	template <typename Func, typename... Args>
+	template <typename Func, typename... Args, enable_if_t<is_invocable_v<Func, Args...>, int> = 0>
 	decltype(auto) submit_task(Func&& func, Args&&... args) {
 		using Result = decltype(func(args...));
 		auto task = _MSTL make_shared<std::packaged_task<Result()>>(
@@ -97,7 +97,7 @@ public:
 		task_queue_.emplace([task]() { (*task)(); });
 		++task_size_;
 		not_empty_.notify_all();
-		if (pool_mode_ == POOL_MODE::MODE_CACHED
+		if (pool_mode_ == THREAD_POOL_MODE::MODE_CACHED
 			&& task_size_ > idle_thread_size_
 			&& threads_.size() < thread_size_thresh_hold_) {
 			auto ptr = _MSTL make_unique<__thread_aux>([this](const int id) { thread_function(id); });

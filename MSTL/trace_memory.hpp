@@ -1,7 +1,9 @@
 #ifndef MSTL_TRACE_MEMORY_HPP__
 #define MSTL_TRACE_MEMORY_HPP__
 #include "unordered_map.hpp"
-#if MSTL_DLL_LINK__
+#ifdef MSTL_SUPPORT_BOOST__
+#include "boost/version.hpp"
+#if BOOST_VERSION >= 106500
 #include "boost/stacktrace.hpp"
 MSTL_BEGIN_NAMESPACE__
 
@@ -48,32 +50,31 @@ public:
     }
 
     MSTL_NODISCARD MSTL_DECLALLOC pointer allocate(const size_type n) {
-        pointer ptr = alloc_.allocate(n);
-        boost::stacktrace::stacktrace st = boost::stacktrace::stacktrace();
+        pointer ptr = standard_allocator<T>::allocate(n);
+        auto st = boost::stacktrace::stacktrace();
         traces_[ptr] = st;
         return ptr;
     }
-    MSTL_NODISCARD MSTL_DECLALLOC pointer allocate(void) {
-        return alloc_.allocate(sizeof(value_type));
+    MSTL_NODISCARD MSTL_DECLALLOC pointer allocate() {
+        return standard_allocator<T>::allocate(sizeof(value_type));
     }
     void deallocate(pointer p) noexcept {
         auto it = traces_.find(p);
         if (it != traces_.end()) {
             traces_.erase(it);
         }
-        alloc_.deallocate(p, sizeof(value_type));
+        standard_allocator<T>::deallocate(p, sizeof(value_type));
     }
     void deallocate(pointer p, const size_type n) noexcept {
         auto it = traces_.find(p);
         if (it != traces_.end()) {
             traces_.erase(it);
         }
-        alloc_.deallocate(p, n);
+        standard_allocator<T>::deallocate(p, n);
     }
 
 private:
     unordered_map<T*, boost::stacktrace::stacktrace> traces_;
-    standard_allocator<T> alloc_;
 };
 template <typename T, typename U>
 bool operator ==(const trace_allocator<T>&, const trace_allocator<U>&) noexcept {
@@ -85,5 +86,6 @@ bool operator !=(const trace_allocator<T>&, const trace_allocator<U>&) noexcept 
 }
 
 MSTL_END_NAMESPACE__
-#endif // MSTL_DLL_LINK__
+#endif
+#endif // MSTL_SUPPORT_BOOST__
 #endif // MSTL_TRACE_MEMORY_HPP__

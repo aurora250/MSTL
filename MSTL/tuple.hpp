@@ -211,13 +211,13 @@ public:
 		conjunction_v<tuple_constructible<tuple, U1, U2...>, tuple_convertible<tuple, U1, U2...>>&&
 		tuple_explicitly_convertible_v<tuple, U1, U2...>, int> = 0>
 	explicit tuple(U1&& this_arg, U2&&... rest_arg) noexcept(tuple_nothrow_constructible_v<tuple, U1, U2...>)
-		: tuple(exact_arg_construct_tag{}, MSTL_ forward<U1>(this_arg), MSTL_ forward<U2>(rest_arg)...) {}
+		: tuple(exact_arg_construct_tag{}, _MSTL forward<U1>(this_arg), _MSTL forward<U2>(rest_arg)...) {}
 
 	template <typename U1, typename... U2, enable_if_t<
 		conjunction_v<tuple_constructible<tuple, U1, U2...>, tuple_convertible<tuple, U1, U2...>> &&
 		!tuple_explicitly_convertible_v<tuple, U1, U2...>, int> = 0>
 	tuple(U1&& this_arg, U2&&... rest_arg) noexcept(tuple_nothrow_constructible_v<tuple, U1, U2...>)
-		: tuple(exact_arg_construct_tag{}, MSTL_ forward<U1>(this_arg), MSTL_ forward<U2>(rest_arg)...) {}
+		: tuple(exact_arg_construct_tag{}, _MSTL forward<U1>(this_arg), _MSTL forward<U2>(rest_arg)...) {}
 
 	template <typename... U, enable_if_t<conjunction_v<tuple_constructible<tuple, const U&...>, 
 		tuple_convertible<tuple, const tuple<U...>&, U...>> &&
@@ -235,13 +235,13 @@ public:
 		conjunction_v<tuple_constructible<tuple, U...>, tuple_convertible<tuple, tuple<U...>, U...>>&&
 		tuple_explicitly_convertible_v<tuple, U...>, int> = 0>
 	explicit tuple(tuple<U...>&& tup) noexcept(tuple_nothrow_constructible_v<tuple, U...>)
-		: tuple(unpack_utility_construct_tag{}, MSTL_ move(tup)) {}
+		: tuple(unpack_utility_construct_tag{}, _MSTL move(tup)) {}
 
 	template <typename... U, enable_if_t<
 		conjunction_v<tuple_constructible<tuple, U...>, tuple_convertible<tuple, tuple<U...>, U...>> &&
 		!tuple_explicitly_convertible_v<tuple, U...>, int> = 0>
 	tuple(tuple<U...>&& tup) noexcept(tuple_nothrow_constructible_v<tuple, U...>)
-		: tuple(unpack_utility_construct_tag{}, MSTL_ move(tup)) {}
+		: tuple(unpack_utility_construct_tag{}, _MSTL move(tup)) {}
 
 	template <typename T1, typename T2, enable_if_t<tuple_constructible_v<tuple, const T1&, const T2&>&&
 		tuple_explicitly_convertible_v<tuple, const T1&, const T2&>, int> = 0>
@@ -256,12 +256,12 @@ public:
 	template <typename T1, typename T2, enable_if_t<
 		tuple_constructible_v<tuple, T1, T2> && tuple_explicitly_convertible_v<tuple, T1, T2>, int> = 0>
 	explicit tuple(pair<T1, T2>&& pir) noexcept(tuple_nothrow_constructible_v<tuple, T1, T2>)
-		: tuple(unpack_utility_construct_tag{}, MSTL_ move(pir)) {}
+		: tuple(unpack_utility_construct_tag{}, _MSTL move(pir)) {}
 
 	template <typename T1, typename T2, enable_if_t<
 		tuple_constructible_v<tuple, T1, T2> && !tuple_explicitly_convertible_v<tuple, T1, T2>, int> = 0>
 	tuple(pair<T1, T2>&& pir) noexcept(tuple_nothrow_constructible_v<tuple, T1, T2>)
-		: tuple(unpack_utility_construct_tag{}, MSTL_ move(pir)) {}
+		: tuple(unpack_utility_construct_tag{}, _MSTL move(pir)) {}
 #endif
 
 	tuple(const tuple&) = default;
@@ -519,14 +519,14 @@ struct __broadern_tuple_hash_aux {
 	static constexpr size_t hash(const Tuple& tup) {
 		using ElementType = remove_cvref_t<tuple_element_t<Index - 1, Tuple>>;
 		return __broadern_tuple_hash_aux<Tuple, Index - 1>::hash(tup) 
-			^ MSTL_ hash<ElementType>()(MSTL_ get<Index - 1>(tup));
+			^ _MSTL hash<ElementType>()(_MSTL get<Index - 1>(tup));
 	}
 };
 template <typename Tuple>
 struct __broadern_tuple_hash_aux<Tuple, 1> {
 	static constexpr size_t hash(const Tuple& tup) {
 		using ElementType = remove_cvref_t<tuple_element_t<0, Tuple>>;
-		return MSTL_ hash<ElementType>()(MSTL_ get<0>(tup));
+		return _MSTL hash<ElementType>()(_MSTL get<0>(tup));
 	}
 };
 template <typename Tuple>

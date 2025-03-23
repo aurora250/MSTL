@@ -5,6 +5,11 @@
 #include "stack.hpp"
 MSTL_BEGIN_NAMESPACE__
 
+inline void split_line(std::ostream& out = std::cout, uint32_t size = MSTL_SPLIT_LENGTH, const char split = '-') {
+	while (size--) out << split;
+	out << '\n';
+}
+
 template <typename Container>
 #ifdef MSTL_VERSION_20__
 	requires(is_detailable<Container>)

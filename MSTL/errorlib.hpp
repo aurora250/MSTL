@@ -46,6 +46,7 @@ inline std::ostream& operator <<(std::ostream& out, const Error& err) {
 	return out;
 }
 
+
 inline void Exception(const Error& err){
 	show_data_only(err, std::cerr);
 	std::cerr << std::endl;
