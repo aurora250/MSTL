@@ -118,9 +118,6 @@
 #if defined(MSTL_COMPILE_GNUC__) && defined(MSTL_VERSION_17__)
 	#define MSTL_SUPPORT_UNLIKELY__			1
 #endif
-#if defined(MSTL_COMPILE_MSVC__)
-	#define MSTL_SUPPORT_DECLSPEC__			1
-#endif
 #if defined(MSTL_COMPILE_MSVC__) || defined(MSTL_COMPILE_CLANG__)
 	#define MSTL_SUPPORT_MAKE_INTEGER_SEQ__	1
 #endif
@@ -222,12 +219,12 @@
 	#define MSTL_TRAITS_DEPRE
 #endif
 
-#ifdef MSTL_SUPPORT_DECLSPEC__
+#ifdef MSTL_COMPILE_MSVC__
 	#define MSTL_DECLALLOC __declspec(allocator)
 	#define MSTL_DECLNOVTB __declspec(novtable)
-#else
-	#define MSTL_DECLALLOC
-	#define MSTL_DECLNOVTB
+#elif defined(MSTL_COMPILE_GNUC__)
+	#define MSTL_DECLALLOC __attribute__((allocator()))
+	#define MSTL_DECLNOVTB __attribute__((novtable))
 #endif
 
 #ifdef MSTL_SUPPORT_NO_UNIQUE_ADS__
