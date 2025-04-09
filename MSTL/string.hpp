@@ -140,10 +140,10 @@ MSTL_NODISCARD inline string to_string(long x) {
 MSTL_NODISCARD inline string to_string(unsigned long x) {
     return uint_to_string<char>(x);
 }
-MSTL_NODISCARD inline string to_string(MSTL_LLT x) {
+MSTL_NODISCARD inline string to_string(long long x) {
     return int_to_string<char>(x);
 }
-MSTL_NODISCARD inline string to_string(unsigned MSTL_LLT x) {
+MSTL_NODISCARD inline string to_string(unsigned long long x) {
     return uint_to_string<char>(x);
 }
 

@@ -3,9 +3,9 @@
 #include "algobase.hpp"
 #include "tuple.hpp"
 #include <atomic>
+#include <future>
 MSTL_BEGIN_NAMESPACE__
-
-template <typename Iterator1, typename Iterator2, enable_if_t<
+    template <typename Iterator1, typename Iterator2, enable_if_t<
     is_trivially_copy_assignable_v<iter_val_t<Iterator1>>, int> = 0>
 MSTL_CONSTEXPR20 Iterator2 __uninitialized_copy_aux(Iterator1 first, Iterator1 last, Iterator2 result) {
     return _MSTL copy(first, last, result);
@@ -168,7 +168,7 @@ private:
     MSTL_CONSTEXPR20 void allocate_buffer() {
         original_len_ = len_;
         buffer_ = 0;
-        if (len_ > static_cast<ptrdiff_t>(INT_MAX_SIZE / sizeof(T))) len_ = INT_MAX_SIZE / sizeof(T);
+        if (len_ > static_cast<ptrdiff_t>(UINT32_MAX_SIZE / sizeof(T))) len_ = UINT32_MAX_SIZE / sizeof(T);
         while (len_ > 0) {
             buffer_ = static_cast<T *>(std::malloc(len_ * sizeof(T)));
             if (buffer_) break;
@@ -317,7 +317,7 @@ struct allocator_traits {
     template <class U>
     using rebind_traits = allocator_traits<rebind_alloc<U>>;
 
-    MSTL_ALLOCNODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(
+    MSTL_ALLOC_NODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(
         Alloc& alloc, const size_type n) {
         return alloc.allocate(n);
     }
@@ -393,10 +393,10 @@ MSTL_CONSTEXPR20 void __deallocate_aux(void* ptr, size_t bytes) noexcept {
         ptr = reinterpret_cast<void*>(holder);
     }
 #ifdef MSTL_VERSION_17__
-#ifdef MSTL_PLATFORM_WINDOWS__
-    ::operator delete(ptr, bytes);
-#else
+#ifdef MSTL_COMPILE_CLANG__
     ::operator delete(ptr, std::align_val_t{ bytes });
+#else
+    ::operator delete(ptr, bytes);
 #endif
 #else
     ::operator delete(ptr);
@@ -406,7 +406,7 @@ MSTL_CONSTEXPR20 void __deallocate_aux(void* ptr, size_t bytes) noexcept {
 template <size_t Align, enable_if_t<(Align > MEMORY_ALIGN_THRESHHOLD), int> = 0>
 MSTL_CONSTEXPR20 void __deallocate_dispatch(void* ptr, const size_t bytes) noexcept {
     size_t align = _MSTL max(Align, MEMORY_BIG_ALLOC_ALIGN);
-#ifdef MSTL_PLATFORM_LINUX__
+#ifdef MSTL_COMPILE_CLANG__
     ::operator delete(ptr, std::align_val_t{ align });
 #else
     ::operator delete(ptr, bytes, std::align_val_t{ align });
@@ -464,15 +464,15 @@ public:
     MSTL_CONSTEXPR20 ~standard_allocator() noexcept = default;
     MSTL_CONSTEXPR20 self& operator =(const self&) noexcept = default;
 
-    MSTL_ALLOCNODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(const size_type n) {
+    MSTL_ALLOC_NODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(const size_type n) {
         constexpr size_t value_size = sizeof(value_type);
         static_assert(value_size > 0, "value type must be complete before allocation called.");
         const size_t alloc_size = value_size * n;
-        MSTL_DEBUG_VERIFY__(alloc_size <= INT_MAX_SIZE, "allocation will cause memory overflow.");
+        MSTL_DEBUG_VERIFY__(alloc_size <= UINT32_MAX_SIZE, "allocation will cause memory overflow.");
         return static_cast<T*>(_MSTL allocate<FINAL_ALIGN_SIZE<T>>(alloc_size));
     }
-    MSTL_ALLOCNODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate() {
-        return allocate(1);
+    MSTL_ALLOC_NODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate() {
+        return standard_allocator::allocate(1);
     }
     static MSTL_CONSTEXPR20 void deallocate(pointer p, const size_type n) noexcept {
         constexpr size_t value_size = sizeof(value_type);
@@ -480,7 +480,7 @@ public:
         _MSTL deallocate<FINAL_ALIGN_SIZE<T>>(p, n * value_size);
     }
     static MSTL_CONSTEXPR20 void deallocate(pointer p) noexcept {
-        deallocate(p, 1);
+        standard_allocator::deallocate(p, 1);
     }
 };
 template <typename T, typename U>
@@ -519,10 +519,10 @@ public:
     MSTL_CONSTEXPR20 ~ctype_allocator() noexcept = default;
     MSTL_CONSTEXPR20 self& operator =(const self&) noexcept = default;
 
-    MSTL_ALLOCNODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(const size_type n) {
+    MSTL_ALLOC_NODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(const size_type n) {
         return 0 == n ? nullptr : static_cast<pointer>(std::malloc(n * sizeof(T)));
     }
-    MSTL_ALLOCNODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate() {
+    MSTL_ALLOC_NODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate() {
         return static_cast<pointer>(std::malloc(sizeof(T)));
     }
     static MSTL_CONSTEXPR20 void deallocate(pointer p) noexcept {
@@ -568,10 +568,10 @@ public:
     MSTL_CONSTEXPR20 ~new_allocator() noexcept = default;
     MSTL_CONSTEXPR20 self& operator =(const self&) noexcept = default;
 
-    MSTL_ALLOCNODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(const size_type n) {
+    MSTL_ALLOC_NODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate(const size_type n) {
         return 0 == n ? nullptr : static_cast<pointer>(::operator new(n * sizeof(T)));
     }
-    MSTL_ALLOCNODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate() {
+    MSTL_ALLOC_NODISCARD static MSTL_CONSTEXPR20 MSTL_DECLALLOC pointer allocate() {
         return static_cast<pointer>(::operator new(sizeof(T)));
     }
     static MSTL_CONSTEXPR20 void deallocate(pointer p) noexcept {
@@ -1065,11 +1065,11 @@ struct hash<unique_ptr<T, Deleter>> {
 
 
 template <class T, class... Args, enable_if_t<!(is_unbounded_array_v<T> || is_bounded_array_v<T>), int> = 0>
-unique_ptr<T> make_unique(Args&&... args) {
+MSTL_CONSTEXPR23 unique_ptr<T> make_unique(Args&&... args) {
     return unique_ptr<T>(new T(_MSTL forward<Args>(args)...));
 }
 template <class T, enable_if_t<is_unbounded_array_v<T>, int> = 0>
-unique_ptr<T> make_unique(const size_t len) {
+MSTL_CONSTEXPR23 unique_ptr<T> make_unique(const size_t len) {
     return unique_ptr<T>(new remove_extent_t<T>[len]());
 }
 template <class T, class... Args, enable_if_t<is_bounded_array_v<T>, int> = 0>
@@ -1077,11 +1077,11 @@ unique_ptr<T> make_unique(Args&&...) = delete;
 
 
 template <class T, enable_if_t<!(is_unbounded_array_v<T> || is_bounded_array_v<T>), int> = 0>
-unique_ptr<T> make_unique_for_overwrite() {
+MSTL_CONSTEXPR23 unique_ptr<T> make_unique_for_overwrite() {
     return unique_ptr<T>(new T());
 }
 template <class T, enable_if_t<is_unbounded_array_v<T>, int> = 0>
-unique_ptr<T> make_unique_for_overwrite(const size_t len) {
+MSTL_CONSTEXPR23 unique_ptr<T> make_unique_for_overwrite(const size_t len) {
     return unique_ptr<T>(new remove_extent_t<T>[len]());
 }
 template <class T, class... Args, enable_if_t<is_bounded_array_v<T>, int> = 0>

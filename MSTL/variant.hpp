@@ -203,7 +203,7 @@ public:
         return index_;
     }
     template <typename T, enable_if_t<is_any_of_v<T, Types...>, int> = 0>
-    MSTL_NODISCARD MSTL_CONSTEXPR20  bool holds_alternative() const noexcept {
+    MSTL_NODISCARD MSTL_CONSTEXPR20 bool holds_alternative() const noexcept {
         return variant_index_v<variant, T> == index_;
     }
 
@@ -326,6 +326,11 @@ template <typename T0, typename T, typename ...Types>
 struct variant_index<variant<T0, Types...>, T> {
     static constexpr size_t value = variant_index<variant<Types...>, T>::value + 1;
 };
+
+template <typename T, typename... Types>
+MSTL_CONSTEXPR20 bool holds_alternative(const variant<Types...>& v) noexcept {
+    return v.template holds_alternative<T>();
+}
 
 template <size_t Idx, typename... Types>
 MSTL_CONSTEXPR20 variant_alternative_t<variant<Types...>, Idx>& get(variant<Types...>& v) {

@@ -1,20 +1,28 @@
 #ifndef MSTL_ARRAY_HPP__
 #define MSTL_ARRAY_HPP__
-#include "algo.hpp"
+#include "algobase.hpp"
 MSTL_BEGIN_NAMESPACE__
 
-template <typename T, size_t Size, typename Ref = T&, typename Ptr = T*>
+template <bool IsConst, size_t Size, typename Array>
 class array_iterator {
+private:
+    using container_type	= Array;
+    using iterator			= array_iterator<false, Size, container_type>;
+    using const_iterator	= array_iterator<true, Size, container_type>;
+
 public:
 #ifdef MSTL_VERSION_20__
     using iterator_category = contiguous_iterator_tag;
 #else
     using iterator_category = random_access_iterator_tag;
-#endif
-    using value_type        = T;
-    using difference_type   = ptrdiff_t;
-    using pointer           = Ptr;
-    using reference         = Ref;
+#endif // MSTL_VERSION_20__
+    using value_type		= typename container_type::value_type;
+    using reference			= conditional_t<IsConst, typename container_type::const_reference, typename container_type::reference>;
+    using pointer			= conditional_t<IsConst, typename container_type::const_pointer, typename container_type::pointer>;
+    using difference_type	= typename container_type::difference_type;
+    using size_type			= typename container_type::size_type;
+
+    using self				= array_iterator<IsConst, Size, container_type>;
 
 private:
     pointer ptr_ = nullptr;
@@ -111,11 +119,12 @@ class array {
 
 public:
     MSTL_BUILD_TYPE_ALIAS(T)
+    using self = array<T, Size>;
 
-    using iterator       = array_iterator<T, Size, pointer, reference>;
-    using const_iterator = array_iterator<T, Size, const_pointer, const_reference>;
-    using reverse_iterator       = _MSTL reverse_iterator<iterator>;
-    using const_reverse_iterator = _MSTL reverse_iterator<const_iterator>;
+    using iterator                  = array_iterator<false, Size, self>;
+    using const_iterator            = array_iterator<true, Size, self>;
+    using reverse_iterator          = _MSTL reverse_iterator<iterator>;
+    using const_reverse_iterator    = _MSTL reverse_iterator<const_iterator>;
 
 private:
     T array_[Size];
@@ -146,6 +155,9 @@ public:
         return reverse_iterator(cbegin());
     }
 
+    MSTL_NODISCARD constexpr size_type size() const noexcept {
+        return Size;
+    }
     MSTL_NODISCARD constexpr size_type max_size() const noexcept {
         return Size;
     }
@@ -209,11 +221,12 @@ class array<T, 0> {
 
 public:
     MSTL_BUILD_TYPE_ALIAS(T)
+    using self = array<T, 0>;
     
-    using iterator               = array_iterator<T, 0, reference, pointer>;
-    using const_iterator         = array_iterator<T, 0, const_reference, const_pointer>;
-    using reverse_iterator       = _MSTL reverse_iterator<iterator>;
-    using const_reverse_iterator = _MSTL reverse_iterator<const_iterator>;
+    using iterator                  = array_iterator<false, 0, self>;
+    using const_iterator            = array_iterator<true, 0, self>;
+    using reverse_iterator          = _MSTL reverse_iterator<iterator>;
+    using const_reverse_iterator    = _MSTL reverse_iterator<const_iterator>;
 
 private:
     conditional_t<disjunction_v<is_default_constructible<T>, is_implicitly_default_constructible<T>>,

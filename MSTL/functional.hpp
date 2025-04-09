@@ -113,7 +113,7 @@ union storage_data {
 	char data_[sizeof(__nocopy_type)];
 };
 
-enum class __MANAGE_FUNC_OPERATE {
+enum class FUNCTION_MANAGE_OPERATE {
     GET_TYPE_INFO, GET_PTR, COPY_PTR, DESTROY_PTR
 };
 
@@ -128,11 +128,8 @@ public:
     template <typename F>
 	class __manager_base {
     protected:
-		static const bool stored_ =
-			is_trivially_copyable_v<F>
-			&& sizeof(F) <= max_size_
-			&& alignof(F) <= max_align_
-			&& max_align_ % alignof(F) == 0;
+		static const bool stored_ = is_trivially_copyable_v<F> && sizeof(F) <= max_size_
+			&& alignof(F) <= max_align_ && max_align_ % alignof(F) == 0;
 
 		using storage_ = bool_constant<stored_>;
 
@@ -163,18 +160,18 @@ public:
 		}
 
     public:
-		static bool manage(storage_data& dest, const storage_data& src, const __MANAGE_FUNC_OPERATE oper) {
+		static bool manage(storage_data& dest, const storage_data& src, const FUNCTION_MANAGE_OPERATE oper) {
 			switch (oper) {
-				case __MANAGE_FUNC_OPERATE::GET_TYPE_INFO:
+				case FUNCTION_MANAGE_OPERATE::GET_TYPE_INFO:
 					dest.access<const std::type_info*>() = &typeid(F);
 					break;
-				case __MANAGE_FUNC_OPERATE::GET_PTR:
+				case FUNCTION_MANAGE_OPERATE::GET_PTR:
 					dest.access<F*>() = __manager_base::get_pointer(src);
 					break;
-				case __MANAGE_FUNC_OPERATE::COPY_PTR:
+				case FUNCTION_MANAGE_OPERATE::COPY_PTR:
 					__manager_base::init_func(dest, *const_cast<const F*>(__manager_base::get_pointer(src)));
 					break;
-				case __MANAGE_FUNC_OPERATE::DESTROY_PTR:
+				case FUNCTION_MANAGE_OPERATE::DESTROY_PTR:
 					__manager_base::destroy(dest, storage_());
 					break;
 			}
@@ -205,7 +202,7 @@ public:
 		}
     };
 
-	using manage_type = bool (*)(storage_data&, const storage_data&, __MANAGE_FUNC_OPERATE);
+	using manage_type = bool (*)(storage_data&, const storage_data&, FUNCTION_MANAGE_OPERATE);
 
 	storage_data func_{};
 	manage_type manager_ = nullptr;
@@ -214,7 +211,7 @@ public:
     __function_base() = default;
     ~__function_base() {
 		if (manager_)
-			manager_(func_, func_, __MANAGE_FUNC_OPERATE::DESTROY_PTR);
+			manager_(func_, func_, FUNCTION_MANAGE_OPERATE::DESTROY_PTR);
     }
 
     MSTL_NODISCARD bool empty() const { return !manager_; }
@@ -230,12 +227,12 @@ private:
 	using base_type = __function_base::__manager_base<F>;
 public:
 	static bool manage(storage_data& dest, const storage_data& src,
-		__MANAGE_FUNC_OPERATE oper) {
+		FUNCTION_MANAGE_OPERATE oper) {
 		switch (oper) {
-			case __MANAGE_FUNC_OPERATE::GET_TYPE_INFO:
+			case FUNCTION_MANAGE_OPERATE::GET_TYPE_INFO:
 				dest.access<const std::type_info*>() = &typeid(F);
 				break;
-			case __MANAGE_FUNC_OPERATE::GET_PTR:
+			case FUNCTION_MANAGE_OPERATE::GET_PTR:
 				dest.access<F*>() = base_type::get_pointer(src);
 				break;
 			default:
@@ -257,7 +254,7 @@ public:
 template <>
 class __function_manage_handler<void, void> {
 public:
-	static bool manage(storage_data&, const storage_data&, __MANAGE_FUNC_OPERATE) {
+	static bool manage(storage_data&, const storage_data&, FUNCTION_MANAGE_OPERATE) {
 		return false;
 	}
 };
@@ -284,6 +281,21 @@ private:
 
 	invoker_type invoker_ = nullptr;
 
+	template <typename F, enable_if_t<is_object_v<F>, int> = 0>
+	const F* __target_impl() const noexcept {
+		if (manager_ == &__function_handler_dispatch<Res(Args...), F>::manage
+			|| (manager_ && typeid(F) == target_type())) {
+			storage_data ptr{};
+			manager_(ptr, func_, FUNCTION_MANAGE_OPERATE::GET_PTR);
+			return ptr.access<const F*>();
+		}
+		return nullptr;
+	}
+	template <typename F, enable_if_t<!is_object_v<F>, int> = 0>
+	const F* __target_impl() const noexcept {
+		return nullptr;
+	}
+
 public:
 	using result_type = Res;
 
@@ -291,7 +303,7 @@ public:
 
 	function(const function& x) : __function_base() {
 		if (static_cast<bool>(x)) {
-			x.manager_(func_, x.func_, __MANAGE_FUNC_OPERATE::COPY_PTR);
+			x.manager_(func_, x.func_, FUNCTION_MANAGE_OPERATE::COPY_PTR);
 			invoker_ = x.invoker_;
 			manager_ = x.manager_;
 		}
@@ -330,7 +342,7 @@ public:
 	}
 	function& operator =(nullptr_t) noexcept {
 		if (manager_) {
-			manager_(func_, func_, __MANAGE_FUNC_OPERATE::DESTROY_PTR);
+			manager_(func_, func_, FUNCTION_MANAGE_OPERATE::DESTROY_PTR);
 			manager_ = nullptr;
 			invoker_ = nullptr;
 		}
@@ -357,38 +369,28 @@ public:
 	explicit operator bool() const noexcept { return !empty(); }
 
 	Res operator ()(Args&&... args) const {
-		if (empty()) Exception(MemoryError("pointer null."));
+		if (empty()) Exception(MemoryError("functional pointing to null."));
 		return invoker_(func_, _MSTL forward<Args>(args)...);
 	}
 
 	MSTL_NODISCARD const std::type_info& target_type() const noexcept {
 		if (manager_) {
 			storage_data result{};
-			manager_(result, func_, __MANAGE_FUNC_OPERATE::GET_TYPE_INFO);
-			if (auto info = result.access<const std::type_info*>())
+			manager_(result, func_, FUNCTION_MANAGE_OPERATE::GET_TYPE_INFO);
+			if (const auto info = result.access<const std::type_info*>())
 				return *info;
 		}
 		return typeid(void);
 	}
 
 	template <typename F>
-	F* target() noexcept {
-		const function* const_this = this;
-		const F* f = const_this->target<F>();
-		return *const_cast<F**>(&f);
-	}
-
-	template <typename F>
 	const F* target() const noexcept {
-		MSTL_IF_CONSTEXPR (is_object_v<F>) {
-			if (manager_ == &__function_handler_dispatch<Res(Args...), F>::manage
-				|| (manager_ && typeid(F) == target_type())) {
-				storage_data ptr{};
-				manager_(ptr, func_, __MANAGE_FUNC_OPERATE::GET_PTR);
-				return ptr.access<const F*>();
-			}
-		}
-		return nullptr;
+		return __target_impl<F>();
+	}
+	template <typename F>
+	F* target() noexcept {
+		const F* f = const_cast<const function*>(this)->target<F>();
+		return *const_cast<F**>(&f);
 	}
 };
 

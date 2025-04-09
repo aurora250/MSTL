@@ -27,13 +27,15 @@ public:
     using const_pointer     = typename base_type::const_pointer;
     using reference         = typename base_type::reference;
     using const_reference   = typename base_type::const_reference;
+
     using iterator          = typename base_type::iterator;
     using const_iterator    = typename base_type::const_iterator;
+
     using allocator_type    = typename base_type::allocator_type;
     using self              = unordered_map<Key, T, HashFcn, EqualKey, Alloc>;
 
 private:
-    base_type ht_{100, hasher(), key_equal()};
+    base_type ht_{101, hasher(), key_equal()};
 
     template <typename Key1, typename T1, typename HashFcn1, typename EqualKey1, typename Alloc1>
     friend bool operator ==(const unordered_map<Key1, T1, HashFcn1, EqualKey1, Alloc1>&,

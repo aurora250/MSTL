@@ -419,7 +419,7 @@ MSTL_NODISCARD constexpr const tuple_element_t<Index, Types...>&& get(const tupl
 }
 
 template <size_t Index, typename... Types>
-MSTL_NODISCARD constexpr tuple_element_t<Index, Types...>&& pair_get_from_tuple(tuple<Types...>&& tup) noexcept {
+MSTL_NODISCARD constexpr tuple_element_t<Index, Types...>&& __pair_get_from_tuple(tuple<Types...>&& tup) noexcept {
 	using T = tuple_element_t<Index, tuple<Types...>>;
 	using tuple_type = tuple_extract_base_t<Index, tuple<Types...>>;
 	return static_cast<T&&>(static_cast<tuple_type&>(tup).data_);
@@ -458,15 +458,15 @@ is_constructible_v<T, decltype(_MSTL get<Index>(_MSTL declval<Tuple>()))...>;
 
 
 template <typename T, typename Tuple, size_t... Index>
-MSTL_NODISCARD constexpr T broaden_make_from_tuple(Tuple&& tup, index_sequence<Index...>)
+MSTL_NODISCARD constexpr T __broaden_make_from_tuple(Tuple&& tup, index_sequence<Index...>)
 noexcept(is_nothrow_constructible_v<T, decltype(_MSTL get<Index>(_MSTL forward<Tuple>(tup)))...>) {
 	return T(_MSTL get<Index>(_MSTL forward<Tuple>(tup))...);
 }
 
 template <typename T, typename Tuple, enable_if_t<__constructible_from_tuple<T, Tuple>, int> = 0>
-MSTL_NODISCARD constexpr T make_from_tuple(Tuple&& tup) noexcept(noexcept(_MSTL broaden_make_from_tuple<T>(
+MSTL_NODISCARD constexpr T make_from_tuple(Tuple&& tup) noexcept(noexcept(_MSTL __broaden_make_from_tuple<T>(
 	_MSTL forward<Tuple>(tup), make_index_sequence<tuple_size_v<remove_reference_t<Tuple>>>{}))) {
-	return _MSTL broaden_make_from_tuple<T>(
+	return _MSTL __broaden_make_from_tuple<T>(
 		_MSTL forward<Tuple>(tup), make_index_sequence<tuple_size_v<remove_reference_t<Tuple>>>{});
 }
 
@@ -541,7 +541,7 @@ template <typename... Args>
 struct hash<tuple<Args...>> {
 private:
 	template <typename Tuple, size_t... Idx>
-	constexpr size_t broaden_tuple(const Tuple& tup, _MSTL index_sequence<Idx...>) const noexcept {
+	constexpr size_t __broaden_tuple(const Tuple& tup, _MSTL index_sequence<Idx...>) const noexcept {
 #ifdef MSTL_VERSION_17__
 		return (hash<remove_cvref_t<tuple_element_t<Idx, Tuple>>>()(_MSTL get<Idx>(tup)) ^ ...);
 #else
@@ -551,7 +551,7 @@ private:
 
 public:
 	MSTL_NODISCARD constexpr size_t operator()(const _MSTL tuple<Args...>& tup) const noexcept {
-		return this->broaden_tuple(tup, _MSTL index_sequence_for<Args...>());
+		return this->__broaden_tuple(tup, _MSTL index_sequence_for<Args...>());
 	}
 };
 

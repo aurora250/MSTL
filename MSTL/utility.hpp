@@ -132,7 +132,7 @@ public:
 	}
 
 	constexpr void swap(compressed_pair& rh)
-		noexcept(is_nothrow_swappable_v<T2>) {
+	noexcept(is_nothrow_swappable_v<T2>) {
 		_MSTL swap(value, rh.value);
 	};
 };
@@ -150,11 +150,9 @@ public:
 	T2 value;
 
 	constexpr compressed_pair(const compressed_pair& pir)
-		: no_compressed(pir.no_compressed), value(pir.value) {
-	}
+		: no_compressed(pir.no_compressed), value(pir.value) {}
 	constexpr compressed_pair(compressed_pair&& pir) noexcept
-		: no_compressed(_MSTL move(pir.no_compressed)), value(_MSTL move(pir.value)) {
-	}
+		: no_compressed(_MSTL move(pir.no_compressed)), value(_MSTL move(pir.value)) {}
 
 	template <typename... Args>
 	constexpr compressed_pair(default_construct_tag, Args&&... args)
@@ -176,7 +174,7 @@ public:
 	}
 
 	constexpr void swap(compressed_pair& rh)
-		noexcept(conjunction_v<is_nothrow_swappable<T1>, is_nothrow_swappable<T2>>) {
+	noexcept(conjunction_v<is_nothrow_swappable<T1>, is_nothrow_swappable<T2>>) {
 		_MSTL swap(value, rh.value);
 		_MSTL swap(no_compressed, rh.no_compressed);
 	};
@@ -215,7 +213,7 @@ template <size_t Index, typename... Types>
 MSTL_NODISCARD constexpr const tuple_element_t<Index, Types...>&& get(const tuple<Types...>&& t) noexcept;
 
 template <size_t Index, typename... Types>
-MSTL_NODISCARD constexpr tuple_element_t<Index, Types...>&& pair_get_from_tuple(tuple<Types...>&& t) noexcept;
+MSTL_NODISCARD constexpr tuple_element_t<Index, Types...>&& __pair_get_from_tuple(tuple<Types...>&& t) noexcept;
 
 
 template <typename T1, typename T2>
@@ -342,8 +340,8 @@ struct pair {
 
 	template <typename Tuple1, typename Tuple2, size_t... Index1, size_t... Index2>
 	constexpr pair(Tuple1& t1, Tuple2& t2, index_sequence<Index1...>, index_sequence<Index2...>)
-		: first(_MSTL pair_get_from_tuple<Index1>(_MSTL move(t1))...),
-		second(_MSTL pair_get_from_tuple<Index2>(_MSTL move(t2))...) {}
+		: first(_MSTL __pair_get_from_tuple<Index1>(_MSTL move(t1))...),
+		second(_MSTL __pair_get_from_tuple<Index2>(_MSTL move(t2))...) {}
 
 	// construct from tuple
 	template <typename... Types1, typename... Types2>
@@ -632,9 +630,9 @@ MSTL_NODISCARD constexpr const T2&& get(const pair<T1, T2>&& pir) noexcept {
 
 
 template <typename T, typename... Args>
-MSTL_CONSTEXPR20 void construct(T* const ptr, Args&&... args)
+MSTL_CONSTEXPR20 void* construct(T* ptr, Args&&... args)
 noexcept(is_nothrow_constructible_v<T, Args...>) {
-	::new (static_cast<void*>(ptr)) T(_MSTL forward<Args>(args)...);
+    return ::new (static_cast<void*>(ptr)) T(_MSTL forward<Args>(args)...);
 }
 
 

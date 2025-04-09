@@ -6,15 +6,14 @@ MSTL_BEGIN_NAMESPACE__
 
 MSTL_ERROR_BUILD_CLASS(MathError, ValueError, "Math Function Argument Invalid.")
 
-using mathus_t	= unsigned short;
-using mathi_t	= int;
-using mathui_t	= unsigned int;
-using mathl_t	= MSTL_LLT;
-using mathul_t	= unsigned MSTL_LLT;
-using mathd_t	= double;
-using mathld_t	= long double;
-using mathud_t	= void;
-using mathuld_t = void;
+using maths_t   = int16_t;
+using mathus_t	= uint16_t;
+using mathi_t	= int32_t;
+using mathui_t	= uint32_t;
+using mathl_t	= int64_t;
+using mathul_t	= uint64_t;
+using mathd_t	= float64_t;
+using mathld_t	= float_ex_t;
 
 namespace constants {
 	static constexpr mathld_t EULER = 2.718281828459045L;
@@ -55,8 +54,8 @@ constexpr mathul_t leonardo(const mathus_t n) {
 constexpr mathld_t angular2radian(const mathld_t angular) noexcept {
 	return angular * constants::PI / constants::SEMI_CIRCLE;
 }
-constexpr mathld_t radian2angular(const mathld_t radians) noexcept {
-	return radians * (constants::SEMI_CIRCLE / constants::PI);
+constexpr mathld_t radian2angular(const mathld_t radian) noexcept {
+	return radian * (constants::SEMI_CIRCLE / constants::PI);
 }
 
 template <typename T, enable_if_t<is_signed_v<T>, int> = 0>
@@ -260,7 +259,7 @@ constexpr mathld_t divided_float(mathld_t x, mathl_t* int_ptr) noexcept {
 }
 
 constexpr mathld_t sine(const mathld_t x) noexcept {
-	mathul_t i = 1;
+	mathld_t i = 1;
 	mathi_t neg = 1;
 	mathld_t sum = 0;
 	mathld_t idx = x;
@@ -298,7 +297,7 @@ inline mathld_t arccosine(const mathld_t x) {
 constexpr mathld_t __arctangent_taylor(const mathld_t x) noexcept {
 	mathld_t y = 0.0;
 	mathld_t tmp = x;
-	mathul_t N = 1;
+	mathld_t N = 1.0;
 	while (tmp > constants::EPSILON || tmp < -constants::EPSILON) {
 		y += tmp;
 		N += 2;
@@ -311,7 +310,7 @@ constexpr mathld_t arctangent(const mathld_t x) noexcept {
 	if (x > 1)
 		return constants::PI / 2 - __arctangent_taylor(1 / x);
 	if (x < -1)
-		return -constants::PI / 2 - __arctangent_taylor(1 / x);
+		return -(constants::PI / 2 - __arctangent_taylor(1 / -x));
 	return __arctangent_taylor(x);
 }
 

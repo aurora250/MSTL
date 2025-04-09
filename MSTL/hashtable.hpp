@@ -7,11 +7,7 @@ MSTL_BEGIN_NAMESPACE__
 template <typename Value, typename Key, typename HashFcn, 
     typename ExtractKey, typename EqualKey, typename Alloc>
 class hashtable;
-template <typename Value, typename Key, typename HashFcn, 
-    typename ExtractKey, typename EqualKey, typename Alloc>
-struct hashtable_const_iterator;
-template <typename Value, typename Key, typename HashFcn, 
-    typename ExtractKey, typename EqualKey, typename Alloc>
+template <bool IsConst, typename HashTable>
 struct hashtable_iterator;
 
 template <typename T>
@@ -20,232 +16,143 @@ private:
     __hashtable_node* next_ = nullptr;
     T data_{};
 
-    template <typename Value, typename Key, typename HashFcn,
-        typename ExtractKey, typename EqualKey, typename Alloc>
-    friend class hashtable;
-    template <typename Value, typename Key, typename HashFcn,
-        typename ExtractKey, typename EqualKey, typename Alloc>
-    friend struct hashtable_const_iterator;
-    template <typename Value, typename Key, typename HashFcn,
-        typename ExtractKey, typename EqualKey, typename Alloc>
-    friend struct hashtable_iterator;
+    template <typename, typename, typename, typename, typename, typename> friend class hashtable;
+    template <bool, typename> friend struct hashtable_iterator;
 
 public:
     __hashtable_node() = default;
 };
 
-template <typename Value, typename Key, typename HashFcn, typename ExtractKey, typename EqualKey, typename Alloc>
+template <bool IsConst, typename HashTable>
 struct hashtable_iterator {
-    template <typename Value1, typename Key1, typename HashFcn1,
-        typename ExtractKey1, typename EqualKey1, typename Alloc1>
-    friend class hashtable;
-    template <typename Value1, typename Key1, typename HashFcn1,
-        typename ExtractKey1, typename EqualKey1, typename Alloc1>
-    friend struct hashtable_const_iterator;
-    template <typename Value1, typename Key1, typename HashFcn1,
-        typename ExtractKey1, typename EqualKey1, typename Alloc1>
-    friend struct hashtable_iterator;
+private:
+    using container_type    = HashTable;
+    using iterator          = hashtable_iterator<false, container_type>;
+    using const_iterator    = hashtable_iterator<true, container_type>;
 
 public:
-    using hashtable         = _MSTL hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
-    using iterator          = hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
-    using const_iterator    = hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
-    using node              = __hashtable_node<Value>;
     using iterator_category = forward_iterator_tag;
-    using value_type        = Value;
-    using difference_type   = ptrdiff_t;
-    using size_type         = size_t;
-    using reference         = Value&;
-    using pointer           = Value*;
-    using self              = hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+    using value_type        = typename container_type::value_type;
+    using reference         = conditional_t<IsConst, typename container_type::const_reference, typename container_type::reference>;
+    using pointer           = conditional_t<IsConst, typename container_type::const_pointer, typename container_type::pointer>;
+    using difference_type   = typename container_type::difference_type;
+    using size_type         = typename container_type::size_type;
+
+    using self              = hashtable_iterator<IsConst, container_type>;
 
 private:
-    node* cur_ = nullptr;
-    hashtable* ht_ = nullptr;
+    using node_type         = __hashtable_node<value_type>;
+
+    node_type* cur_ = nullptr;
+    const container_type* ht_ = nullptr;
+    size_type bucket_ = 0;
+
+    template <typename, typename, typename, typename, typename, typename> friend class hashtable;
+    template <bool, typename> friend struct hashtable_iterator;
 
 public:
     hashtable_iterator() noexcept = default;
-    hashtable_iterator(node* n, hashtable* tab) : cur_(n), ht_(tab) {}
 
-    hashtable_iterator(const iterator& it) : cur_(it.cur_), ht_(it.ht_) {}
+    hashtable_iterator(node_type* n, const HashTable* tab, const size_type bucket)
+    : cur_(n), ht_(tab), bucket_(bucket) {}
+
+    hashtable_iterator(const iterator& it)
+    : cur_(it.cur_), ht_(it.ht_), bucket_(it.bucket_) {}
+
     self& operator =(const iterator& it) {
         if(_MSTL addressof(it) == this) return *this;
         cur_ = it.cur_;
         ht_ = it.ht_;
+        bucket_ = it.bucket_;
         return *this;
     }
 
-    hashtable_iterator(iterator&& it) noexcept : cur_(it.cur_), ht_(it.ht_) {
+    hashtable_iterator(iterator&& it) noexcept
+    : cur_(it.cur_), ht_(it.ht_), bucket_(it.bucket_) {
         it.cur_ = nullptr;
         it.ht_ = nullptr;
+        it.bucket_ = -1;
     }
+
     self& operator =(iterator&& it) noexcept {
         if(_MSTL addressof(it) == this) return *this;
         cur_ = it.cur_;
         ht_ = it.ht_;
+        bucket_ = it.bucket_;
         it.cur_ = nullptr;
         it.ht_ = nullptr;
+        it.bucket_ = -1;
         return *this;
     }
 
     hashtable_iterator(const const_iterator& it)
-        : cur_(const_cast<node*>(it.cur_)), ht_(const_cast<hashtable*>(it.ht_)) {}
+    : cur_(it.cur_), ht_(it.ht_), bucket_(it.bucket_) {}
+
     self& operator =(const const_iterator& it) {
         if(_MSTL addressof(it) == this) return *this;
-        cur_ = const_cast<node*>(it.cur_);
-        ht_ = const_cast<hashtable*>(it.ht_);
+        cur_ = it.cur_;
+        ht_ = it.ht_;
+        bucket_ = it.bucket_;
         return *this;
     }
 
     hashtable_iterator(const_iterator&& it)
-        : cur_(const_cast<node*>(it.cur_)), ht_(const_cast<hashtable*>(it.ht_)) {
+    : cur_(it.cur_), ht_(it.ht_), bucket_(it.bucket_) {
         it.cur_ = nullptr;
         it.ht_ = nullptr;
+        it.bucket_ = -1;
     }
+
     self& operator =(const_iterator&& it) {
         if(_MSTL addressof(it) == this) return *this;
-        cur_ = const_cast<node*>(it.cur_);
-        ht_ = const_cast<hashtable*>(it.ht_);
+        cur_ = it.cur_;
+        ht_ = it.ht_;
+        bucket_ = it.bucket_;
         it.cur_ = nullptr;
         it.ht_ = nullptr;
+        it.bucket_ = -1;
         return *this;
     }
 
     ~hashtable_iterator() = default;
 
-    MSTL_NODISCARD reference operator *() const noexcept { return cur_->data_; }
-    MSTL_NODISCARD pointer operator ->() const noexcept { return &(operator*()); }
+    MSTL_NODISCARD reference operator *() const noexcept {
+        MSTL_DEBUG_VERIFY__(cur_ && ht_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(hashtable_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
+        MSTL_DEBUG_VERIFY__(bucket_ < ht_->buckets_.size() && 0 <= bucket_,
+            __MSTL_DEBUG_MESG_OUT_OF_RANGE(hashtable_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
+        return cur_->data_;
+    }
+    MSTL_NODISCARD pointer operator ->() const noexcept {
+        MSTL_DEBUG_VERIFY__(cur_ && ht_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(hashtable_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
+        MSTL_DEBUG_VERIFY__(bucket_ < ht_->buckets_.size() && 0 <= bucket_,
+            __MSTL_DEBUG_MESG_OUT_OF_RANGE(hashtable_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
+        return &operator*();
+    }
 
-    iterator& operator ++() {
-        const node* old = cur_;
+    self& operator ++() {
+        MSTL_DEBUG_VERIFY__(cur_ && ht_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(hashtable_iterator, __MSTL_DEBUG_TAG_INCREMENT));
+        MSTL_DEBUG_VERIFY__(bucket_ < ht_->buckets_.size() && !(bucket_ + 1 == ht_->buckets_.size() && cur_->next_ != nullptr),
+            __MSTL_DEBUG_MESG_OUT_OF_RANGE(hashtable_iterator, __MSTL_DEBUG_TAG_INCREMENT));
         cur_ = cur_->next_;
         if (cur_ == nullptr) {
-            size_t bucket = ht_->bkt_num(old->data_, ht_->buckets_.size());
-            while (cur_ == nullptr && ++bucket < ht_->buckets_.size())
-                cur_ = ht_->buckets_[bucket];
+            while (cur_ == nullptr && ++bucket_ < ht_->buckets_.size()) {
+                cur_ = ht_->buckets_[bucket_];
+            }
         }
         return *this;
     }
-    iterator operator ++(int) {
+    self operator ++(int) {
         iterator tmp = *this;
         ++*this;
         return tmp;
     }
 
-    MSTL_NODISCARD friend bool operator ==(const iterator& lh, const iterator& rh) noexcept {
-        return lh.cur_ == rh.cur_;
+    MSTL_NODISCARD bool operator ==(const self& x) noexcept {
+		MSTL_DEBUG_VERIFY__(ht_ == x.ht_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(hashtable_iterator));
+        return cur_ == x.cur_;
     }
-    MSTL_NODISCARD friend bool operator !=(const iterator& lh, const iterator& rh) noexcept {
-        return lh.cur_ != rh.cur_;
-    }
-};
-
-
-template <typename Value, typename Key, typename HashFcn, typename ExtractKey, typename EqualKey, typename Alloc>
-struct hashtable_const_iterator {
-    template <typename Value1, typename Key1, typename HashFcn1,
-        typename ExtractKey1, typename EqualKey1, typename Alloc1>
-    friend class hashtable;
-    template <typename Value1, typename Key1, typename HashFcn1,
-        typename ExtractKey1, typename EqualKey1, typename Alloc1>
-    friend struct hashtable_const_iterator;
-    template <typename Value1, typename Key1, typename HashFcn1,
-        typename ExtractKey1, typename EqualKey1, typename Alloc1>
-    friend struct hashtable_iterator;
-
-public:
-    using hashtable         = hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
-    using iterator          = hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
-    using const_iterator    = hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
-    using node              = __hashtable_node<Value>;
-    using iterator_category = forward_iterator_tag;
-    using value_type        = Value;
-    using difference_type   = ptrdiff_t;
-    using size_type         = size_t;
-    using reference         = const Value&;
-    using pointer           = const Value*;
-    using self              = hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
-
-private:
-    const node* cur_ = nullptr;
-    const hashtable* ht_ = nullptr;
-
-public:
-    hashtable_const_iterator() noexcept = default;
-    hashtable_const_iterator(const node* n, const hashtable* tab)
-        : cur_(n), ht_(tab) {}
-
-    hashtable_const_iterator(const const_iterator& it) : cur_(it.cur_), ht_(it.ht_) {}
-    self& operator =(const const_iterator& it) {
-        if(_MSTL addressof(it) == this) return *this;
-        cur_ = it.cur_;
-        ht_ = it.ht_;
-        return *this;
-    }
-
-    hashtable_const_iterator(const_iterator&& it)  noexcept : cur_(it.cur_), ht_(it.ht_) {
-        it.cur_ = nullptr;
-        it.ht_ = nullptr;
-    }
-    self& operator =(const_iterator&& it) noexcept {
-        if(_MSTL addressof(it) == this) return *this;
-        cur_ = it.cur_;
-        ht_ = it.ht_;
-        it.cur_ = nullptr;
-        it.ht_ = nullptr;
-        return *this;
-    }
-
-    hashtable_const_iterator(const iterator& it)
-        : cur_(const_cast<const node*>(it.cur_)), ht_(const_cast<const hashtable*>(it.ht_)) {}
-    self& operator =(const iterator& it) {
-        if(_MSTL addressof(it) == this) return *this;
-        cur_ = const_cast<const node*>(it.cur_);
-        ht_ = const_cast<const hashtable*>(it.ht_);
-        return *this;
-    }
-
-    hashtable_const_iterator(iterator&& it)
-        : cur_(const_cast<const node*>(it.cur_)), ht_(const_cast<const hashtable*>(it.ht_)) {
-        it.cur_ = nullptr;
-        it.ht_ = nullptr;
-    }
-    self& operator =(iterator&& it) {
-        if(_MSTL addressof(it) == this) return *this;
-        cur_ = const_cast<const node*>(it.cur_);
-        ht_ = const_cast<const hashtable*>(it.ht_);
-        it.cur_ = nullptr;
-        it.ht_ = nullptr;
-        return *this;
-    }
-
-    ~hashtable_const_iterator() = default;
-
-    MSTL_NODISCARD reference operator *() const noexcept { return cur_->data_; }
-    MSTL_NODISCARD pointer operator ->() const noexcept { return &(operator*()); }
-
-    const_iterator& operator ++() {
-        const node* old = cur_;
-        cur_ = cur_->next_;
-        if (cur_ == nullptr) {
-            size_t bucket = ht_->bkt_num(old->data_, ht_->buckets_.size());
-            while (cur_ == nullptr && ++bucket < ht_->buckets_.size()) {
-                cur_ = ht_->buckets_[bucket];
-            }
-        }
-        return *this;
-    }
-    const_iterator operator ++(int) {
-        const_iterator tmp = *this;
-        ++*this;
-        return tmp;
-    }
-
-    MSTL_NODISCARD friend bool operator ==(const const_iterator& lh, const const_iterator& rh) noexcept {
-        return lh.cur_ == rh.cur_;
-    }
-    MSTL_NODISCARD friend bool operator !=(const const_iterator& lh, const const_iterator& rh) noexcept {
-        return lh.cur_ != rh.cur_;
+    MSTL_NODISCARD bool operator !=(const self& x) noexcept {
+        return !(*this == x);
     }
 };
 
@@ -282,7 +189,7 @@ static constexpr size_t HASH_PRIME_LIST[HASH_PRIMER_COUNT] = {
     9716266221083181299ull, 14574399331624771603ull,    18446744073709551557ull
 };
 
-MSTL_NODISCARD inline size_t hashtable_next_prime(size_t n) {
+MSTL_NODISCARD inline size_t hashtable_next_prime(const size_t n) {
     const size_t* first = HASH_PRIME_LIST;
     const size_t* last = HASH_PRIME_LIST + HASH_PRIMER_COUNT;
     const size_t* pos = _MSTL lower_bound(first, last, n);
@@ -316,21 +223,20 @@ template <typename Value, typename Key, typename HashFcn,
 class hashtable {
 public:
     MSTL_BUILD_TYPE_ALIAS(Value)
-
+    using self              = hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+    using allocator_type    = Alloc;
     using key_type          = Key;
     using hasher            = HashFcn;
     using key_equal         = EqualKey;
+
+    using iterator          = hashtable_iterator<false, self>;
+    using const_iterator    = hashtable_iterator<true, self>;
+
+private:
     using node_type         = __hashtable_node<value_type>;
-    using link_type         = node_type*;
 
-    using iterator          = hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
-    using const_iterator    = hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
-
-    using self              = hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
-    using allocator_type    = Alloc;
-
-    friend struct hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
-    friend struct hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+    template <bool, typename>
+    friend struct hashtable_iterator;
 
     template <typename Value1, typename Key1, typename HashFcn1,
         typename ExtractKey1, typename EqualKey1, typename Alloc1>
@@ -338,11 +244,11 @@ public:
         const hashtable<Value1, Key1, HashFcn1, ExtractKey1, EqualKey1, Alloc1>&) noexcept;
 
 private:
-    vector<link_type> buckets_{};
+    vector<node_type*> buckets_{};
     size_type size_ = 0;
-    MSTL_NO_UNIADS hasher hasher_{};
-    MSTL_NO_UNIADS key_equal equals_{};
-    MSTL_NO_UNIADS ExtractKey extracter_{};
+    hasher hasher_{};
+    key_equal equals_{};
+    ExtractKey extracter_{};
     compressed_pair<allocator_type, float> pair_{ default_construct_tag{}, 1.0f };
 
     MSTL_NODISCARD static size_type next_size(const size_type n) noexcept {
@@ -351,8 +257,7 @@ private:
 
     void initialize_buckets(const size_type n) {
         const size_type n_buckets = next_size(n);
-        buckets_.reserve(n_buckets);
-        buckets_.insert(buckets_.end(), n_buckets, nullptr);
+        buckets_.assign(n_buckets, nullptr);
         size_ = 0;
     }
 
@@ -433,13 +338,13 @@ private:
                 delete_node(cur);
                 x->next_ = buckets_[n];
                 buckets_[n] = x;
-                return {{x, this}, false};
+                return {{x, this, n}, false};
             }
         }
         x->next_ = first;
         buckets_[n] = x;
         ++size_;
-        return {{x, this}, true};
+        return {{x, this, n}, true};
     }
 
     iterator insert_equal_noresize(node_type* x) {
@@ -453,24 +358,23 @@ private:
                 cur->next_ = x;
                 x->next_ = nullptr;
                 ++size_;
-                return {x, this};
+                return {x, this, n};
             }
         }
         x->next_ = first;
         buckets_[n] = x;
         ++size_;
-        return {x, this};
+        return {x, this, n};
     }
 
-    template <typename Iterator, enable_if_t<
-        is_input_iter_v<Iterator> && !is_fwd_iter_v<Iterator>, int> = 0>
+    template <typename Iterator,
+        enable_if_t<is_iter_v<Iterator> && !is_fwd_iter_v<Iterator>, int> = 0>
     void insert_unique_aux(Iterator first, Iterator last) {
         for (; first != last; ++first)
             insert_unique(*first);
     }
 
-    template <typename Iterator, enable_if_t<
-        is_fwd_iter_v<Iterator>, int> = 0>
+    template <typename Iterator, enable_if_t<is_fwd_iter_v<Iterator>, int> = 0>
     void insert_unique_aux(Iterator first, Iterator last) {
         size_type n = _MSTL distance(first, last);
         rehash(size_ + n);
@@ -480,8 +384,8 @@ private:
         }
     }
 
-    template <typename Iterator, enable_if_t<
-        is_input_iter_v<Iterator> && !is_fwd_iter_v<Iterator>, int> = 0>
+    template <typename Iterator,
+        enable_if_t<is_input_iter_v<Iterator> && !is_fwd_iter_v<Iterator>, int> = 0>
     void insert_equal_aux(Iterator first, Iterator last) {
         for (; first != last; ++first)
             insert_equal(*first);
@@ -541,22 +445,23 @@ public:
     ~hashtable() { clear(); }
 
     MSTL_NODISCARD iterator begin() noexcept {
-        for (size_type n = 0; n < buckets_.size(); ++n)
+        for (size_type n = 0; n < buckets_.size(); ++n) {
             if (buckets_[n] != nullptr)
-                return iterator(buckets_[n], this);
+                return iterator(buckets_[n], this, n);
+        }
         return end();
     }
-    MSTL_NODISCARD iterator end() noexcept { return iterator(nullptr, this); }
+    MSTL_NODISCARD iterator end() noexcept { return iterator(nullptr, this, -1); }
 
     MSTL_NODISCARD const_iterator cbegin() const noexcept {
         for (size_type n = 0; n < buckets_.size(); ++n) {
             if (buckets_[n] != nullptr) 
-                return const_iterator(buckets_[n], this);
+                return const_iterator(buckets_[n], this, n);
         }
         return cend();
     }
     MSTL_NODISCARD const_iterator cend() const noexcept {
-        return const_iterator(nullptr, this);
+        return const_iterator(nullptr, this, -1);
     }
 
     MSTL_NODISCARD size_type size() const noexcept { return size_; }
@@ -722,35 +627,32 @@ public:
                         --size_;
                         break;
                     }
-                    else {
-                        cur = next;
-                        next = cur->next_;
-                    }
+                    cur = next;
+                    next = cur->next_;
                 }
             }
         }
     }
     void erase(iterator first, iterator last) noexcept(is_nothrow_hashable_v<key_type>) {
-        size_type f_bucket = first.cur_ ? first.hash_val_ : buckets_.size();
+        const size_type f_bucket = first.cur_ ? first.hash_val_ : buckets_.size();
         size_type l_bucket = last.cur_ ? last.hash_val_ : buckets_.size();
         if (first.cur_ == last.cur_) return;
-        else if (f_bucket == l_bucket)
+        if (f_bucket == l_bucket)
             erase_bucket(f_bucket, first.cur_, last.cur_);
         else {
-            erase_bucket(f_bucket, first.cur_, 0);
+            erase_bucket(f_bucket, first.cur_, nullptr);
             for (size_type n = f_bucket + 1; n < l_bucket; ++n)
-                erase_bucket(n, 0);
+                erase_bucket(n, nullptr);
             if (l_bucket != buckets_.size())
                 erase_bucket(l_bucket, last.cur_);
         }
     }
 
     void erase(const const_iterator& it) noexcept(is_nothrow_hashable_v<key_type>) {
-        erase(iterator(const_cast<node_type*>(it.cur_), const_cast<hashtable*>(it.ht_)));
+        erase(iterator(it));
     }
     void erase(const_iterator first, const_iterator last) noexcept(is_nothrow_hashable_v<key_type>) {
-        erase(iterator(const_cast<node_type*>(first.cur_), const_cast<hashtable*>(first.ht_)),
-            iterator(const_cast<node_type*>(last.cur_), const_cast<hashtable*>(last.ht_)));
+        erase(iterator(first), iterator(last));
     }
 
     void clear() noexcept {
@@ -781,7 +683,7 @@ public:
         node_type* first;
         for (first = buckets_[n]; first != nullptr && !equals_(extracter_(first->data_), key);
             first = first->next_) {}
-        return iterator(first, this);
+        return iterator(first, this, n);
     }
 
     MSTL_NODISCARD const_iterator find(const key_type& key) const noexcept(is_nothrow_hashable_v<key_type>) {
@@ -789,7 +691,7 @@ public:
         const node_type* first;
         for (first = buckets_[n]; first != nullptr && !equals_(extracter_(first->data_), key);
             first = first->next_) {}
-        return const_iterator(first, this);
+        return const_iterator(first, this, n);
     }
 
     MSTL_NODISCARD size_type count(const key_type& key) const noexcept(is_nothrow_hashable_v<key_type>) {

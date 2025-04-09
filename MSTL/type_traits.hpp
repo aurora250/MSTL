@@ -1,6 +1,6 @@
 #ifndef MSTL_TYPE_TRAITS_HPP__
 #define MSTL_TYPE_TRAITS_HPP__
-#include "basiclib.h"
+#include "basiclib.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 MSTL_INDEPENDENT_TAG_NAMESPACE_SETTING namespace tags {
@@ -352,8 +352,8 @@ struct is_bool : bool_constant<is_bool_v<T>> {};
 
 
 template <typename T>
-constexpr bool is_standard_integer_v = is_any_of_v<remove_cv_t<T>, short, int, long, MSTL_LLT,
-    unsigned short, unsigned int, unsigned long, unsigned MSTL_LLT>;
+constexpr bool is_standard_integer_v = is_any_of_v<remove_cv_t<T>, short, int, long, long long,
+    unsigned short, unsigned int, unsigned long, unsigned long long>;
 template <typename T>
 struct is_standard_integral : bool_constant<is_standard_integer_v<T>> {};
 
@@ -365,7 +365,7 @@ struct is_integral : bool_constant<is_integral_v<T>> {};
 
 
 template <typename T>
-constexpr bool is_nonbool_integral = is_integral_v<T> && !is_same_v<remove_cv_t<T>, bool>;
+constexpr bool is_nonbool_integral_v = is_integral_v<T> && !is_bool_v<T>;
 
 
 template <typename T>
@@ -464,7 +464,7 @@ struct add_pointer {
     using type = T;
 };
 template <typename T>
-struct add_pointer<T, void> {
+struct add_pointer<T, void_t<remove_reference_t<T>*>> {
     using type = remove_reference_t<T>*;
 };
 
@@ -481,7 +481,6 @@ type_identity_t<T> declcopy(type_identity_t<T>) noexcept;
 // work with is_void_t
 template <typename T>
 void declvoid(type_identity_t<T>) noexcept;
-
 
 
 template <typename>
@@ -634,7 +633,8 @@ struct is_function : bool_constant<is_function_v<T>> {};
 
 
 template <typename T>
-constexpr bool is_allocable_v = !(is_void_v<T> || is_reference_v<T> || is_function_v<T> || is_const_v<T>) && sizeof(T) > 0;
+constexpr bool is_allocable_v =
+    !(is_void_v<T> || is_reference_v<T> || is_function_v<T> || is_const_v<T>) && sizeof(T) > 0;
 template <typename T>
 struct is_allocable : bool_constant<is_allocable_v<T>> {};
 
@@ -718,6 +718,19 @@ template <typename T>
 struct is_final : bool_constant<__is_final(T)> {};
 template <typename T>
 constexpr bool is_final_v = is_final<T>::value;
+
+
+template <class T, bool = is_enum_v<T>>
+struct __underlying_type_aux {
+    using type = __underlying_type(T);
+};
+template <class T>
+struct __underlying_type_aux<T, false> {};
+
+template <class T>
+struct underlying_type : __underlying_type_aux<T> {};
+template <class T>
+using underlying_type_t = typename underlying_type<T>::type;
 
 
 // standard layout types have these characteristics:
@@ -993,7 +1006,7 @@ constexpr bool is_nothrow_default_constructible_v = is_nothrow_default_construct
 
 template <typename T, typename... Args>
 struct __is_nothrow_constructible_dispatch
-    : bool_constant<noexcept(T(MSTL::declval<Args>()...))> {};
+    : bool_constant<noexcept(T(_MSTL declval<Args>()...))> {};
 
 template <typename T>
 struct __is_nothrow_constructible_dispatch<T>
@@ -1035,7 +1048,7 @@ struct is_nothrow_assignable : bool_constant<__is_nothrow_assignable(To, From)> 
 #else
 template <typename To, typename From>
 struct is_nothrow_assignable : conjunction<
-    is_assignable<To, From>, bool_constant<noexcept(MSTL::declval<To>() = MSTL::declval<From>())>> {};
+    is_assignable<To, From>, bool_constant<noexcept(_MSTL declval<To>() = _MSTL declval<From>())>> {};
 #endif
 
 template <typename To, typename From>
@@ -1111,7 +1124,7 @@ template <typename T>
 MSTL_NODISCARD constexpr
 conditional_t<!is_nothrow_move_constructible_v<T> && is_copy_constructible_v<T>, const T&, T&&>
 move_if_noexcept(T& x) noexcept {
-    return MSTL::move(x);
+    return _MSTL move(x);
 }
 
 
@@ -1172,9 +1185,9 @@ struct __sign_byte_aux<4> {
 template <>
 struct __sign_byte_aux<8> {
     template <typename>
-    using signed_t = signed MSTL_LLT;
+    using signed_t = signed long long;
     template <typename>
-    using unsigned_t = unsigned MSTL_LLT;
+    using unsigned_t = unsigned long long;
 };
 
 template <typename T>
@@ -1184,7 +1197,7 @@ using __set_unsigned_byte = typename __sign_byte_aux<sizeof(T)>::template unsign
 
 template <typename T>
 struct __set_sign {
-    static_assert(is_nonbool_integral<T> || is_enum_v<T>,
+    static_assert(is_nonbool_integral_v<T> || is_enum_v<T>,
         "make signed only support non bool integral types and enum types");
 
     using signed_type   = copy_cv_t<T, __set_signed_byte<T>>;
@@ -1221,26 +1234,68 @@ template <typename T>
 constexpr size_t alignment_of_v = alignment_of<T>::value;
 
 
-// get the base type of enum type
-template <typename T, bool = is_enum_v<T>>
-struct underlying_type {
-    using type = __underlying_type(T);
-};
-template <typename T>
-struct underlying_type<T, false> {};
-template <typename T>
-using underlying_type_t = typename underlying_type<T>::type;
-
-
 template <typename Base, typename Derived>
 struct is_base_of : bool_constant<__is_base_of(Base, Derived)> {};
 template <typename Base, typename Derived>
 constexpr bool is_base_of_v = is_base_of<Base, Derived>::value;
 
 
+template <size_t Len>
+struct __aligned_storage_aux {
+    union type {
+        unsigned char data[Len];
+        struct MSTL_ALIGNOF_DEFAULT() {} align;
+    };
+};
+
+template <size_t Len, size_t Align = alignof(typename __aligned_storage_aux<Len>::type)>
+struct aligned_storage {
+    union type {
+        unsigned char data[Len];
+        struct MSTL_ALIGNOF(Align) {} align;
+    };
+};
+
+template <size_t Len, size_t Align = alignof(typename __aligned_storage_aux<Len>::type)>
+using aligned_storage_t = typename aligned_storage<Len, Align>::type;
+
+
+template <typename...>
+struct __aligned_union_aux {
+    static const size_t align_ = 0;
+    static const size_t size_ = 0;
+};
+
+template <typename T, typename... Types>
+struct __aligned_union_aux<T, Types...> {
+    static const size_t align_ = alignof(T) > __aligned_union_aux<Types...>::align_
+        ? alignof(T) : __aligned_union_aux<Types...>::align_;
+    static const size_t size_ = sizeof(T) > __aligned_union_aux<Types...>::size_
+        ? sizeof(T) : __aligned_union_aux<Types...>::size_;
+};
+
+template <size_t Len, typename... Types>
+struct aligned_union {
+private:
+    static_assert(sizeof...(Types) != 0, "aligned_union requires at least one type.");
+
+    using strictest_t = __aligned_union_aux<Types...>;
+    static const size_t len_ = Len > strictest_t::size_ ? Len : strictest_t::size_;
+
+public:
+    static const size_t align_value = strictest_t::align_;
+    using type = typename aligned_storage<len_, align_value>::type;
+};
+
+template <size_t Len, typename... Types>
+using aligned_union_t = typename aligned_union<Len, Types...>::type;
+template <size_t Len, typename... Types>
+constexpr size_t aligned_union_v = aligned_union<Len, Types...>::align_value;
+
+
 // decay_t will simulate the decline in the argument passing of function:
 //   ref and cv qualifier will be removed;
-//   array and function types will be converted to pointer types unless they are used to iitialize referece.
+//   array and function types will be converted to pointer types unless they are used to initialize reference.
 template <typename T>
 struct decay {
     using rem_ref_t = remove_reference_t<T>;
@@ -1257,7 +1312,7 @@ using decay_t = typename decay<T>::type;
 //   if expr2 and expr3 are different types, the compiler will attempt to type a common type.
 //   conversion rules are typically based on standard implicit type conversion rules.
 template <typename T1, typename T2>
-using common_ternary_operator_t = decltype(false ? MSTL::declval<T1>() : MSTL::declval<T2>());
+using common_ternary_operator_t = decltype(false ? _MSTL declval<T1>() : _MSTL declval<T2>());
 
 template <typename, typename, typename = void>
 struct __oper_decay_aux {};
@@ -1406,7 +1461,7 @@ constexpr bool is_specialization_v() {
 
 
 template <typename From, typename To, bool = is_convertible_v<From, To>, bool = is_void_v<To>>
-constexpr bool is_nothrow_convertible_v = noexcept(MSTL::declcopy<To>(MSTL::declval<From>()));
+constexpr bool is_nothrow_convertible_v = noexcept(_MSTL declcopy<To>(_MSTL declval<From>()));
 template <typename From, typename To, bool IsVoid>
 constexpr bool is_nothrow_convertible_v<From, To, false, IsVoid> = false;
 template <typename From, typename To>
@@ -1425,7 +1480,7 @@ template <typename, typename, typename = void>
 struct ref_wrapper_constructable_from : false_type {};
 template <typename T, typename U>
 struct ref_wrapper_constructable_from<T, U,
-    void_t<decltype(MSTL::__ref_wrapper_construct_aux<T>(MSTL::declval<U>()))>> : true_type {};
+    void_t<decltype(_MSTL __ref_wrapper_construct_aux<T>(_MSTL declval<U>()))>> : true_type {};
 template <typename T, typename U>
 constexpr bool ref_wrapper_constructable_from_v = ref_wrapper_constructable_from<T, U>::value;
 
@@ -1443,16 +1498,20 @@ template <typename T>
 class reference_wrapper {
 public:
     static_assert(is_object_v<T> || is_function_v<T>,
-        "reference_wrapper<T> requires T to be an object type or a function type.");
+        "reference_wrapper requires an object or function type.");
 
     using type = T;
+    
+private:
+    T* ptr_{};
 
+public:
     template <typename U, enable_if_t<conjunction_v<negation<is_same<remove_cvref_t<U>, reference_wrapper>>,
         ref_wrapper_constructable_from<T, U>>, int> = 0>
     constexpr reference_wrapper(U&& x)
-        noexcept(noexcept(MSTL::__ref_wrapper_construct_aux<T>(MSTL::declval<U>()))) {
+        noexcept(noexcept(_MSTL __ref_wrapper_construct_aux<T>(_MSTL declval<U>()))) {
         T& ref = static_cast<U&&>(x);
-        ptr_ = MSTL::addressof(ref);
+        ptr_ = _MSTL addressof(ref);
     }
     constexpr operator T& () const noexcept {
         return *ptr_;
@@ -1460,15 +1519,10 @@ public:
     MSTL_NODISCARD constexpr T& get() const noexcept {
         return *ptr_;
     }
-
-private:
-    T* ptr_{};
-
-public:
     template <typename... Args>
     MSTL_CONSTEXPR20 typename __invoke_result_aux<T&, Args...>::type
     operator()(Args&&... args) const noexcept(is_nothrow_invocable<T&, Args...>::value) {
-        return MSTL::invoke(get(), MSTL::forward<Args>(args)...);
+        return _MSTL invoke(get(), _MSTL forward<Args>(args)...);
     }
 };
 #if MSTL_SUPPORT_DEDUCTION_GUIDES__
@@ -1556,7 +1610,7 @@ struct __invoke_result_memfun_ref {
 private:
     template <typename F, typename T, typename... Args1>
     static invoke_result_true<decltype(
-        (MSTL::declval<T>().*MSTL::declval<F>())(MSTL::declval<Args1>()...)),
+        (_MSTL declval<T>().*_MSTL declval<F>())(_MSTL declval<Args1>()...)),
     invoke_memfun_ref_tag> __test(int);
 
     template <typename...>
@@ -1571,7 +1625,7 @@ struct __invoke_result_memfun_deref {
 private:
     template <typename F, typename T, typename... Args1>
     static invoke_result_true<decltype(
-            (*MSTL::declval<T>().*MSTL::declval<F>())(MSTL::declval<Args1>()...)
+            (*_MSTL declval<T>().*_MSTL declval<F>())(_MSTL declval<Args1>()...)
         ),
     invoke_memfun_deref_tag> __test(int);
 
@@ -1586,7 +1640,7 @@ template <typename MemPtr, typename Arg>
 struct __invoke_result_memobj_ref {
 private:
     template <typename F, typename T>
-    static invoke_result_true<decltype(MSTL::declval<T>().*MSTL::declval<F>()),
+    static invoke_result_true<decltype(_MSTL declval<T>().*_MSTL declval<F>()),
         invoke_memobj_ref_tag> __test(int);
 
     template <typename, typename>
@@ -1600,7 +1654,7 @@ template <typename MemPtr, typename Arg>
 struct __invoke_result_memobj_deref {
 private:
     template <typename F, typename T>
-    static invoke_result_true<decltype(*MSTL::declval<T>().*MSTL::declval<F>()),
+    static invoke_result_true<decltype(*_MSTL declval<T>().*_MSTL declval<F>()),
     invoke_memobj_deref_tag> __test(int);
 
     template <typename, typename>
@@ -1653,7 +1707,7 @@ template <typename F, typename... Args>
 struct __invoke_result_dispatch<false, false, F, Args...> {
 private:
     template<typename F1, typename... Args1>
-    static invoke_result_true<decltype(MSTL::declval<F1>()(MSTL::declval<Args1>()...)),
+    static invoke_result_true<decltype(_MSTL declval<F1>()(_MSTL declval<Args1>()...)),
         invoke_other_tag> __test(int);
 
     template <typename...>
@@ -1702,9 +1756,9 @@ private:
     using Res_t = typename Result::type;
 
     template <typename T,
-        bool Nothrow = noexcept(MSTL::declvoid<T>(MSTL::declval<Res_t>())),
-        typename = decltype(MSTL::declvoid<T>(MSTL::declval<Res_t>())),
-#ifdef MSTL_COMPILE_GCC__
+        bool Nothrow = noexcept(_MSTL declvoid<T>(_MSTL declval<Res_t>())),
+        typename = decltype(_MSTL declvoid<T>(_MSTL declval<Res_t>())),
+#ifdef MSTL_COMPILE_GNUC__
         bool Dangle = __reference_converts_from_temporary(T, Res_t)
 #else
         bool Dangle = false
@@ -1746,31 +1800,31 @@ constexpr bool is_invocable_r_v = is_invocable_r<Ret, F, Args...>::value;
 template <typename F, typename T, typename... Args>
 constexpr bool __invoke_is_nothrow_dispatch(invoke_memfun_ref_tag) {
     using U = unwrap_reference_t<T>;
-    return noexcept((MSTL::declval<U>().*MSTL::declval<F>())(
-        MSTL::declval<Args>()...));
+    return noexcept((_MSTL declval<U>().*_MSTL declval<F>())(
+        _MSTL declval<Args>()...));
 }
 template <typename F, typename T, typename... Args>
 constexpr bool __invoke_is_nothrow_dispatch(invoke_memfun_deref_tag) {
-    return noexcept((*MSTL::declval<T>().*MSTL::declval<F>())(
-	    MSTL::declval<Args>()...));
+    return noexcept((*_MSTL declval<T>().*_MSTL declval<F>())(
+	    _MSTL declval<Args>()...));
 }
 template <typename F, typename T>
 constexpr bool __invoke_is_nothrow_dispatch(invoke_memobj_ref_tag) {
     using U = unwrap_reference_t<T>;
-    return noexcept(MSTL::declval<U>().*MSTL::declval<F>());
+    return noexcept(_MSTL declval<U>().*_MSTL declval<F>());
 }
 template <typename F, typename T>
 constexpr bool __invoke_is_nothrow_dispatch(invoke_memobj_deref_tag) {
-    return noexcept(*MSTL::declval<T>().*MSTL::declval<F>());
+    return noexcept(*_MSTL declval<T>().*_MSTL declval<F>());
 }
 template <typename F, typename... Args>
 constexpr bool __invoke_is_nothrow_dispatch(invoke_other_tag) {
-    return noexcept(MSTL::declval<F>()(MSTL::declval<Args>()...));
+    return noexcept(_MSTL declval<F>()(_MSTL declval<Args>()...));
 }
 
 template <typename Result, typename F, typename... Args>
 struct __invoke_is_nothrow
-    : bool_constant<MSTL::__invoke_is_nothrow_dispatch<F, Args...>
+    : bool_constant<_MSTL __invoke_is_nothrow_dispatch<F, Args...>
         (typename Result::invoke_type{})> {};
 
 template <typename F, typename... Args>
@@ -1855,10 +1909,10 @@ struct is_allocator : bool_constant<is_allocator_v<T>> {};
 
 template <typename Alloc1, typename Alloc2>
 constexpr bool allocable_from_v = is_same_v<
-    decltype(MSTL::declval<Alloc1>().allocate(1)), decltype(MSTL::declval<Alloc2>().allocate(1))>;
+    decltype(_MSTL declval<Alloc1>().allocate(1)), decltype(_MSTL declval<Alloc2>().allocate(1))>;
 
 template <typename Alloc1, typename Alloc2>
-constexpr bool allocable_with = allocable_from_v<Alloc1, Alloc2>&& allocable_from_v<Alloc2, Alloc1>;
+constexpr bool allocable_with = allocable_from_v<Alloc1, Alloc2> && allocable_from_v<Alloc2, Alloc1>;
 
 
 template <typename>
@@ -1876,19 +1930,19 @@ constexpr void swap(T(&)[Size], T(&)[Size]) noexcept(is_nothrow_swappable<T>::va
 void swap() = delete;
 
 template <typename T, typename U = T>
-constexpr T exchange(T&, U&&) noexcept(conjunction_v<
-    is_nothrow_move_constructible<T>, is_nothrow_assignable<T&, U>>);
+constexpr T exchange(T&, U&&)
+noexcept(conjunction_v<is_nothrow_move_constructible<T>, is_nothrow_assignable<T&, U>>);
 
 
 template <typename, typename, typename = void>
-struct one_way_swappable : false_type {};
+struct is_swappable_from : false_type {};
+template <typename T1, typename T2>
+struct is_swappable_from<T1, T2, void_t<decltype(
+    _MSTL swap(_MSTL declval<T1>(), _MSTL declval<T2>()))>> : true_type {};
 
 template <typename T1, typename T2>
-struct one_way_swappable<T1, T2, void_t<decltype(
-    MSTL::swap(MSTL::declval<T1>(), MSTL::declval<T2>()))>> : true_type {};
-template <typename T1, typename T2>
 struct is_swappable_with
-    : bool_constant<conjunction_v<one_way_swappable<T1, T2>, one_way_swappable<T2, T1>>> {};
+    : bool_constant<conjunction_v<is_swappable_from<T1, T2>, is_swappable_from<T2, T1>>> {};
 template <typename T1, typename T2>
 constexpr bool is_swappable_with_v = is_swappable_with<T1, T2>::value;
 
@@ -1901,12 +1955,12 @@ constexpr bool is_swappable_v = is_swappable<T>::value;
 
 
 template <typename T1, typename T2>
-struct nothrow_swappable_only : bool_constant<noexcept(MSTL::swap(MSTL::declval<T1>(), MSTL::declval<T2>()))
-    && noexcept(MSTL::swap(MSTL::declval<T2>(), MSTL::declval<T1>()))> {};
+struct is_nothrow_swappable_from : bool_constant<noexcept(_MSTL swap(_MSTL declval<T1>(), _MSTL declval<T2>()))
+    && noexcept(_MSTL swap(_MSTL declval<T2>(), _MSTL declval<T1>()))> {};
 
 template <typename T1, typename T2>
 struct is_nothrow_swappable_with
-    : bool_constant<conjunction_v<is_swappable_with<T1, T2>, nothrow_swappable_only<T1, T2>>> {};
+    : bool_constant<conjunction_v<is_swappable_with<T1, T2>, is_nothrow_swappable_from<T1, T2>>> {};
 template <typename T1, typename T2>
 constexpr bool is_nothrow_swappable_with_v = is_nothrow_swappable_with<T1, T2>::value;
 
@@ -1922,13 +1976,13 @@ constexpr bool is_nothrow_swappable_v = is_nothrow_swappable<T>::value;
 // specifically, when a function is called, in addition to the global and local scopes, 
 // the compiler will also look up the function declaration in the namespace to which the argument type belongs.
 template <typename, typename = void>
-struct ADL_swappable : false_type {};
+struct is_ADL_swappable : false_type {};
 template <typename T>
-struct ADL_swappable<T, void_t<decltype(MSTL::swap(MSTL::declval<T&>(), MSTL::declval<T&>()))>> : true_type {};
+struct is_ADL_swappable<T, void_t<decltype(_MSTL swap(_MSTL declval<T&>(), _MSTL declval<T&>()))>> : true_type {};
 
 template <typename T>
 constexpr bool is_trivially_swappable_v = conjunction_v<is_trivially_destructible<T>,
-    is_trivially_move_constructible<T>, is_trivially_move_assignable<T>, negation<ADL_swappable<T>>>;
+    is_trivially_move_constructible<T>, is_trivially_move_assignable<T>, negation<is_ADL_swappable<T>>>;
 
 template <typename T>
 struct is_trivially_swappable : bool_constant<is_trivially_swappable_v<T>> {};
@@ -1936,7 +1990,7 @@ struct is_trivially_swappable : bool_constant<is_trivially_swappable_v<T>> {};
 
 #ifdef MSTL_VERSION_20__
 template <typename From, typename To>
-concept convertible_to = is_convertible_v<From, To> && requires { static_cast<To>(MSTL::declval<From>()); };
+concept convertible_to = is_convertible_v<From, To> && requires { static_cast<To>(_MSTL declval<From>()); };
 #endif // MSTL_VERSION_20__
 
 
@@ -1944,7 +1998,7 @@ template <typename Iterator, typename Ptr, bool = is_pointer_v<remove_cvref_t<It
 constexpr bool is_nothrow_arrow = is_nothrow_convertible_v<Iterator, Ptr>;
 template <typename Iterator, typename Ptr>
 constexpr bool is_nothrow_arrow<Iterator, Ptr, false> =
-noexcept(MSTL::declcopy<Ptr>(MSTL::declval<Iterator>().operator->()));
+noexcept(_MSTL declcopy<Ptr>(_MSTL declval<Iterator>().operator->()));
 
 
 template <typename Key>
@@ -1966,10 +2020,10 @@ MSTL_MACRO_RANGE_INT(INT_HASH_STRUCT__)
 #undef INT_HASH_STRUCT__
 
 
-#if defined(MSTL_PLATFORM_WIN64__) || defined(MSTL_PLATFORM_LINUX64__)
+#ifdef MSTL_DATA_BUS_WIDTH_64__
 static constexpr size_t FNV_OFFSET_BASIS = 14695981039346656037ULL;
 static constexpr size_t FNV_PRIME = 1099511628211ULL;
-#elif defined(MSTL_PLATFORM_WIN32__) || defined(MSTL_PLATFORM_LINUX32__)
+#else
 static constexpr size_t FNV_OFFSET_BASIS = 2166136261U;
 static constexpr size_t FNV_PRIME = 16777619U;
 #endif
@@ -1977,7 +2031,7 @@ static constexpr size_t FNV_PRIME = 16777619U;
 // the FNV (Fowler-Noll-Vo) is a non-cryptographic hash algorithm
 // with a good avalanche effect and a low collision rate.
 // FNV_hash function is FNV-1a version.
-constexpr size_t FNV_hash(const byte_t* first, size_t count) noexcept {
+constexpr size_t FNV_hash(const byte_t* first, const size_t count) noexcept {
     size_t result = FNV_OFFSET_BASIS;
     for (size_t i = 0; i < count; i++) {
         result ^= static_cast<size_t>(first[i]);
@@ -1999,8 +2053,8 @@ MSTL_MACRO_RANGE_FLOAT(FLOAT_HASH_STRUCT__)
 template <typename, typename = void>
 struct is_nothrow_hashable : false_type {};
 template <typename Key>
-struct is_nothrow_hashable<Key, void_t<decltype(MSTL::hash<Key>{}(MSTL::declval<const Key&>()))>>
-    : bool_constant<noexcept(MSTL::hash<Key>{}(MSTL::declval<const Key&>()))> {};
+struct is_nothrow_hashable<Key, void_t<decltype(_MSTL hash<Key>{}(_MSTL declval<const Key&>()))>>
+    : bool_constant<noexcept(_MSTL hash<Key>{}(_MSTL declval<const Key&>()))> {};
 template <typename Key>
 constexpr bool is_nothrow_hashable_v = is_nothrow_hashable<Key>::value;
 

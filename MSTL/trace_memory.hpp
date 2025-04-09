@@ -10,6 +10,7 @@ MSTL_BEGIN_NAMESPACE__
 template <typename T>
 class trace_allocator {
     static_assert(is_allocable_v<T>, "allocator can`t alloc void, reference, function or const type.");
+
 public:
     using value_type = T;
     using pointer = T*;
@@ -29,7 +30,7 @@ public:
     template <typename U>
     trace_allocator(const trace_allocator<U>& a) : traces_(a.traces_) {}
     self& operator =(const self& a) {
-        if (MSTL::addressof(a) == this) return *this;
+        if (_MSTL addressof(a) == this) return *this;
         traces_ = a.traces_;
         return *this;
     }
@@ -50,31 +51,31 @@ public:
     }
 
     MSTL_NODISCARD MSTL_DECLALLOC pointer allocate(const size_type n) {
-        pointer ptr = standard_allocator<T>::allocate(n);
+        pointer ptr = _MSTL standard_allocator<T>::allocate(n);
         auto st = boost::stacktrace::stacktrace();
         traces_[ptr] = st;
         return ptr;
     }
     MSTL_NODISCARD MSTL_DECLALLOC pointer allocate() {
-        return standard_allocator<T>::allocate(sizeof(value_type));
+        return _MSTL standard_allocator<T>::allocate(sizeof(value_type));
     }
     void deallocate(pointer p) noexcept {
         auto it = traces_.find(p);
         if (it != traces_.end()) {
             traces_.erase(it);
         }
-        standard_allocator<T>::deallocate(p, sizeof(value_type));
+        _MSTL standard_allocator<T>::deallocate(p, sizeof(value_type));
     }
     void deallocate(pointer p, const size_type n) noexcept {
         auto it = traces_.find(p);
         if (it != traces_.end()) {
             traces_.erase(it);
         }
-        standard_allocator<T>::deallocate(p, n);
+        _MSTL standard_allocator<T>::deallocate(p, n);
     }
 
 private:
-    unordered_map<T*, boost::stacktrace::stacktrace> traces_;
+    _MSTL unordered_map<T*, boost::stacktrace::stacktrace> traces_;
 };
 template <typename T, typename U>
 bool operator ==(const trace_allocator<T>&, const trace_allocator<U>&) noexcept {

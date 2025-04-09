@@ -12,7 +12,7 @@ MSTL_INDEPENDENT_TAG_NAMESPACE_SETTING namespace tags {
     };
 }
 
-MSTL_INLINE17 constexpr nullopt_t nullopt;
+static constexpr nullopt_t nullopt;
 
 template <class T>
 struct optional {

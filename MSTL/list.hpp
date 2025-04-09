@@ -5,125 +5,143 @@ MSTL_BEGIN_NAMESPACE__
 
 template <typename T, typename Alloc>
 class list;
-template <typename T, typename Ref, typename Ptr>
+template <bool IsConst, typename List>
 struct list_iterator;
 
 template <typename T>
 struct __list_node {
-public:
-    using value_type    = T;
-    using self          = __list_node<value_type>;
-
-    template <typename T1, typename Alloc>
-    friend class list;
-    template <typename T1, typename Ref, typename Ptr>
-    friend struct list_iterator;
-
 private:
+    using value_type    = T;
+    using node_type     = __list_node<value_type>;
 
     value_type data_{};
-    self* prev_ = nullptr;
-    self* next_ = nullptr;
+    node_type* prev_ = nullptr;
+    node_type* next_ = nullptr;
 
-public:
-    __list_node() noexcept = default;
-    __list_node(const T& val, self* prev, self* next) noexcept 
-        : data_(val), prev_(prev), next_(next) {}
+    template <typename, typename> friend class list;
+    template <bool, typename> friend struct list_iterator;
 };
 
-template <typename T, typename Ref = T&, typename Ptr = T*>
+template <bool IsConst, typename List>
 struct list_iterator {
+private:
+    using container_type	= List;
+    using iterator			= list_iterator<false, container_type>;
+    using const_iterator	= list_iterator<true, container_type>;
+
 public:
     using iterator_category = bidirectional_iterator_tag;
-    using difference_type   = ptrdiff_t;
-    using value_type        = T;
-    using pointer           = Ptr;
-    using reference         = Ref;
-    using self              = list_iterator<T, Ref, Ptr>;
-    using iterator          = list_iterator<T, T&, T*>;
-    using const_iterator    = list_iterator<T, const T&, const T*>;
-    using link_type         = __list_node<T>*;
+    using value_type		= typename container_type::value_type;
+    using reference			= conditional_t<IsConst, typename container_type::const_reference, typename container_type::reference>;
+    using pointer			= conditional_t<IsConst, typename container_type::const_pointer, typename container_type::pointer>;
+    using difference_type	= typename container_type::difference_type;
+    using size_type			= typename container_type::size_type;
 
-    template <typename T1, typename Alloc>
-    friend class list;
-    template <typename T1, typename Ref1, typename Ptr1>
-    friend struct list_iterator;
+    using self              = list_iterator<IsConst, container_type>;
 
 private:
-    link_type node_ = nullptr;
+    using node_type         = __list_node<value_type>;
+
+    node_type* node_ = nullptr;
+    const container_type* list_ = nullptr;
+
+    template <typename, typename> friend class list;
+    template <bool, typename> friend struct list_iterator;
 
 public:
     list_iterator() noexcept = default;
-    list_iterator(link_type x) noexcept : node_(x) {}
+    list_iterator(node_type* x, const container_type* list) noexcept
+    : node_(x), list_(list) {}
 
-    list_iterator(const iterator& x) noexcept : node_(x.node_) {}
+    list_iterator(const iterator& x) noexcept
+    : node_(x.node_), list_(x.list_) {}
+
     self& operator =(const iterator& x) noexcept {
     	if(_MSTL addressof(x) == this) return *this;
 		node_ = x.node_;
+        list_ = x.list_;
 		return *this;
 	}
-    list_iterator(const const_iterator& x) noexcept : node_(const_cast<link_type>(x.node_)) {}
+
+    list_iterator(const const_iterator& x) noexcept
+    : node_(x.node_), list_(x.list_) {}
+
     self& operator =(const const_iterator& x) noexcept {
         if(_MSTL addressof(x) == this) return *this;
-        node_ = const_cast<link_type*>(x.node_);
+        node_ = x.node_;
+        list_ = x.list_;
         return *this;
     }
 
-    list_iterator(iterator&& x) noexcept : node_(x.node_) { x.node_ = nullptr; }
+    list_iterator(iterator&& x) noexcept : node_(x.node_), list_(x.list_) {
+        x.node_ = nullptr;
+        x.list_ = nullptr;
+    }
+
     self& operator =(iterator&& x) noexcept {
         if(_MSTL addressof(x) == this) return *this;
         node_ = x.node_;
+        list_ = x.list_;
         x.node_ = nullptr;
+        x.list_ = nullptr;
         return *this;
     }
-    list_iterator(const_iterator&& x) noexcept : node_(const_cast<link_type>(x.node_)) { x.node_ = nullptr; }
+
+    list_iterator(const_iterator&& x) noexcept
+    : node_(x.node_), list_(x.list_) {
+        x.node_ = nullptr;
+        x.list_ = nullptr;
+    }
+
     self& operator =(const_iterator&& x) noexcept {
         if(_MSTL addressof(x) == this) return *this;
-        node_ = const_cast<link_type*>(x.node_);
+        node_ = x.node_;
+        list_ = x.list_;
         x.node_ = nullptr;
+        x.list_ = nullptr;
         return *this;
     }
 
     ~list_iterator() = default;
 
-    MSTL_NODISCARD reference operator *() const noexcept { return node_->data_; }
-    MSTL_NODISCARD pointer operator->() const noexcept { return &(operator*()); }
-
-    MSTL_NODISCARD friend difference_type operator -(const self& lh, const self& rh) noexcept {
-        difference_type result = 0;
-        self current = rh;
-        while (current != lh) {
-            ++current;
-            ++result;
-        }
-        return result;
+    MSTL_NODISCARD reference operator *() const noexcept {
+        MSTL_DEBUG_VERIFY__(list_ && node_ && node_ != list_->head_,
+            __MSTL_DEBUG_MESG_OPERATE_NULLPTR(list_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
+        return node_->data_;
+    }
+    MSTL_NODISCARD pointer operator->() const noexcept {
+        return &operator*();
     }
 
     self& operator ++() noexcept {
+        MSTL_DEBUG_VERIFY__(list_ && node_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(list_iterator, __MSTL_DEBUG_TAG_INCREMENT));
+        MSTL_DEBUG_VERIFY__(node_ != list_->head_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(list_iterator, __MSTL_DEBUG_TAG_INCREMENT));
         node_ = node_->next_;
         return *this;
     }
     self operator ++(int) noexcept {
-        self _old = *this;
+        self old = *this;
         ++*this;
-        return _old;
+        return old;
     }
-
     self& operator --() noexcept {
+        MSTL_DEBUG_VERIFY__(list_ && node_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(list_iterator, __MSTL_DEBUG_TAG_DECREMENT));
+        MSTL_DEBUG_VERIFY__(node_->prev_ != list_->head_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(list_iterator, __MSTL_DEBUG_TAG_DECREMENT));
         node_ = node_->prev_;
         return *this;
     }
     self operator --(int) noexcept {
-        self _old = *this;
+        self old = *this;
         --*this;
-        return _old;
+        return old;
     }
 
-    MSTL_NODISCARD friend bool operator ==(const self& lh, const self& rh) noexcept {
-        return lh.node_ == rh.node_;
+    MSTL_NODISCARD bool operator ==(const self& x) noexcept {
+		MSTL_DEBUG_VERIFY__(list_ == x.list_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(list_iterator));
+        return node_ == x.node_;
     }
-    MSTL_NODISCARD friend bool operator !=(const self& lh, const self& rh) noexcept {
-        return lh.node_ != rh.node_;
+    MSTL_NODISCARD bool operator !=(const self& x) noexcept {
+        return !(*this == x);
     }
 };
 
@@ -138,26 +156,27 @@ class list {
 
 public:
     MSTL_BUILD_TYPE_ALIAS(T)
+    using allocator_type            = Alloc;
+    using self                      = list<T, Alloc>;
 
-    using node_type         = __list_node<T>;
-    using link_type         = node_type*;
-
-    using iterator          = list_iterator<T, T&, T*>;
-    using const_iterator    = list_iterator<T, const T&, const T*>;
-    using reverse_iterator  = _MSTL reverse_iterator<iterator>;
-    using const_reverse_iterator = _MSTL reverse_iterator<const_iterator>;
-
-    using self              = list<T, Alloc>;
-    using allocator_type    = Alloc;
+    using iterator                  = list_iterator<false, self>;
+    using const_iterator            = list_iterator<true, self>;
+    using reverse_iterator          = _MSTL reverse_iterator<iterator>;
+    using const_reverse_iterator    = _MSTL reverse_iterator<const_iterator>;
 
 private:
-    link_type node_ = nullptr;
+    using node_type = __list_node<T>;
+    using link_type = node_type*;
+
+    link_type head_ = nullptr;
     compressed_pair<allocator_type, size_type> pair_{ default_construct_tag{}, 0 };
 
+    template <bool, typename> friend struct list_iterator;
+
+private:
     void range_check(const size_type position) const noexcept {
         MSTL_DEBUG_VERIFY__(position < pair_.value, "list index out of ranges.");
     }
-
     void range_check(iterator position) const noexcept {
         MSTL_DEBUG_VERIFY__(_MSTL distance(const_iterator(position), cend()) >= 0,
             "list iterator out of ranges."
@@ -176,8 +195,8 @@ private:
     }
 
     void empty_init() {
-        node_ = create_node();
-        node_->prev_ = node_->next_ = node_;
+        head_ = create_node();
+        head_->prev_ = head_->next_ = head_;
     }
 
 public:
@@ -217,13 +236,13 @@ public:
     self& operator =(const self& x) {
         if (_MSTL addressof(x) == this) return *this;
         clear();
-        link_type p = x.node_->next_;
-        while (p != x.node_) {
+        link_type p = x.head_->next_;
+        while (p != x.head_) {
             link_type q = create_node(p->data);
-            q->prev_ = node_->prev_;
-            q->next_ = node_;
-            node_->prev_->next_ = q;
-            node_->prev_ = q;
+            q->prev_ = head_->prev_;
+            q->next_ = head_;
+            head_->prev_->next_ = q;
+            head_->prev_ = q;
             p = p->next_;
         }
         pair_.value = x.pair_.value;
@@ -242,19 +261,19 @@ public:
     }
 
     ~list() {
-        link_type p = this->node_->next_;
-        while (p != this->node_) {
+        link_type p = head_->next_;
+        while (p != head_) {
             link_type q = p;
             p = p->next_;
             destroy_node(q);
         }
-        destroy_node(this->node_);
+        destroy_node(head_);
     }
 
-    MSTL_NODISCARD iterator begin() noexcept { return this->node_->next_; }
-    MSTL_NODISCARD iterator end() noexcept { return this->node_; }
-    MSTL_NODISCARD const_iterator cbegin() const noexcept { return this->node_->next_; }
-    MSTL_NODISCARD const_iterator cend() const noexcept { return this->node_; }
+    MSTL_NODISCARD iterator begin() noexcept { return {head_->next_, this}; }
+    MSTL_NODISCARD iterator end() noexcept { return {head_, this}; }
+    MSTL_NODISCARD const_iterator cbegin() const noexcept { return {head_->next_, this}; }
+    MSTL_NODISCARD const_iterator cend() const noexcept { return {head_, this}; }
     MSTL_NODISCARD reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
     MSTL_NODISCARD reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
     MSTL_NODISCARD const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cend()); }
@@ -263,26 +282,26 @@ public:
     MSTL_NODISCARD size_type size() const noexcept { return pair_.value; }
     MSTL_NODISCARD size_type max_size() const noexcept { return static_cast<size_type>(-1); }
     MSTL_NODISCARD bool empty() const noexcept {
-        return this->node_->next_ == this->node_ || link_type(this->node_->next_)->next_ == this->node_;
+        return head_->next_ == head_ || link_type(head_->next_)->next_ == head_;
     }
 
     MSTL_NODISCARD allocator_type get_allocator() { return allocator_type(); }
 
     MSTL_NODISCARD reference front() noexcept {
         MSTL_DEBUG_VERIFY__(!empty(), "front called on empty list");
-        return this->node_->next_->data_;
+        return head_->next_->data_;
     }
     MSTL_NODISCARD const_reference front() const noexcept {
         MSTL_DEBUG_VERIFY__(!empty(), "front called on empty list");
-        return this->node_->next_->data_;
+        return head_->next_->data_;
     }
     MSTL_NODISCARD reference back() noexcept {
         MSTL_DEBUG_VERIFY__(!empty(), "back called on empty list");
-        return this->node_->prev_->data_;
+        return head_->prev_->data_;
     }
     MSTL_NODISCARD const_reference back() const noexcept {
         MSTL_DEBUG_VERIFY__(!empty(), "back called on empty list");
-        return this->node_->prev_->data_;
+        return head_->prev_->data_;
     }
 
     template <typename... U>
@@ -294,7 +313,7 @@ public:
         position.node_->prev_->next_ = temp;
         position.node_->prev_ = temp;
         ++pair_.value;
-        return temp;
+        return {temp, this};
     }
 
     template <typename... Args>
@@ -312,7 +331,7 @@ public:
     void push_back(T&& x) { insert(end(), _MSTL forward<T>(x)); }
 
     void pop_front() noexcept { erase(begin()); }
-    void pop_back() noexcept { erase(node_->prev_); }
+    void pop_back() noexcept { erase({head_->prev_, this}); }
 
     void assign(size_type count, const T& value) {
         clear();
@@ -366,13 +385,13 @@ public:
 
     iterator erase(iterator position) noexcept {
         range_check(position);
-        if (empty()) return this->node_;
+        if (empty()) return end();
         link_type ret = position.node_->next_;
         position.node_->prev_->next_ = position.node_->next_;
         position.node_->next_->prev_ = position.node_->prev_;
         destroy_node(position.node_);
         --pair_.value;
-        return ret;
+        return {ret, this};
     }
     iterator erase(iterator first, iterator last) noexcept {
         Exception(_MSTL distance(first, last) >= 0, StopIterator("list erase out of ranges."));
@@ -381,19 +400,19 @@ public:
         return first;
     }
     void clear() noexcept {
-        link_type cur = node_->next_;
-        while (cur != node_) {
+        link_type cur = head_->next_;
+        while (cur != head_) {
             link_type temp = cur;
             cur = cur->next_;
             destroy_node(temp);
             --pair_.value;
         }
-        node_->prev_ = node_;
-        node_->next_ = node_;
+        head_->prev_ = head_;
+        head_->next_ = head_;
     }
 
     void swap(self& x) noexcept {
-        _MSTL swap(node_, x.node_);
+        _MSTL swap(head_, x.head_);
         pair_.swap(x.pair_);
     }
 
@@ -515,11 +534,11 @@ public:
     template <typename Pred>
     void sort(Pred pred) {
         if (empty()) return;
-        link_type p = node_->next_->next_;
-        while (p != node_) {
+        link_type p = head_->next_->next_;
+        while (p != head_) {
             T temp = p->data_;
             link_type prev = p->prev_;
-            while (prev != node_ && pred(temp, prev->data_)) {
+            while (prev != head_ && pred(temp, prev->data_)) {
                 prev->next_->data_ = prev->data_;
                 prev = prev->prev_;
             }

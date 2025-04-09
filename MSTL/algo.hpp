@@ -468,6 +468,27 @@ MSTL_CONSTEXPR20 Iterator remove_if(Iterator first, Iterator last, Predicate pre
 	return first == last ? first : _MSTL remove_copy_if(++next, last, first, pred);
 }
 
+template <typename Container, typename U,
+	enable_if_t<is_same_v<typename Container::value_type, U>, int> = 0>
+MSTL_CONSTEXPR20 decltype(auto) erase(Container& cont, const U& value) {
+	const auto old_size = cont.size();
+	const auto end = cont.end();
+	auto removed = _MSTL remove_if(cont.begin(), end,
+		[&value](const auto& iter) { return *iter == value; });
+	cont.erase(removed, end);
+	return old_size - cont.size();
+}
+
+template <typename Container, typename Predicate>
+MSTL_CONSTEXPR20 decltype(auto) erase_if(Container& cont, Predicate pred) {
+	const auto old_size = cont.size();
+	const auto end = cont.end();
+	auto removed = _MSTL remove_if(cont.begin(), end,
+		[ref_pred = _MSTL ref(pred)](const auto& iter) { return ref_pred(*iter); });
+	cont.erase(removed, end);
+	return old_size - cont.size();
+}
+
 template <typename Iterator1, typename Iterator2, typename T,
 	enable_if_t<is_fwd_iter_v<Iterator1> && is_fwd_iter_v<Iterator2>, int> = 0>
 MSTL_CONSTEXPR20 Iterator2 replace_copy(Iterator1 first, Iterator1 last, Iterator2 result,
@@ -626,6 +647,42 @@ template <typename Iterator1, typename Iterator2,
 	enable_if_t<is_fwd_iter_v<Iterator1> && is_fwd_iter_v<Iterator2>, int> = 0>
 MSTL_CONSTEXPR20 Iterator2 rotate_copy(Iterator1 first, Iterator1 middle, Iterator1 last, Iterator2 result) {
 	return _MSTL copy(first, middle, _MSTL copy(middle, last, result));
+}
+
+template <typename Iterator,
+	enable_if_t<is_fwd_iter_v<Iterator> && is_default_constructible_v<iter_val_t<Iterator>>, int> = 0>
+MSTL_CONSTEXPR20 void shift_left(Iterator first, Iterator last, size_t n) {
+	if (first == last || n == 0) return;
+	if (n >= _MSTL distance(first, last)) {
+		for (; first != last; ++first) {
+			*first = _MSTL initialize<iter_val_t<Iterator>>();
+		}
+		return;
+	}
+	Iterator new_first = _MSTL next(first, n);
+	_MSTL copy(new_first, last, first);
+	Iterator end = _MSTL prev(last, -n);
+	for (; end != last; ++end) {
+		*end = _MSTL initialize<iter_val_t<Iterator>>();
+	}
+}
+
+template<typename Iterator,
+	enable_if_t<is_bid_iter_v<Iterator> && is_default_constructible_v<iter_val_t<Iterator>>, int> = 0>
+MSTL_CONSTEXPR20 void shift_right(Iterator first, Iterator last, size_t n) {
+	if (first == last || n == 0) return;
+	if (n >= _MSTL distance(first, last)) {
+		for (; first != last; ++first) {
+			*first = _MSTL initialize<iter_val_t<Iterator>>();
+		}
+		return;
+	}
+	auto new_last = _MSTL prev(last, -n);
+	_MSTL move_backward(first, new_last, last);
+	auto end = _MSTL next(first, n);
+	for (; first != end; ++first) {
+		*first = _MSTL initialize<iter_val_t<Iterator>>();
+	}
 }
 
 template <typename Iterator1, typename Iterator2,

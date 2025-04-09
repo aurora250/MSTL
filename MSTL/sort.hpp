@@ -4,20 +4,7 @@
 #include "heap.hpp"
 MSTL_BEGIN_NAMESPACE__
 
-template <typename Iterator, enable_if_t<
-    is_input_iter_v<Iterator>, int> = 0>
-bool is_sorted(Iterator first, Iterator last) {
-    if (first == last) return true;
-    Iterator next = _MSTL next(first);
-    for (; next != last; ++first, ++next) {
-        if (*next < *first)
-            return false;
-    }
-    return true;
-}
-
-template<typename Iterator, typename Compare, enable_if_t<
-    is_input_iter_v<Iterator>, int> = 0>
+template<typename Iterator, typename Compare, enable_if_t<is_input_iter_v<Iterator>, int> = 0>
 bool is_sorted(Iterator first, Iterator last, Compare comp) {
     if (first == last) return true;
     Iterator next = _MSTL next(first);
@@ -30,20 +17,12 @@ bool is_sorted(Iterator first, Iterator last, Compare comp) {
     return true;
 }
 
-template <typename Iterator, enable_if_t<
-    is_input_iter_v<Iterator>, int> = 0>
-Iterator is_sorted_until(Iterator first, Iterator last) {
-    if (first == last) return last;
-    Iterator next = _MSTL next(first);
-    for (; next != last; ++first, ++next) {
-        if (*next < *first) 
-            return next;
-    }
-    return last;
+template <typename Iterator>
+bool is_sorted(Iterator first, Iterator last) {
+    return is_sorted(first, last, _MSTL less<iter_val_t<Iterator>>());
 }
 
-template <typename Iterator, typename Compare, enable_if_t<
-    is_input_iter_v<Iterator>, int> = 0>
+template <typename Iterator, typename Compare, enable_if_t<is_input_iter_v<Iterator>, int> = 0>
 Iterator is_sorted_until(Iterator first, Iterator last, Compare comp) {
     if (first == last) return last;
     Iterator next = _MSTL next(first);
@@ -54,9 +33,13 @@ Iterator is_sorted_until(Iterator first, Iterator last, Compare comp) {
     return last;
 }
 
+template <typename Iterator>
+Iterator is_sorted_until(Iterator first, Iterator last) {
+    return is_sorted_until(first, last, _MSTL less<iter_val_t<Iterator>>());
+}
+
 // bubble sort : Ot(N)~(N^2) Om(1) stable
-template <typename Iterator, typename Compare, enable_if_t<
-    is_bid_iter_v<Iterator>, int> = 0>
+template <typename Iterator, typename Compare, enable_if_t<is_bid_iter_v<Iterator>, int> = 0>
 void bubble_sort(Iterator first, Iterator last, Compare comp) {
     if (first == last) return;
     auto revend = _MSTL make_reverse_iterator(first);
@@ -82,8 +65,7 @@ void bubble_sort(Iterator first, Iterator last) {
 }
 
 // cocktail sort : Ot(N)~(N^2) Om(1) stable
-template <typename Iterator, typename Compare, enable_if_t<
-    is_bid_iter_v<Iterator>, int> = 0>
+template <typename Iterator, typename Compare, enable_if_t<is_bid_iter_v<Iterator>, int> = 0>
 void cocktail_sort(Iterator first, Iterator last, Compare comp) {
     if (first == last) return;
     bool swapped = true;

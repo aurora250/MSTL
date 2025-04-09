@@ -11,8 +11,8 @@
 #include "unordered_map.hpp"
 MSTL_BEGIN_NAMESPACE__
 
-static constexpr size_t MSTL_TASK_MAX_THRESHHOLD__ = INT32_MAX;
-static constexpr MSTL_LLT MSTL_THREAD_MAX_IDLE_SECONDS__ = 60;
+static constexpr size_t MSTL_TASK_MAX_THRESHHOLD__ = INT32_MAX_SIZE;
+static constexpr int64_t MSTL_THREAD_MAX_IDLE_SECONDS__ = 60;
 static const size_t MSTL_THREAD_MAX_THRESHHOLD__ = std::thread::hardware_concurrency();
 
 enum class THREAD_POOL_MODE {
@@ -20,29 +20,38 @@ enum class THREAD_POOL_MODE {
 	MODE_CACHED  // dynamic number
 };
 
-class __thread_aux {
-private:
-	using ThreadFunc = _MSTL function<void(int)>;
+static uint32_t __pool_generate_id = 0;
 
-	ThreadFunc func_;
-	static int generateId_;
-	int threadId_;
+class manual_thread {
+public:
+    using id_type        = uint32_t;
+
+private:
+	using thread_func    = _MSTL function<void(id_type)>;
+
+	thread_func func_;
+	id_type thread_id_;
 
 public:
-	__thread_aux(ThreadFunc);
-	~__thread_aux() = default;
+	manual_thread(thread_func);
+	~manual_thread() = default;
 
-	MSTL_NODISCARD int get_id() const;
+	MSTL_NODISCARD id_type get_id() const;
 	void start();
 };
 
-class ThreadPool {
+class thread_pool;
+thread_pool& get_instance_thread_pool();
+
+
+class thread_pool {
 private:
-	using Task = _MSTL function<void()>;
+	using Task      = _MSTL function<void()>;
+    using id_type   = typename manual_thread::id_type;
 
-	_MSTL unordered_map<int, _MSTL unique_ptr<__thread_aux>> threads_;
+	_MSTL unordered_map<id_type, _MSTL unique_ptr<manual_thread>> threads_;
 
-	uint32_t init_thread_size_;
+	id_type init_thread_size_;
 	size_t thread_size_thresh_hold_;
 
 	_MSTL queue<Task> task_queue_;
@@ -59,23 +68,29 @@ private:
 	_MSTL THREAD_POOL_MODE pool_mode_;
 	std::atomic_bool is_running_;
 
+    friend thread_pool& get_instance_thread_pool();
+
 private:
-	void thread_function(int);
-	MSTL_NODISCARD bool running() const;
+	void thread_function(id_type);
+
+	thread_pool();
+	~thread_pool();
 
 public:
-	ThreadPool();
-	~ThreadPool();
-	ThreadPool(const ThreadPool&) = delete;
-	ThreadPool(ThreadPool&&) = delete;
-	ThreadPool& operator =(const ThreadPool&) = delete;
-	ThreadPool& operator =(ThreadPool&&) = delete;
+    thread_pool(const thread_pool&) = delete;
+    thread_pool(thread_pool&&) = delete;
+    thread_pool& operator =(const thread_pool&) = delete;
+    thread_pool& operator =(thread_pool&&) = delete;
 
-	void set_mode(THREAD_POOL_MODE);
-	void set_taskque_max_thresh_hold(size_t);
-	void set_thread_size_thresh_hold(size_t);
-	MSTL_NODISCARD static size_t max_thread_size();
-	void start(unsigned int = 2);
+	bool set_mode(THREAD_POOL_MODE);
+	bool set_taskque_max_thresh_hold(size_t);
+	bool set_thread_size_thresh_hold(size_t);
+	MSTL_NODISCARD size_t max_thread_size() noexcept;
+	MSTL_NODISCARD bool running() const;
+    MSTL_NODISCARD THREAD_POOL_MODE mode() const;
+
+	void start(id_type = 2);
+    void stop();
 
 	template <typename Func, typename... Args, enable_if_t<is_invocable_v<Func, Args...>, int> = 0>
 	decltype(auto) submit_task(Func&& func, Args&&... args) {
@@ -94,14 +109,14 @@ public:
 			(*task_)();
 			return task_->get_future();
 		}
-		task_queue_.emplace([task]() { (*task)(); });
+		task_queue_.emplace([task] { (*task)(); });
 		++task_size_;
 		not_empty_.notify_all();
 		if (pool_mode_ == THREAD_POOL_MODE::MODE_CACHED
 			&& task_size_ > idle_thread_size_
 			&& threads_.size() < thread_size_thresh_hold_) {
-			auto ptr = _MSTL make_unique<__thread_aux>([this](const int id) { thread_function(id); });
-			int thread_id = ptr->get_id();
+			auto ptr = _MSTL make_unique<manual_thread>([this](const id_type id) { thread_function(id); });
+			id_type thread_id = ptr->get_id();
 			threads_.emplace(thread_id, _MSTL move(ptr));
 			threads_[thread_id]->start();
 			++idle_thread_size_;

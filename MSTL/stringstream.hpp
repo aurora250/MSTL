@@ -58,11 +58,11 @@ public:
 		buffer_.append(_MSTL move((__stream_to_string<CharT>)(x)));
 		return *this;
 	}
-	MSTL_CONSTEXPR20 self& operator <<(MSTL_LLT x) {
+	MSTL_CONSTEXPR20 self& operator <<(long long x) {
 		buffer_.append(_MSTL move((__stream_to_string<CharT>)(x)));
 		return *this;
 	}
-	MSTL_CONSTEXPR20 self& operator <<(unsigned MSTL_LLT x) {
+	MSTL_CONSTEXPR20 self& operator <<(unsigned long long x) {
 		buffer_.append(_MSTL move((__stream_to_string<CharT>)(x)));
 		return *this;
 	}

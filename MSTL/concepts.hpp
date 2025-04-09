@@ -1,7 +1,6 @@
 #ifndef MSTL_CONCEPTS_HPP__
 #define MSTL_CONCEPTS_HPP__
 #include "type_traits.hpp"
-#include <iostream>
 MSTL_BEGIN_NAMESPACE__
 
 #ifdef MSTL_VERSION_20__
@@ -119,16 +118,8 @@ concept regular = semiregular<T> && equality_comparable<T>;
 
 
 template <typename T>
-concept is_printable = requires(T t) {
+concept is_printable = requires(const T& t) {
 	{ std::cout << t } -> convertible_to<std::ostream&>;
-};
-
-template <typename T>
-concept is_detailable = requires(const T& c) {
-	{ c.cbegin() } -> convertible_to<typename T::const_iterator>;
-	{ c.cend() } -> convertible_to<typename T::const_iterator>;
-	{ c.size() } -> convertible_to<size_t>;
-	requires is_printable<typename iterator_traits<typename T::const_iterator>::value_type>;
 };
 
 
@@ -151,7 +142,7 @@ concept input_iterator = both_equality_comparable<Iterator, Iterator>
 template <typename Iterator>
 concept forward_iterator = both_ordered_with<Iterator, Iterator> && semiregular<Iterator>
 && input_iterator<Iterator> && requires(Iterator it1, Iterator it2) {
-	{ (it1 - it2) } -> convertible_to<typename iterator_traits<Iterator>::difference_type>;
+	{ it1 - it2 } -> convertible_to<typename iterator_traits<Iterator>::difference_type>;
 };
 template <typename Iterator>
 concept bidirectional_iterator = forward_iterator<Iterator> && requires(Iterator it) {

@@ -19,8 +19,7 @@ private:
     MSTL_CONSTEXPR20 void out(const T& val) {
         if (this->check_empty(val)) return;
         if (!this->is_compact_) sr_ += " ";
-        using ss_t = stringstream;
-        this->sr_ += static_cast<ss_t>(ss_t() << val).str();
+        this->sr_ += static_cast<stringstream>(stringstream() << val).str();
         this->is_compact_ = false;
     }
 
@@ -60,7 +59,7 @@ struct bound {   // [N]
 
     MSTL_CONSTEXPR20 bound(output& out) : out_(out) {}
     MSTL_CONSTEXPR20 ~bound() {
-        if (N == 0) out_("[]");
+        MSTL_IF_CONSTEXPR (N == 0) out_("[]");
         else out_("[").compact()(N).compact()("]");
     }
 };
@@ -76,20 +75,20 @@ struct parameter<IsStart> {
     MSTL_CONSTEXPR20 ~parameter() { bracket<IsStart> { out_ }; }
 };
 
+
 template <typename T, bool IsBase = false>
 struct check {
     output out_;
 
     MSTL_CONSTEXPR20 check(const output& out) : out_(out) {
-        const char* typeid_name = typeid(T).name();
 #if defined(MSTL_COMPILE_GNUC__)
         auto deleter = [](char* p) { if (p) free(p); };
         _MSTL unique_ptr<char, decltype(deleter)> real_name {
-            ::abi::__cxa_demangle(typeid_name, nullptr, nullptr, nullptr), deleter
+            ::abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, nullptr), deleter
         };
         out_(real_name.get());
 #else
-        out_(typeid_name);
+        out_(typeid(T).name());
 #endif
     }
 };
@@ -151,6 +150,7 @@ struct parameter<IsStart, P1, P...> {
     CHECK_TYPE_ARRAY__(const, BOUND_OPT, ,##__VA_ARGS__) \
     CHECK_TYPE_ARRAY__(volatile, BOUND_OPT, ,##__VA_ARGS__) \
     CHECK_TYPE_ARRAY__(const volatile, BOUND_OPT, ,##__VA_ARGS__)
+
 #if defined(MSTL_COMPILE_GNUC__)
 CHECK_TYPE_ARRAY_CV__(0)
 #endif

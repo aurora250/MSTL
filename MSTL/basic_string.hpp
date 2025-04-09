@@ -4,77 +4,185 @@
 #include "memory.hpp"
 MSTL_BEGIN_NAMESPACE__
 
-template <typename CharT, typename Ref = CharT&, typename Ptr = CharT*>
-class basic_string_iterator {
+template <typename CharT, typename Traits, typename Alloc>
+class basic_string;
+
+template <bool IsConst, typename String>
+struct basic_string_iterator {
+private:
+    using container_type	= String;
+    using iterator			= basic_string_iterator<false, container_type>;
+    using const_iterator	= basic_string_iterator<true, container_type>;
+
 public:
 #ifdef MSTL_VERSION_20__
     using iterator_category = contiguous_iterator_tag;
 #else
     using iterator_category = random_access_iterator_tag;
 #endif // MSTL_VERSION_20__
-    using value_type        = CharT;
-    using pointer           = Ptr;
-    using reference         = Ref;
-    using difference_type   = ptrdiff_t;
-    using self              = basic_string_iterator<CharT, Ref, Ptr>;
+    using value_type		= typename container_type::value_type;
+    using reference			= conditional_t<IsConst, typename container_type::const_reference, typename container_type::reference>;
+    using pointer			= conditional_t<IsConst, typename container_type::const_pointer, typename container_type::pointer>;
+    using difference_type	= typename container_type::difference_type;
+    using size_type			= typename container_type::size_type;
+
+    using self				= basic_string_iterator<IsConst, String>;
 
 private:
     pointer ptr_ = nullptr;
+    const container_type* str_ = nullptr;
+
+    template <typename, typename, typename> friend class basic_string;
+    template <bool, typename> friend struct basic_string_iterator;
 
 public:
-    MSTL_CONSTEXPR20 basic_string_iterator() noexcept = default;
-    MSTL_CONSTEXPR20 basic_string_iterator(pointer p) noexcept : ptr_(p) {}
-    MSTL_CONSTEXPR20 basic_string_iterator(const self&) noexcept = default;
-    MSTL_CONSTEXPR20 ~basic_string_iterator() = default;
+    MSTL_CONSTEXPR20 basic_string_iterator() = default;
+    MSTL_CONSTEXPR20 basic_string_iterator(pointer ptr, const container_type* vec) : ptr_(ptr), str_(vec) {}
 
-    MSTL_NODISCARD MSTL_CONSTEXPR20 reference operator *()  const noexcept { return *ptr_; }
-    MSTL_NODISCARD MSTL_CONSTEXPR20 pointer operator ->() const noexcept { return &(operator*()); }
+    MSTL_CONSTEXPR20 basic_string_iterator(const iterator& x) noexcept
+    : ptr_(const_cast<pointer>(x.ptr_)), str_(x.str_) {}
 
-    MSTL_CONSTEXPR20 self& operator ++() noexcept { ++ptr_;
+    MSTL_CONSTEXPR20 self& operator =(const iterator& rh) noexcept {
+        if (_MSTL addressof(rh) == this) return *this;
+        ptr_ = const_cast<pointer>(rh.ptr_);
+        str_ = rh.str_;
+        return *this;
+    }
+
+    MSTL_CONSTEXPR20 basic_string_iterator(iterator&& x) noexcept
+    : ptr_(const_cast<pointer>(x.ptr_)), str_(x.str_) {
+        x.ptr_ = nullptr;
+        x.str_ = nullptr;
+    }
+
+    MSTL_CONSTEXPR20 self& operator =(iterator&& rh) noexcept {
+        if (_MSTL addressof(rh) == this) return *this;
+        ptr_ = const_cast<pointer>(rh.ptr_);
+        str_ = rh.str_;
+        rh.ptr_ = nullptr;
+        rh.str_ = nullptr;
+        return *this;
+    }
+
+    MSTL_CONSTEXPR20 basic_string_iterator(const const_iterator& x) noexcept
+    : ptr_(const_cast<pointer>(x.ptr_)), str_(x.str_) {}
+
+    MSTL_CONSTEXPR20 self& operator =(const const_iterator& rh) noexcept {
+        if (_MSTL addressof(rh) == this) return *this;
+        ptr_ = const_cast<pointer>(rh.ptr_);
+        str_ = rh.str_;
+        return *this;
+    }
+
+    MSTL_CONSTEXPR20 basic_string_iterator(const_iterator&& x) noexcept
+    : ptr_(const_cast<pointer>(x.ptr_)), str_(x.str_) {
+        x.ptr_ = nullptr;
+        x.str_ = nullptr;
+    }
+
+    MSTL_CONSTEXPR20 self& operator =(const_iterator&& rh) noexcept {
+        if (_MSTL addressof(rh) == this) return *this;
+        ptr_ = const_cast<pointer>(rh.ptr_);
+        str_ = rh.str_;
+        rh.ptr_ = nullptr;
+        rh.str_ = nullptr;
+        return *this;
+    }
+
+    MSTL_CONSTEXPR20 ~basic_string_iterator() noexcept = default;
+
+    MSTL_NODISCARD MSTL_CONSTEXPR20 reference operator *()  const noexcept {
+        MSTL_DEBUG_VERIFY__(ptr_ && str_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(basic_string_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
+        MSTL_DEBUG_VERIFY__(str_->data_ <= ptr_ && ptr_ <= str_->data_ + str_->size_,
+            __MSTL_DEBUG_MESG_OUT_OF_RANGE(basic_string_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
+        return *ptr_;
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 pointer operator ->() const noexcept {
+        return &operator*();
+    }
+
+    MSTL_CONSTEXPR20 self& operator ++() noexcept {
+        MSTL_DEBUG_VERIFY__(ptr_ && str_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(basic_string_iterator, __MSTL_DEBUG_TAG_INCREMENT));
+        MSTL_DEBUG_VERIFY__(ptr_ < str_->data_ + str_->size_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(basic_string_iterator, __MSTL_DEBUG_TAG_INCREMENT));
+        ++ptr_;
         return *this;
     }
     MSTL_CONSTEXPR20 self  operator ++(int) noexcept {
         self tmp = *this;
-        ++ptr_;
+        ++*this;
         return tmp;
     }
 
     MSTL_CONSTEXPR20 self& operator --() noexcept {
+        MSTL_DEBUG_VERIFY__(ptr_ && str_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(basic_string_iterator, __MSTL_DEBUG_TAG_DECREMENT));
+        MSTL_DEBUG_VERIFY__(str_->data_ < ptr_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(basic_string_iterator, __MSTL_DEBUG_TAG_DECREMENT));
         --ptr_; 
         return *this;
     }
     MSTL_CONSTEXPR20 self  operator --(int) noexcept {
         self tmp = *this;
-        --ptr_;
+        --*this;
         return tmp;
     }
 
-    MSTL_NODISCARD MSTL_CONSTEXPR20 self operator +(const difference_type n) const noexcept { return self(ptr_ + n); }
+    MSTL_CONSTEXPR20 self& operator +=(difference_type n) noexcept {
+        if (n < 0) {
+            MSTL_DEBUG_VERIFY__((ptr_ && str_) || n == 0, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(basic_string_iterator, __MSTL_DEBUG_TAG_DECREMENT));
+            MSTL_DEBUG_VERIFY__(n >= str_->data_ - ptr_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(basic_string_iterator, __MSTL_DEBUG_TAG_DECREMENT));
+        }
+        else if (n > 0) {
+            MSTL_DEBUG_VERIFY__((ptr_ && str_) || n == 0, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(basic_string_iterator, __MSTL_DEBUG_TAG_INCREMENT));
+            MSTL_DEBUG_VERIFY__(n <= str_->data_ + str_->size_ - ptr_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(basic_string_iterator, __MSTL_DEBUG_TAG_INCREMENT));
+        }
+        ptr_ += n;
+        return *this;
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 self operator +(const difference_type n) const noexcept {
+        self tmp = *this;
+        tmp += n;
+        return tmp;
+    }
     MSTL_NODISCARD friend MSTL_CONSTEXPR20 self operator +(const difference_type n, const self& it) noexcept {
         return it + n;
     }
 
-    MSTL_CONSTEXPR20 self& operator +=(difference_type n) noexcept {
-        ptr_ += n;
-        return *this;
-    }
-
-    MSTL_NODISCARD MSTL_CONSTEXPR20 self operator -(difference_type n) const noexcept { return self(ptr_ - n); }
-    MSTL_NODISCARD MSTL_CONSTEXPR20 difference_type operator -(const self& rhs) const noexcept { return ptr_ - rhs.ptr_; }
-
     MSTL_CONSTEXPR20 self& operator -=(difference_type n) noexcept {
-        ptr_ -= n;
+        ptr_ += -n;
         return *this;
     }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 self operator -(difference_type n) const noexcept {
+        auto tmp = *this;
+        tmp -= n;
+        return tmp;
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 difference_type operator -(const self& rh) const noexcept {
+        return static_cast<difference_type>(ptr_ - rh.ptr_);
+    }
 
-    MSTL_NODISCARD MSTL_CONSTEXPR20 reference operator [](difference_type n) const noexcept { return ptr_[n]; }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 reference operator [](difference_type n) const noexcept {
+        return *(*this + n);
+    }
 
-    MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator ==(const self& rhs) const noexcept { return ptr_ == rhs.ptr_; }
-    MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator !=(const self& rhs) const noexcept { return ptr_ != rhs.ptr_; }
-    MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator <(const self& rhs) const noexcept { return ptr_ < rhs.ptr_; }
-    MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator >(const self& rhs) const noexcept { return ptr_ > rhs.ptr_; }
-    MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator <=(const self& rhs) const noexcept { return ptr_ <= rhs.ptr_; }
-    MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator >=(const self& rhs) const noexcept { return ptr_ >= rhs.ptr_; }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator ==(const self& rh) const noexcept {
+		MSTL_DEBUG_VERIFY__(str_ == rh.str_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(vector_iterator));
+        return ptr_ == rh.ptr_;
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator !=(const self& rh) const noexcept {
+        return !(*this == rh);
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator <(const self& rh) const noexcept {
+		MSTL_DEBUG_VERIFY__(str_ == rh.str_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(vector_iterator));
+        return ptr_ < rh.ptr_;
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator >(const self& rh) const noexcept {
+        return rh < *this;
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator <=(const self& rh) const noexcept {
+        return !(*this > rh);
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator >=(const self& rh) const noexcept {
+        return !(*this < rh);
+    }
 };
 
 template <typename CharT, typename Traits = char_traits<CharT>, typename Alloc = standard_allocator<CharT>>
@@ -89,17 +197,15 @@ class basic_string {
 
 public:
     MSTL_BUILD_TYPE_ALIAS(CharT)
+    using traits_type               = Traits;
+    using view_type                 = basic_string_view<CharT, Traits>;
+    using allocator_type            = Alloc;
+    using self                      = basic_string<CharT, Traits, Alloc>;
 
-    using traits_type   = Traits;
-    using view_type     = basic_string_view<CharT, Traits>;
-
-    using iterator                  = basic_string_iterator<CharT, reference, pointer>;
-    using const_iterator            = basic_string_iterator<CharT, const_reference, const_pointer>;
+    using iterator                  = basic_string_iterator<false, self>;
+    using const_iterator            = basic_string_iterator<true, self>;
     using reverse_iterator          = _MSTL reverse_iterator<iterator>;
     using const_reverse_iterator    = _MSTL reverse_iterator<const_iterator>;
-
-    using self              = basic_string<CharT, Traits, Alloc>;
-    using allocator_type    = Alloc;
 
     static constexpr size_type npos = static_cast<size_type>(-1);
 
@@ -108,6 +214,9 @@ private:
     size_type size_ = 0;
     compressed_pair<allocator_type, size_type> alloc_pair_{ default_construct_tag{}, 0 };
 
+    template <bool, typename> friend struct basic_string_iterator;
+
+private:
     MSTL_CONSTEXPR20 void range_check(const size_type n) const noexcept {
         MSTL_DEBUG_VERIFY__(n < size_, "basic_string index out of ranges.");
     }
@@ -186,8 +295,8 @@ private:
         return *this;
     }
 
-    template <typename Iterator, enable_if_t<
-        is_iter_v<Iterator> && is_same_v<iter_val_t<Iterator>, value_type>, int> = 0>
+    template <typename Iterator,
+        enable_if_t<is_iter_v<Iterator> && is_same_v<iter_val_t<Iterator>, value_type>, int> = 0>
     MSTL_CONSTEXPR20 basic_string& replace_copy(iterator first1, iterator last1, Iterator first2, Iterator last2) {
         size_type len1 = _MSTL distance(first1, last1);
         size_type len2 = _MSTL distance(first2, last2);
@@ -362,10 +471,10 @@ public:
 
     MSTL_CONSTEXPR20 ~basic_string() { destroy_buffer(); }
 
-    MSTL_NODISCARD MSTL_CONSTEXPR20 iterator begin() noexcept { return data_; }
-    MSTL_NODISCARD MSTL_CONSTEXPR20 iterator end() noexcept { return data_ + size_; }
-    MSTL_NODISCARD MSTL_CONSTEXPR20 const_iterator cbegin() const noexcept { return data_; }
-    MSTL_NODISCARD MSTL_CONSTEXPR20 const_iterator cend() const noexcept { return data_ + size_; }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 iterator begin() noexcept { return {data_, this}; }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 iterator end() noexcept { return {data_ + size_, this}; }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 const_iterator cbegin() const noexcept { return {data_, this}; }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 const_iterator cend() const noexcept { return {data_ + size_, this}; }
     MSTL_NODISCARD MSTL_CONSTEXPR20 reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
     MSTL_NODISCARD MSTL_CONSTEXPR20 reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
     MSTL_NODISCARD MSTL_CONSTEXPR20 const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cend()); }
@@ -614,16 +723,14 @@ public:
         MSTL_DEBUG_VERIFY__(begin() <= first && last <= end() && first <= last, "basic_string replace iterator out of ranges.");
         return replace_copy(first, last - first, str.data_, str.size_);
     }
-
     MSTL_CONSTEXPR20 self& replace(const size_type position, const size_type n, const_pointer str) {
         range_check(position);
-        return replace_copy(data_ + position, n, str, traits_type::length(str));
+        return replace_copy({data_ + position, this}, n, str, traits_type::length(str));
     }
     MSTL_CONSTEXPR20 self& replace(iterator first, iterator last, const_pointer str) {
         MSTL_DEBUG_VERIFY__(begin() <= first && last <= end() && first <= last, "basic_string replace iterator out of ranges.");
         return replace_copy(first, last - first, str, traits_type::length(str));
     }
-
     MSTL_CONSTEXPR20 self& replace(const size_type position, const size_type n1, const_pointer str, const size_type n2) {
         range_check(position);
         return replace_copy(data_ + position, n1, str, n2);
@@ -632,7 +739,6 @@ public:
         MSTL_DEBUG_VERIFY__(begin() <= first && last <= end() && first <= last, "basic_string replace iterator out of ranges.");
         return replace_copy(first, last - first, str, n);
     }
-
     MSTL_CONSTEXPR20 self& replace(const size_type position, const size_type n1, const size_type n2, const value_type chr) {
         range_check(position);
         return replace_fill(data_ + position, n1, n2, chr);
@@ -641,14 +747,12 @@ public:
         MSTL_DEBUG_VERIFY__(begin() <= first && last <= end() && first <= last, "basic_string replace iterator out of ranges.");
         return replace_fill(first, static_cast<size_type>(last - first), n, chr);
     }
-
     MSTL_CONSTEXPR20 self& replace(const size_type position1, const size_type n1, const self& str,
         const size_type position2, const size_type n2 = npos) {
         range_check(position1);
         range_check(position2);
         return replace_copy(data_ + position1, n1, str.data_ + position2, n2);
     }
-
     template <typename Iterator>
     MSTL_CONSTEXPR20 self& replace(iterator first, iterator last, Iterator first2, Iterator last2) {
         MSTL_DEBUG_VERIFY__(begin() <= first && last <= end() && first <= last, "basic_string replace iterator out of ranges.");

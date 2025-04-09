@@ -5,29 +5,26 @@
 #include "stack.hpp"
 MSTL_BEGIN_NAMESPACE__
 
+MSTL_INLINE17 constexpr uint32_t MSTL_SPLIT_LENGTH = 15U;
+
 inline void split_line(std::ostream& out = std::cout, uint32_t size = MSTL_SPLIT_LENGTH, const char split = '-') {
 	while (size--) out << split;
 	out << '\n';
 }
 
 template <typename Container>
-#ifdef MSTL_VERSION_20__
-	requires(is_detailable<Container>)
-#endif // MSTL_VERSION_20__
 void show_data_only(const Container& c, std::ostream& _out) {
 	_out << '[';
-	for (auto iter = c.cbegin(); iter != c.cend();) {
-		_out << *iter << std::flush;
-		++iter;
-		if (iter != c.cend()) _out << ", ";
+    auto last = _MSTL cend(c);
+    auto first = _MSTL cbegin(c);
+	for (auto iter = first; iter != last; ++iter) {
+	    if(iter != first) _out << ", ";
+		_out << *iter;
 	}
 	_out << ']' << std::flush;
 }
 
 template <typename T1, typename T2>
-#ifdef MSTL_VERSION_20__
-	requires(is_printable<T1> && is_printable<T2>)
-#endif // MSTL_VERSION_20__
 void show_data_only(const _MSTL pair<T1, T2>& p, std::ostream& _out) {
 	_out << "{ " << p.first << ", " << p.second << " }" << std::flush;
 }
@@ -70,18 +67,23 @@ std::ostream& operator <<(std::ostream& out, const shared_ptr<T>& ptr) {
 	return out;
 }
 
+inline void show_data_only(nullptr_t, std::ostream& out) {
+    out << "nullptr" << std::flush;
+}
+inline std::ostream& operator <<(std::ostream& out, const nullptr_t null) {
+    show_data_only(null, out);
+    return out;
+}
+
 template <typename Container>
-#ifdef MSTL_VERSION_20__
-	requires(is_detailable<Container>)
-#endif
 void detailof(const Container& c, std::ostream& out = std::cout) {
 	split_line(out);
 	out << "type: " << _MSTL check_type<Container>() << '\n';
-	out << "size: " << c.size() << '\n';
+	out << "size: " << _MSTL size(c) << '\n';
 	out << "data: ";
-	show_data_only(c, out);
+	_MSTL show_data_only(c, out);
 	out << std::endl;
-	split_line(out);
+	_MSTL split_line(out);
 }
 
 template <typename T, typename Sequence>
