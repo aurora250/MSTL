@@ -9,7 +9,6 @@
 #include "optional.hpp"
 #include <charconv>
 #include <regex>
-#include <unordered_map>
 MSTL_BEGIN_NAMESPACE__
 
 struct JSONObject;
@@ -102,7 +101,7 @@ inline pair<JSONObject, size_t> parse(const string_view json) {
         }
         return {JSONObject{move(str)}, i};
     } else if (json[0] == '[') {
-        vector<JSONObject> res;
+        JSONList res;
         size_t i;
         for (i = 1; i < json.size();) {
             if (json[i] == ']') {
@@ -122,7 +121,7 @@ inline pair<JSONObject, size_t> parse(const string_view json) {
         }
         return {JSONObject{std::move(res)}, i};
     } else if (json[0] == '{') {
-        unordered_map<string, JSONObject> res;
+        JSONDict res{100};
         size_t i;
         for (i = 1; i < json.size();) {
             if (json[i] == '}') {

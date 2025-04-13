@@ -4,7 +4,7 @@
 #include "heap.hpp"
 MSTL_BEGIN_NAMESPACE__
 
-template<typename T, typename Sequence = deque<T>>
+template <typename T, typename Sequence = deque<T>>
 class queue {
 public:
     using value_type        = typename Sequence::value_type;
@@ -95,7 +95,7 @@ void swap(queue<T, Sequence>& lh, queue<T, Sequence>& rh) noexcept(noexcept(lh.s
 }
 
 
-template<typename T, typename Sequence = vector<T>,
+template <typename T, typename Sequence = vector<T>,
     typename Compare = less<typename Sequence::value_type>>
 class priority_queue {
 public:

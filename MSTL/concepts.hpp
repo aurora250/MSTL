@@ -164,16 +164,16 @@ concept random_access_iterator = bidirectional_iterator<Iterator>
 
 
 template <typename, typename = void>
-constexpr bool __is_iterator_with_cate_v = false;
+MSTL_INLINE17 constexpr bool __is_iterator_with_cate_v = false;
 template <typename Iterator>
-constexpr bool __is_iterator_with_cate_v<Iterator, void_t<iter_cat_t<Iterator>>> = true;
+MSTL_INLINE17 constexpr bool __is_iterator_with_cate_v<Iterator, void_t<iter_cat_t<Iterator>>> = true;
 
 
 template <typename Iterator>
-constexpr bool is_ranges_iter_v = __is_iterator_with_cate_v<Iterator>;
+MSTL_INLINE17 constexpr bool is_ranges_iter_v = __is_iterator_with_cate_v<Iterator>;
 
 template <typename Iterator>
-constexpr bool is_iter_v =
+MSTL_INLINE17 constexpr bool is_iter_v =
 #ifdef MSTL_VERSION_20__
 iterator_typedef<Iterator> &&
 #endif
@@ -181,10 +181,10 @@ is_ranges_iter_v<Iterator>;
 
 
 template <typename Iterator>
-constexpr bool is_ranges_input_iter_v = is_convertible_v<iter_cat_t<Iterator>, input_iterator_tag>;
+MSTL_INLINE17 constexpr bool is_ranges_input_iter_v = is_convertible_v<iter_cat_t<Iterator>, input_iterator_tag>;
 
 template <typename Iterator>
-constexpr bool is_input_iter_v =
+MSTL_INLINE17 constexpr bool is_input_iter_v =
 #ifdef MSTL_VERSION_20__
 input_iterator<Iterator> &&
 #endif
@@ -192,10 +192,10 @@ is_ranges_input_iter_v<Iterator>;
 
 
 template <typename Iterator>
-constexpr bool is_ranges_fwd_iter_v = is_convertible_v<iter_cat_t<Iterator>, forward_iterator_tag>;
+MSTL_INLINE17 constexpr bool is_ranges_fwd_iter_v = is_convertible_v<iter_cat_t<Iterator>, forward_iterator_tag>;
 
 template <typename Iterator>
-constexpr bool is_fwd_iter_v = 
+MSTL_INLINE17 constexpr bool is_fwd_iter_v =
 #ifdef MSTL_VERSION_20__
 forward_iterator<Iterator> &&
 #endif
@@ -203,10 +203,10 @@ is_ranges_fwd_iter_v<Iterator>;
 
 
 template <typename Iterator>
-constexpr bool is_ranges_bid_iter_v = is_convertible_v<iter_cat_t<Iterator>, bidirectional_iterator_tag>;
+MSTL_INLINE17 constexpr bool is_ranges_bid_iter_v = is_convertible_v<iter_cat_t<Iterator>, bidirectional_iterator_tag>;
 
 template <typename Iterator>
-constexpr bool is_bid_iter_v =
+MSTL_INLINE17 constexpr bool is_bid_iter_v =
 #ifdef MSTL_VERSION_20__
 bidirectional_iterator<Iterator> &&
 #endif
@@ -214,10 +214,10 @@ is_ranges_bid_iter_v<Iterator>;
 
 
 template <typename Iterator>
-constexpr bool is_ranges_rnd_iter_v = is_convertible_v<iter_cat_t<Iterator>, random_access_iterator_tag>;
+MSTL_INLINE17 constexpr bool is_ranges_rnd_iter_v = is_convertible_v<iter_cat_t<Iterator>, random_access_iterator_tag>;
 
 template <typename Iterator>
-constexpr bool is_rnd_iter_v =
+MSTL_INLINE17 constexpr bool is_rnd_iter_v =
 #ifdef MSTL_VERSION_20__
 random_access_iterator<Iterator> &&
 #endif
@@ -225,7 +225,7 @@ is_ranges_rnd_iter_v<Iterator>;
 
 
 template <typename Iterator>
-constexpr bool is_ranges_cot_iter_v = 
+MSTL_INLINE17 constexpr bool is_ranges_cot_iter_v =
 #ifdef MSTL_VERSION_20__
 is_convertible_v<iter_cat_t<Iterator>, contiguous_iterator_tag>;
 #else
@@ -233,7 +233,7 @@ is_pointer_v<Iterator>;
 #endif // MSTL_VERSION_20__
 
 template <typename Iterator>
-constexpr bool is_cot_iter_v = 
+MSTL_INLINE17 constexpr bool is_cot_iter_v =
 #ifdef MSTL_VERSION_20__
 random_access_iterator<Iterator> && 
 #endif // MSTL_VERSION_20__

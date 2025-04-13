@@ -275,7 +275,7 @@ private:
         MSTL_TRY__{
             _MSTL construct(&n->data_, _MSTL forward<Args>(args)...);
         }
-        MSTL_CATCH_UNWIND_THROW_U__(delete_node(n));
+        MSTL_CATCH_UNWIND_THROW_M__(delete_node(n));
         return n;
     }
     void delete_node(node_type* n) noexcept {

@@ -4,13 +4,13 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <bool Same, typename Dest, typename... Srcs>
-constexpr bool __tuple_constructible_aux = false;
+MSTL_INLINE17 constexpr bool __tuple_constructible_aux = false;
 template <typename... Dests, typename... Srcs>
-constexpr bool __tuple_constructible_aux<true, tuple<Dests...>, Srcs...> =
+MSTL_INLINE17 constexpr bool __tuple_constructible_aux<true, tuple<Dests...>, Srcs...> =
 	conjunction_v<is_constructible<Dests, Srcs>...>;
 
 template <typename Dest, typename... Srcs>
-constexpr bool tuple_constructible_v =
+MSTL_INLINE17 constexpr bool tuple_constructible_v =
 	__tuple_constructible_aux<tuple_size_v<Dest> == sizeof...(Srcs), Dest, Srcs...>;
 
 template <typename Dest, typename... Srcs>
@@ -18,13 +18,13 @@ struct tuple_constructible : bool_constant<tuple_constructible_v<Dest, Srcs...>>
 
 
 template <bool Same, typename Dest, typename... Srcs>
-constexpr bool __tuple_explicitly_convertible_aux = false;
+MSTL_INLINE17 constexpr bool __tuple_explicitly_convertible_aux = false;
 template <typename... Dests, typename... Srcs>
-constexpr bool __tuple_explicitly_convertible_aux<true, tuple<Dests...>, Srcs...> =
+MSTL_INLINE17 constexpr bool __tuple_explicitly_convertible_aux<true, tuple<Dests...>, Srcs...> =
 !conjunction_v<is_convertible<Srcs, Dests>...>;
 
 template <typename Dest, typename... Srcs>
-constexpr bool tuple_explicitly_convertible_v =
+MSTL_INLINE17 constexpr bool tuple_explicitly_convertible_v =
 __tuple_explicitly_convertible_aux<tuple_size_v<Dest> == sizeof...(Srcs), Dest, Srcs...>;
 
 
@@ -45,13 +45,13 @@ struct tuple_perfect_forward<tuple<T1, T2, T3>, U1, U2, U3>
 
 
 template <bool Same, typename Dest, typename... Srcs>
-constexpr bool __tuple_nothrow_constructible_aux = false;
+MSTL_INLINE17 constexpr bool __tuple_nothrow_constructible_aux = false;
 template <typename... Dests, typename... Srcs>
-constexpr bool __tuple_nothrow_constructible_aux<true, tuple<Dests...>, Srcs...> =
+MSTL_INLINE17 constexpr bool __tuple_nothrow_constructible_aux<true, tuple<Dests...>, Srcs...> =
 conjunction_v<is_nothrow_constructible<Dests, Srcs>...>;
 
 template <typename Dest, typename... Srcs>
-constexpr bool tuple_nothrow_constructible_v =
+MSTL_INLINE17 constexpr bool tuple_nothrow_constructible_v =
 	__tuple_nothrow_constructible_aux<tuple_size_v<Dest> == sizeof...(Srcs), Dest, Srcs...>;
 
 
@@ -69,13 +69,13 @@ struct tuple_convertible : bool_constant<tuple_convertible_v<Self, Tuple, U...>>
 
 
 template <bool Same, typename Dest, typename... Srcs>
-constexpr bool __tuple_assignable_aux = false;
+MSTL_INLINE17 constexpr bool __tuple_assignable_aux = false;
 template <typename... Dests, typename... Srcs>
-constexpr bool __tuple_assignable_aux<true, tuple<Dests...>, Srcs...> = conjunction_v<
+MSTL_INLINE17 constexpr bool __tuple_assignable_aux<true, tuple<Dests...>, Srcs...> = conjunction_v<
 	is_assignable<Dests&, Srcs>...>;
 
 template <typename Dest, typename... Srcs>
-constexpr bool tuple_assignable_v = __tuple_assignable_aux<
+MSTL_INLINE17 constexpr bool tuple_assignable_v = __tuple_assignable_aux<
 	tuple_size_v<Dest> == sizeof...(Srcs), Dest, Srcs...>;
 
 template <typename Dest, typename... Srcs>
@@ -83,13 +83,13 @@ struct tuple_assignable : bool_constant<tuple_assignable_v<Dest, Srcs...>> {};
 
 
 template <bool Same, typename Dest, typename... Srcs>
-constexpr bool __tuple_nothrow_assignable_aux = false;
+MSTL_INLINE17 constexpr bool __tuple_nothrow_assignable_aux = false;
 template <typename... Dests, typename... Srcs>
-constexpr bool __tuple_nothrow_assignable_aux<true, tuple<Dests...>, Srcs...> =
+MSTL_INLINE17 constexpr bool __tuple_nothrow_assignable_aux<true, tuple<Dests...>, Srcs...> =
 	conjunction_v<is_nothrow_assignable<Dests&, Srcs>...>;
 
 template <typename Dest, typename... Srcs>
-constexpr bool tuple_nothrow_assignable_v =
+MSTL_INLINE17 constexpr bool tuple_nothrow_assignable_v =
 	__tuple_nothrow_assignable_aux<tuple_size_v<Dest> == sizeof...(Srcs), Dest, Srcs...>;
 
 
@@ -451,9 +451,9 @@ MSTL_NODISCARD constexpr tuple<Types&&...> forward_as_tuple(Types&&... args) noe
 
 
 template <typename, typename Tuple, typename = make_index_sequence<tuple_size_v<remove_reference_t<Tuple>>>>
-constexpr bool __constructible_from_tuple = false;
+MSTL_INLINE17 constexpr bool __constructible_from_tuple = false;
 template <typename T, typename Tuple, size_t... Index>
-constexpr bool __constructible_from_tuple<T, Tuple, index_sequence<Index...>> =
+MSTL_INLINE17 constexpr bool __constructible_from_tuple<T, Tuple, index_sequence<Index...>> =
 is_constructible_v<T, decltype(_MSTL get<Index>(_MSTL declval<Tuple>()))...>;
 
 

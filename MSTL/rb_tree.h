@@ -286,7 +286,7 @@ private:
                 x = left(x);
             }
         }
-        MSTL_CATCH_UNWIND_THROW_U__(erase_under_node(top));
+        MSTL_CATCH_UNWIND_THROW_M__(erase_under_node(top));
         return top;
     }
     void erase_under_node(link_type x) noexcept {

@@ -149,10 +149,7 @@ public:
     : have_value_(true), value_(ilist, _MSTL forward<Types>(args)...) {}
 
     MSTL_CONSTEXPR20 ~optional() noexcept {
-        if (have_value_) {
-            _MSTL destroy(&value_);
-            have_value_ = false;
-        }
+        reset();
     }
 
     template <typename... Types, enable_if_t<is_constructible_v<T, Types...>, int> = 0>

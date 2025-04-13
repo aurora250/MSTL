@@ -107,6 +107,10 @@ public:
 	        x.manage_(COPY, &x, &arg);
 	    }
     }
+    any& operator =(const any& rh) {
+        *this = any(rh);
+        return *this;
+    }
 
     any(any&& x) noexcept {
         if (!x.has_value())
@@ -117,11 +121,28 @@ public:
             x.manage_(SWAP, &x, &arg);
         }
     }
+    any& operator =(any&& rh) noexcept {
+        if (!rh.has_value())
+            reset();
+        else if (this != &rh) {
+            reset();
+            ArgT arg{};
+            arg.any_ptr_ = this;
+            rh.manage_(SWAP, &rh, &arg);
+        }
+        return *this;
+    }
 
     template <typename T, typename VT = decay_t<T>, typename Manager = manage_t<VT>,
         enable_if_t<is_copy_constructible_v<VT> && !is_same_v<inplace_construct_tag, VT> && !is_same_v<VT, any>, int> = 0>
     any(T&& value) : manage_(&Manager::manage) {
         Manager::create(storage_, _MSTL forward<T>(value));
+    }
+    template <typename T, typename VT = decay_t<T>,
+        enable_if_t<!is_same_v<VT, any> && is_copy_constructible_v<VT>, int> = 0>
+    any& operator =(T&& rh) {
+        *this = any(_MSTL forward<T>(rh));
+        return *this;
     }
 
     template <typename T, typename... Args, typename VT = decay_t<T>, typename Manager = manage_t<VT>,
@@ -136,30 +157,8 @@ public:
 	    Manager::create(storage_, ilist, _MSTL forward<Args>(args)...);
     }
 
-    ~any() { reset(); }
-
-    any& operator =(const any& rh) {
-      *this = any(rh);
-      return *this;
-    }
-
-    any& operator =(any&& rh) noexcept {
-        if (!rh.has_value())
-            reset();
-        else if (this != &rh) {
-            reset();
-            ArgT arg{};
-            arg.any_ptr_ = this;
-            rh.manage_(SWAP, &rh, &arg);
-        }
-        return *this;
-    }
-
-    template <typename T, typename VT = decay_t<T>,
-        enable_if_t<!is_same_v<VT, any> && is_copy_constructible_v<VT>, int> = 0>
-    any& operator =(T&& rh) {
-        *this = any(_MSTL forward<T>(rh));
-        return *this;
+    ~any() {
+        reset();
     }
 
     template <typename T, typename... Args, typename VT = decay_t<T>,
@@ -183,6 +182,16 @@ public:
         }
     }
 
+    MSTL_NODISCARD bool has_value() const noexcept { return manage_ != nullptr; }
+
+    MSTL_NODISCARD const std::type_info& type() const noexcept {
+        if (!has_value())
+            return typeid(void);
+        ArgT arg{};
+        manage_(GET_TYPE_INFO, this, &arg);
+        return *arg.type_ptr_;
+    }
+
     void swap(any& rh) noexcept {
         if (!has_value() && !rh.has_value()) return;
         if (has_value() && rh.has_value()) {
@@ -203,16 +212,6 @@ public:
             arg.any_ptr_ = emp;
             full->manage_(SWAP, full, &arg);
         }
-    }
-
-    MSTL_NODISCARD bool has_value() const noexcept { return manage_ != nullptr; }
-
-    MSTL_NODISCARD const std::type_info& type() const noexcept {
-        if (!has_value())
-            return typeid(void);
-        ArgT arg{};
-        manage_(GET_TYPE_INFO, this, &arg);
-        return *arg.type_ptr_;
     }
 };
 

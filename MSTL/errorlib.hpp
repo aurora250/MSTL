@@ -76,7 +76,6 @@ inline void Exit(const bool abort = false, void(* func)() = nullptr){
 
 #define MSTL_TRY__ try
 #define MSTL_CATCH_UNWIND__ catch(...)
-#define MSTL_CATCH_UNWIND_THROW_U__(CON) MSTL_CATCH_UNWIND__ { CON; throw; }
 #define MSTL_CATCH_UNWIND_THROW_M__(ACT) \
 	MSTL_CATCH_UNWIND__ { \
 		ACT; \

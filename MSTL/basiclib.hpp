@@ -59,7 +59,6 @@
 
 
 #define __MSTL_GLOBAL_NAMESPACE__ MSTL
-#define __MSTL_PROJECT_VERSION__ 101000
 
 #define USE_MSTL using namespace __MSTL_GLOBAL_NAMESPACE__;
 #define MSTL_BEGIN_NAMESPACE__ namespace __MSTL_GLOBAL_NAMESPACE__ {
@@ -253,8 +252,8 @@
 	#define MSTL_DEPRECATED [[deprecated]]
 	// after C++ 11, we can use lambda expressions to quickly build closures 
 	// instead of using functor adapters.
-	#define MSTL_FUNCADP_DEPRE \
-		[[deprecated("C++ 11 and later versions no longer use functor adapters.")]]
+	#define MSTL_FUNC_ADAPTER_DEPRE \
+		[[deprecated("C++ 11 and later versions no longer use functor base types and functor adapters.")]]
 	#define MSTL_TRAITS_DEPRE \
 		[[deprecated("C++ 11 and later versions no longer use iterator traits functions.")]]
 #else 
@@ -442,24 +441,32 @@ constexpr wchar_t* wmemcpy(wchar_t* dest, const wchar_t* src, size_t count) noex
 }
 
 constexpr int memcmp(const void* dest, const void* src, size_t byte) noexcept {
-	assert(dest && src);
-	while (byte--) {
-		if (*static_cast<const char*>(dest) != *static_cast<const char*>(src))
-			return *static_cast<const char*>(dest) - *static_cast<const char*>(src);
-		dest = static_cast<const char*>(dest) + 1;
-		src = static_cast<const char*>(src) + 1;
-	}
-	return 0;
+    if (dest == nullptr && src == nullptr) return 0;
+    else if (dest == nullptr) return -1;
+    else if (src == nullptr) return 1;
+    else {
+        while (byte--) {
+            if (*static_cast<const char*>(dest) != *static_cast<const char*>(src))
+                return *static_cast<const char*>(dest) - *static_cast<const char*>(src);
+            dest = static_cast<const char*>(dest) + 1;
+            src = static_cast<const char*>(src) + 1;
+        }
+        return 0;
+    }
 }
 
 constexpr int wmemcmp(const wchar_t* dest, const wchar_t* src, size_t count) noexcept {
-	assert(dest && src);
-	while (count--) {
-		if (*dest != *src) return *dest - *src;
-		++dest;
-		++src;
-	}
-	return 0;
+    if (dest == nullptr && src == nullptr) return 0;
+    else if (dest == nullptr) return -1;
+    else if (src == nullptr) return 1;
+    else {
+        while (count--) {
+            if (*dest != *src) return *dest - *src;
+            ++dest;
+            ++src;
+        }
+        return 0;
+    }
 }
 
 constexpr void* memchr(const void* dest, const int value, size_t byte) noexcept {

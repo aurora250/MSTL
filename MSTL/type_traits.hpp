@@ -66,13 +66,13 @@ using conditional_t = typename conditional<Test, T1, T2>::type;
 template <typename T>
 struct negation : bool_constant<!static_cast<bool>(T::value)> {};
 template <typename T>
-constexpr bool negation_v = negation<T>::value;
+MSTL_INLINE17 constexpr bool negation_v = negation<T>::value;
 
 
 template <typename, typename>
-constexpr bool is_same_v = false;
+MSTL_INLINE17 constexpr bool is_same_v = false;
 template <typename T>
-constexpr bool is_same_v<T, T> = true;
+MSTL_INLINE17 constexpr bool is_same_v<T, T> = true;
 
 template <typename T1, typename T2>
 struct is_same : bool_constant<is_same_v<T1, T2>> {};
@@ -88,7 +88,7 @@ using type_identity_t = typename type_identity<T>::type;
 
 #ifdef MSTL_VERSION_17__
 template <typename T, typename... Types>
-constexpr bool is_any_of_v = (is_same_v<T, Types> || ...);
+MSTL_INLINE17 constexpr bool is_any_of_v = (is_same_v<T, Types> || ...);
 template <typename T, typename... Types>
 struct is_any_of : bool_constant<is_any_of_v<T, Types...>> {};
 #else
@@ -101,7 +101,7 @@ template <typename T, typename U, typename... Types>
 struct is_any_of<T, U, Types...> 
     : conditional<is_same_v<T, U>, true_type, is_any_of<T, Types...>>::type {};
 template <typename T, typename... Types>
-constexpr bool is_any_of_v = is_any_of<T, Types...>::value;
+MSTL_INLINE17 constexpr bool is_any_of_v = is_any_of<T, Types...>::value;
 #endif // MSTL_VERSION_17__
 
 
@@ -126,7 +126,7 @@ struct disjunction<First, Rest...>
 };
 
 template <typename... Args>
-constexpr bool disjunction_v = disjunction<Args...>::value;
+MSTL_INLINE17 constexpr bool disjunction_v = disjunction<Args...>::value;
 
 
 // Test is false, stop recursion and set type
@@ -150,7 +150,7 @@ struct conjunction<First, Rest...>
 };
 
 template <typename... Args>
-constexpr bool conjunction_v = conjunction<Args...>::value;
+MSTL_INLINE17 constexpr bool conjunction_v = conjunction<Args...>::value;
 
 
 template <typename T>
@@ -325,7 +325,7 @@ using copy_pointer_t = typename remove_pointer<From>::template bind_pointer_t<To
 
 
 template <typename T>
-constexpr bool is_void_v = is_same_v<remove_cv_t<T>, void>;
+MSTL_INLINE17 constexpr bool is_void_v = is_same_v<remove_cv_t<T>, void>;
 template <typename T>
 struct is_void : bool_constant<is_void_v<T>> {};
 
@@ -334,7 +334,7 @@ using void_t = void;
 
 
 template <typename T>
-constexpr bool is_character_v = is_any_of_v<remove_cv_t<T>,
+MSTL_INLINE17 constexpr bool is_character_v = is_any_of_v<remove_cv_t<T>,
     char, signed char, unsigned char, wchar_t,
 #ifdef MSTL_VERSION_20__
     char8_t,
@@ -346,36 +346,32 @@ struct is_character : bool_constant<is_character_v<T>> {};
 
 
 template <typename T>
-constexpr bool is_bool_v = is_same_v<remove_cv_t<T>, bool>;
+MSTL_INLINE17 constexpr bool is_bool_v = is_same_v<remove_cv_t<T>, bool>;
 template <typename T>
 struct is_bool : bool_constant<is_bool_v<T>> {};
 
 
 template <typename T>
-constexpr bool is_standard_integer_v = is_any_of_v<remove_cv_t<T>, short, int, long, long long,
+MSTL_INLINE17 constexpr bool is_standard_integer_v = is_any_of_v<remove_cv_t<T>, short, int, long, long long,
     unsigned short, unsigned int, unsigned long, unsigned long long>;
 template <typename T>
 struct is_standard_integral : bool_constant<is_standard_integer_v<T>> {};
 
 
 template <typename T>
-constexpr bool is_integral_v = is_standard_integer_v<T> || is_character_v<T> || is_bool_v<T>;
+MSTL_INLINE17 constexpr bool is_integral_v = is_standard_integer_v<T> || is_character_v<T> || is_bool_v<T>;
 template <typename T>
 struct is_integral : bool_constant<is_integral_v<T>> {};
 
 
 template <typename T>
-constexpr bool is_nonbool_integral_v = is_integral_v<T> && !is_bool_v<T>;
-
-
-template <typename T>
-constexpr bool is_floating_point_v = is_any_of_v<remove_cv_t<T>, float, double, long double>;
+MSTL_INLINE17 constexpr bool is_floating_point_v = is_any_of_v<remove_cv_t<T>, float, double, long double>;
 template <typename T>
 struct is_floating_point : bool_constant<is_floating_point_v<T>> {};
 
 
 template <typename T>
-constexpr bool is_arithmetic_v = is_integral_v<T> || is_floating_point_v<T>;
+MSTL_INLINE17 constexpr bool is_arithmetic_v = is_integral_v<T> || is_floating_point_v<T>;
 template <typename T>
 struct is_arithmetic : bool_constant<is_arithmetic_v<T>> {};
 
@@ -394,12 +390,12 @@ struct __check_sign_aux<T, false> {
 template <typename T>
 struct is_signed : bool_constant<__check_sign_aux<T>::is_signed> {};
 template <typename T>
-constexpr bool is_signed_v = is_signed<T>::value;
+MSTL_INLINE17 constexpr bool is_signed_v = is_signed<T>::value;
 
 template <typename T>
 struct is_unsigned : bool_constant<__check_sign_aux<T>::is_unsigned> {};
 template <typename T>
-constexpr bool is_unsigned_v = is_unsigned<T>::value;
+MSTL_INLINE17 constexpr bool is_unsigned_v = is_unsigned<T>::value;
 
 
 template <typename T>
@@ -508,76 +504,76 @@ struct extent : integral_constant<size_t, extent_v<T, Idx>> {};
 
 
 template <typename>
-constexpr bool is_bounded_array_v = false;
+MSTL_INLINE17 constexpr bool is_bounded_array_v = false;
 template <typename T, size_t Idx>
-constexpr bool is_bounded_array_v<T[Idx]> = true;
+MSTL_INLINE17 constexpr bool is_bounded_array_v<T[Idx]> = true;
 
 template <typename T>
 struct is_bounded_array : bool_constant<is_bounded_array_v<T>> {};
 
 
 template <typename>
-constexpr bool is_unbounded_array_v = false;
+MSTL_INLINE17 constexpr bool is_unbounded_array_v = false;
 template <typename T>
-constexpr bool is_unbounded_array_v<T[]> = true;
+MSTL_INLINE17 constexpr bool is_unbounded_array_v<T[]> = true;
 
 template <typename T>
 struct is_unbounded_array : bool_constant<is_unbounded_array_v<T>> {};
 
 
 template <typename T>
-constexpr bool is_array_v = is_unbounded_array_v<T> || is_bounded_array_v<T>;
+MSTL_INLINE17 constexpr bool is_array_v = is_unbounded_array_v<T> || is_bounded_array_v<T>;
 
 template <typename T>
 struct is_array : bool_constant<is_array_v<T>> {};
 
 
 template <typename>
-constexpr bool is_lvalue_reference_v = false;
+MSTL_INLINE17 constexpr bool is_lvalue_reference_v = false;
 template <typename T>
-constexpr bool is_lvalue_reference_v<T&> = true;
+MSTL_INLINE17 constexpr bool is_lvalue_reference_v<T&> = true;
 
 template <typename T>
 struct is_lvalue_reference : bool_constant<is_lvalue_reference_v<T>> {};
 
 
 template <typename>
-constexpr bool is_rvalue_reference_v = false;
+MSTL_INLINE17 constexpr bool is_rvalue_reference_v = false;
 template <typename T>
-constexpr bool is_rvalue_reference_v<T&&> = true;
+MSTL_INLINE17 constexpr bool is_rvalue_reference_v<T&&> = true;
 
 template <typename T>
 struct is_rvalue_reference : bool_constant<is_rvalue_reference_v<T>> {};
 
 
 template <typename>
-constexpr bool is_reference_v = false;
+MSTL_INLINE17 constexpr bool is_reference_v = false;
 template <typename T>
-constexpr bool is_reference_v<T&> = true;
+MSTL_INLINE17 constexpr bool is_reference_v<T&> = true;
 template <typename T>
-constexpr bool is_reference_v<T&&> = true;
+MSTL_INLINE17 constexpr bool is_reference_v<T&&> = true;
 
 template <typename T>
 struct is_reference : bool_constant<is_reference_v<T>> {};
 
 
 template <typename>
-constexpr bool is_pointer_v = false;
+MSTL_INLINE17 constexpr bool is_pointer_v = false;
 template <typename T>
-constexpr bool is_pointer_v<T*> = true;
+MSTL_INLINE17 constexpr bool is_pointer_v<T*> = true;
 template <typename T>
-constexpr bool is_pointer_v<T* const> = true;
+MSTL_INLINE17 constexpr bool is_pointer_v<T* const> = true;
 template <typename T>
-constexpr bool is_pointer_v<T* volatile> = true;
+MSTL_INLINE17 constexpr bool is_pointer_v<T* volatile> = true;
 template <typename T>
-constexpr bool is_pointer_v<T* const volatile> = true;
+MSTL_INLINE17 constexpr bool is_pointer_v<T* const volatile> = true;
 
 template <typename T>
 struct is_pointer : bool_constant<is_pointer_v<T>> {};
 
 
 template <typename T>
-constexpr bool is_null_pointer_v = is_same_v<remove_cv_t<T>, nullptr_t>;
+MSTL_INLINE17 constexpr bool is_null_pointer_v = is_same_v<remove_cv_t<T>, nullptr_t>;
 template <typename T>
 struct is_null_pointer : bool_constant<is_null_pointer_v<T>> {};
 
@@ -585,64 +581,64 @@ struct is_null_pointer : bool_constant<is_null_pointer_v<T>> {};
 template<typename T>
 struct is_enum : bool_constant<__is_enum(T)> {};
 template <typename T>
-constexpr bool is_enum_v = is_enum<T>::value;
+MSTL_INLINE17 constexpr bool is_enum_v = is_enum<T>::value;
 
 template <typename T>
 struct is_union : bool_constant<__is_union(T)> {};
 template <typename T>
-constexpr bool is_union_v = is_union<T>::value;
+MSTL_INLINE17 constexpr bool is_union_v = is_union<T>::value;
 
 template <typename T>
 struct is_class : bool_constant<__is_class(T)> {};
 template <typename T>
-constexpr bool is_class_v = is_class<T>::value;
+MSTL_INLINE17 constexpr bool is_class_v = is_class<T>::value;
 
 
 template <typename T>
-constexpr bool is_fundamental_v = is_arithmetic_v<T> || is_void_v<T> || is_null_pointer_v<T>;
+MSTL_INLINE17 constexpr bool is_fundamental_v = is_arithmetic_v<T> || is_void_v<T> || is_null_pointer_v<T>;
 template <typename T>
 struct is_fundamental : bool_constant<is_fundamental_v<T>> {};
 
 template <typename T>
 struct is_compound : bool_constant<!is_fundamental_v<T>> {};
 template <typename T>
-constexpr bool is_compound_v = is_compound<T>::value;
+MSTL_INLINE17 constexpr bool is_compound_v = is_compound<T>::value;
 
 
 template <typename>
-constexpr bool is_const_v = false;
+MSTL_INLINE17 constexpr bool is_const_v = false;
 template <typename T>
-constexpr bool is_const_v<const T> = true;
+MSTL_INLINE17 constexpr bool is_const_v<const T> = true;
 template <typename T>
 struct is_const : bool_constant<is_const_v<T>> {};
 
 
 template <typename>
-constexpr bool is_volatile_v = false;
+MSTL_INLINE17 constexpr bool is_volatile_v = false;
 template <typename T>
-constexpr bool is_volatile_v<volatile T> = true;
+MSTL_INLINE17 constexpr bool is_volatile_v<volatile T> = true;
 template <typename T>
 struct is_volatile : bool_constant<is_volatile_v<T>> {};
 
 
 // function cannot be const qualified.
 template <typename T>
-constexpr bool is_function_v = !is_const_v<const T> && !is_reference_v<T>;
+MSTL_INLINE17 constexpr bool is_function_v = !is_const_v<const T> && !is_reference_v<T>;
 template <typename T>
 struct is_function : bool_constant<is_function_v<T>> {};
 
 
 template <typename T>
-constexpr bool is_allocable_v =
+MSTL_INLINE17 constexpr bool is_allocable_v =
     !(is_void_v<T> || is_reference_v<T> || is_function_v<T> || is_const_v<T>) && sizeof(T) > 0;
 template <typename T>
 struct is_allocable : bool_constant<is_allocable_v<T>> {};
 
 
-// object types are types without function, reference or void types. 
+// object types are types excepts function, reference or void types.
 //   especially, function and reference types cannot be const–qualified.
 template <typename T>
-constexpr bool is_object_v = is_const_v<const T> && !is_void_v<T>;
+MSTL_INLINE17 constexpr bool is_object_v = is_const_v<const T> && !is_void_v<T>;
 template <typename T>
 struct is_object : bool_constant<is_object_v<T>> {};
 
@@ -659,7 +655,7 @@ template<typename T>
 struct is_member_function_pointer : __is_member_function_pointer_aux<remove_cv_t<T>> {};
 #endif
 template <typename T>
-constexpr bool is_member_function_pointer_v = is_member_function_pointer<T>::value;
+MSTL_INLINE17 constexpr bool is_member_function_pointer_v = is_member_function_pointer<T>::value;
 
 
 #ifdef MSTL_COMPILE_CLANG__
@@ -672,15 +668,15 @@ template <typename T, typename C>
 struct is_member_object_pointer<T C::*> : bool_constant<!is_function_v<T>> {};
 #endif
 template <typename T>
-constexpr bool is_member_object_pointer_v = is_member_object_pointer<remove_cv_t<T>>::value;
+MSTL_INLINE17 constexpr bool is_member_object_pointer_v = is_member_object_pointer<remove_cv_t<T>>::value;
 
 
 #ifdef MSTL_COMPILE_CLANG__
 template <typename T>
-constexpr bool is_member_pointer_v = __is_member_pointer(T);
+MSTL_INLINE17 constexpr bool is_member_pointer_v = __is_member_pointer(T);
 #else
 template <typename T>
-constexpr bool is_member_pointer_v = is_member_object_pointer_v<T> || is_member_function_pointer_v<T>;
+MSTL_INLINE17 constexpr bool is_member_pointer_v = is_member_object_pointer_v<T> || is_member_function_pointer_v<T>;
 #endif
 template <typename T>
 struct is_member_pointer : bool_constant<is_member_pointer_v<T>> {};
@@ -688,7 +684,7 @@ struct is_member_pointer : bool_constant<is_member_pointer_v<T>> {};
 
 // arithmetic, enum and pointer types are scalar types.
 template <typename T>
-constexpr bool is_scalar_v =
+MSTL_INLINE17 constexpr bool is_scalar_v =
 is_arithmetic_v<T> || is_enum_v<T> || is_pointer_v<T> || is_member_pointer_v<T> || is_null_pointer_v<T>;
 template <typename T>
 struct is_scalar : bool_constant<is_scalar_v<T>> {};
@@ -699,25 +695,25 @@ struct is_scalar : bool_constant<is_scalar_v<T>> {};
 template <typename T>
 struct is_empty : bool_constant<__is_empty(T)> {};
 template <typename T>
-constexpr bool is_empty_v = is_empty<T>::value;
+MSTL_INLINE17 constexpr bool is_empty_v = is_empty<T>::value;
 
 
 template <typename T>
 struct is_polymorphic : bool_constant<__is_polymorphic(T)> {};
 template <typename T>
-constexpr bool is_polymorphic_v = is_polymorphic<T>::value;
+MSTL_INLINE17 constexpr bool is_polymorphic_v = is_polymorphic<T>::value;
 
 
 template <typename T>
 struct is_abstract : bool_constant<__is_abstract(T)> {};
 template <typename T>
-constexpr bool is_abstract_v = is_abstract<T>::value;
+MSTL_INLINE17 constexpr bool is_abstract_v = is_abstract<T>::value;
 
 
 template <typename T>
 struct is_final : bool_constant<__is_final(T)> {};
 template <typename T>
-constexpr bool is_final_v = is_final<T>::value;
+MSTL_INLINE17 constexpr bool is_final_v = is_final<T>::value;
 
 
 template <class T, bool = is_enum_v<T>>
@@ -741,14 +737,14 @@ using underlying_type_t = typename underlying_type<T>::type;
 template <typename T>
 struct is_standard_layout : bool_constant<__is_standard_layout(T)> {};
 template <typename T>
-constexpr bool is_standard_layout_v = is_standard_layout<T>::value;
+MSTL_INLINE17 constexpr bool is_standard_layout_v = is_standard_layout<T>::value;
 
 
 // pod types meet is_standard_layout and is_trivial conditions.
 template <typename T>
 struct is_pod : bool_constant<__is_pod(T)> {};
 template <typename T>
-constexpr bool is_pod_v = is_pod<T>::value;
+MSTL_INLINE17 constexpr bool is_pod_v = is_pod<T>::value;
 
 
 #ifdef MSTL_COMPILE_CLANG__
@@ -765,7 +761,7 @@ constexpr bool is_pod_v = is_pod<T>::value;
 template <typename T>
 struct MSTL_DEPRECATED is_literal_type : bool_constant<__is_literal_type(T)> {};
 template <typename T>
-MSTL_DEPRECATED constexpr bool is_literal_type_v = is_literal_type<T>::value;
+MSTL_DEPRECATED MSTL_INLINE17 constexpr bool is_literal_type_v = is_literal_type<T>::value;
 
 #ifdef MSTL_COMPILE_CLANG__
 #pragma clang diagnostic pop
@@ -783,19 +779,19 @@ MSTL_DEPRECATED constexpr bool is_literal_type_v = is_literal_type<T>::value;
 template <typename T>
 struct is_trivial : bool_constant<__is_trivial(T)> {};
 template <typename T>
-constexpr bool is_trivial_v = is_trivial<T>::value;
+MSTL_INLINE17 constexpr bool is_trivial_v = is_trivial<T>::value;
 
 
 template <typename T>
 struct is_trivially_copyable : bool_constant<__is_trivially_copyable(T)> {};
 template <typename T>
-constexpr bool is_trivially_copyable_v = is_trivially_copyable<T>::value;
+MSTL_INLINE17 constexpr bool is_trivially_copyable_v = is_trivially_copyable<T>::value;
 
 
 template <typename T>
 struct has_virtual_destructor : bool_constant<__has_virtual_destructor(T)> {};
 template <typename T>
-constexpr bool has_virtual_destructor_v = has_virtual_destructor<T>::value;
+MSTL_INLINE17 constexpr bool has_virtual_destructor_v = has_virtual_destructor<T>::value;
 
 
 // each different value of a type has a unique binary representation, 
@@ -806,15 +802,15 @@ constexpr bool has_virtual_destructor_v = has_virtual_destructor<T>::value;
 template <typename T>
 struct has_unique_object_representations : bool_constant<__has_unique_object_representations(T)> {};
 template <typename T>
-constexpr bool has_unique_object_representations_v = has_unique_object_representations<T>::value;
+MSTL_INLINE17 constexpr bool has_unique_object_representations_v = has_unique_object_representations<T>::value;
 
 
 #ifdef MSTL_COMPILE_MSVC__
 template <typename T>
-constexpr bool is_aggregate_v = is_array_v<T> || __is_aggregate(T);
+MSTL_INLINE17 constexpr bool is_aggregate_v = is_array_v<T> || __is_aggregate(T);
 #else
 template <typename T>
-constexpr bool is_aggregate_v = __is_aggregate(remove_cv_t<T>);
+MSTL_INLINE17 constexpr bool is_aggregate_v = __is_aggregate(remove_cv_t<T>);
 #endif
 
 // aggregate types have these characteristics:
@@ -830,20 +826,20 @@ struct is_aggregate : bool_constant<is_aggregate_v<T>> {};
 template <typename T, typename... Args>
 struct is_constructible : bool_constant<__is_constructible(T, Args...)> {};
 template <typename T, typename... Args>
-constexpr bool is_constructible_v = is_constructible<T, Args...>::value;
+MSTL_INLINE17 constexpr bool is_constructible_v = is_constructible<T, Args...>::value;
 
 
 template <typename T>
 struct is_copy_constructible 
     : bool_constant<is_constructible_v<T, add_lvalue_reference_t<const T>>> {};
 template <typename T>
-constexpr bool is_copy_constructible_v = is_copy_constructible<T>::value;
+MSTL_INLINE17 constexpr bool is_copy_constructible_v = is_copy_constructible<T>::value;
 
 
 template <typename T>
 struct is_default_constructible : bool_constant<is_constructible_v<T>> {};
 template <typename T>
-constexpr bool is_default_constructible_v = is_default_constructible<T>::value;
+MSTL_INLINE17 constexpr bool is_default_constructible_v = is_default_constructible<T>::value;
 
 
 template <typename T>
@@ -856,32 +852,32 @@ struct is_implicitly_default_constructible
     <T, void_t<decltype(__implicitly_default_construct_aux<T>({}))>> : true_type {};
 
 template <typename T>
-constexpr bool is_implicitly_default_constructible_v = is_implicitly_default_constructible<T>::value;
+MSTL_INLINE17 constexpr bool is_implicitly_default_constructible_v = is_implicitly_default_constructible<T>::value;
 
 
 template <typename T>
 struct is_move_constructible : bool_constant<is_constructible_v<T, T>> {};
 template <typename T>
-constexpr bool is_move_constructible_v = is_move_constructible<T>::value;
+MSTL_INLINE17 constexpr bool is_move_constructible_v = is_move_constructible<T>::value;
 
 
 template <typename To, typename From>
 struct is_assignable : bool_constant<__is_assignable(To, From)> {};
 template <typename To, typename From>
-constexpr bool is_assignable_v = is_assignable<To, From>::value;
+MSTL_INLINE17 constexpr bool is_assignable_v = is_assignable<To, From>::value;
 
 
 template <typename T>
 struct is_copy_assignable
     : bool_constant<is_assignable_v<add_lvalue_reference_t<T>, add_lvalue_reference_t<const T>>> {};
 template <typename T>
-constexpr bool is_copy_assignable_v = is_copy_assignable<T>::value;
+MSTL_INLINE17 constexpr bool is_copy_assignable_v = is_copy_assignable<T>::value;
 
 
 template <typename T>
 struct is_move_assignable : bool_constant<is_assignable_v<add_lvalue_reference_t<T>, T>> {};
 template <typename T>
-constexpr bool is_move_assignable_v = is_move_assignable<T>::value;
+MSTL_INLINE17 constexpr bool is_move_assignable_v = is_move_assignable<T>::value;
 
 
 #ifdef MSTL_COMPILE_MSVC__
@@ -920,52 +916,52 @@ struct is_destructible : __is_destructible_dispatch<T>::type {};
 #endif
 
 template <typename T>
-constexpr bool is_destructible_v = is_destructible<T>::value;
+MSTL_INLINE17 constexpr bool is_destructible_v = is_destructible<T>::value;
 
 
 template <typename T, typename... Args>
 struct is_trivially_constructible : bool_constant<__is_trivially_constructible(T, Args...)> {};
 template <typename T, typename... Args>
-constexpr bool is_trivially_constructible_v = is_trivially_constructible<T, Args...>::value;
+MSTL_INLINE17 constexpr bool is_trivially_constructible_v = is_trivially_constructible<T, Args...>::value;
 
 
 template <typename T>
 struct is_trivially_copy_constructible
     : bool_constant<is_trivially_constructible_v<T, add_lvalue_reference_t<const T>>> {};
 template <typename T>
-constexpr bool is_trivially_copy_constructible_v = is_trivially_copy_constructible<T>::value;
+MSTL_INLINE17 constexpr bool is_trivially_copy_constructible_v = is_trivially_copy_constructible<T>::value;
 
 
 template <typename T>
 struct is_trivially_default_constructible : bool_constant<is_trivially_constructible_v<T>> {};
 template <typename T>
-constexpr bool is_trivially_default_constructible_v = is_trivially_default_constructible<T>::value;
+MSTL_INLINE17 constexpr bool is_trivially_default_constructible_v = is_trivially_default_constructible<T>::value;
 
 
 template <typename T>
 struct is_trivially_move_constructible : bool_constant<is_trivially_constructible_v<T, T>> {};
 template <typename T>
-constexpr bool is_trivially_move_constructible_v = is_trivially_move_constructible<T>::value;
+MSTL_INLINE17 constexpr bool is_trivially_move_constructible_v = is_trivially_move_constructible<T>::value;
 
 
 template <typename To, typename From>
 struct is_trivially_assignable : bool_constant<__is_trivially_assignable(To, From)> {};
 template <typename To, typename From>
-constexpr bool is_trivially_assignable_v = is_trivially_assignable<To, From>::value;
+MSTL_INLINE17 constexpr bool is_trivially_assignable_v = is_trivially_assignable<To, From>::value;
 
 
 template <typename T>
 struct is_trivially_copy_assignable : bool_constant<is_trivially_assignable_v<
     add_lvalue_reference_t<T>, add_lvalue_reference_t<const T>>> {};
 template <typename T>
-constexpr bool is_trivially_copy_assignable_v = is_trivially_copy_assignable<T>::value;
+MSTL_INLINE17 constexpr bool is_trivially_copy_assignable_v = is_trivially_copy_assignable<T>::value;
 
 
 template <typename T>
 struct is_trivially_move_assignable 
     : bool_constant<is_trivially_assignable_v<add_lvalue_reference_t<T>, T>> {};
 template <typename T>
-constexpr bool is_trivially_move_assignable_v = is_trivially_move_assignable<T>::value;
+MSTL_INLINE17 constexpr bool is_trivially_move_assignable_v = is_trivially_move_assignable<T>::value;
 
 
 #if defined(MSTL_COMPILE_MSVC__) || defined(MSTL_COMPILE_CLANG__)
@@ -978,7 +974,7 @@ struct is_trivially_destructible : conjunction<
 #endif
 
 template <typename T>
-constexpr bool is_trivially_destructible_v = is_trivially_destructible<T>::value;
+MSTL_INLINE17 constexpr bool is_trivially_destructible_v = is_trivially_destructible<T>::value;
 
 
 #ifdef MSTL_COMPILE_MSVC__
@@ -1001,7 +997,7 @@ struct is_nothrow_default_constructible : conjunction<
     is_default_constructible<T>, __is_nothrow_default_constructible_dispatch<T>> {};
 
 template <typename T>
-constexpr bool is_nothrow_default_constructible_v = is_nothrow_default_constructible<T>::value;
+MSTL_INLINE17 constexpr bool is_nothrow_default_constructible_v = is_nothrow_default_constructible<T>::value;
 
 
 template <typename T, typename... Args>
@@ -1018,28 +1014,28 @@ struct is_nothrow_constructible : conjunction<
 #endif
 
 template <typename T, typename... Args>
-constexpr bool is_nothrow_constructible_v = is_nothrow_constructible<T, Args...>::value;
+MSTL_INLINE17 constexpr bool is_nothrow_constructible_v = is_nothrow_constructible<T, Args...>::value;
 
 
 template <typename T>
 struct is_nothrow_copy_constructible
     : bool_constant<is_nothrow_constructible_v<T, add_lvalue_reference_t<const T>>> {};
 template <typename T>
-constexpr bool is_nothrow_copy_constructible_v = is_nothrow_copy_constructible<T>::value;
+MSTL_INLINE17 constexpr bool is_nothrow_copy_constructible_v = is_nothrow_copy_constructible<T>::value;
 
 
 #ifdef MSTL_COMPILE_MSVC__
 template <typename T>
 struct is_nothrow_default_constructible : bool_constant<is_nothrow_constructible_v<T>> {};
 template <typename T>
-constexpr bool is_nothrow_default_constructible_v = is_nothrow_default_constructible<T>::value;
+MSTL_INLINE17 constexpr bool is_nothrow_default_constructible_v = is_nothrow_default_constructible<T>::value;
 #endif
 
 
 template <typename T>
 struct is_nothrow_move_constructible : bool_constant<is_nothrow_constructible_v<T, T>> {};
 template <typename T>
-constexpr bool is_nothrow_move_constructible_v = is_nothrow_move_constructible<T>::value;
+MSTL_INLINE17 constexpr bool is_nothrow_move_constructible_v = is_nothrow_move_constructible<T>::value;
 
 
 #ifdef MSTL_COMPILER_MSVC__
@@ -1052,20 +1048,20 @@ struct is_nothrow_assignable : conjunction<
 #endif
 
 template <typename To, typename From>
-constexpr bool is_nothrow_assignable_v = is_nothrow_assignable<To, From>::value;
+MSTL_INLINE17 constexpr bool is_nothrow_assignable_v = is_nothrow_assignable<To, From>::value;
 
 
 template <typename T>
 struct is_nothrow_copy_assignable
     : bool_constant<is_nothrow_assignable_v<add_lvalue_reference_t<T>, add_lvalue_reference_t<const T>>> {};
 template <typename T>
-constexpr bool is_nothrow_copy_assignable_v = is_nothrow_copy_assignable<T>::value;
+MSTL_INLINE17 constexpr bool is_nothrow_copy_assignable_v = is_nothrow_copy_assignable<T>::value;
 
 
 template <typename T>
 struct is_nothrow_move_assignable : bool_constant<is_nothrow_assignable_v<add_lvalue_reference_t<T>, T>> {};
 template <typename T>
-constexpr bool is_nothrow_move_assignable_v = is_nothrow_move_assignable<T>::value;
+MSTL_INLINE17 constexpr bool is_nothrow_move_assignable_v = is_nothrow_move_assignable<T>::value;
 
 
 #ifdef MSTL_COMPILE_MSVC__
@@ -1104,7 +1100,7 @@ struct is_nothrow_destructible : __is_nothrow_destructible_dispatch<T>::type {};
 #endif
 
 template <typename T>
-constexpr bool is_nothrow_destructible_v = is_nothrow_destructible<T>::value;
+MSTL_INLINE17 constexpr bool is_nothrow_destructible_v = is_nothrow_destructible<T>::value;
 
 
 template <typename T>
@@ -1152,7 +1148,7 @@ struct is_convertible : bool_constant<__is_convertible(From, To)> {};
 #endif
 
 template <typename From, typename To>
-constexpr bool is_convertible_v = is_convertible<From, To>::value;
+MSTL_INLINE17 constexpr bool is_convertible_v = is_convertible<From, To>::value;
 
 
 template <size_t>
@@ -1197,7 +1193,7 @@ using __set_unsigned_byte = typename __sign_byte_aux<sizeof(T)>::template unsign
 
 template <typename T>
 struct __set_sign {
-    static_assert(is_nonbool_integral_v<T> || is_enum_v<T>,
+    static_assert((is_integral_v<T> && !is_bool_v<T>) || is_enum_v<T>,
         "make signed only support non bool integral types and enum types");
 
     using signed_type   = copy_cv_t<T, __set_signed_byte<T>>;
@@ -1237,7 +1233,7 @@ constexpr size_t alignment_of_v = alignment_of<T>::value;
 template <typename Base, typename Derived>
 struct is_base_of : bool_constant<__is_base_of(Base, Derived)> {};
 template <typename Base, typename Derived>
-constexpr bool is_base_of_v = is_base_of<Base, Derived>::value;
+MSTL_INLINE17 constexpr bool is_base_of_v = is_base_of<Base, Derived>::value;
 
 
 template <size_t Len>
@@ -1441,9 +1437,9 @@ struct common_reference<T1, T2, T3, Rest...> : common_reference<common_reference
 
 #ifdef MSTL_VERSION_17__
 template <typename T, template <typename...> typename Template>
-constexpr bool is_specialization_v = false;
+MSTL_INLINE17 constexpr bool is_specialization_v = false;
 template <template <typename...> typename Template, typename... Args>
-constexpr bool is_specialization_v<Template<Args...>, Template> = true;
+MSTL_INLINE17 constexpr bool is_specialization_v<Template<Args...>, Template> = true;
 
 template <typename T, template <typename...> typename Template>
 struct is_specialization : bool_constant<is_specialization_v<T, Template>> {};
@@ -1461,11 +1457,11 @@ constexpr bool is_specialization_v() {
 
 
 template <typename From, typename To, bool = is_convertible_v<From, To>, bool = is_void_v<To>>
-constexpr bool is_nothrow_convertible_v = noexcept(_MSTL declcopy<To>(_MSTL declval<From>()));
+MSTL_INLINE17 constexpr bool is_nothrow_convertible_v = noexcept(_MSTL declcopy<To>(_MSTL declval<From>()));
 template <typename From, typename To, bool IsVoid>
-constexpr bool is_nothrow_convertible_v<From, To, false, IsVoid> = false;
+MSTL_INLINE17 constexpr bool is_nothrow_convertible_v<From, To, false, IsVoid> = false;
 template <typename From, typename To>
-constexpr bool is_nothrow_convertible_v<From, To, true, true> = true;
+MSTL_INLINE17 constexpr bool is_nothrow_convertible_v<From, To, true, true> = true;
 
 template <typename From, typename To>
 struct is_nothrow_convertible : bool_constant<is_nothrow_convertible_v<From, To>> {};
@@ -1482,7 +1478,7 @@ template <typename T, typename U>
 struct ref_wrapper_constructable_from<T, U,
     void_t<decltype(_MSTL __ref_wrapper_construct_aux<T>(_MSTL declval<U>()))>> : true_type {};
 template <typename T, typename U>
-constexpr bool ref_wrapper_constructable_from_v = ref_wrapper_constructable_from<T, U>::value;
+MSTL_INLINE17 constexpr bool ref_wrapper_constructable_from_v = ref_wrapper_constructable_from<T, U>::value;
 
 template <typename F, typename... Args>
 struct __invoke_result_aux;
@@ -1787,14 +1783,14 @@ struct is_invocable
     : __is_invocable_aux<__invoke_result_aux<F, Args...>, void>::type {};
 
 template <typename F, typename... Args>
-constexpr bool is_invocable_v = is_invocable<F, Args...>::value;
+MSTL_INLINE17 constexpr bool is_invocable_v = is_invocable<F, Args...>::value;
 
 template <typename Ret, typename F, typename... Args>
 struct is_invocable_r
     : __is_invocable_aux<__invoke_result_aux<F, Args...>, Ret>::type {};
 
 template <typename Ret, typename F, typename... Args>
-constexpr bool is_invocable_r_v = is_invocable_r<Ret, F, Args...>::value;
+MSTL_INLINE17 constexpr bool is_invocable_r_v = is_invocable_r<Ret, F, Args...>::value;
 
 
 template <typename F, typename T, typename... Args>
@@ -1836,7 +1832,7 @@ struct is_nothrow_invocable : conjunction<
     is_invocable<F, Args...>, __bind_invoke_is_nothrow<F, Args...>>::type {};
 
 template <typename F, typename... Args>
-constexpr bool is_nothrow_invocable_v = is_nothrow_invocable<F, Args...>::value;
+MSTL_INLINE17 constexpr bool is_nothrow_invocable_v = is_nothrow_invocable<F, Args...>::value;
 
 
 #ifdef MSTL_COMPILE_MSVC__
@@ -1846,14 +1842,14 @@ constexpr bool is_nothrow_invocable_v = is_nothrow_invocable<F, Args...>::value;
 template <typename T1, typename T2>
 struct is_layout_compatible : bool_constant<__is_layout_compatible(T1, T2)> {};
 template <typename T1, typename T2>
-constexpr bool is_layout_compatible_v = is_layout_compatible<T1, T2>::value;
+MSTL_INLINE17 constexpr bool is_layout_compatible_v = is_layout_compatible<T1, T2>::value;
 
 
 template <typename Base, typename Derived>
 struct is_pointer_interconvertible_base_of 
     : bool_constant<__is_pointer_interconvertible_base_of(Base, Derived)> {};
 template <typename Base, typename Derived>
-constexpr bool is_pointer_interconvertible_base_of_v = is_pointer_interconvertible_base_of<Base, Derived>::value;
+MSTL_INLINE17 constexpr bool is_pointer_interconvertible_base_of_v = is_pointer_interconvertible_base_of<Base, Derived>::value;
 #endif
 
 
@@ -1908,11 +1904,11 @@ struct is_allocator : bool_constant<is_allocator_v<T>> {};
 
 
 template <typename Alloc1, typename Alloc2>
-constexpr bool allocable_from_v = is_same_v<
+MSTL_INLINE17 constexpr bool allocable_from_v = is_same_v<
     decltype(_MSTL declval<Alloc1>().allocate(1)), decltype(_MSTL declval<Alloc2>().allocate(1))>;
 
 template <typename Alloc1, typename Alloc2>
-constexpr bool allocable_with = allocable_from_v<Alloc1, Alloc2> && allocable_from_v<Alloc2, Alloc1>;
+MSTL_INLINE17 constexpr bool allocable_with = allocable_from_v<Alloc1, Alloc2> && allocable_from_v<Alloc2, Alloc1>;
 
 
 template <typename>
@@ -1944,14 +1940,14 @@ template <typename T1, typename T2>
 struct is_swappable_with
     : bool_constant<conjunction_v<is_swappable_from<T1, T2>, is_swappable_from<T2, T1>>> {};
 template <typename T1, typename T2>
-constexpr bool is_swappable_with_v = is_swappable_with<T1, T2>::value;
+MSTL_INLINE17 constexpr bool is_swappable_with_v = is_swappable_with<T1, T2>::value;
 
 
 template <typename T>
 struct is_swappable 
     : bool_constant<is_swappable_with_v<add_lvalue_reference_t<T>, add_lvalue_reference_t<T>>> {};
 template <typename T>
-constexpr bool is_swappable_v = is_swappable<T>::value;
+MSTL_INLINE17 constexpr bool is_swappable_v = is_swappable<T>::value;
 
 
 template <typename T1, typename T2>
@@ -1962,14 +1958,14 @@ template <typename T1, typename T2>
 struct is_nothrow_swappable_with
     : bool_constant<conjunction_v<is_swappable_with<T1, T2>, is_nothrow_swappable_from<T1, T2>>> {};
 template <typename T1, typename T2>
-constexpr bool is_nothrow_swappable_with_v = is_nothrow_swappable_with<T1, T2>::value;
+MSTL_INLINE17 constexpr bool is_nothrow_swappable_with_v = is_nothrow_swappable_with<T1, T2>::value;
 
 
 template <typename T>
 struct is_nothrow_swappable
     : bool_constant<is_nothrow_swappable_with_v<add_lvalue_reference_t<T>, add_lvalue_reference_t<T>>> {};
 template <typename T>
-constexpr bool is_nothrow_swappable_v = is_nothrow_swappable<T>::value;
+MSTL_INLINE17 constexpr bool is_nothrow_swappable_v = is_nothrow_swappable<T>::value;
 
 
 // ADL (Argument Dependent Lookup) is a function–lookup mechanism.
@@ -1981,7 +1977,7 @@ template <typename T>
 struct is_ADL_swappable<T, void_t<decltype(_MSTL swap(_MSTL declval<T&>(), _MSTL declval<T&>()))>> : true_type {};
 
 template <typename T>
-constexpr bool is_trivially_swappable_v = conjunction_v<is_trivially_destructible<T>,
+MSTL_INLINE17 constexpr bool is_trivially_swappable_v = conjunction_v<is_trivially_destructible<T>,
     is_trivially_move_constructible<T>, is_trivially_move_assignable<T>, negation<is_ADL_swappable<T>>>;
 
 template <typename T>
@@ -1995,9 +1991,9 @@ concept convertible_to = is_convertible_v<From, To> && requires { static_cast<To
 
 
 template <typename Iterator, typename Ptr, bool = is_pointer_v<remove_cvref_t<Iterator>>>
-constexpr bool is_nothrow_arrow = is_nothrow_convertible_v<Iterator, Ptr>;
+MSTL_INLINE17 constexpr bool is_nothrow_arrow = is_nothrow_convertible_v<Iterator, Ptr>;
 template <typename Iterator, typename Ptr>
-constexpr bool is_nothrow_arrow<Iterator, Ptr, false> =
+MSTL_INLINE17 constexpr bool is_nothrow_arrow<Iterator, Ptr, false> =
 noexcept(_MSTL declcopy<Ptr>(_MSTL declval<Iterator>().operator->()));
 
 
@@ -2056,7 +2052,7 @@ template <typename Key>
 struct is_nothrow_hashable<Key, void_t<decltype(_MSTL hash<Key>{}(_MSTL declval<const Key&>()))>>
     : bool_constant<noexcept(_MSTL hash<Key>{}(_MSTL declval<const Key&>()))> {};
 template <typename Key>
-constexpr bool is_nothrow_hashable_v = is_nothrow_hashable<Key>::value;
+MSTL_INLINE17 constexpr bool is_nothrow_hashable_v = is_nothrow_hashable<Key>::value;
 
 
 #ifdef MSTL_VERSION_20__

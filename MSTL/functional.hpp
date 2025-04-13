@@ -265,6 +265,7 @@ struct __function_handler_dispatch : __function_manage_handler<Sign, remove_cv_t
 template <typename Sign, typename F>
 struct __function_handler_dispatch<Sign, F, false> : __function_manage_handler<void, void> {};
 
+
 template <typename Res, typename... Args>
 class function<Res(Args...)> : __function_base {
 private:

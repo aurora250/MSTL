@@ -7,18 +7,18 @@ static constexpr int MSTL_WORD_BIT_SIZE = 8 * sizeof(unsigned int);
 
 class bitmap;
 
-struct __bit_reference {
+struct bit_reference {
 private:
     unsigned int* ptr_ = nullptr;
     unsigned int mask_ = 0;
 
 public:
-    MSTL_CONSTEXPR20 __bit_reference() = default;
-    MSTL_CONSTEXPR20 __bit_reference(unsigned int* x, const unsigned int y) noexcept : ptr_(x), mask_(y) {}
+    MSTL_CONSTEXPR20 bit_reference() = default;
+    MSTL_CONSTEXPR20 bit_reference(unsigned int* x, const unsigned int y) noexcept : ptr_(x), mask_(y) {}
 
     MSTL_CONSTEXPR20 operator bool() const noexcept { return *ptr_ & mask_; }
 
-    MSTL_CONSTEXPR20 __bit_reference& operator=(const bool x) noexcept {
+    MSTL_CONSTEXPR20 bit_reference& operator=(const bool x) noexcept {
         if (x)
             *ptr_ |= mask_;
         else
@@ -26,47 +26,52 @@ public:
         return *this;
     }
 
-    MSTL_CONSTEXPR20 __bit_reference& operator=(const __bit_reference& x) noexcept {
+    MSTL_CONSTEXPR20 bit_reference& operator=(const bit_reference& x) noexcept {
         return *this = static_cast<bool>(x);
     }
 
-    MSTL_CONSTEXPR20 bool operator==(const __bit_reference& x) const noexcept {
+    MSTL_CONSTEXPR20 bool operator==(const bit_reference& x) const noexcept {
         return static_cast<bool>(*this) == static_cast<bool>(x);
     }
 
-    MSTL_CONSTEXPR20 bool operator<(const __bit_reference& x) const noexcept {
+    MSTL_CONSTEXPR20 bool operator<(const bit_reference& x) const noexcept {
         return static_cast<bool>(*this) < static_cast<bool>(x);
     }
 
     MSTL_CONSTEXPR20 void flip() const noexcept { *ptr_ ^= mask_; }
 };
 
-MSTL_CONSTEXPR20 void swap(__bit_reference& x, __bit_reference& y) noexcept {
+MSTL_CONSTEXPR20 void swap(bit_reference& x, bit_reference& y) noexcept {
     const bool tmp = x;
     x = y;
     y = tmp;
 }
 
-template <typename T, typename Ref, typename Ptr>
+template <bool IsConst, typename BitMap>
 struct bitmap_iterator {
-public:
-    using value_type        = T;
-    using difference_type   = ptrdiff_t;
-    using size_type         = size_t;
-    using iterator_category = random_access_iterator_tag;
-    using reference         = Ref;
-    using pointer           = Ptr;
-    using iterator           = bitmap_iterator<bool, __bit_reference, __bit_reference*>;
-    using const_iterator     = bitmap_iterator<bool, bool, const bool*>;
+private:
+    using container_type	= BitMap;
+    using iterator			= bitmap_iterator<false, container_type>;
+    using const_iterator	= bitmap_iterator<true, container_type>;
 
-    friend class bitmap;
-    template <typename T1, typename Ref1, typename Ptr1>
-    friend struct bitmap_iterator;
+public:
+    using iterator_category = random_access_iterator_tag;
+    using value_type		= typename container_type::value_type;
+    using reference			= conditional_t<IsConst, typename container_type::const_reference, typename container_type::reference>;
+    using pointer			= conditional_t<IsConst, typename container_type::const_pointer, typename container_type::pointer>;
+    using difference_type	= typename container_type::difference_type;
+    using size_type			= typename container_type::size_type;
+
+    using self              = bitmap_iterator<IsConst, BitMap>;
 
 private:
     unsigned int* ptr_ = nullptr;
     unsigned int off_ = 0;
 
+    friend class bitmap;
+    template <bool, typename> friend struct bitmap_iterator;
+
+private:
     MSTL_CONSTEXPR20 void bump_up() noexcept {
         if (off_++ == MSTL_WORD_BIT_SIZE - 1) {
             off_ = 0;
@@ -86,7 +91,7 @@ private:
     }
     template <typename Ref1, enable_if_t<!is_bool_v<Ref1>, int> = 0>
     MSTL_NODISCARD MSTL_CONSTEXPR20 Ref1 reference_dispatch() const noexcept {
-        return reference(ptr_, 1U << off_);
+        return Ref1(ptr_, 1U << off_);
     }
 
 public:
@@ -175,18 +180,21 @@ public:
 
 
 class bitmap {
-    using data_allocator = standard_allocator<unsigned int>;
-
 public:
     using value_type         = bool;
+    using pointer            = bit_reference*;
+    using reference          = bit_reference;
+    using const_pointer      = const bool*;
+    using const_reference    = const bool;
     using size_type          = size_t;
     using difference_type    = ptrdiff_t;
-    using reference          = __bit_reference;
-    using const_reference    = bool;
-    using iterator           = bitmap_iterator<bool, __bit_reference, __bit_reference*>;
-    using const_iterator     = bitmap_iterator<bool, bool, const bool*>;
-    using reverse_iterator       = _MSTL reverse_iterator<iterator>;
-    using const_reverse_iterator = _MSTL reverse_iterator<const_iterator>;
+    using allocator_type     = standard_allocator<uint32_t>;
+    using self               = bitmap;
+
+    using iterator                  = bitmap_iterator<false, self>;
+    using const_iterator            = bitmap_iterator<true, self>;
+    using reverse_iterator          = _MSTL reverse_iterator<iterator>;
+    using const_reverse_iterator    = _MSTL reverse_iterator<const_iterator>;
 
 protected:
     iterator start_{};
@@ -194,11 +202,11 @@ protected:
     unsigned int* end_of_storage_ = nullptr;
 
     MSTL_CONSTEXPR20 static unsigned int* bit_alloc(const size_type n) {
-        return data_allocator::allocate((n + MSTL_WORD_BIT_SIZE - 1) / MSTL_WORD_BIT_SIZE);
+        return allocator_type::allocate((n + MSTL_WORD_BIT_SIZE - 1) / MSTL_WORD_BIT_SIZE);
     }
     MSTL_CONSTEXPR20 void deallocate() {
         if (start_.ptr_)
-            data_allocator::deallocate(start_.ptr_, end_of_storage_ - start_.ptr_);
+            allocator_type::deallocate(start_.ptr_, end_of_storage_ - start_.ptr_);
     }
 
     template <typename Iterator1, typename Iterator2>
