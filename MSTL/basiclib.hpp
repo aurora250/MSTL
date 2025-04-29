@@ -2,6 +2,7 @@
 #define MSTL_BASICLIB_H__
 #include <iostream>
 #include <cassert>
+#include "undef_cmacro.hpp"
 
 #if defined(WIN32) || defined(_WIN32) || defined(_WIN32_) || defined(_M_X86)
 	#define MSTL_PLATFORM_WINDOWS__		1
@@ -63,7 +64,7 @@
 #define USE_MSTL using namespace __MSTL_GLOBAL_NAMESPACE__;
 #define MSTL_BEGIN_NAMESPACE__ namespace __MSTL_GLOBAL_NAMESPACE__ {
 #define MSTL_END_NAMESPACE__ }
-#define _MSTL __MSTL_GLOBAL_NAMESPACE__::
+#define _MSTL __MSTL_GLOBAL_NAMESPACE__ ::
 
 #define MSTL_INDEPENDENT_TAG_NAMESPACE_SETTING inline
 
@@ -142,7 +143,7 @@
 	#define SIMPLE_LOG(MESG) \
 		std::cout << __FILE__ << ":" << __LINE__ << " " << __TIMESTAMP__ << " : " << MESG << std::endl;
 #else
-	#define SIMPLE_LOG(MESG) 
+	#define SIMPLE_LOG(MESG)
 #endif
 
 
@@ -181,7 +182,7 @@
 
 
 #ifdef MSTL_SUPPORT_IF_CONSTEXPR__
-	// this macro will be used with caution, as it will break static overload.
+	// this macro will be used with caution, as it may break static overload under C++17.
 	#define MSTL_IF_CONSTEXPR if constexpr
 #else
 	#define MSTL_IF_CONSTEXPR if
@@ -230,7 +231,7 @@
 
 #ifdef MSTL_SUPPORT_UNLIKELY__
 	#define MSTL_UNLIKELY [[unlikely]]
-#else 
+#else
 	#define MSTL_UNLIKELY
 #endif
 
@@ -243,20 +244,20 @@
 	#else
 		#define MSTL_NORETURN
 	#endif
-#else 
-	#define MSTL_NORETURN 
+#else
+	#define MSTL_NORETURN
 #endif
 
 
 #ifdef MSTL_SUPPORT_DEPRECATED__
 	#define MSTL_DEPRECATED [[deprecated]]
-	// after C++ 11, we can use lambda expressions to quickly build closures 
+	// after C++ 11, we can use lambda expressions to quickly build closures
 	// instead of using functor adapters.
 	#define MSTL_FUNC_ADAPTER_DEPRE \
 		[[deprecated("C++ 11 and later versions no longer use functor base types and functor adapters.")]]
 	#define MSTL_TRAITS_DEPRE \
 		[[deprecated("C++ 11 and later versions no longer use iterator traits functions.")]]
-#else 
+#else
 	#define MSTL_DEPRECATED
 	#define MSTL_FUNCADP_DEPRE
 	#define MSTL_TRAITS_DEPRE
@@ -299,11 +300,11 @@
 #define MSTL_MACRO_RANGES_UNICODE_CHARS(MAC) \
 	MAC(char8_t) \
 	MAC(char16_t) \
-	MAC(char32_t) 
+	MAC(char32_t)
 #else
 #define MSTL_MACRO_RANGES_UNICODE_CHARS(MAC) \
 	MAC(char16_t) \
-	MAC(char32_t) 
+	MAC(char32_t)
 #endif
 
 #define MSTL_MACRO_RANGE_CHARS(MAC) \
@@ -401,9 +402,11 @@ MSTL_INLINE17 constexpr uint32_t UINT32_MAX_SIZE = 0xffffffffU;
 MSTL_INLINE17 constexpr uint64_t UINT64_MAX_SIZE = 0xffffffffffffffffULL;
 
 
-MSTL_INLINE17 constexpr size_t MEMORY_ALIGN_THRESHHOLD = 16ULL;
-MSTL_INLINE17 constexpr size_t MEMORY_BIG_ALLOC_ALIGN = 32ULL;
-MSTL_INLINE17 constexpr size_t MEMORY_BIG_ALLOC_THRESHHOLD = 4096ULL;
+MSTL_INLINE17 constexpr size_t MEMORY_ALIGN_THRESHHOLD = 16UL;
+
+#ifdef MSTL_COMPILE_MSVC__
+MSTL_INLINE17 constexpr size_t MEMORY_BIG_ALLOC_ALIGN = 32UL;
+MSTL_INLINE17 constexpr size_t MEMORY_BIG_ALLOC_THRESHHOLD = 4096UL;
 
 #ifdef MSTL_STATE_DEBUG__
 MSTL_INLINE17 constexpr size_t MEMORY_NO_USER_SIZE = 2 * sizeof(void*) + MEMORY_BIG_ALLOC_ALIGN - 1;
@@ -412,13 +415,15 @@ MSTL_INLINE17 constexpr size_t MEMORY_NO_USER_SIZE = sizeof(void*) + MEMORY_BIG_
 #endif
 
 #ifdef MSTL_DATA_BUS_WIDTH_64__
-MSTL_INLINE17 constexpr size_t MEMORY_BIG_ALLOC_SENTINEL = 0xFAFAFAFAFAFAFAFAULL;
+MSTL_INLINE17 constexpr size_t MEMORY_BIG_ALLOC_SENTINEL = 0xFAFAFAFAFAFAFAFAUL;
 #else
 MSTL_INLINE17 constexpr size_t MEMORY_BIG_ALLOC_SENTINEL = 0xFAFAFAFAUL;
 #endif
 
+#endif // MSTL_COMPILE_MSVC__
 
-constexpr void* memcpy(void* dest, const void* src, size_t byte) noexcept {
+
+constexpr void* memory_copy(void* dest, const void* src, size_t byte) noexcept {
 	if(dest == nullptr || src == nullptr) return nullptr;
 	void* res = dest;
 	while (byte--) {
@@ -429,7 +434,7 @@ constexpr void* memcpy(void* dest, const void* src, size_t byte) noexcept {
 	return res;
 }
 
-constexpr wchar_t* wmemcpy(wchar_t* dest, const wchar_t* src, size_t count) noexcept {
+constexpr wchar_t* wchar_memory_copy(wchar_t* dest, const wchar_t* src, size_t count) noexcept {
 	if(dest == nullptr || src == nullptr) return nullptr;
 	wchar_t* res = dest;
 	while (count--) {
@@ -440,7 +445,7 @@ constexpr wchar_t* wmemcpy(wchar_t* dest, const wchar_t* src, size_t count) noex
 	return res;
 }
 
-constexpr int memcmp(const void* dest, const void* src, size_t byte) noexcept {
+constexpr int memory_compare(const void* dest, const void* src, size_t byte) noexcept {
     if (dest == nullptr && src == nullptr) return 0;
     else if (dest == nullptr) return -1;
     else if (src == nullptr) return 1;
@@ -455,7 +460,7 @@ constexpr int memcmp(const void* dest, const void* src, size_t byte) noexcept {
     }
 }
 
-constexpr int wmemcmp(const wchar_t* dest, const wchar_t* src, size_t count) noexcept {
+constexpr int wchar_memory_compare(const wchar_t* dest, const wchar_t* src, size_t count) noexcept {
     if (dest == nullptr && src == nullptr) return 0;
     else if (dest == nullptr) return -1;
     else if (src == nullptr) return 1;
@@ -469,7 +474,7 @@ constexpr int wmemcmp(const wchar_t* dest, const wchar_t* src, size_t count) noe
     }
 }
 
-constexpr void* memchr(const void* dest, const int value, size_t byte) noexcept {
+constexpr void* memory_char(const void* dest, const int value, size_t byte) noexcept {
 	if(dest == nullptr) return nullptr;
 	auto p = static_cast<const char *>(dest);
 	while (byte--) {
@@ -480,7 +485,7 @@ constexpr void* memchr(const void* dest, const int value, size_t byte) noexcept 
 	return nullptr;
 }
 
-constexpr wchar_t* wmemchr(const wchar_t* dest, const wchar_t value, size_t count) noexcept {
+constexpr wchar_t* wchar_memory_char(const wchar_t* dest, const wchar_t value, size_t count) noexcept {
 	if(dest == nullptr) return nullptr;
 	const wchar_t* p = dest;
 	while (count--) {
@@ -491,7 +496,7 @@ constexpr wchar_t* wmemchr(const wchar_t* dest, const wchar_t value, size_t coun
 	return nullptr;
 }
 
-constexpr void* memmove(void* dest, const void* src, size_t byte) noexcept {
+constexpr void* memory_move(void* dest, const void* src, size_t byte) noexcept {
 	if(dest == nullptr || src == nullptr) return nullptr;
 	void* res = dest;
 	if (dest < src) {
@@ -509,12 +514,12 @@ constexpr void* memmove(void* dest, const void* src, size_t byte) noexcept {
 	return res;
 }
 
-constexpr wchar_t* wmemmove(wchar_t* dest, const wchar_t* src, const size_t count) noexcept {
+constexpr wchar_t* wchar_memory_move(wchar_t* dest, const wchar_t* src, const size_t count) noexcept {
 	if(dest == nullptr || src == nullptr) return nullptr;
-	return static_cast<wchar_t *>(memmove(dest, src, count * sizeof(wchar_t)));
+	return static_cast<wchar_t *>(memory_move(dest, src, count * sizeof(wchar_t)));
 }
 
-constexpr void* memset(void* dest, const int value, size_t byte) noexcept {
+constexpr void* memory_set(void* dest, const int value, size_t byte) noexcept {
 	if(dest == nullptr) return nullptr;
 	void* ret = static_cast<char *>(dest);
 	while (byte--) {
@@ -524,7 +529,7 @@ constexpr void* memset(void* dest, const int value, size_t byte) noexcept {
 	return ret;
 }
 
-constexpr wchar_t* wmemset(wchar_t* dest, const wchar_t value, size_t count) noexcept {
+constexpr wchar_t* wchar_memory_set(wchar_t* dest, const wchar_t value, size_t count) noexcept {
 	if(dest == nullptr) return nullptr;
 	wchar_t* ret = dest;
 	while (count--) {
@@ -535,23 +540,23 @@ constexpr wchar_t* wmemset(wchar_t* dest, const wchar_t value, size_t count) noe
 }
 
 
-constexpr int strlen(const char* str) noexcept {
-	if (*str != '\0') return strlen(str + 1) + 1;
+constexpr int string_length(const char* str) noexcept {
+	if (*str != '\0') return string_length(str + 1) + 1;
 	return 0;
 }
 
-constexpr int wcslen(const wchar_t* str) noexcept {
-	if (*str != L'\0') return wcslen(str + 1) + 1;
+constexpr int wstring_length(const wchar_t* str) noexcept {
+	if (*str != L'\0') return wstring_length(str + 1) + 1;
 	return 0;
 }
 #ifdef MSTL_VERSION_20__
-constexpr int u8cslen(const char8_t* str) noexcept {
-	if (*str != u8'\0') return u8cslen(str + 1) + 1;
+constexpr int u8strig_length(const char8_t* str) noexcept {
+	if (*str != u8'\0') return u8strig_length(str + 1) + 1;
 	return 0;
 }
 #endif
 
-constexpr char* strcpy(char* dest, const char* src) noexcept {
+constexpr char* string_copy(char* dest, const char* src) noexcept {
 	if(dest == nullptr || src == nullptr) return nullptr;
 	char* _ret = dest;
 	while (*src != '\0') {
@@ -563,7 +568,7 @@ constexpr char* strcpy(char* dest, const char* src) noexcept {
 	return _ret;
 }
 
-constexpr int strcmp(const char* dest, const char* src) noexcept {
+constexpr int string_compare(const char* dest, const char* src) noexcept {
 	assert(dest && src);
 	while (*dest == *src) {
 		if (*dest == '\0') return 0;
@@ -574,7 +579,7 @@ constexpr int strcmp(const char* dest, const char* src) noexcept {
 	return -1;
 }
 
-constexpr const char* strstr(const char* dest, const char* src) noexcept {
+constexpr const char* string_in_string(const char* dest, const char* src) noexcept {
 	if(dest == nullptr || src == nullptr) return nullptr;
 	const char* cur = dest;
 	while (*cur) {
@@ -590,15 +595,15 @@ constexpr const char* strstr(const char* dest, const char* src) noexcept {
 	return nullptr;
 }
 
-constexpr char* memstr(char* data, const int len, const char* sub) noexcept {
+constexpr char* string_in_memory(char* data, const int len, const char* sub) noexcept {
 	if (data == nullptr || len <= 0 || sub == nullptr) return nullptr;
 	if (*sub == '\0') return nullptr;
-	const int str_len = strlen(sub);
+	const int str_len = string_length(sub);
 	char* cur = data;
 	const int last = len - str_len + 1;
 	for (int i = 0; i < last; i++) {
 		if (*cur == *sub)
-			if (memcmp(cur, sub, str_len) == 0) return cur;
+			if (memory_compare(cur, sub, str_len) == 0) return cur;
 		cur++;
 	}
 	return nullptr;

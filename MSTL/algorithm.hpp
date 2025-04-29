@@ -6,7 +6,7 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator, typename BinaryOperation, typename Result,
-    size_t Threshhold = 10, enable_if_t<is_input_iter_v<Iterator>, int> = 0>
+    size_t Threshhold = 10, enable_if_t<is_ranges_input_iter_v<Iterator>, int> = 0>
 void reduce(Iterator first, Iterator last, BinaryOperation op, Result& res) {
     const size_t dist = _MSTL distance(first, last);
     if (dist <= Threshhold) {
@@ -24,7 +24,7 @@ void reduce(Iterator first, Iterator last, BinaryOperation op, Result& res) {
 }
 
 template <typename Iterator, typename UnaryOperation, typename BinaryOp, typename Result,
-    size_t Threshhold = 10, enable_if_t<is_input_iter_v<Iterator>, int> = 0>
+    size_t Threshhold = 10, enable_if_t<is_ranges_input_iter_v<Iterator>, int> = 0>
 void transform_reduce(Iterator first, Iterator last, UnaryOperation transform, BinaryOp reduce, Result& res) {
     const size_t dist = _MSTL distance(first, last);
     if (dist <= Threshhold) {

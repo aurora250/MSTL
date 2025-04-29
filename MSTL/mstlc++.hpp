@@ -16,5 +16,7 @@
 #include "detailof.hpp"
 #include "trace_memory.hpp"
 #include "thread_pool.h"
+#include "database_pool.h"
+#include "undef_cmacro.hpp"
 
 #endif // MSTL_MSTLCPP_HPP__

@@ -117,21 +117,21 @@ public:
     ~hashtable_iterator() = default;
 
     MSTL_NODISCARD reference operator *() const noexcept {
-        MSTL_DEBUG_VERIFY__(cur_ && ht_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(hashtable_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
-        MSTL_DEBUG_VERIFY__(bucket_ < ht_->buckets_.size() && 0 <= bucket_,
+        MSTL_DEBUG_VERIFY(cur_ && ht_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(hashtable_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
+        MSTL_DEBUG_VERIFY(bucket_ < ht_->buckets_.size() && 0 <= bucket_,
             __MSTL_DEBUG_MESG_OUT_OF_RANGE(hashtable_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
         return cur_->data_;
     }
     MSTL_NODISCARD pointer operator ->() const noexcept {
-        MSTL_DEBUG_VERIFY__(cur_ && ht_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(hashtable_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
-        MSTL_DEBUG_VERIFY__(bucket_ < ht_->buckets_.size() && 0 <= bucket_,
+        MSTL_DEBUG_VERIFY(cur_ && ht_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(hashtable_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
+        MSTL_DEBUG_VERIFY(bucket_ < ht_->buckets_.size() && 0 <= bucket_,
             __MSTL_DEBUG_MESG_OUT_OF_RANGE(hashtable_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
         return &operator*();
     }
 
     self& operator ++() {
-        MSTL_DEBUG_VERIFY__(cur_ && ht_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(hashtable_iterator, __MSTL_DEBUG_TAG_INCREMENT));
-        MSTL_DEBUG_VERIFY__(bucket_ < ht_->buckets_.size() && !(bucket_ + 1 == ht_->buckets_.size() && cur_->next_ != nullptr),
+        MSTL_DEBUG_VERIFY(cur_ && ht_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(hashtable_iterator, __MSTL_DEBUG_TAG_INCREMENT));
+        MSTL_DEBUG_VERIFY(bucket_ < ht_->buckets_.size() && !(bucket_ + 1 == ht_->buckets_.size() && cur_->next_ != nullptr),
             __MSTL_DEBUG_MESG_OUT_OF_RANGE(hashtable_iterator, __MSTL_DEBUG_TAG_INCREMENT));
         cur_ = cur_->next_;
         if (cur_ == nullptr) {
@@ -148,7 +148,7 @@ public:
     }
 
     MSTL_NODISCARD bool operator ==(const self& x) noexcept {
-		MSTL_DEBUG_VERIFY__(ht_ == x.ht_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(hashtable_iterator));
+		MSTL_DEBUG_VERIFY(ht_ == x.ht_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(hashtable_iterator));
         return cur_ == x.cur_;
     }
     MSTL_NODISCARD bool operator !=(const self& x) noexcept {
@@ -272,10 +272,13 @@ private:
     node_type* new_node(Args&&... args) {
         node_type* n = pair_.get_base().allocate();
         n->next_ = nullptr;
-        MSTL_TRY__{
+        try {
             _MSTL construct(&n->data_, _MSTL forward<Args>(args)...);
         }
-        MSTL_CATCH_UNWIND_THROW_M__(delete_node(n));
+        catch (...) {
+            delete_node(n);
+            Exception(MemoryError("hashtable construct node failed."));
+        }
         return n;
     }
     void delete_node(node_type* n) noexcept {
@@ -312,7 +315,7 @@ private:
         buckets_.clear();
         buckets_.reserve(ht.buckets_.size());
         buckets_.insert(buckets_.end(), ht.buckets_.size(), nullptr);
-        MSTL_TRY__{
+        try {
             for (size_type i = 0; i < ht.buckets_.size(); ++i) {
                 if (const node_type* cur = ht.buckets_[i]) {
                     node_type* copy = (new_node)(cur->data_);
@@ -326,7 +329,10 @@ private:
             size_ = ht.size_;
             pair_.value = ht.pair_.value;
         }
-        MSTL_CATCH_UNWIND_THROW_M__(clear());
+        catch (MemoryError&) {
+            clear();
+            throw;
+        }
     }
 
     pair<iterator, bool> insert_unique_noresize(node_type* x) {
@@ -368,13 +374,13 @@ private:
     }
 
     template <typename Iterator,
-        enable_if_t<is_iter_v<Iterator> && !is_fwd_iter_v<Iterator>, int> = 0>
+        enable_if_t<is_iter_v<Iterator> && !is_ranges_fwd_iter_v<Iterator>, int> = 0>
     void insert_unique_aux(Iterator first, Iterator last) {
         for (; first != last; ++first)
             insert_unique(*first);
     }
 
-    template <typename Iterator, enable_if_t<is_fwd_iter_v<Iterator>, int> = 0>
+    template <typename Iterator, enable_if_t<is_ranges_fwd_iter_v<Iterator>, int> = 0>
     void insert_unique_aux(Iterator first, Iterator last) {
         size_type n = _MSTL distance(first, last);
         rehash(size_ + n);
@@ -385,14 +391,14 @@ private:
     }
 
     template <typename Iterator,
-        enable_if_t<is_input_iter_v<Iterator> && !is_fwd_iter_v<Iterator>, int> = 0>
+        enable_if_t<is_ranges_input_iter_v<Iterator> && !is_ranges_fwd_iter_v<Iterator>, int> = 0>
     void insert_equal_aux(Iterator first, Iterator last) {
         for (; first != last; ++first)
             insert_equal(*first);
     }
 
     template <typename Iterator, enable_if_t<
-        is_fwd_iter_v<Iterator>, int> = 0>
+        is_ranges_fwd_iter_v<Iterator>, int> = 0>
     void insert_equal_aux(Iterator first, Iterator last) {
         size_type n = _MSTL distance(first, last);
         rehash(size_ + n);
@@ -496,17 +502,17 @@ public:
         return pair_.value;
     }
     void max_load_factor(float new_max) noexcept {
-        MSTL_DEBUG_VERIFY__(!std::isnan(new_max) && new_max > 0, "hashtable load factor invalid.");
+        MSTL_DEBUG_VERIFY(!std::isnan(new_max) && new_max > 0, "hashtable load factor invalid.");
         pair_.value = new_max;
     }
 
-    void rehash(size_type new_size) {
+    void rehash(const size_type new_size) {
         const size_type old_size = buckets_.size();
         if (new_size <= old_size) return;
         const size_type n = next_size(new_size);
         if (n <= old_size) return;
         vector<node_type*> tmp(n, nullptr);
-        MSTL_TRY__{
+        try {
             for (size_type bucket = 0; bucket < old_size; ++bucket) {
                 node_type* first = buckets_[bucket];
                 while (first != nullptr) {
@@ -519,7 +525,7 @@ public:
             }
             buckets_.swap(tmp);
         }
-        MSTL_CATCH_UNWIND__{
+        catch (...) {
             for (size_type bucket = 0; bucket < tmp.size(); ++bucket) {
                 while (tmp[bucket] != nullptr) {
                     node_type* next = tmp[bucket]->next_;
@@ -527,11 +533,11 @@ public:
                     tmp[bucket] = next;
                 }
             }
-            MSTL_EXEC_MEMORY__
+            Exception(MemoryError("hashtable rehash failed."));
         }
     }
 
-    void reserve(size_type max_count) {
+    void reserve(const size_type max_count) {
         rehash(static_cast<size_type>(_MSTL ceil(static_cast<float>(max_count) / pair_.value, 0)));
     }
 

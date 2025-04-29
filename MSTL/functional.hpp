@@ -95,8 +95,8 @@ class undefined_utility_class;
 union __nocopy_type {
 	void* object_;
 	const void* const_object_;
-	void (*function_pointer_)();
-	void (undefined_utility_class::*member_pointer_)();
+	void (* function_pointer_)();
+	void (undefined_utility_class::* member_pointer_)();
 };
 
 union storage_data {

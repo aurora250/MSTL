@@ -18,11 +18,13 @@ concept与requires；
 
 使用可变参数模板、递归展开和模板特化等模板元技术实现类型萃取并编写功能性容器；
 
+函数式编程工具的实现；
+
+类型擦除工具类与函数的实现；
+
 通过enable_if实现SFINAF(Substitution Failure Is Not An Error)；
 
 通过compressed_pair实现EBCO(Empty Base Class Optimization)；
-
-用static_assert进行静态模板保证；
 
 使用alignof实现内存对位分配；
 
@@ -234,9 +236,13 @@ Strengthen noexcept guarantee;
 
 Use meta programming technologies such as variable argument templates, recursion expansion and template specializations to implement type traits and edit utility containers;
 
-Through enable_if to implement SFINAF(Substitution Failure Is Not An Error)；
+Implement functional programming tools;
 
-Through compressed_pair to implement EBCO(Empty Base Class Optimization)；
+Implement type-erasure utility classes and functions;
+
+Through enable_if to implement SFINAF(Substitution Failure Is Not An Error);
+
+Through compressed_pair to implement EBCO(Empty Base Class Optimization);
 
 Use static_assert to ensure actions of template arguments;
 

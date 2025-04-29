@@ -50,12 +50,12 @@ template <typename Iterator, typename Distance, enable_if_t<is_rnd_iter_v<Iterat
 MSTL_CONSTEXPR17 void __advance_aux(Iterator& i, Distance n) {
     i += n;
 }
-template <typename Iterator, typename Distance, enable_if_t<!is_rnd_iter_v<Iterator> && is_bid_iter_v<Iterator>, int> = 0>
+template <typename Iterator, typename Distance, enable_if_t<!is_rnd_iter_v<Iterator> && is_ranges_bid_iter_v<Iterator>, int> = 0>
 MSTL_CONSTEXPR17 void __advance_aux(Iterator& i, Distance n) {
     for (; n < 0; ++n) --i;
     for (; 0 < n; --n) ++i;
 }
-template <typename Iterator, typename Distance, enable_if_t<!is_rnd_iter_v<Iterator> && !is_bid_iter_v<Iterator>, int> = 0>
+template <typename Iterator, typename Distance, enable_if_t<!is_rnd_iter_v<Iterator> && !is_ranges_bid_iter_v<Iterator>, int> = 0>
 MSTL_CONSTEXPR17 void __advance_aux(Iterator& i, Distance n) {
     MSTL_DEBUG_VERIFY__(is_signed_v<Distance> && n >= 0, "negative advance of non-bidirectional iterator");
     for (; 0 < n; --n) ++i;
@@ -72,7 +72,7 @@ MSTL_CONSTEXPR17 void advance(Iterator& i, Distance n) {
     }
     else {
         if constexpr (is_signed_v<Distance> && !is_bid_iter_v<Iterator>) {
-            MSTL_DEBUG_VERIFY__(n >= 0, "negative advance of non-bidirectional iterator");
+            MSTL_DEBUG_VERIFY(n >= 0, "negative advance of non-bidirectional iterator");
         }
         if constexpr (is_signed_v<Distance> && is_bid_iter_v<Iterator>) {
             for (; n < 0; ++n)

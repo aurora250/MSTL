@@ -136,35 +136,32 @@ public:
     ~deque_iterator() noexcept = default;
 
     MSTL_NODISCARD reference operator *() const noexcept {
-        MSTL_DEBUG_VERIFY__(cur_ && deq_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(deque_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
-        MSTL_DEBUG_VERIFY__(first_ <= cur_ && cur_ < last_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(deque_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
+        MSTL_DEBUG_VERIFY(cur_ && deq_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(deque_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
+        MSTL_DEBUG_VERIFY(first_ <= cur_ && cur_ < last_,
+            __MSTL_DEBUG_MESG_OUT_OF_RANGE(deque_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
         return *cur_;
-    }
-    MSTL_NODISCARD pointer operator ->() const noexcept {
-        return &operator*();
     }
 
     self& operator ++() noexcept {
-        MSTL_DEBUG_VERIFY__(cur_ && deq_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(deque_iterator, __MSTL_DEBUG_TAG_INCREMENT));
-        MSTL_DEBUG_VERIFY__(cur_ < last_ ||
-            (cur_ + 1 == last_ && node_ + 1 < deq_->map_pair_.value + deq_->map_size_pair_.value && *(node_ + 1) < deq_->finish_.cur_),
-             __MSTL_DEBUG_MESG_OUT_OF_RANGE(deque_iterator, __MSTL_DEBUG_TAG_INCREMENT));
+        MSTL_DEBUG_VERIFY(cur_ && deq_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(deque_iterator, __MSTL_DEBUG_TAG_INCREMENT));
+        // MSTL_DEBUG_VERIFY__(cur_ < last_ ||
+        //     (cur_ + 1 == last_ && node_ + 1 < deq_->map_pair_.value + deq_->map_size_pair_.value && *(node_ + 1) < deq_->finish_.cur_),
+        //      __MSTL_DEBUG_MESG_OUT_OF_RANGE(deque_iterator, __MSTL_DEBUG_TAG_INCREMENT));
         ++cur_;
-        if (cur_ == last_) {
+        if (cur_ == last_ && node_ < deq_->finish_.node_) {
             change_buff(node_ + 1);
             cur_ = first_;
         }
         return *this;
     }
-    self operator ++(int) noexcept {
-        self temp = *this;
-        ++*this;
-        return temp;
-    }
+
     self& operator --() noexcept {
-        MSTL_DEBUG_VERIFY__(cur_ && deq_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(deque_iterator, __MSTL_DEBUG_TAG_DECREMENT));
-        MSTL_DEBUG_VERIFY__(first_ < cur_ || (cur_ == first_ && node_ - 1 == deq_->map_pair_.value),
-            __MSTL_DEBUG_MESG_OUT_OF_RANGE(deque_iterator, __MSTL_DEBUG_TAG_DECREMENT));
+        MSTL_DEBUG_VERIFY(cur_ && deq_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(deque_iterator, __MSTL_DEBUG_TAG_DECREMENT));
+        // MSTL_DEBUG_VERIFY__(
+        //     (cur_ > first_) ||
+        //     (cur_ == first_ && node_ > deq_->map_pair_.value),
+        //     __MSTL_DEBUG_MESG_OUT_OF_RANGE(deque_iterator, __MSTL_DEBUG_TAG_DECREMENT)
+        // );
         if (cur_ == first_) {
             change_buff(node_ - 1);
             cur_ = last_;
@@ -172,13 +169,9 @@ public:
         --cur_;
         return *this;
     }
-    self operator --(int) noexcept {
-        self temp = *this;
-        --*this;
-        return temp;
-    }
 
     self& operator +=(const difference_type n) noexcept {
+        MSTL_DEBUG_VERIFY(cur_ && deq_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(deque_iterator, __MSTL_DEBUG_TAG_INCREMENT));
         const difference_type offset = n + (cur_ - first_);
         if (offset >= 0 && offset < static_cast<difference_type>(buff_size()))
             cur_ += n;
@@ -207,19 +200,19 @@ public:
         return temp -= n;
     }
     difference_type operator -(const self& x) const noexcept {
-		MSTL_DEBUG_VERIFY__(deq_ == x.deq_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(deque_iterator));
+		MSTL_DEBUG_VERIFY(deq_ == x.deq_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(deque_iterator));
         return (node_ - x.node_ - 1) * buff_size() + (cur_ - first_) + (x.last_ - x.cur_);
     }
 
     MSTL_NODISCARD reference operator [](const difference_type n) noexcept { return *(*this + n); }
 
     MSTL_NODISCARD bool operator ==(const self& x) const noexcept {
-		MSTL_DEBUG_VERIFY__(deq_ == x.deq_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(deque_iterator));
+		MSTL_DEBUG_VERIFY(deq_ == x.deq_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(deque_iterator));
         return cur_ == x.cur_;
     }
     MSTL_NODISCARD bool operator !=(const self& x) const noexcept { return !(*this == x); }
     MSTL_NODISCARD bool operator <(const self& x) const noexcept {
-		MSTL_DEBUG_VERIFY__(deq_ == x.deq_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(deque_iterator));
+		MSTL_DEBUG_VERIFY(deq_ == x.deq_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(deque_iterator));
         return node_ == x.node_ ? cur_ < x.cur_ : node_ < x.node_;
     }
     MSTL_NODISCARD bool operator >(const self& x) const noexcept { return x < *this; }
@@ -251,18 +244,18 @@ private:
 
     iterator start_{};
     iterator finish_{};
-    compressed_pair<allocator_type, size_type> map_size_pair_{ default_construct_tag{}, 0 };
-    compressed_pair<map_allocator, map_pointer> map_pair_{ default_construct_tag{}, nullptr };
+    compressed_pair<allocator_type, size_type> map_size_pair_{ default_construct_tag{}, 0 }; // map_size_
+    compressed_pair<map_allocator, map_pointer> map_pair_{ default_construct_tag{}, nullptr }; // map_
 
     template <bool, typename, size_t> friend struct deque_iterator;
 
 private:
     void range_check(const size_type position) const noexcept {
-        MSTL_DEBUG_VERIFY__(position < static_cast<size_type>(distance(start_, finish_)),
+        MSTL_DEBUG_VERIFY(position < static_cast<size_type>(distance(start_, finish_)),
             "deque index out of ranges.");
     }
     void range_check(iterator position) const noexcept {
-        MSTL_DEBUG_VERIFY__(position >= start_ && position <= finish_, "deque index out of ranges.");
+        MSTL_DEBUG_VERIFY(position >= start_ && position <= finish_, "deque index out of ranges.");
     }
 
     MSTL_CONSTEXPR static size_t buff_size() noexcept {
@@ -276,12 +269,13 @@ private:
         map_pointer nstart = map_pair_.value + (map_size_pair_.value - node_nums) / 2;
         map_pointer nfinish = nstart + node_nums - 1;
         map_pointer cur;
-        MSTL_TRY__{
+        try {
             for (cur = nstart; cur <= nfinish; ++cur) *cur = map_size_pair_.get_base().allocate(buff_size());
         }
-        MSTL_CATCH_UNWIND_THROW_M__(
+        catch (MemoryError&) {
             for (cur = nstart; cur <= nfinish; ++cur) map_size_pair_.get_base().deallocate(*cur, buff_size());
-        );
+            throw;
+        }
         start_.change_buff(nstart);
         finish_.change_buff(nfinish);
         start_.cur_ = start_.first_;
@@ -292,8 +286,7 @@ private:
 
     void fill_initialize(const size_type n, const T& x) {
         create_map_and_nodes(n);
-        map_pointer cur = nullptr;
-        for (cur = start_.node_; cur < finish_.node_; ++cur)
+        for (map_pointer cur = start_.node_; cur < finish_.node_; ++cur)
             _MSTL uninitialized_fill(*cur, *cur + buff_size(), x);
         _MSTL uninitialized_fill(finish_.first_, finish_.cur_, x);
     }
@@ -322,8 +315,7 @@ private:
         finish_.change_buff(new_start + old_num_nodes - 1);
     }
 
-    template <typename Iterator,
-        enable_if_t<is_input_iter_v<Iterator>, int> = 0>
+    template <typename Iterator, enable_if_t<is_ranges_input_iter_v<Iterator>, int> = 0>
     iterator range_insert(iterator position, Iterator first, Iterator last) {
         difference_type n = last - first;
         difference_type index = position - start_;
@@ -544,19 +536,19 @@ public:
     MSTL_NODISCARD allocator_type get_allocator() const noexcept { return allocator_type(); }
 
     MSTL_NODISCARD reference front() noexcept {
-        MSTL_DEBUG_VERIFY__(!empty(), "front called on empty deque");
+        MSTL_DEBUG_VERIFY(!empty(), "front called on empty deque");
         return *start_;
     }
     MSTL_NODISCARD const_reference front() const noexcept {
-        MSTL_DEBUG_VERIFY__(!empty(), "front called on empty deque");
+        MSTL_DEBUG_VERIFY(!empty(), "front called on empty deque");
         return *start_;
     }
     MSTL_NODISCARD reference back() noexcept {
-        MSTL_DEBUG_VERIFY__(!empty(), "back called on empty deque");
+        MSTL_DEBUG_VERIFY(!empty(), "back called on empty deque");
         return *(finish_ - 1);
     }
     MSTL_NODISCARD const_reference back() const noexcept {
-        MSTL_DEBUG_VERIFY__(!empty(), "back called on empty deque");
+        MSTL_DEBUG_VERIFY(!empty(), "back called on empty deque");
         return *(finish_ - 1);
     }
 
@@ -603,6 +595,7 @@ public:
             finish_.cur_ = finish_.first_;
         }
     }
+
     template <typename... Args>
     void emplace_front(Args&&... args) {
         if (start_.cur_ != start_.first_) {
@@ -635,24 +628,32 @@ public:
         if (finish_.cur_ != finish_.first_) {
             --finish_.cur_;
             _MSTL destroy(finish_.cur_);
-        }
-        else {
+        } else {
             map_size_pair_.get_base().deallocate(finish_.first_, buff_size());
-            finish_.change_buff(finish_.node_ - 1);
-            finish_.cur_ = finish_.last_ - 1;
-            _MSTL destroy(finish_.cur_);
+            if (finish_.node_ == start_.node_) {
+                finish_ = iterator();
+                start_ = iterator();
+            } else {
+                finish_.change_buff(finish_.node_ - 1);
+                finish_.cur_ = finish_.last_ - 1;
+                _MSTL destroy(finish_.cur_);
+            }
         }
     }
     void pop_front() noexcept {
         if (start_.cur_ != start_.last_ - 1) {
             _MSTL destroy(start_.cur_);
             ++start_.cur_;
-        }
-        else {
+        } else {
             _MSTL destroy(start_.cur_);
             map_size_pair_.get_base().deallocate(start_.first_, buff_size());
-            start_.change_buff(start_.node_ + 1);
-            start_.cur_ = start_.first_;
+            if (start_.node_ == finish_.node_) {
+                start_ = iterator();
+                finish_ = iterator();
+            } else {
+                start_.change_buff(start_.node_ + 1);
+                start_.cur_ = start_.first_;
+            }
         }
     }
 
@@ -682,8 +683,7 @@ public:
         return (emplace)(position, T());
     }
 
-    template <typename Iterator, enable_if_t<
-        is_input_iter_v<Iterator>, int> = 0>
+    template <typename Iterator, enable_if_t<is_ranges_input_iter_v<Iterator>, int> = 0>
     iterator insert(iterator position, Iterator first, Iterator last) {
         range_check(position);
         Exception(_MSTL distance(first, last) >= 0, StopIterator("deque insert out of ranges."));
@@ -761,6 +761,7 @@ public:
     }
 
     void clear() noexcept {
+        if (start_.node_ == nullptr) return;
         map_pointer cur = start_.node_;
         for (++cur; cur < finish_.node_; ++cur) {
             _MSTL destroy(*cur, *cur + buff_size());

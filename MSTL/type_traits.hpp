@@ -1607,7 +1607,7 @@ private:
     template <typename F, typename T, typename... Args1>
     static invoke_result_true<decltype(
         (_MSTL declval<T>().*_MSTL declval<F>())(_MSTL declval<Args1>()...)),
-    invoke_memfun_ref_tag> __test(int);
+        invoke_memfun_ref_tag> __test(int);
 
     template <typename...>
     static invoke_result_false __test(...);
@@ -1667,9 +1667,8 @@ template <typename Res, typename Class, typename Arg>
 struct __invoke_result_memobj<Res Class::*, Arg> {
     using Argval = remove_cvref_t<Arg>;
     using MemPtr = Res Class::*;
-
     using type = typename conditional_t<disjunction_v<
-            is_same<Argval, Class>, is_base_of<Class, Argval>>,
+        is_same<Argval, Class>, is_base_of<Class, Argval>>,
         __invoke_result_memobj_ref<MemPtr, Arg>,
         __invoke_result_memobj_deref<MemPtr, Arg>>::type;
 };
@@ -1679,9 +1678,8 @@ struct __invoke_result_memfun;
 
 template <typename Res, typename Class, typename Arg, typename... Args>
 struct __invoke_result_memfun<Res Class::*, Arg, Args...> {
-    using Argval = remove_reference_t<Arg>;
     using MemPtr = Res Class::*;
-    using type = typename conditional_t<is_base_of_v<Class, Argval>,
+    using type = typename conditional_t<is_base_of_v<Class, remove_reference_t<Arg>>,
         __invoke_result_memfun_ref<MemPtr, Arg, Args...>,
         __invoke_result_memfun_deref<MemPtr, Arg, Args...>>::type;
 };
@@ -1703,8 +1701,8 @@ template <typename F, typename... Args>
 struct __invoke_result_dispatch<false, false, F, Args...> {
 private:
     template<typename F1, typename... Args1>
-    static invoke_result_true<decltype(_MSTL declval<F1>()(_MSTL declval<Args1>()...)),
-        invoke_other_tag> __test(int);
+    static invoke_result_true<
+        decltype(_MSTL declval<F1>()(_MSTL declval<Args1>()...)), invoke_other_tag> __test(int);
 
     template <typename...>
     static invoke_result_false __test(...);
@@ -1714,7 +1712,7 @@ public:
 };
 
 template <typename F, typename... Args>
-struct __invoke_result_aux :  __invoke_result_dispatch<
+struct __invoke_result_aux : __invoke_result_dispatch<
     is_member_object_pointer_v<remove_reference_t<F>>,
     is_member_function_pointer_v<remove_reference_t<F>>,
     F, Args...>::type {};
@@ -1727,13 +1725,10 @@ using invoke_result_t = typename __invoke_result_aux<F, Args...>::type;
 
 
 template <typename Result, typename Ret, bool = is_void_v<Ret>, typename = void>
-struct __is_invocable_aux : false_type {
-    using __nothrow_conv = false_type;
-};
+struct __is_invocable_aux : false_type {};
+
 template <typename Result, typename Ret>
-struct __is_invocable_aux<Result, Ret, true, void_t<typename Result::type>> : true_type {
-    using __nothrow_conv = true_type;
-};
+struct __is_invocable_aux<Result, Ret, true, void_t<typename Result::type>> : true_type {};
 
 #ifdef MSTL_COMPILE_GCC__
 #pragma GCC diagnostic push
@@ -1751,8 +1746,7 @@ struct __is_invocable_aux<Result, Ret, false, void_t<typename Result::type>> {
 private:
     using Res_t = typename Result::type;
 
-    template <typename T,
-        bool Nothrow = noexcept(_MSTL declvoid<T>(_MSTL declval<Res_t>())),
+    template <typename T, bool Nothrow = noexcept(_MSTL declvoid<T>(_MSTL declval<Res_t>())),
         typename = decltype(_MSTL declvoid<T>(_MSTL declval<Res_t>())),
 #ifdef MSTL_COMPILE_GNUC__
         bool Dangle = __reference_converts_from_temporary(T, Res_t)
@@ -1766,7 +1760,6 @@ private:
 
 public:
     using type = decltype(__test<Ret, true>(1));
-    using __nothrow_conv = decltype(__test<Ret>(1));
 };
 
 #ifdef MSTL_COMPILE_CLANG__
@@ -1779,15 +1772,13 @@ public:
 
 
 template <typename F, typename... Args>
-struct is_invocable
-    : __is_invocable_aux<__invoke_result_aux<F, Args...>, void>::type {};
+struct is_invocable : __is_invocable_aux<__invoke_result_aux<F, Args...>, void>::type {};
 
 template <typename F, typename... Args>
 MSTL_INLINE17 constexpr bool is_invocable_v = is_invocable<F, Args...>::value;
 
 template <typename Ret, typename F, typename... Args>
-struct is_invocable_r
-    : __is_invocable_aux<__invoke_result_aux<F, Args...>, Ret>::type {};
+struct is_invocable_r : __is_invocable_aux<__invoke_result_aux<F, Args...>, Ret>::type {};
 
 template <typename Ret, typename F, typename... Args>
 MSTL_INLINE17 constexpr bool is_invocable_r_v = is_invocable_r<Ret, F, Args...>::value;
@@ -1795,19 +1786,15 @@ MSTL_INLINE17 constexpr bool is_invocable_r_v = is_invocable_r<Ret, F, Args...>:
 
 template <typename F, typename T, typename... Args>
 constexpr bool __invoke_is_nothrow_dispatch(invoke_memfun_ref_tag) {
-    using U = unwrap_reference_t<T>;
-    return noexcept((_MSTL declval<U>().*_MSTL declval<F>())(
-        _MSTL declval<Args>()...));
+    return noexcept((_MSTL declval<unwrap_reference_t<T>>().*_MSTL declval<F>())(_MSTL declval<Args>()...));
 }
 template <typename F, typename T, typename... Args>
 constexpr bool __invoke_is_nothrow_dispatch(invoke_memfun_deref_tag) {
-    return noexcept((*_MSTL declval<T>().*_MSTL declval<F>())(
-	    _MSTL declval<Args>()...));
+    return noexcept((*_MSTL declval<T>().*_MSTL declval<F>())(_MSTL declval<Args>()...));
 }
 template <typename F, typename T>
 constexpr bool __invoke_is_nothrow_dispatch(invoke_memobj_ref_tag) {
-    using U = unwrap_reference_t<T>;
-    return noexcept(_MSTL declval<U>().*_MSTL declval<F>());
+    return noexcept(_MSTL declval<unwrap_reference_t<T>>().*_MSTL declval<F>());
 }
 template <typename F, typename T>
 constexpr bool __invoke_is_nothrow_dispatch(invoke_memobj_deref_tag) {
@@ -1819,13 +1806,11 @@ constexpr bool __invoke_is_nothrow_dispatch(invoke_other_tag) {
 }
 
 template <typename Result, typename F, typename... Args>
-struct __invoke_is_nothrow
-    : bool_constant<_MSTL __invoke_is_nothrow_dispatch<F, Args...>
-        (typename Result::invoke_type{})> {};
+struct __invoke_is_nothrow : bool_constant<
+    _MSTL __invoke_is_nothrow_dispatch<F, Args...> (typename Result::invoke_type{})> {};
 
 template <typename F, typename... Args>
-using __bind_invoke_is_nothrow
-    = __invoke_is_nothrow<__invoke_result_aux<F, Args...>, F, Args...>;
+using __bind_invoke_is_nothrow = __invoke_is_nothrow<__invoke_result_aux<F, Args...>, F, Args...>;
 
 template <typename F, typename... Args>
 struct is_nothrow_invocable : conjunction<
@@ -1895,7 +1880,7 @@ using get_rebind_type_t = typename get_rebind_type<T, U>::type;
 
 #ifdef MSTL_VERSION_20__
 template <typename T>
-concept is_allocator_v = requires(T& alloc) {
+concept is_allocator_v = requires(T alloc) {
     alloc.deallocate(alloc.allocate(size_t{ 1 }), size_t{ 1 });
 };
 template <typename T>

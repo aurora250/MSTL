@@ -37,12 +37,12 @@ public:
         return *operator->();
     }
     MSTL_NODISCARD MSTL_CONSTEXPR17 pointer operator ->() const noexcept {
-        MSTL_DEBUG_VERIFY__(ptr_ && idx_ < Size, "cannot dereference out of range array iterator");
+        MSTL_DEBUG_VERIFY(ptr_ && idx_ < Size, "cannot dereference out of range array iterator");
         return ptr_ + idx_;
     }
 
     MSTL_CONSTEXPR17 array_iterator& operator ++() noexcept {
-        MSTL_DEBUG_VERIFY__(ptr_ && idx_ < Size, "cannot increment array iterator past end");
+        MSTL_DEBUG_VERIFY(ptr_ && idx_ < Size, "cannot increment array iterator past end");
         ++idx_;
         return *this;
     }
@@ -52,7 +52,7 @@ public:
         return tmp;
     }
     MSTL_CONSTEXPR17 array_iterator& operator --() noexcept {
-        MSTL_DEBUG_VERIFY__(ptr_ && idx_ != 0, "cannot decrement array iterator before begin");
+        MSTL_DEBUG_VERIFY(ptr_ && idx_ != 0, "cannot decrement array iterator before begin");
         --idx_;
         return *this;
     }
@@ -166,19 +166,19 @@ public:
     }
 
     MSTL_NODISCARD MSTL_CONSTEXPR17 reference at(size_type _Pos) {
-        MSTL_DEBUG_VERIFY__(_Pos < Size, "array subscript out of range");
+        MSTL_DEBUG_VERIFY(_Pos < Size, "array subscript out of range");
         return array_[_Pos];
     }
     MSTL_NODISCARD constexpr const_reference at(size_type _Pos) const {
-        MSTL_DEBUG_VERIFY__(_Pos < Size, "array subscript out of range");
+        MSTL_DEBUG_VERIFY(_Pos < Size, "array subscript out of range");
         return array_[_Pos];
     }
     MSTL_NODISCARD MSTL_CONSTEXPR17 reference operator[](size_type _Pos) noexcept {
-        MSTL_DEBUG_VERIFY__(_Pos < Size, "array subscript out of range");
+        MSTL_DEBUG_VERIFY(_Pos < Size, "array subscript out of range");
         return array_[_Pos];
     }
     MSTL_NODISCARD constexpr const_reference operator[](size_type _Pos) const noexcept {
-        MSTL_DEBUG_VERIFY__(_Pos < Size, "array subscript out of range");
+        MSTL_DEBUG_VERIFY(_Pos < Size, "array subscript out of range");
         return array_[_Pos];
     }
 

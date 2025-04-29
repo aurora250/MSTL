@@ -21,7 +21,7 @@ struct base_char_traits {
             return dest;
         }
 #endif // MSTL_VERSION_20__
-        _MSTL memcpy(dest, srcs, count * sizeof(char_type));
+        _MSTL memory_copy(dest, srcs, count * sizeof(char_type));
 #endif // MSTL_SUPPORT_MEM_INTRINSICS__
         return dest;
     }
@@ -51,7 +51,7 @@ struct base_char_traits {
             return dest;
         }
 #endif // MSTL_VERSION_20__
-        _MSTL memmove(dest, srcs, count * sizeof(char_type));
+        _MSTL memory_move(dest, srcs, count * sizeof(char_type));
 #endif // MSTL_SUPPORT_MEM_INTRINSICS__
         return dest;
     }
@@ -140,7 +140,7 @@ public:
             }
         }
 #endif // MSTL_VERSION_20__
-        return _MSTL wmemcmp(reinterpret_cast<const wchar_t*>(lh),
+        return _MSTL wchar_memory_compare(reinterpret_cast<const wchar_t*>(lh),
             reinterpret_cast<const wchar_t*>(rh), n);
     }
 
@@ -151,7 +151,7 @@ public:
 #if defined(MSTL_COMPILE_MSVC__) || defined(MSTL_COMPILE_CLANG__)
                 return __builtin_wcslen(str);
 #else
-                return _MSTL wcslen(str);
+                return _MSTL wstring_length(str);
 #endif
             }
             else {
@@ -159,7 +159,7 @@ public:
             }
         }
 #endif // MSTL_VERSION_20__
-        return _MSTL wcslen(reinterpret_cast<const wchar_t*>(str));
+        return _MSTL wstring_length(reinterpret_cast<const wchar_t*>(str));
     }
 
     MSTL_NODISCARD static constexpr const char_type* find(
@@ -175,7 +175,7 @@ public:
         }
 #endif // MSTL_VERSION_20__
         return reinterpret_cast<const char_type*>(
-            _MSTL wmemchr(reinterpret_cast<const wchar_t*>(str), chr, n));
+            _MSTL wchar_memory_char(reinterpret_cast<const wchar_t*>(str), chr, n));
     }
 
     static constexpr char_type* assign(char_type* const str, size_t n, const char_type chr) noexcept {
@@ -184,7 +184,7 @@ public:
             return base_type::assign(str, n, chr);
         }
 #endif // MSTL_VERSION_20__
-        return reinterpret_cast<char_type*>(_MSTL wmemset(reinterpret_cast<wchar_t*>(str), chr, n));
+        return reinterpret_cast<char_type*>(_MSTL wchar_memory_set(reinterpret_cast<wchar_t*>(str), chr, n));
     }
     static constexpr void assign(char_type& lh, const char_type& rh) noexcept {
 #if MSTL_VERSION_20__
@@ -234,10 +234,10 @@ public:
 public:
     MSTL_NODISCARD static constexpr int compare(const char_type* const lh,
         const char_type* const rh, const size_t n) noexcept {
-#if MSTL_VERSION_17__
+#ifdef MSTL_VERSION_17__
         return __builtin_memcmp(lh, rh, n);
 #else
-        return _MSTL memcmp(lh, rh, n);
+        return _MSTL memory_compare(lh, rh, n);
 #endif
     }
 
@@ -249,7 +249,7 @@ public:
 #ifdef MSTL_COMPILE_MSVC__
             return __builtin_u8strlen(str);
 #else
-            return _MSTL u8cslen(str);
+            return _MSTL u8strig_length(str);
 #endif
 #else
             return base_type::length(str);
@@ -261,7 +261,7 @@ public:
             return __builtin_strlen(str);
         }
 #else
-        return _MSTL strlen(reinterpret_cast<const char*>(str));
+        return _MSTL string_length(reinterpret_cast<const char*>(str));
 #endif // MSTL_VERSION_17__
     }
 
@@ -286,7 +286,7 @@ public:
 #endif
         }
 #else
-        return static_cast<const char_type*>(_MSTL memchr(str, chr, n));
+        return static_cast<const char_type*>(_MSTL memory_char(str, chr, n));
 #endif // MSTL_VERSION_17__
     }
 
@@ -296,7 +296,7 @@ public:
             return base_type::assign(str, n, chr);
         }
 #endif // MSTL_VERSION_20__
-        return static_cast<char_type*>(_MSTL memset(str, chr, n));
+        return static_cast<char_type*>(_MSTL memory_set(str, chr, n));
     }
     static constexpr void assign(char_type& lh, const char_type& rh) noexcept {
 #ifdef MSTL_VERSION_20__
@@ -311,13 +311,13 @@ public:
         return lh == rh;
     }
     MSTL_NODISCARD static constexpr bool lt(const char_type lh, const char_type rh) noexcept {
-        return static_cast<unsigned char>(lh) < static_cast<unsigned char>(rh);
+        return static_cast<byte_t>(lh) < static_cast<byte_t>(rh);
     }
     MSTL_NODISCARD static constexpr char_type to_char_type(const int_type rsc) noexcept {
         return static_cast<char_type>(rsc);
     }
     MSTL_NODISCARD static constexpr int_type to_int_type(const char_type chr) noexcept {
-        return static_cast<unsigned char>(chr);
+        return static_cast<byte_t>(chr);
     }
     MSTL_NODISCARD static constexpr bool eq_int_type(const int_type lh, const int_type rh) noexcept {
         return lh == rh;
@@ -358,11 +358,11 @@ public:
 
     constexpr bool mark(const CharT* first, const CharT* const last) noexcept {
         for (; first != last; ++first)
-            matches_[static_cast<unsigned char>(*first)] = true;
+            matches_[static_cast<byte_t>(*first)] = true;
         return true;
     }
     constexpr bool match(const CharT chr) const noexcept {
-        return matches_[static_cast<unsigned char>(chr)];
+        return matches_[static_cast<byte_t>(chr)];
     }
 };
 
@@ -453,7 +453,7 @@ template <typename Traits, enable_if_t<
 #else
     is_specialization_v<Traits, char_traits>()
 #endif
-, int> = 0>
+    , int> = 0>
 constexpr size_t char_traits_find_first_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (rsc_size != 0 && start < dest_size) {
@@ -477,7 +477,7 @@ template <typename Traits, enable_if_t<
 #else
     !is_specialization_v<Traits, char_traits>()
 #endif
-, int> = 0>
+    , int> = 0>
 constexpr size_t char_traits_find_first_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size, 
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (rsc_size != 0 && start < dest_size) {
@@ -496,7 +496,7 @@ template <typename Traits, enable_if_t<
 #else
     is_specialization_v<Traits, char_traits>()
 #endif
-, int> = 0>
+    , int> = 0>
 constexpr size_t char_traits_find_last_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (rsc_size != 0 && dest_size != 0) {
@@ -521,7 +521,7 @@ template <typename Traits, enable_if_t<
 #else
     !is_specialization_v<Traits, char_traits>()
 #endif
-, int> = 0>
+    , int> = 0>
 constexpr size_t char_traits_find_last_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size, 
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (rsc_size != 0 && dest_size != 0) {
@@ -541,7 +541,7 @@ template <typename Traits, enable_if_t<
 #else
     is_specialization_v<Traits, char_traits>()
 #endif
-, int> = 0>
+    , int> = 0>
 constexpr size_t char_traits_find_first_not_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (start < dest_size) {
@@ -565,7 +565,7 @@ template <typename Traits, enable_if_t<
 #else
     !is_specialization_v<Traits, char_traits>()
 #endif
-, int> = 0>
+    , int> = 0>
 constexpr size_t char_traits_find_first_not_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (start < dest_size) {
@@ -597,7 +597,7 @@ template <typename Traits, enable_if_t<
 #else
     is_specialization_v<Traits, char_traits>()
 #endif
-, int> = 0>
+    , int> = 0>
 constexpr size_t char_traits_find_last_not_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size,
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (dest_size != 0) {
@@ -622,7 +622,7 @@ template <typename Traits, enable_if_t<
 #else
     !is_specialization_v<Traits, char_traits>()
 #endif
-, int> = 0>
+    , int> = 0>
 constexpr size_t char_traits_find_last_not_of(const char_traits_ptr_t<Traits> dest, const size_t dest_size, 
     const size_t start, const char_traits_ptr_t<Traits> rsc, const size_t rsc_size) noexcept {
     if (dest_size != 0) {
@@ -690,8 +690,8 @@ public:
         : data_(data), size_(size), idx_(off) {}
 
     MSTL_NODISCARD constexpr reference operator *() const noexcept {
-        MSTL_DEBUG_VERIFY__(data_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(string_view_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
-        MSTL_DEBUG_VERIFY__(idx_ < size_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(string_view_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
+        MSTL_DEBUG_VERIFY(data_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(string_view_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
+        MSTL_DEBUG_VERIFY(idx_ < size_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(string_view_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
         return data_[idx_];
     }
 
@@ -700,8 +700,8 @@ public:
     }
 
     constexpr self& operator ++() noexcept {
-        MSTL_DEBUG_VERIFY__(data_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(string_view_iterator, __MSTL_DEBUG_TAG_INCREMENT));
-        MSTL_DEBUG_VERIFY__(idx_ < size_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(string_view_iterator, __MSTL_DEBUG_TAG_INCREMENT));
+        MSTL_DEBUG_VERIFY(data_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(string_view_iterator, __MSTL_DEBUG_TAG_INCREMENT));
+        MSTL_DEBUG_VERIFY(idx_ < size_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(string_view_iterator, __MSTL_DEBUG_TAG_INCREMENT));
         ++idx_;
         return *this;
     }
@@ -713,8 +713,8 @@ public:
     }
 
     constexpr self& operator --() noexcept {
-        MSTL_DEBUG_VERIFY__(data_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(string_view_iterator, __MSTL_DEBUG_TAG_DECREMENT));
-        MSTL_DEBUG_VERIFY__(idx_ != 0, __MSTL_DEBUG_MESG_OUT_OF_RANGE(string_view_iterator, __MSTL_DEBUG_TAG_DECREMENT));
+        MSTL_DEBUG_VERIFY(data_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(string_view_iterator, __MSTL_DEBUG_TAG_DECREMENT));
+        MSTL_DEBUG_VERIFY(idx_ != 0, __MSTL_DEBUG_MESG_OUT_OF_RANGE(string_view_iterator, __MSTL_DEBUG_TAG_DECREMENT));
         --idx_;
         return *this;
     }
@@ -727,13 +727,13 @@ public:
 
     constexpr self& operator +=(const difference_type n) noexcept {
         if (n < 0) {
-            MSTL_DEBUG_VERIFY__(data_ || n == 0, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(vector_iterator, __MSTL_DEBUG_TAG_DECREMENT));
-            MSTL_DEBUG_VERIFY__(idx_ >= static_cast<size_t>(0) - static_cast<size_t>(n),
+            MSTL_DEBUG_VERIFY(data_ || n == 0, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(vector_iterator, __MSTL_DEBUG_TAG_DECREMENT));
+            MSTL_DEBUG_VERIFY(idx_ >= static_cast<size_t>(0) - static_cast<size_t>(n),
                 __MSTL_DEBUG_MESG_OUT_OF_RANGE(vector_iterator, __MSTL_DEBUG_TAG_DECREMENT));
         }
         else if (n > 0) {
-            MSTL_DEBUG_VERIFY__(data_ || n == 0, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(vector_iterator, __MSTL_DEBUG_TAG_INCREMENT));
-            MSTL_DEBUG_VERIFY__(size_ - idx_ >= static_cast<size_t>(n),
+            MSTL_DEBUG_VERIFY(data_ || n == 0, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(vector_iterator, __MSTL_DEBUG_TAG_INCREMENT));
+            MSTL_DEBUG_VERIFY(size_ - idx_ >= static_cast<size_t>(n),
                 __MSTL_DEBUG_MESG_OUT_OF_RANGE(vector_iterator, __MSTL_DEBUG_TAG_INCREMENT));
         }
         idx_ += n;
@@ -758,7 +758,7 @@ public:
         return tmp;
     }
     MSTL_NODISCARD constexpr difference_type operator -(const self& iter) const noexcept {
-        MSTL_DEBUG_VERIFY__(data_ == iter.data_ && size_ == iter.size_,
+        MSTL_DEBUG_VERIFY(data_ == iter.data_ && size_ == iter.size_,
             __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(string_view_iterator));
         return static_cast<difference_type>(idx_ - iter.idx_);
     }
@@ -768,7 +768,7 @@ public:
     }
 
     MSTL_NODISCARD constexpr bool operator ==(const self& iter) const noexcept {
-        MSTL_DEBUG_VERIFY__(data_ == iter.data_ && size_ == iter.size_,
+        MSTL_DEBUG_VERIFY(data_ == iter.data_ && size_ == iter.size_,
             __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(string_view_iterator));
         return idx_ == iter.idx_;
     }
@@ -776,7 +776,7 @@ public:
         return !(*this == iter);
     }
     MSTL_NODISCARD constexpr bool operator <(const self& iter) const noexcept {
-        MSTL_DEBUG_VERIFY__(data_ == iter.data_ && size_ == iter.size_,
+        MSTL_DEBUG_VERIFY(data_ == iter.data_ && size_ == iter.size_,
             __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(string_view_iterator));
         return idx_ < iter.idx_;
     }
@@ -816,7 +816,7 @@ private:
     size_type size_;
 
     constexpr void range_check(const size_type n) const {
-        MSTL_DEBUG_VERIFY__(size_ < n, "basic string view index out of ranges.");
+        MSTL_DEBUG_VERIFY(size_ < n, "basic string view index out of ranges.");
     }
 
     MSTL_NODISCARD constexpr size_type clamp_size(const size_type position, const size_type size) const noexcept {
@@ -852,11 +852,11 @@ public:
 
     MSTL_NODISCARD constexpr const_pointer data() const noexcept { return data_; }
     MSTL_NODISCARD constexpr const_reference front() const noexcept {
-        MSTL_DEBUG_VERIFY__(!empty(), "cannot call front on empty string_view");
+        MSTL_DEBUG_VERIFY(!empty(), "cannot call front on empty string_view");
         return data_[0];
     }
     MSTL_NODISCARD constexpr const_reference back() const noexcept {
-        MSTL_DEBUG_VERIFY__(!empty(), "cannot call back on empty string_view");
+        MSTL_DEBUG_VERIFY(!empty(), "cannot call back on empty string_view");
         return data_[size_ - 1];
     }
 
@@ -870,12 +870,12 @@ public:
     }
 
     constexpr void remove_prefix(const size_type n) noexcept {
-        MSTL_DEBUG_VERIFY__(size_ >= n, "cannot remove prefix longer than total size");
+        MSTL_DEBUG_VERIFY(size_ >= n, "cannot remove prefix longer than total size");
         data_ += n;
         size_ -= n;
     }
     constexpr void remove_suffix(const size_type n) noexcept {
-        MSTL_DEBUG_VERIFY__(size_ >= n, "cannot remove suffix longer than total size");
+        MSTL_DEBUG_VERIFY(size_ >= n, "cannot remove suffix longer than total size");
         size_ -= n;
     }
 
@@ -1268,13 +1268,13 @@ inline size_t string_hash(const char* s, size_t len, uint32_t seed) noexcept {
 template <>
  struct hash<char*> {
     MSTL_NODISCARD size_t operator ()(const char* str) const noexcept {
-        return string_hash(str, _MSTL strlen(str), 0);
+        return string_hash(str, _MSTL string_length(str), 0);
     }
 }; 
 template <>
  struct hash<const char*> {
     MSTL_NODISCARD size_t operator ()(const char* str) const noexcept {
-        return string_hash(str, _MSTL strlen(str), 0);
+        return string_hash(str, _MSTL string_length(str), 0);
     }
 };
 template <>

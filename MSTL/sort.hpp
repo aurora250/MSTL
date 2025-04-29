@@ -4,7 +4,7 @@
 #include "heap.hpp"
 MSTL_BEGIN_NAMESPACE__
 
-template<typename Iterator, typename Compare, enable_if_t<is_input_iter_v<Iterator>, int> = 0>
+template<typename Iterator, typename Compare, enable_if_t<is_ranges_input_iter_v<Iterator>, int> = 0>
 bool is_sorted(Iterator first, Iterator last, Compare comp) {
     if (first == last) return true;
     Iterator next = _MSTL next(first);
@@ -22,7 +22,7 @@ bool is_sorted(Iterator first, Iterator last) {
     return is_sorted(first, last, _MSTL less<iter_val_t<Iterator>>());
 }
 
-template <typename Iterator, typename Compare, enable_if_t<is_input_iter_v<Iterator>, int> = 0>
+template <typename Iterator, typename Compare, enable_if_t<is_ranges_input_iter_v<Iterator>, int> = 0>
 Iterator is_sorted_until(Iterator first, Iterator last, Compare comp) {
     if (first == last) return last;
     Iterator next = _MSTL next(first);
@@ -39,7 +39,7 @@ Iterator is_sorted_until(Iterator first, Iterator last) {
 }
 
 // bubble sort : Ot(N)~(N^2) Om(1) stable
-template <typename Iterator, typename Compare, enable_if_t<is_bid_iter_v<Iterator>, int> = 0>
+template <typename Iterator, typename Compare, enable_if_t<is_ranges_bid_iter_v<Iterator>, int> = 0>
 void bubble_sort(Iterator first, Iterator last, Compare comp) {
     if (first == last) return;
     auto revend = _MSTL make_reverse_iterator(first);
@@ -65,7 +65,7 @@ void bubble_sort(Iterator first, Iterator last) {
 }
 
 // cocktail sort : Ot(N)~(N^2) Om(1) stable
-template <typename Iterator, typename Compare, enable_if_t<is_bid_iter_v<Iterator>, int> = 0>
+template <typename Iterator, typename Compare, enable_if_t<is_ranges_bid_iter_v<Iterator>, int> = 0>
 void cocktail_sort(Iterator first, Iterator last, Compare comp) {
     if (first == last) return;
     bool swapped = true;
@@ -104,7 +104,7 @@ void cocktail_sort(Iterator first, Iterator last) {
 
 // select sort : Ot(N^2) Om(1) unstable 
 template <typename Iterator, typename Compare, enable_if_t<
-    is_fwd_iter_v<Iterator>, int> = 0>
+    is_ranges_fwd_iter_v<Iterator>, int> = 0>
 void select_sort(Iterator first, Iterator last, Compare comp) {
     if (first == last) return;
     Iterator min;
@@ -126,7 +126,7 @@ void select_sort(Iterator first, Iterator last) {
 
 // shell sort : Ot(NlogN)~(N^2) Om(1) unstable
 template <typename Iterator, typename Compare, enable_if_t<
-    is_rnd_iter_v<Iterator>, int> = 0>
+    is_ranges_rnd_iter_v<Iterator>, int> = 0>
 void shell_sort(Iterator first, Iterator last, Compare comp) {
     if (first == last) return;
     using Distance = iter_dif_t<Iterator>;
@@ -150,7 +150,7 @@ void shell_sort(Iterator first, Iterator last) {
 
 // counting sort : Ot(N + k) Om(k) stable
 template <typename Iterator, typename Compare, typename IndexMapper, enable_if_t<
-    is_rnd_iter_v<Iterator>, int> = 0>
+    is_ranges_rnd_iter_v<Iterator>, int> = 0>
 void counting_sort(Iterator first, Iterator last, Compare comp, IndexMapper mapper) {
     if (first == last) return;
     using T = typename iterator_traits<Iterator>::value_type;
@@ -186,7 +186,7 @@ void counting_sort(Iterator first, Iterator last) {
 }
 
 template <typename Iterator, enable_if_t<
-    is_fwd_iter_v<Iterator>, int> = 0>
+    is_ranges_fwd_iter_v<Iterator>, int> = 0>
 void bucket_sort_less(Iterator first, Iterator last) {
     using T = iter_val_t<Iterator>;
     pair<Iterator, Iterator> min_max = _MSTL minmax_element(first, last);
@@ -207,7 +207,7 @@ void bucket_sort_less(Iterator first, Iterator last) {
 }
 
 template <typename Iterator, enable_if_t<
-    is_fwd_iter_v<Iterator>, int> = 0>
+    is_ranges_fwd_iter_v<Iterator>, int> = 0>
 void bucket_sort_greater(Iterator first, Iterator last) {
     using T = iter_val_t<Iterator>;
     pair<Iterator, Iterator> min_max = _MSTL minmax_element(first, last);
@@ -254,7 +254,7 @@ int __get_number_aux(T num, T d) {
 }
 
 template <typename Iterator, typename Mapper, enable_if_t<
-    is_rnd_iter_v<Iterator>, int> = 0>
+    is_ranges_rnd_iter_v<Iterator>, int> = 0>
 void radix_sort_less(Iterator first, Iterator last, Mapper mapper) {
     if (first == last) return;
     using Distance = typename iterator_traits<Iterator>::difference_type;
@@ -289,7 +289,7 @@ void radix_sort_less(Iterator first, Iterator last, Mapper mapper) {
 }
 
 template <typename Iterator, typename Mapper, enable_if_t<
-    is_rnd_iter_v<Iterator>, int> = 0>
+    is_ranges_rnd_iter_v<Iterator>, int> = 0>
 void radix_sort_greater(Iterator first, Iterator last, Mapper mapper) {
     if (first == last) return;
     using Mapped = remove_cvref_t<decltype(mapper(*first))>;
@@ -329,7 +329,7 @@ void radix_sort(Iterator first, Iterator last, Mapper mapper = Mapper()) {
 
 // merge sort : Ot(NlogN) Om(logN) stable
 template <typename Iterator, typename Compare, enable_if_t<
-    is_rnd_iter_v<Iterator>, int> = 0>
+    is_ranges_rnd_iter_v<Iterator>, int> = 0>
 void merge_sort(Iterator first, Iterator last, Compare comp) {
     using Distance = typename iterator_traits<Iterator>::difference_type;
     Distance n = _MSTL distance(first, last);
@@ -347,7 +347,7 @@ void merge_sort(Iterator first, Iterator last) {
 
 // partial sort / heap sort : Ot(NlogN) Om(1) unstable
 template <typename Iterator, typename Compare, enable_if_t<
-    is_rnd_iter_v<Iterator>, int> = 0>
+    is_ranges_rnd_iter_v<Iterator>, int> = 0>
 void partial_sort(Iterator first, Iterator middle, Iterator last, Compare comp) {
     if (first == middle) return;
     _MSTL make_heap(first, middle, comp);
@@ -364,7 +364,7 @@ void partial_sort(Iterator first, Iterator middle, Iterator last) {
 }
 
 template <typename Iterator1, typename Iterator2, typename Compare, enable_if_t<
-    is_input_iter_v<Iterator1> && is_rnd_iter_v<Iterator2>, int> = 0>
+    is_ranges_input_iter_v<Iterator1> && is_ranges_rnd_iter_v<Iterator2>, int> = 0>
 Iterator2 partial_sort_copy(Iterator1 first, Iterator1 last,
 	Iterator2 result_first, Iterator2 result_last, Compare comp) {
 	if (result_first == result_last) return result_last;
@@ -414,7 +414,7 @@ void __insertion_sort_aux(Iterator last, T value, Compare comp) {
 
 // insertion sort : Ot(N)~(N^2) Om(1) stable
 template <typename Iterator, typename Compare, enable_if_t<
-    is_rnd_iter_v<Iterator>, int> = 0>
+    is_ranges_rnd_iter_v<Iterator>, int> = 0>
 void insertion_sort(Iterator first, Iterator last, Compare comp) {
     if (first == last) return;
     using T = typename iterator_traits<Iterator>::value_type;
@@ -438,7 +438,7 @@ static constexpr size_t SORT_DISPATCH_THRESHOLD = 16;
 
 // introspective sort : Ot(NlogN) Om(logN) unstable
 template <typename Iterator, typename Compare, enable_if_t<
-    is_rnd_iter_v<Iterator>, int> = 0>
+    is_ranges_rnd_iter_v<Iterator>, int> = 0>
 void introspective_sort(Iterator first, Iterator last, int depth_limit, Compare comp) {
     while (first < last) {
         if (depth_limit == 0) {
@@ -460,7 +460,7 @@ void introspective_sort(Iterator first, Iterator last, int depth_limit) {
 
 // quick sort : Ot(NlogN) Om(1) unstable 
 template <typename Iterator, typename Compare, enable_if_t<
-    is_rnd_iter_v<Iterator>, int> = 0>
+    is_ranges_rnd_iter_v<Iterator>, int> = 0>
 void quick_sort(Iterator first, Iterator last, Compare comp) {
     if (first < last) {
         Iterator pov = last - 1;
@@ -493,7 +493,7 @@ void __intro_sort_dispatch(Iterator first, Iterator last, int depth_limit, Compa
 
 // standard sort : Ot(NlogN) Om(logN) unstable
 template <typename Iterator, typename Compare, enable_if_t<
-    is_rnd_iter_v<Iterator>, int> = 0>
+    is_ranges_rnd_iter_v<Iterator>, int> = 0>
 void sort(Iterator first, Iterator last, Compare comp) {
     if (first == last) return;
     _MSTL __intro_sort_dispatch(first, last, (int)_MSTL cursory_lg2(last - first) * 2, comp);
@@ -513,7 +513,7 @@ void sort(Iterator first, Iterator last) {
 
 // nth element : Ot(N)~(N^2) Om(1) unstable
 template <typename Iterator, typename Compare, enable_if_t<
-    is_rnd_iter_v<Iterator>, int> = 0>
+    is_ranges_rnd_iter_v<Iterator>, int> = 0>
 void nth_element(Iterator first, Iterator nth, Iterator last, Compare comp) {
     while (last - first > 3) {
         Iterator cut = _MSTL lomuto_partition(
@@ -531,7 +531,7 @@ void nth_element(Iterator first, Iterator nth, Iterator last) {
 
 // tim sort : Ot(NlogN) Om(N) stable
 template <typename Iterator, typename Compare, enable_if_t<
-    is_rnd_iter_v<Iterator>, int> = 0>
+    is_ranges_rnd_iter_v<Iterator>, int> = 0>
 void tim_sort(Iterator first, Iterator last, Compare comp) {
     static constexpr int MIN_MERGE = 32;
     iter_dif_t<Iterator> n = _MSTL distance(first, last);
@@ -557,7 +557,7 @@ void tim_sort(Iterator first, Iterator last) {
 
 // monkey sort : Ot-avg((N + 1)!) Om(1) unstable
 template <typename Iterator, typename Compare, enable_if_t<
-    is_rnd_iter_v<Iterator>, int> = 0>
+    is_ranges_rnd_iter_v<Iterator>, int> = 0>
 void monkey_sort(Iterator first, Iterator last, Compare comp) {
     while (!_MSTL is_sorted(first, last, comp)) {
         _MSTL shuffle(first, last);

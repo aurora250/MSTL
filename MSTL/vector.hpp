@@ -90,8 +90,8 @@ public:
 	MSTL_CONSTEXPR20 ~vector_iterator() noexcept = default;
 
 	MSTL_NODISCARD MSTL_CONSTEXPR20 reference operator *() const noexcept {
-		MSTL_DEBUG_VERIFY__(ptr_ && vec_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(vector_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
-		MSTL_DEBUG_VERIFY__(vec_->start_ <= ptr_ && ptr_ <= vec_->finish_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(vector_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
+		MSTL_DEBUG_VERIFY(ptr_ && vec_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(vector_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
+		MSTL_DEBUG_VERIFY(vec_->start_ <= ptr_ && ptr_ <= vec_->finish_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(vector_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
 		return *ptr_;
 	}
 	MSTL_NODISCARD MSTL_CONSTEXPR20 pointer operator ->() const noexcept {
@@ -99,8 +99,8 @@ public:
 	}
 
 	MSTL_CONSTEXPR20 self& operator ++() noexcept {
-		MSTL_DEBUG_VERIFY__(ptr_ && vec_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(vector_iterator, __MSTL_DEBUG_TAG_INCREMENT));
-		MSTL_DEBUG_VERIFY__(ptr_ < vec_->finish_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(vector_iterator, __MSTL_DEBUG_TAG_INCREMENT));
+		MSTL_DEBUG_VERIFY(ptr_ && vec_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(vector_iterator, __MSTL_DEBUG_TAG_INCREMENT));
+		MSTL_DEBUG_VERIFY(ptr_ < vec_->finish_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(vector_iterator, __MSTL_DEBUG_TAG_INCREMENT));
 		++ptr_;
 		return *this;
 	}
@@ -110,8 +110,8 @@ public:
 		return temp;
 	}
 	MSTL_CONSTEXPR20 self& operator --() noexcept {
-		MSTL_DEBUG_VERIFY__(ptr_ && vec_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(vector_iterator, __MSTL_DEBUG_TAG_DECREMENT));
-		MSTL_DEBUG_VERIFY__(vec_->start_ < ptr_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(vector_iterator, __MSTL_DEBUG_TAG_DECREMENT));
+		MSTL_DEBUG_VERIFY(ptr_ && vec_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(vector_iterator, __MSTL_DEBUG_TAG_DECREMENT));
+		MSTL_DEBUG_VERIFY(vec_->start_ < ptr_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(vector_iterator, __MSTL_DEBUG_TAG_DECREMENT));
 		--ptr_;
 		return *this;
 	}
@@ -123,12 +123,12 @@ public:
 
 	MSTL_CONSTEXPR20 self& operator +=(difference_type n) noexcept {
 		if (n < 0) {
-			MSTL_DEBUG_VERIFY__((ptr_ && vec_) || n == 0, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(vector_iterator, __MSTL_DEBUG_TAG_DECREMENT));
-			MSTL_DEBUG_VERIFY__(n >= vec_->start_ - ptr_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(vector_iterator, __MSTL_DEBUG_TAG_DECREMENT));
+			MSTL_DEBUG_VERIFY((ptr_ && vec_) || n == 0, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(vector_iterator, __MSTL_DEBUG_TAG_DECREMENT));
+			MSTL_DEBUG_VERIFY(n >= vec_->start_ - ptr_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(vector_iterator, __MSTL_DEBUG_TAG_DECREMENT));
 		}
 		else if (n > 0) {
-			MSTL_DEBUG_VERIFY__((ptr_ && vec_) || n == 0, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(vector_iterator, __MSTL_DEBUG_TAG_INCREMENT));
-			MSTL_DEBUG_VERIFY__(n <= vec_->finish_ - ptr_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(vector_iterator, __MSTL_DEBUG_TAG_INCREMENT));
+			MSTL_DEBUG_VERIFY((ptr_ && vec_) || n == 0, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(vector_iterator, __MSTL_DEBUG_TAG_INCREMENT));
+			MSTL_DEBUG_VERIFY(n <= vec_->finish_ - ptr_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(vector_iterator, __MSTL_DEBUG_TAG_INCREMENT));
 		}
 		ptr_ += n;
 		return *this;
@@ -152,7 +152,7 @@ public:
 		return tmp;
 	}
 	MSTL_NODISCARD MSTL_CONSTEXPR20 difference_type operator -(const self& x) const noexcept {
-		MSTL_DEBUG_VERIFY__(vec_ == x.vec_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(vector_iterator));
+		MSTL_DEBUG_VERIFY(vec_ == x.vec_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(vector_iterator));
 		return static_cast<difference_type>(ptr_ - x.ptr_);
 	}
 
@@ -161,14 +161,14 @@ public:
 	}
 
 	MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator ==(const self& x) const noexcept {
-		MSTL_DEBUG_VERIFY__(vec_ == x.vec_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(vector_iterator));
+		MSTL_DEBUG_VERIFY(vec_ == x.vec_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(vector_iterator));
 		return ptr_ == x.ptr_;
 	}
 	MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator !=(const self& x) const noexcept {
 		return !(*this == x);
 	}
 	MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator <(const self& x) const noexcept {
-		MSTL_DEBUG_VERIFY__(vec_ == x.vec_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(vector_iterator));
+		MSTL_DEBUG_VERIFY(vec_ == x.vec_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(vector_iterator));
 		return ptr_ < x.ptr_;
 	}
 	MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator >(const self& x) const noexcept {
@@ -209,7 +209,7 @@ private:
 
 private:
 	MSTL_CONSTEXPR20 void range_check(const size_type position) const noexcept {
-		MSTL_DEBUG_VERIFY__(
+		MSTL_DEBUG_VERIFY(
 			position < static_cast<size_type>(finish_ - start_), "vector index out of ranges."
 		);
 	}
@@ -234,12 +234,12 @@ private:
 	}
 
 	template <typename Iterator, enable_if_t<
-		is_iter_v<Iterator> && !is_fwd_iter_v<Iterator>, int> = 0>
+		is_iter_v<Iterator> && !is_ranges_fwd_iter_v<Iterator>, int> = 0>
 	MSTL_CONSTEXPR20 void range_initialize(Iterator first, Iterator last) {
 		for (; first != last; ++first)
 			push_back(*first);
 	}
-	template <typename Iterator, enable_if_t<is_fwd_iter_v<Iterator>, int> = 0>
+	template <typename Iterator, enable_if_t<is_ranges_fwd_iter_v<Iterator>, int> = 0>
 	MSTL_CONSTEXPR20 void range_initialize(Iterator first, Iterator last) {
 		size_type n = _MSTL distance(first, last);
 		start_ = (allocate_and_copy)(n, first, last);
@@ -290,10 +290,10 @@ private:
 		}
 	}
 
-	template <typename Iterator, enable_if_t<!is_fwd_iter_v<Iterator>, int> = 0>
+	template <typename Iterator, enable_if_t<!is_ranges_fwd_iter_v<Iterator>, int> = 0>
 	MSTL_CONSTEXPR20 void assign_aux(Iterator first, Iterator last) {
 		const size_t n = _MSTL distance(first, last);
-		MSTL_DEBUG_VERIFY__(n >= 0, "vector assign out of ranges.");
+		MSTL_DEBUG_VERIFY(n >= 0, "vector assign out of ranges.");
 		pointer cur = start_;
 		for (; first != last && cur != finish_; ++first, ++cur)
 			*cur = *first;
@@ -302,10 +302,10 @@ private:
 		else
 			insert(finish_, first, last);
 	}
-	template <typename Iterator, enable_if_t<is_fwd_iter_v<Iterator>, int> = 0>
+	template <typename Iterator, enable_if_t<is_ranges_fwd_iter_v<Iterator>, int> = 0>
 	MSTL_CONSTEXPR20 void assign_aux(Iterator first, Iterator last) {
 		const size_t n = _MSTL distance(first, last);
-		MSTL_DEBUG_VERIFY__(n >= 0, "vector assign out of ranges.");
+		MSTL_DEBUG_VERIFY(n >= 0, "vector assign out of ranges.");
 		if (n > capacity()) {
 			clear();
 			range_insert(begin(), first, last);
@@ -376,7 +376,7 @@ public:
 
 	template <typename Iterator>
 	MSTL_CONSTEXPR20 vector(Iterator first, Iterator last) {
-		MSTL_DEBUG_VERIFY__(first <= last, "vector iterator-constructor out of ranges.");
+		MSTL_DEBUG_VERIFY(first <= last, "vector iterator-constructor out of ranges.");
 		range_initialize(first, last);
 	}
 
@@ -443,35 +443,35 @@ public:
 	}
 
 	MSTL_NODISCARD MSTL_CONSTEXPR20 pointer data() noexcept {
-		MSTL_DEBUG_VERIFY__(!empty(), "data called on empty vector");
+		MSTL_DEBUG_VERIFY(!empty(), "data called on empty vector");
 		return start_;
 	}
 	MSTL_NODISCARD MSTL_CONSTEXPR20 const pointer data() const noexcept {
-		MSTL_DEBUG_VERIFY__(!empty(), "data called on empty vector");
+		MSTL_DEBUG_VERIFY(!empty(), "data called on empty vector");
 		return start_;
 	}
 
 	MSTL_NODISCARD MSTL_CONSTEXPR20 allocator_type get_allocator() const noexcept { return allocator_type(); }
 
 	MSTL_NODISCARD MSTL_CONSTEXPR20 reference front() noexcept {
-		MSTL_DEBUG_VERIFY__(!empty(), "front called on empty vector");
+		MSTL_DEBUG_VERIFY(!empty(), "front called on empty vector");
 		return *start_;
 	}
 	MSTL_NODISCARD MSTL_CONSTEXPR20 const_reference front() const noexcept {
-		MSTL_DEBUG_VERIFY__(!empty(), "front called on empty vector");
+		MSTL_DEBUG_VERIFY(!empty(), "front called on empty vector");
 		return *start_;
 	}
 	MSTL_NODISCARD MSTL_CONSTEXPR20 reference back() noexcept {
-		MSTL_DEBUG_VERIFY__(!empty(), "back called on empty vector");
+		MSTL_DEBUG_VERIFY(!empty(), "back called on empty vector");
 		return *(finish_ - 1);
 	}
 	MSTL_NODISCARD MSTL_CONSTEXPR20 const_reference back() const noexcept {
-		MSTL_DEBUG_VERIFY__(!empty(), "back called on empty vector");
+		MSTL_DEBUG_VERIFY(!empty(), "back called on empty vector");
 		return *(finish_ - 1);
 	}
 
 	MSTL_CONSTEXPR20 void reserve(const size_type n) {
-		MSTL_DEBUG_VERIFY__(n < max_size(), "vector reserve out of allocate bounds.");
+		MSTL_DEBUG_VERIFY(n < max_size(), "vector reserve out of allocate bounds.");
 		if (capacity() >= n) return;
 		size_type new_capacity = _MSTL max(capacity() * 2, n);
 		size_type old_size = size();
@@ -576,7 +576,7 @@ public:
 
 	template <typename Iterator>
 	MSTL_CONSTEXPR20 void insert(iterator position, Iterator first, Iterator last) {
-		MSTL_DEBUG_VERIFY__(
+		MSTL_DEBUG_VERIFY(
 			distance(first, last) >= 0, "vector insert resource iterator out of ranges."
 		);
 		range_insert(position, first, last);
@@ -622,7 +622,7 @@ public:
 
 	MSTL_CONSTEXPR20 iterator erase(iterator first, iterator last)
 		noexcept(is_nothrow_move_assignable_v<value_type>) {
-		MSTL_DEBUG_VERIFY__(_MSTL distance(first, last) >= 0, "vector erase out of ranges.");
+		MSTL_DEBUG_VERIFY(_MSTL distance(first, last) >= 0, "vector erase out of ranges.");
 		pointer i = _MSTL copy(&*last, finish_, &*first);
 		_MSTL destroy(i, finish_);
 		finish_ = finish_ - (last - first);

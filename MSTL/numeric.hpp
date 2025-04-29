@@ -5,7 +5,7 @@
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator, typename T, typename BinaryOperation,
-	enable_if_t<is_input_iter_v<Iterator>, int> = 0>
+	enable_if_t<is_ranges_input_iter_v<Iterator>, int> = 0>
 MSTL_CONSTEXPR20 T accumulate(Iterator first, Iterator second, T init, BinaryOperation binary_op) {
 	for (; first != second; ++first) init = binary_op(init, *first);
 	return init;
@@ -17,7 +17,7 @@ MSTL_CONSTEXPR20 T accumulate(Iterator first, Iterator second, T init) {
 }
 
 template <typename Iterator1, typename Iterator2, typename BinaryOperation,
-	enable_if_t<is_input_iter_v<Iterator1> && is_input_iter_v<Iterator2>, int> = 0>
+	enable_if_t<is_ranges_input_iter_v<Iterator1> && is_ranges_input_iter_v<Iterator2>, int> = 0>
 MSTL_CONSTEXPR20 Iterator2 adjacent_difference(Iterator1 first, Iterator1 last,
 	Iterator2 result, BinaryOperation binary_op) {
 	if (first == last) return result;
@@ -38,7 +38,7 @@ MSTL_CONSTEXPR20 Iterator2 adjacent_difference(Iterator1 first, Iterator1 last, 
 }
 
 template <typename Iterator1, typename Iterator2, typename T, typename BinaryOperation1, typename BinaryOperation2,
-	enable_if_t<is_input_iter_v<Iterator1> && is_input_iter_v<Iterator2>, int> = 0>
+	enable_if_t<is_ranges_input_iter_v<Iterator1> && is_ranges_input_iter_v<Iterator2>, int> = 0>
 MSTL_CONSTEXPR20 T inner_product(Iterator1 first1, Iterator1 last1, Iterator2 first2, T init,
 	BinaryOperation1 binary_op1, BinaryOperation2 binary_op2) {
 	for (; first1 != last1; ++first1, ++first2) 
@@ -52,7 +52,7 @@ MSTL_CONSTEXPR20 T inner_product(Iterator1 first1, Iterator1 last1, Iterator2 fi
 }
 
 template <typename Iterator1, typename Iterator2, typename BinaryOperation,
-	enable_if_t<is_input_iter_v<Iterator1> && is_input_iter_v<Iterator2>, int> = 0>
+	enable_if_t<is_ranges_input_iter_v<Iterator1> && is_ranges_input_iter_v<Iterator2>, int> = 0>
 MSTL_CONSTEXPR20 Iterator2 partial_sum(Iterator1 first, Iterator1 last, Iterator2 result, BinaryOperation binary_op) {
 	if (first == last) return result;
 	*result = *first;
@@ -69,7 +69,7 @@ MSTL_CONSTEXPR20 Iterator2 partial_sum(Iterator1 first, Iterator1 last, Iterator
 	return _MSTL partial_sum(first, last, result, _MSTL plus<iter_val_t<Iterator1>>());
 }
 
-template <typename Iterator, typename T, enable_if_t<is_input_iter_v<Iterator>, int> = 0>
+template <typename Iterator, typename T, enable_if_t<is_ranges_input_iter_v<Iterator>, int> = 0>
 MSTL_CONSTEXPR20 void iota(Iterator first, Iterator last, T value) {
 	while (first != last) {
 		*first++ = value;

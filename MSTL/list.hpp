@@ -105,7 +105,7 @@ public:
     ~list_iterator() = default;
 
     MSTL_NODISCARD reference operator *() const noexcept {
-        MSTL_DEBUG_VERIFY__(list_ && node_ && node_ != list_->head_,
+        MSTL_DEBUG_VERIFY(list_ && node_ && node_ != list_->head_,
             __MSTL_DEBUG_MESG_OPERATE_NULLPTR(list_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
         return node_->data_;
     }
@@ -114,8 +114,8 @@ public:
     }
 
     self& operator ++() noexcept {
-        MSTL_DEBUG_VERIFY__(list_ && node_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(list_iterator, __MSTL_DEBUG_TAG_INCREMENT));
-        MSTL_DEBUG_VERIFY__(node_ != list_->head_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(list_iterator, __MSTL_DEBUG_TAG_INCREMENT));
+        MSTL_DEBUG_VERIFY(list_ && node_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(list_iterator, __MSTL_DEBUG_TAG_INCREMENT));
+        MSTL_DEBUG_VERIFY(node_ != list_->head_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(list_iterator, __MSTL_DEBUG_TAG_INCREMENT));
         node_ = node_->next_;
         return *this;
     }
@@ -125,8 +125,8 @@ public:
         return old;
     }
     self& operator --() noexcept {
-        MSTL_DEBUG_VERIFY__(list_ && node_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(list_iterator, __MSTL_DEBUG_TAG_DECREMENT));
-        MSTL_DEBUG_VERIFY__(node_->prev_ != list_->head_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(list_iterator, __MSTL_DEBUG_TAG_DECREMENT));
+        MSTL_DEBUG_VERIFY(list_ && node_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(list_iterator, __MSTL_DEBUG_TAG_DECREMENT));
+        MSTL_DEBUG_VERIFY(node_->prev_ != list_->head_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(list_iterator, __MSTL_DEBUG_TAG_DECREMENT));
         node_ = node_->prev_;
         return *this;
     }
@@ -137,7 +137,7 @@ public:
     }
 
     MSTL_NODISCARD bool operator ==(const self& x) noexcept {
-		MSTL_DEBUG_VERIFY__(list_ == x.list_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(list_iterator));
+		MSTL_DEBUG_VERIFY(list_ == x.list_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(list_iterator));
         return node_ == x.node_;
     }
     MSTL_NODISCARD bool operator !=(const self& x) noexcept {
@@ -175,10 +175,10 @@ private:
 
 private:
     void range_check(const size_type position) const noexcept {
-        MSTL_DEBUG_VERIFY__(position < pair_.value, "list index out of ranges.");
+        MSTL_DEBUG_VERIFY(position < pair_.value, "list index out of ranges.");
     }
     void range_check(iterator position) const noexcept {
-        MSTL_DEBUG_VERIFY__(_MSTL distance(const_iterator(position), cend()) >= 0,
+        MSTL_DEBUG_VERIFY(_MSTL distance(const_iterator(position), cend()) >= 0,
             "list iterator out of ranges."
         );
     }
@@ -213,8 +213,7 @@ public:
         while (n--) push_back(x);
     };
 
-    template <typename Iterator, enable_if_t<
-        is_input_iter_v<Iterator>, int> = 0>
+    template <typename Iterator, enable_if_t<is_ranges_input_iter_v<Iterator>, int> = 0>
     list(Iterator first, Iterator last) {
         empty_init();
         while (first != last) {
@@ -288,19 +287,19 @@ public:
     MSTL_NODISCARD allocator_type get_allocator() { return allocator_type(); }
 
     MSTL_NODISCARD reference front() noexcept {
-        MSTL_DEBUG_VERIFY__(!empty(), "front called on empty list");
+        MSTL_DEBUG_VERIFY(!empty(), "front called on empty list");
         return head_->next_->data_;
     }
     MSTL_NODISCARD const_reference front() const noexcept {
-        MSTL_DEBUG_VERIFY__(!empty(), "front called on empty list");
+        MSTL_DEBUG_VERIFY(!empty(), "front called on empty list");
         return head_->next_->data_;
     }
     MSTL_NODISCARD reference back() noexcept {
-        MSTL_DEBUG_VERIFY__(!empty(), "back called on empty list");
+        MSTL_DEBUG_VERIFY(!empty(), "back called on empty list");
         return head_->prev_->data_;
     }
     MSTL_NODISCARD const_reference back() const noexcept {
-        MSTL_DEBUG_VERIFY__(!empty(), "back called on empty list");
+        MSTL_DEBUG_VERIFY(!empty(), "back called on empty list");
         return head_->prev_->data_;
     }
 
@@ -338,8 +337,7 @@ public:
         insert(begin(), count, value);
     }
 
-    template <typename Iterator, enable_if_t<
-        is_input_iter_v<Iterator>, int> = 0>
+    template <typename Iterator, enable_if_t<is_ranges_input_iter_v<Iterator>, int> = 0>
     void assign(Iterator first, Iterator last) {
         clear();
         insert(begin(), first, last);

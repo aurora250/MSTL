@@ -14,7 +14,7 @@ using u32string = basic_string<char32_t>;
 template <>
 struct hash<_MSTL string> {
     MSTL_NODISCARD size_t operator ()(const _MSTL string& s) const noexcept {
-        return string_hash(s.c_str(), _MSTL strlen(s.c_str()), 0);
+        return string_hash(s.c_str(), _MSTL string_length(s.c_str()), 0);
     }
 };
 template <typename CharT, typename Traits, typename Alloc>
@@ -27,7 +27,7 @@ struct hash<basic_string<CharT, Traits, Alloc>> {
 template <>
 struct hash<std::string> {
     MSTL_NODISCARD size_t operator ()(const std::string& s) const noexcept {
-        return string_hash(s.c_str(), _MSTL strlen(s.c_str()), 0);
+        return string_hash(s.c_str(), _MSTL string_length(s.c_str()), 0);
     }
 };
 
@@ -62,7 +62,7 @@ MSTL_NODISCARD inline int stoi(const string& str, size_t* idx = nullptr, const i
     const char* raw = str.c_str();
     char* err;
     const long num = ::strtol(raw, &err, base);
-    MSTL_DEBUG_VERIFY__(raw != err, "invalid argument.");
+    MSTL_DEBUG_VERIFY(raw != err, "invalid argument.");
     if (idx) 
         *idx = static_cast<size_t>(err - raw);
     return static_cast<int>(num);

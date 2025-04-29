@@ -60,36 +60,18 @@ inline void Exception(const bool boolean, const Error& err = Error()) {
 
 
 // just allowing void(void) function be called before process exit
-inline void Exit(const bool abort = false, void(* func)() = nullptr){
-	if (func)
-		std::atexit(func);
-	else {
-		if (abort)
-			std::abort();
-		std::exit(1);
-	}
+MSTL_NORETURN inline void Exit(const bool abort = false, void(* func)() = nullptr) {
+	if (abort) std::abort();
+	if (func) std::atexit(func);
+	std::exit(1);
 }
 
 
-#define MSTL_EXEC_MEMORY__ MSTL::Exception(MSTL::MemoryError());
-#define MSTL_EXEC_UNWIND__ throw;
+#define MSTL_REPORT_ERROR(MESG) \
+    { std::cerr << "\nAssert Failed! ( " << MESG << " )" << std::endl; }
 
-#define MSTL_TRY__ try
-#define MSTL_CATCH_UNWIND__ catch(...)
-#define MSTL_CATCH_UNWIND_THROW_M__(ACT) \
-	MSTL_CATCH_UNWIND__ { \
-		ACT; \
-		MSTL_EXEC_MEMORY__ \
-	};
-#define MSTL_CATCH_ERROR__ catch(const MSTL::Error& error)
-#define MSTL_CATCH_ERROR_UNUSE__ catch(const MSTL::Error&)
-
-
-#define MSTL_REPORT_ERROR__(MESG) \
-    { std::cerr << "\nAssert Failed! ( " << MESG << " )" << std::endl; } assert(false);
-
-#ifdef MSTL_STATE_DEBUG__
-#define MSTL_DEBUG_VERIFY__(CON, MESG) { if (CON) {} else { MSTL_REPORT_ERROR__(MESG); } }
+#define MSTL_DEBUG_VERIFY(CON, MESG) \
+	{ if (CON) {} else { MSTL_REPORT_ERROR(MESG); assert(false); } }
 
 #define __MSTL_DEBUG_MESG_OPERATE_NULLPTR(ITER, ACT) "can`t " ACT ": " TO_STRING(ITER) " is pointing to nullptr."
 #define __MSTL_DEBUG_MESG_OUT_OF_RANGE(CLASS, ACT) "can`t " ACT ": " TO_STRING(CLASS) " out of ranges."
@@ -98,19 +80,6 @@ inline void Exit(const bool abort = false, void(* func)() = nullptr){
 #define __MSTL_DEBUG_TAG_DEREFERENCE "dereference"
 #define __MSTL_DEBUG_TAG_INCREMENT "increment"
 #define __MSTL_DEBUG_TAG_DECREMENT "decrement"
-
-#else
-#define MSTL_DEBUG_VERIFY__(CON, MESG)
-
-#define __MSTL_DEBUG_MESG_OPERATE_NULLPTR(ITER, ACT)
-#define __MSTL_DEBUG_MESG_OUT_OF_RANGE(CLASS, ACT)
-#define __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(ITER)
-
-#define __MSTL_DEBUG_TAG_DEREFERENCE
-#define __MSTL_DEBUG_TAG_INCREMENT
-#define __MSTL_DEBUG_TAG_DECREMENT
-
-#endif
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_ERRORLIB_H__

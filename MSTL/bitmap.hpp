@@ -248,7 +248,7 @@ protected:
         }
     }
 
-    template <class Iterator, enable_if_t<!is_fwd_iter_v<Iterator>, int> = 0>
+    template <class Iterator, enable_if_t<!is_ranges_fwd_iter_v<Iterator>, int> = 0>
     MSTL_CONSTEXPR20 void initialize_range(Iterator first, Iterator last) {
         start_ = iterator();
         finish_ = iterator();
@@ -256,21 +256,21 @@ protected:
         for ( ; first != last; ++first)
             push_back(*first);
     }
-    template <class Iterator, enable_if_t<is_fwd_iter_v<Iterator>, int> = 0>
+    template <class Iterator, enable_if_t<is_ranges_fwd_iter_v<Iterator>, int> = 0>
     MSTL_CONSTEXPR20 void initialize_range(Iterator first, Iterator last) {
         const size_type n = _MSTL distance(first, last);
         initialize(n);
         bit_copy(first, last, start_);
     }
 
-    template <class Iterator, enable_if_t<!is_fwd_iter_v<Iterator>, int> = 0>
+    template <class Iterator, enable_if_t<!is_ranges_fwd_iter_v<Iterator>, int> = 0>
     MSTL_CONSTEXPR20 void insert_range(iterator pos, Iterator first, Iterator last) {
         for ( ; first != last; ++first) {
             pos = insert(pos, *first);
             ++pos;
         }
     }
-    template <class Iterator, enable_if_t<is_fwd_iter_v<Iterator>, int> = 0>
+    template <class Iterator, enable_if_t<is_ranges_fwd_iter_v<Iterator>, int> = 0>
     MSTL_CONSTEXPR20 void insert_range(iterator position, Iterator first, Iterator last) {
         if (first != last) {
             size_type n = 0;
