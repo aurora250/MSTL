@@ -1,22 +1,3 @@
-#ifndef MSTL_MSTLCPP_HPP__
-#define MSTL_MSTLCPP_HPP__
-
-#include "functional.hpp"
-#include "tuple.hpp"
-#include "any.hpp"
-#include "array.hpp"
-#include "list.hpp"
-#include "algorithm.hpp"
-#include "unordered_set.hpp"
-#include "map.hpp"
-#include "set.hpp"
-#include "variant.hpp"
-#include "optional.hpp"
-
-#include "detailof.hpp"
-#include "trace_memory.hpp"
-#include "thread_pool.h"
-#include "database_pool.h"
-#include "undef_cmacro.hpp"
-
-#endif // MSTL_MSTLCPP_HPP__
+version https://git-lfs.github.com/spec/v1
+oid sha256:44a27c10b08bd6993ab12a5925909dd7c3c5c1d86db7e159ca2b7f9faa4df73e
+size 505

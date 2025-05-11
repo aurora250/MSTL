@@ -1,15 +1,3 @@
-#ifndef MSTL_UNDEF_CMACRO_HPP__
-#define MSTL_UNDEF_CMACRO_HPP__
-#ifdef bool
-#undef bool
-#undef true
-#undef false
-#endif
-#ifdef max
-#undef max
-#endif
-#ifdef min
-#undef min
-#endif
-
-#endif // MSTL_UNDEF_CMACRO_HPP__
+version https://git-lfs.github.com/spec/v1
+oid sha256:ef6c529e8557cc4a3ae279955ddfab4c2671406e37a77622359c2119148b186c
+size 234
