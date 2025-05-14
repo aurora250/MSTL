@@ -74,7 +74,7 @@ C++ 14 17 20
 
 定义常用的约束。
 
-- [mathlib.h](/MSTL/mathlib.h)
+- [mathlib.h](/MSTL/mathlib.hpp)
 
 定义常用的constexpr的数学函数。
 
@@ -294,7 +294,7 @@ Define functors and functor adapters (Deprecated).
 
 Define commonly used concepts.
 
-- [mathlib.h](/MSTL/mathlib.h)
+- [mathlib.h](/MSTL/mathlib.hpp)
 
 Define commonly used math functions with constexpr property.
 
