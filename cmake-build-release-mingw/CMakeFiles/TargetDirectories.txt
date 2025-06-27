@@ -1,3 +1,6 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:392986ec23ba342ced2669b760c94992b4e868b86bf12e81fd11608c6957bb68
-size 614
+D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-mingw/CMakeFiles/TRY.dir
+D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-mingw/CMakeFiles/edit_cache.dir
+D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-mingw/CMakeFiles/rebuild_cache.dir
+D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-mingw/MSTL/CMakeFiles/MSTL.dir
+D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-mingw/MSTL/CMakeFiles/edit_cache.dir
+D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-mingw/MSTL/CMakeFiles/rebuild_cache.dir

@@ -1,3 +1,7 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:259dd5cd2b4d2ef6139b6eba0ffc43d3d11700d6ecce9a16529511e4559c8a50
-size 641
+"D:\JetBrains\CLion 2024.2\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Release "-DCMAKE_MAKE_PROGRAM=D:/JetBrains/CLion 2024.2/bin/ninja/win/x64/ninja.exe" -G Ninja -S "D:\Workspace\Cpp Workspace\CLine Workspace\MSTL" -B "D:\Workspace\Cpp Workspace\CLine Workspace\MSTL\cmake-build-release-msvc"
+-- Boost toolset is unknown (compiler MSVC 19.43.34809.0)
+-- Boost toolset is unknown (compiler MSVC 19.43.34809.0)
+-- Boost toolset is unknown (compiler MSVC 19.43.34809.0)
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-msvc

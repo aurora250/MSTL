@@ -1,3 +1,16 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:3a186ef0579153d7477e8a9e860cd55751a4d6a4c37cce71ae55747b99a4dcf7
-size 435
+cmake_minimum_required(VERSION 3.15)
+
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif()
+
+if(UNIX AND NOT APPLE)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
+endif()
+
+set(CMAKE_CXX_STANDARD 20)
+project(TRY VERSION 1.2.0 LANGUAGES CXX)
+
+add_subdirectory(MSTL)
+add_executable(${CMAKE_PROJECT_NAME} "main.cpp" "try.cpp" "try.h")
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE MSTL)

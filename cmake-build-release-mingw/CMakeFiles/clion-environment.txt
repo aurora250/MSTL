@@ -1,3 +1,5 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:e417513c7ff71bf421b53d7356b8c57c35c5511be01c500999d5df38dbeb93a1
-size 198
+ToolSet: 12.0 w64 (local)@D:\mingw64
+Ninja: 1.12.0@D:\JetBrains\CLion 2024.2\bin\ninja\win\x64\ninja.exe
+Options: 
+
+Options:-DCMAKE_MAKE_PROGRAM=D:/JetBrains/CLion 2024.2/bin/ninja/win/x64/ninja.exe

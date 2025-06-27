@@ -1,3 +1,130 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:34a9c2b693d1f6676ecdbfce29108d88eb94b0a447996c4b750e4a198991172b
-size 2839
+#ifndef MSTL_ERRORLIB_H__
+#define MSTL_ERRORLIB_H__
+#include "basiclib.hpp"
+#include <cassert>
+#include <iostream>
+#ifdef MSTL_SUPPORT_STACKTRACE__
+#include <boost/stacktrace/stacktrace.hpp>
+#endif
+#ifdef MSTL_SUPPORT_CUDA__
+#include <cuda_runtime.h>
+#endif
+MSTL_BEGIN_NAMESPACE__
+
+#define __MSTL_ERROR_CONSTRUCTOR(THIS, BASE, INFO) \
+	constexpr explicit THIS(const char* const info = INFO, const char* const type = __type__) noexcept \
+		: BASE(info, type) {}
+
+#define __MSTL_ERROR_DERIVED_DESTRUCTOR(CLASS) \
+	virtual ~CLASS() = default;
+
+#define __MSTL_ERROR_FINAL_DESTRUCTOR(CLASS) \
+	~CLASS() override = default;
+
+#define __MSTL_ERROR_TYPE(CLASS) \
+	static constexpr auto __type__ = TO_STRING(CLASS);
+
+#define __MSTL_ERROR_WHAT() \
+	const char* what() { \
+		return info_; \
+	}
+
+#define MSTL_ERROR_BUILD_DERIVED_CLASS(THIS, BASE, INFO) \
+	struct THIS : BASE { \
+		__MSTL_ERROR_CONSTRUCTOR(THIS, BASE, INFO) \
+		__MSTL_ERROR_DERIVED_DESTRUCTOR(THIS) \
+		__MSTL_ERROR_WHAT() \
+		__MSTL_ERROR_TYPE(THIS) \
+	};
+
+#define MSTL_ERROR_BUILD_FINAL_CLASS(THIS, BASE, INFO) \
+	struct THIS final : BASE { \
+		__MSTL_ERROR_CONSTRUCTOR(THIS, BASE, INFO) \
+		__MSTL_ERROR_FINAL_DESTRUCTOR(THIS) \
+		__MSTL_ERROR_WHAT() \
+		__MSTL_ERROR_TYPE(THIS) \
+	};
+
+
+struct Error {
+	const char* const info_ = nullptr;
+	const char* const type_ = nullptr;
+
+	constexpr explicit Error(const char* const info = __type__, const char* const type = __type__) noexcept
+		: info_(info), type_(type) {}
+
+	__MSTL_ERROR_DERIVED_DESTRUCTOR(Error)
+	__MSTL_ERROR_TYPE(Error)
+};
+
+MSTL_ERROR_BUILD_DERIVED_CLASS(MemoryError, Error, "Memory Operation Failed.")
+MSTL_ERROR_BUILD_FINAL_CLASS(StopIterator, MemoryError, "Iterator or Pointer Visit out of Range.")
+MSTL_ERROR_BUILD_FINAL_CLASS(AssertionError, MemoryError, "Assertion Failed.")
+MSTL_ERROR_BUILD_DERIVED_CLASS(ValueError, Error, "Function or Template Argument Invalid.")
+MSTL_ERROR_BUILD_DERIVED_CLASS(LinkError, Error, "External Link Actions Failed.")
+
+#ifdef MSTL_SUPPORT_CUDA__
+// specialization of MSTL_ERROR_BUILD_FINAL_CLASS for CUDA
+struct CUDAMemoryError final : MemoryError {
+	__MSTL_ERROR_CONSTRUCTOR(CUDAMemoryError, MemoryError, "CUDA GPU Memory Operation Failed.")
+
+	constexpr explicit CUDAMemoryError(const cudaError_t err) noexcept
+		: MemoryError(cudaGetErrorString(err), __type__) {}
+
+	__MSTL_ERROR_FINAL_DESTRUCTOR(CUDAMemoryError)
+	__MSTL_ERROR_WHAT()
+	__MSTL_ERROR_TYPE(CUDAMemoryError)
+};
+#endif
+
+
+inline void show_data_only(const Error& err, std::ostream& out) {
+	out << "Exception : (" << err.type_ << ") " << err.info_ << std::flush;
+}
+
+inline std::ostream& operator <<(std::ostream& out, const Error& err) {
+	show_data_only(err, out);
+	return out;
+}
+
+
+// throw a new error and print stacktrace of boost is imported.
+inline void Exception(const Error& err){
+	show_data_only(err, std::cerr);
+	std::cerr << "\nSTACK TRACING: " << std::endl;
+#ifdef MSTL_SUPPORT_STACKTRACE__
+	std::cerr << boost::stacktrace::stacktrace() << std::endl;
+#endif
+	throw err;
+}
+
+inline void Exception(const bool boolean, const Error& err = Error()) {
+	if (boolean) return;
+	Exception(err);
+}
+
+
+// just allowing void(void) function be called before process exit
+MSTL_NORETURN inline void Exit(const bool abort = false, void(* func)() = nullptr) {
+	if (abort) std::abort();
+	if (func) std::atexit(func);
+	std::exit(1);
+}
+
+
+#define MSTL_REPORT_ERROR(MESG) \
+    { MSTL::Exception(MSTL::AssertionError(MESG)); }
+
+#define MSTL_DEBUG_VERIFY(CON, MESG) \
+	{ if (CON) {} else { MSTL_REPORT_ERROR(MESG); assert(false); } }
+
+#define __MSTL_DEBUG_MESG_OPERATE_NULLPTR(ITER, ACT) "can`t " ACT ": " TO_STRING(ITER) " is pointing to nullptr."
+#define __MSTL_DEBUG_MESG_OUT_OF_RANGE(CLASS, ACT) "can`t " ACT ": " TO_STRING(CLASS) " out of ranges."
+#define __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(ITER) "not comparable :" TO_STRING(ITER) " container incompatible."
+
+#define __MSTL_DEBUG_TAG_DEREFERENCE "dereference"
+#define __MSTL_DEBUG_TAG_INCREMENT "increment"
+#define __MSTL_DEBUG_TAG_DECREMENT "decrement"
+
+MSTL_END_NAMESPACE__
+#endif // MSTL_ERRORLIB_H__

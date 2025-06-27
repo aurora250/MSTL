@@ -1,3 +1,4 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:c9e6aa53108c7e7825c9ad9e68df7b96849379623693d419dc44ce76338e2aed
-size 469
+"D:\JetBrains\CLion 2024.2\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Release "-DCMAKE_MAKE_PROGRAM=D:/JetBrains/CLion 2024.2/bin/ninja/win/x64/ninja.exe" -G Ninja -S "D:\Workspace\Cpp Workspace\CLine Workspace\MSTL" -B "D:\Workspace\Cpp Workspace\CLine Workspace\MSTL\cmake-build-release-mingw"
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-mingw
