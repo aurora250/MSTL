@@ -1,3 +1,6 @@
 MSTL/CMakeLists.txt filter=lfs diff=lfs merge=lfs -text
 main.cpp filter=lfs diff=lfs merge=lfs -text
 try.cpp filter=lfs diff=lfs merge=lfs -text
+MSTL/dne_request.hpp filter=lfs diff=lfs merge=lfs -text
+MSTL/print.hpp filter=lfs diff=lfs merge=lfs -text
+try.h filter=lfs diff=lfs merge=lfs -text
