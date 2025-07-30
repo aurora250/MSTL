@@ -125,6 +125,7 @@ void counting_sort(Iterator first, Iterator last, Compare comp, IndexMapper mapp
     auto max_val = mapper(*min_max.second);
     const auto range = static_cast<size_t>(max_val - min_val + 1);
     vector<int> count(range, 0);
+
     for (Iterator it = first; it != last; ++it) {
         auto value = mapper(*it);
         if (value < min_val || value > max_val) {
@@ -132,10 +133,13 @@ void counting_sort(Iterator first, Iterator last, Compare comp, IndexMapper mapp
         }
         ++count[static_cast<size_t>(value - min_val)];
     }
+
     for (size_t i = 1; i < count.size(); ++i)
         count[i] += count[i - 1];
+
     vector<T> sorted(_MSTL distance(first, last));
     auto bound = _MSTL make_reverse_iterator(first);
+
     for (auto rit = _MSTL make_reverse_iterator(last); rit != bound; ++rit) {
         auto value = mapper(*rit);
         const auto index = static_cast<size_t>(value - min_val);
@@ -160,10 +164,13 @@ void bucket_sort_less(Iterator first, Iterator last) {
     T max_val = *min_max.second;
     T range = max_val - min_val + 1;
     vector<size_t> bucket(range, 0);
+
     for (Iterator it = first; it != last; ++it) {
         ++bucket[*it - min_val];
     }
+
     Iterator index = first;
+
     for (size_t i = 0; i < bucket.size(); ++i) {
         while (bucket[i] > 0) {
             *index++ = static_cast<T>(i + min_val);
@@ -181,10 +188,13 @@ void bucket_sort_greater(Iterator first, Iterator last) {
     T max_val = *min_max.second;
     T range = max_val - min_val + 1;
     vector<size_t> bucket(range, 0);
+
     for (Iterator it = first; it != last; ++it) {
         ++bucket[*it - min_val];
     }
+
     Iterator index = first;
+
     for (size_t i = bucket.size(); i-- > 0; ) {
         while (bucket[i] > 0) {
             *index++ = static_cast<T>(i + min_val);
@@ -226,19 +236,23 @@ void radix_sort_less(Iterator first, Iterator last, Mapper mapper) {
     using Distance = typename iterator_traits<Iterator>::difference_type;
     using T = typename iterator_traits<Iterator>::value_type;
     using Mapped = remove_reference_t<decltype(mapper(*first))>;
+
     Distance length = _MSTL distance(first, last);
     vector<Mapped> mapped_values(length);
     vector<T> bucket(length);
     vector<int> count(10);
     Iterator it = first;
+
     FOR_EACH(value, mapped_values) {
         *value = mapper(*it++);
     }
+
     for (int d = 1; d <= _MSTL __max_bit_aux(mapped_values.begin(), mapped_values.end()); ++d) {
         _MSTL fill(count.begin(), count.end(), 0);
         FOR_EACH(num, mapped_values) {
             ++count[_MSTL __get_number_aux(*num, d)];
         }
+
         for (size_t i = 1; i < count.size(); ++i) {
             count[i] += count[i - 1];
         }
@@ -246,6 +260,7 @@ void radix_sort_less(Iterator first, Iterator last, Mapper mapper) {
             const int k = _MSTL __get_number_aux(*iter, d);
             bucket[--count[k]] = *(first + _MSTL distance(mapped_values.begin(), iter.base() - 1));
         }
+
         it = first;
         FOR_EACH(value, bucket) {
             *it++ = *value;
@@ -259,11 +274,13 @@ template <typename Iterator, typename Mapper, enable_if_t<
 void radix_sort_greater(Iterator first, Iterator last, Mapper mapper) {
     if (first == last) return;
     using Mapped = remove_cvref_t<decltype(mapper(*first))>;
+
     iter_dif_t<Iterator> length = _MSTL distance(first, last);
     vector<Mapped> mapped_values(length);
     vector<iter_val_t<Iterator>> bucket(length);
     vector<int> count(10);
     Iterator it = first;
+
     FOR_EACH(value, mapped_values) {
         *value = mapper(*it++);
     }
@@ -272,13 +289,16 @@ void radix_sort_greater(Iterator first, Iterator last, Mapper mapper) {
         FOR_EACH(num, mapped_values) {
             ++count[_MSTL __get_number_aux(*num, d)];
         }
+
         for (size_t i = count.size() - 1; i > 0; --i) {
             count[i - 1] += count[i];
         }
+
         for (auto iter = mapped_values.rbegin(); iter != mapped_values.rend(); ++iter) {
             const int k = _MSTL __get_number_aux(*iter, d);
             bucket[--count[k]] = *(first + _MSTL distance(mapped_values.begin(), iter.base() - 1));
         }
+
         it = first;
         FOR_EACH(value, bucket) {
             *it++ = *value;

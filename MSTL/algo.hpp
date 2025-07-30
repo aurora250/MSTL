@@ -172,8 +172,10 @@ MSTL_CONSTEXPR20 Iterator1 search(Iterator1 first1, Iterator1 last1, Iterator2 f
 	iter_dif_t<Iterator1> d1 = _MSTL distance(first1, last1);
 	iter_dif_t<Iterator2> d2 = _MSTL distance(first2, last2);
 	if (d1 < d2) return last1;
+
 	Iterator1 current1 = first1;
 	Iterator2 current2 = first2;
+
 	while (current2 != last2) {
 		if (binary_pred(*current1, *current2)) {
 			++current1;
@@ -283,10 +285,12 @@ MSTL_CONSTEXPR20 Iterator1 find_end(Iterator1 first1, Iterator1 last1, Iterator2
 	if constexpr (is_ranges_bid_iter_v<Iterator1> && is_ranges_bid_iter_v<Iterator2>) {
 		using reviter1 = _MSTL reverse_iterator<Iterator1>;
 		using reviter2 = _MSTL reverse_iterator<Iterator2>;
+
 		reviter1 rlast1(first1);
 		reviter2 rlast2(first2);
 		reviter1 rresult = _MSTL search(reviter1(last1), rlast1, reviter2(last2), rlast2);
 		if (rresult == rlast1) return last1;
+
 		Iterator1 result = rresult.base();
 		_MSTL advance(result, -distance(first2, last2));
 		return result;

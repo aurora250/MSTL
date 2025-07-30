@@ -1,3 +1,6 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:bacd5ba6ca32685abe39a97eec75bcb66ed93af258a7b7f6cc376852cbdb86a6
-size 236
+set(CMAKE_RC_COMPILER "D:/mingw64/bin/windres.exe")
+set(CMAKE_RC_COMPILER_ARG1 "")
+set(CMAKE_RC_COMPILER_LOADED 1)
+set(CMAKE_RC_SOURCE_FILE_EXTENSIONS rc;RC)
+set(CMAKE_RC_OUTPUT_EXTENSION .obj)
+set(CMAKE_RC_COMPILER_ENV_VAR "RC")

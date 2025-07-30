@@ -81,93 +81,106 @@ struct unpack_utility_construct_tag {
 MSTL_END_TAG__
 
 
-// compressed_pair saves memory with EBCO(Empty Base Class Optimization).
-// it`s an optimization strategy that reduces the align size of an object
-// by using empty class as the base class.
-template <typename T1, typename T2, bool = is_empty_v<T1> && !is_final_v<T1>>
-class compressed_pair final : private T1 {
+template <typename IfEmpty, typename T, bool = is_empty_v<IfEmpty> && !is_final_v<IfEmpty>>
+class compressed_pair final : public IfEmpty {
 public:
-	using base_type = T1;
+    using base_type = IfEmpty;
 
-	T2 value;
+    T value{};
 
-	constexpr compressed_pair(const compressed_pair& pir) : value(pir.value) {}
-	constexpr compressed_pair(compressed_pair&& pir)  noexcept : value(_MSTL move(pir.value)) {}
+    constexpr compressed_pair() noexcept(is_nothrow_default_constructible_v<T>) = default;
 
-	template <typename... Args>
-	constexpr explicit compressed_pair(default_construct_tag, Args&&... args)
-		noexcept(conjunction_v<is_nothrow_default_constructible<T1>, is_nothrow_constructible<T2, Args...>>)
-		: T1(), value(_MSTL forward<Args>(args)...) {}
+    constexpr compressed_pair(const compressed_pair& p)
+        noexcept(is_nothrow_copy_constructible_v<T>) : value(p.value) {}
 
-	template <typename U1, typename... U2>
-	constexpr compressed_pair(exact_arg_construct_tag, U1&& first, U2&&... args)
-		noexcept(conjunction_v<is_nothrow_constructible<T1, U1>, is_nothrow_constructible<T2, U2...>>)
-		: T1(_MSTL forward<U1>(first)), value(_MSTL forward<U2>(args)...) {}
+    constexpr compressed_pair(compressed_pair&& p)
+        noexcept(is_nothrow_move_constructible_v<T>) : value(_MSTL move(p.value)) {}
 
-	constexpr T1& get_base() noexcept {
-		return *this;
-	}
-	constexpr const T1& get_base() const noexcept {
-		return *this;
-	}
+    template <typename... Args>
+    constexpr explicit compressed_pair(default_construct_tag, Args&&... args)
+        noexcept(conjunction_v<is_nothrow_default_constructible<IfEmpty>, is_nothrow_constructible<T, Args...>>)
+        : IfEmpty(), value(_MSTL forward<Args>(args)...) {}
 
-	constexpr void swap(compressed_pair& rh)
-	noexcept(is_nothrow_swappable_v<T2>) {
-		_MSTL swap(value, rh.value);
-	};
+    template <typename ToEmpty, typename... Args>
+    constexpr compressed_pair(exact_arg_construct_tag, ToEmpty&& first, Args&&... args)
+        noexcept(conjunction_v<is_nothrow_constructible<IfEmpty, ToEmpty>, is_nothrow_constructible<T, Args...>>)
+        : IfEmpty(_MSTL forward<ToEmpty>(first)), value(_MSTL forward<Args>(args)...) {}
+
+    constexpr compressed_pair& get_base() noexcept {
+        return *this;
+    }
+    constexpr const compressed_pair& get_base() const noexcept {
+        return *this;
+    }
+
+    constexpr void swap(compressed_pair& rh)
+        noexcept(is_nothrow_swappable_v<T>) {
+        _MSTL swap(value, rh.value);
+    }
 };
 #if MSTL_SUPPORT_DEDUCTION_GUIDES__
-template <typename T1, typename T2>
-compressed_pair(T1, T2) -> compressed_pair<T1, T2>;
+template <typename IfEmpty, typename T>
+compressed_pair(IfEmpty, T) -> compressed_pair<IfEmpty, T>;
 #endif
 
-template <typename T1, typename T2, enable_if_t<is_swappable_v<T2>, int> = 0>
-constexpr void swap(compressed_pair<T1, T2, true>& lh, compressed_pair<T1, T2, true>& rh)
+template <typename IfEmpty, typename T, enable_if_t<is_swappable_v<T>, int> = 0>
+constexpr void swap(
+    compressed_pair<IfEmpty, T, true>& lh,
+    compressed_pair<IfEmpty, T, true>& rh)
 noexcept(noexcept(lh.swap(rh))) {
 	lh.swap(rh);
 }
 
-template <typename T1, typename T2>
-class compressed_pair<T1, T2, false> final {
+
+template <typename IfEmpty, typename T>
+class compressed_pair<IfEmpty, T, false> final {
 public:
-	T1 no_compressed;
-	T2 value;
+	IfEmpty no_compressed;
+	T value;
+
+    constexpr compressed_pair()
+        noexcept(conjunction_v<is_nothrow_default_constructible<IfEmpty>,
+            is_nothrow_default_constructible<T>>) = default;
 
 	constexpr compressed_pair(const compressed_pair& pir)
+        noexcept(conjunction_v<is_nothrow_copy_constructible<IfEmpty>, is_nothrow_copy_constructible<T>>)
 		: no_compressed(pir.no_compressed), value(pir.value) {}
-	constexpr compressed_pair(compressed_pair&& pir) noexcept
+
+	constexpr compressed_pair(compressed_pair&& pir)
+        noexcept(conjunction_v<is_nothrow_move_constructible<IfEmpty>, is_nothrow_move_constructible<T>>)
 		: no_compressed(_MSTL move(pir.no_compressed)), value(_MSTL move(pir.value)) {}
 
 	template <typename... Args>
 	constexpr explicit compressed_pair(default_construct_tag, Args&&... args)
-		noexcept(conjunction_v<is_nothrow_default_constructible<T1>, is_nothrow_constructible<T2, Args...>>)
-		: no_compressed(), value(_MSTL forward<Args>(args)...) {
+		noexcept(conjunction_v<is_nothrow_default_constructible<IfEmpty>, is_nothrow_constructible<T, Args...>>)
+		: no_compressed(), value(_MSTL forward<Args>(args)...) {}
+
+	template <typename ToEmpty, typename... Args>
+	constexpr compressed_pair(exact_arg_construct_tag, ToEmpty&& first, Args&&... args)
+		noexcept(conjunction_v<is_nothrow_constructible<IfEmpty, ToEmpty>, is_nothrow_constructible<T, Args...>>)
+		: no_compressed(_MSTL forward<ToEmpty>(first)), value(_MSTL forward<Args>(args)...) {
 	}
 
-	template <typename U1, typename... U2>
-	constexpr compressed_pair(exact_arg_construct_tag, U1&& first, U2&&... args)
-		noexcept(conjunction_v<is_nothrow_constructible<T1, U1>, is_nothrow_constructible<T2, U2...>>)
-		: no_compressed(_MSTL forward<U1>(first)), value(_MSTL forward<U2>(args)...) {
-	}
-
-	constexpr T1& get_base() noexcept {
+	constexpr IfEmpty& get_base() noexcept {
 		return no_compressed;
 	}
-	constexpr const T1& get_base() const noexcept {
+	constexpr const IfEmpty& get_base() const noexcept {
 		return no_compressed;
 	}
 
 	constexpr void swap(compressed_pair& rh)
-	noexcept(conjunction_v<is_nothrow_swappable<T1>, is_nothrow_swappable<T2>>) {
+	noexcept(conjunction_v<is_nothrow_swappable<IfEmpty>, is_nothrow_swappable<T>>) {
 		_MSTL swap(value, rh.value);
 		_MSTL swap(no_compressed, rh.no_compressed);
-	};
+	}
 };
 
-template <typename T1, typename T2, enable_if_t<
-	is_swappable_v<T1> && is_swappable_v<T2>, int> = 0>
-constexpr void swap(compressed_pair<T1, T2, false>& lh, compressed_pair<T1, T2, false>& rh)
-noexcept(noexcept(lh.swap(rh))) {
+template <typename IfEmpty, typename T,
+    enable_if_t<is_swappable_v<IfEmpty> && is_swappable_v<T>, int> = 0>
+constexpr void swap(
+    compressed_pair<IfEmpty, T, false>& lh,
+    compressed_pair<IfEmpty, T, false>& rh)
+    noexcept(noexcept(lh.swap(rh))) {
 	lh.swap(rh);
 }
 

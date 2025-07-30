@@ -14,7 +14,7 @@ void reduce(Iterator first, Iterator last, BinaryOperation op, Result& res) {
             res = op(res, *it);
     }
     else {
-        Iterator mid = next(first, dist / 2);
+        Iterator mid = _MSTL next(first, dist / 2);
         Result l_res = res, r_res = res;
         std::thread r_thd(reduce<Iterator, BinaryOperation, Result, Threshhold>, mid, last, op, _MSTL ref(r_res));
         _MSTL reduce(first, mid, op, l_res);

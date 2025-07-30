@@ -9,8 +9,8 @@ class bitmap;
 
 struct bit_reference {
 private:
-    unsigned int* ptr_ = nullptr;
-    unsigned int mask_ = 0;
+    uint32_t* ptr_ = nullptr;
+    uint32_t mask_ = 0;
 
 public:
     MSTL_CONSTEXPR20 bit_reference() = default;
@@ -64,8 +64,8 @@ public:
     using self              = bitmap_iterator<IsConst, BitMap>;
 
 private:
-    unsigned int* ptr_ = nullptr;
-    unsigned int off_ = 0;
+    uint32_t* ptr_ = nullptr;
+    uint32_t off_ = 0;
 
     friend class bitmap;
     template <bool, typename> friend struct bitmap_iterator;
@@ -199,9 +199,9 @@ public:
 protected:
     iterator start_{};
     iterator finish_{};
-    unsigned int* end_of_storage_ = nullptr;
+    uint32_t* end_of_storage_ = nullptr;
 
-    MSTL_CONSTEXPR20 static unsigned int* bit_alloc(const size_type n) {
+    MSTL_CONSTEXPR20 static uint32_t* bit_alloc(const size_type n) {
         return allocator_type::allocate((n + MSTL_WORD_BIT_SIZE - 1) / MSTL_WORD_BIT_SIZE);
     }
     MSTL_CONSTEXPR20 void deallocate() {
@@ -225,7 +225,7 @@ protected:
     }
 
     MSTL_CONSTEXPR20 void initialize(const size_type n) {
-        unsigned int* q = bit_alloc(n);
+        uint32_t* q = bit_alloc(n);
         end_of_storage_ = q + (n + MSTL_WORD_BIT_SIZE - 1) / MSTL_WORD_BIT_SIZE;
         start_ = iterator(q, 0);
         finish_ = start_ + static_cast<difference_type>(n);
@@ -238,7 +238,7 @@ protected:
         }
         else {
             const size_type len = size() ? 2 * size() : MSTL_WORD_BIT_SIZE;
-            unsigned int* q = bit_alloc(len);
+            uint32_t* q = bit_alloc(len);
             auto i = bit_copy(begin(), position, iterator(q, 0));
             *i++ = x;
             finish_ = bit_copy(position, end(), i);
@@ -282,7 +282,7 @@ protected:
             }
             else {
                 const size_type len = size() + max(size(), n);
-                unsigned int* q = bit_alloc(len);
+                uint32_t* q = bit_alloc(len);
                 iterator i = bit_copy(begin(), position, iterator(q, 0));
                 i = bit_copy(first, last, i);
                 finish_ = bit_copy(position, end(), i);
@@ -380,7 +380,7 @@ public:
 
     MSTL_CONSTEXPR20 void reserve(const size_type n) {
         if (capacity() < n) {
-            unsigned int* q = bit_alloc(n);
+            uint32_t* q = bit_alloc(n);
             finish_ = bit_copy(begin(), end(), iterator(q, 0));
             deallocate();
             start_ = iterator(q, 0);
@@ -419,7 +419,7 @@ public:
         }
         else {
             const size_type len = size() + max(size(), n);
-            unsigned int* q = bit_alloc(len);
+            uint32_t* q = bit_alloc(len);
             auto i = bit_copy(begin(), position, iterator(q, 0));
             i = bit_copy(first, last, i);
             finish_ = bit_copy(position, end(), i);
@@ -438,7 +438,7 @@ public:
         }
         else {
             const size_type len = size() + max(size(), n);
-            unsigned int* q = bit_alloc(len);
+            uint32_t* q = bit_alloc(len);
             const auto i = bit_copy(begin(), position, iterator(q, 0));
             fill_n(i, n, x);
             finish_ = bit_copy(position, end(), i + static_cast<difference_type>(n));

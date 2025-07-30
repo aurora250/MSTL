@@ -11,6 +11,7 @@ struct nullopt_t {
 };
 static constexpr nullopt_t nullopt;
 
+
 template <typename T>
 struct optional {
     static_assert(!is_any_of_v<remove_cv_t<T>, nullopt_t, _MSTL_TAG inplace_construct_tag>,

@@ -1,3 +1,91 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:d474eabd6dd6fcc77824d30813c56f2bbdc08bb2fd198a9cc50b98d1bd975082
-size 1729
+{
+	"kind" : "toolchains",
+	"toolchains" : 
+	[
+		{
+			"compiler" : 
+			{
+				"id" : "GNU",
+				"implicit" : 
+				{
+					"includeDirectories" : 
+					[
+						"D:/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++",
+						"D:/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/x86_64-w64-mingw32",
+						"D:/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/backward",
+						"D:/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include",
+						"D:/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include-fixed",
+						"D:/mingw64/x86_64-w64-mingw32/include"
+					],
+					"linkDirectories" : 
+					[
+						"D:/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0",
+						"D:/mingw64/lib/gcc",
+						"D:/mingw64/x86_64-w64-mingw32/lib",
+						"D:/mingw64/lib"
+					],
+					"linkFrameworkDirectories" : [],
+					"linkLibraries" : 
+					[
+						"stdc++",
+						"mingw32",
+						"gcc_s",
+						"gcc",
+						"mingwex",
+						"kernel32",
+						"pthread",
+						"advapi32",
+						"shell32",
+						"user32",
+						"kernel32",
+						"iconv",
+						"mingw32",
+						"gcc_s",
+						"gcc",
+						"mingwex",
+						"kernel32"
+					]
+				},
+				"path" : "D:/mingw64/bin/c++.exe",
+				"version" : "14.2.0"
+			},
+			"language" : "CXX",
+			"sourceFileExtensions" : 
+			[
+				"C",
+				"M",
+				"c++",
+				"cc",
+				"cpp",
+				"cxx",
+				"m",
+				"mm",
+				"mpp",
+				"CPP",
+				"ixx",
+				"cppm",
+				"ccm",
+				"cxxm",
+				"c++m"
+			]
+		},
+		{
+			"compiler" : 
+			{
+				"implicit" : {},
+				"path" : "D:/mingw64/bin/windres.exe"
+			},
+			"language" : "RC",
+			"sourceFileExtensions" : 
+			[
+				"rc",
+				"RC"
+			]
+		}
+	],
+	"version" : 
+	{
+		"major" : 1,
+		"minor" : 0
+	}
+}

@@ -1,0 +1,38 @@
+[
+{
+  "directory": "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/build",
+  "command": "D:\\mingw64\\bin\\g++.exe -DBOOST_ATOMIC_NO_LIB -DBOOST_FILESYSTEM_NO_LIB -DBOOST_SYSTEM_NO_LIB -DMSTL_SUPPORT_BOOST__ -DMSTL_SUPPORT_MYSQL__ @CMakeFiles/TRY.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\TRY.dir\\main.cpp.obj -c \"D:\\Workspace\\Cpp Workspace\\CLine Workspace\\MSTL\\main.cpp\"",
+  "file": "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/main.cpp",
+  "output": "CMakeFiles/TRY.dir/main.cpp.obj"
+},
+{
+  "directory": "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/build",
+  "command": "D:\\mingw64\\bin\\g++.exe -DBOOST_ATOMIC_NO_LIB -DBOOST_FILESYSTEM_NO_LIB -DBOOST_SYSTEM_NO_LIB -DMSTL_SUPPORT_BOOST__ -DMSTL_SUPPORT_MYSQL__ @CMakeFiles/TRY.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\TRY.dir\\try.cpp.obj -c \"D:\\Workspace\\Cpp Workspace\\CLine Workspace\\MSTL\\try.cpp\"",
+  "file": "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/try.cpp",
+  "output": "CMakeFiles/TRY.dir/try.cpp.obj"
+},
+{
+  "directory": "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/build/MSTL",
+  "command": "D:\\mingw64\\bin\\g++.exe -DBOOST_ATOMIC_NO_LIB -DBOOST_FILESYSTEM_NO_LIB -DBOOST_SYSTEM_NO_LIB -DMSTL_SUPPORT_BOOST__ -DMSTL_SUPPORT_MYSQL__ @CMakeFiles/MSTL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\MSTL.dir\\database_pool.cpp.obj -c \"D:\\Workspace\\Cpp Workspace\\CLine Workspace\\MSTL\\MSTL\\database_pool.cpp\"",
+  "file": "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/MSTL/database_pool.cpp",
+  "output": "MSTL/CMakeFiles/MSTL.dir/database_pool.cpp.obj"
+},
+{
+  "directory": "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/build/MSTL",
+  "command": "D:\\mingw64\\bin\\g++.exe -DBOOST_ATOMIC_NO_LIB -DBOOST_FILESYSTEM_NO_LIB -DBOOST_SYSTEM_NO_LIB -DMSTL_SUPPORT_BOOST__ -DMSTL_SUPPORT_MYSQL__ @CMakeFiles/MSTL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\MSTL.dir\\rb_tree.cpp.obj -c \"D:\\Workspace\\Cpp Workspace\\CLine Workspace\\MSTL\\MSTL\\rb_tree.cpp\"",
+  "file": "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/MSTL/rb_tree.cpp",
+  "output": "MSTL/CMakeFiles/MSTL.dir/rb_tree.cpp.obj"
+},
+{
+  "directory": "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/build/MSTL",
+  "command": "D:\\mingw64\\bin\\g++.exe -DBOOST_ATOMIC_NO_LIB -DBOOST_FILESYSTEM_NO_LIB -DBOOST_SYSTEM_NO_LIB -DMSTL_SUPPORT_BOOST__ -DMSTL_SUPPORT_MYSQL__ @CMakeFiles/MSTL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\MSTL.dir\\thread_pool.cpp.obj -c \"D:\\Workspace\\Cpp Workspace\\CLine Workspace\\MSTL\\MSTL\\thread_pool.cpp\"",
+  "file": "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/MSTL/thread_pool.cpp",
+  "output": "MSTL/CMakeFiles/MSTL.dir/thread_pool.cpp.obj"
+},
+{
+  "directory": "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/build/MSTL",
+  "command": "D:\\mingw64\\bin\\g++.exe -DBOOST_ATOMIC_NO_LIB -DBOOST_FILESYSTEM_NO_LIB -DBOOST_SYSTEM_NO_LIB -DMSTL_SUPPORT_BOOST__ -DMSTL_SUPPORT_MYSQL__ @CMakeFiles/MSTL.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\MSTL.dir\\timer.cpp.obj -c \"D:\\Workspace\\Cpp Workspace\\CLine Workspace\\MSTL\\MSTL\\timer.cpp\"",
+  "file": "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/MSTL/timer.cpp",
+  "output": "MSTL/CMakeFiles/MSTL.dir/timer.cpp.obj"
+}
+]

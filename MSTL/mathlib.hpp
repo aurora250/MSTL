@@ -22,9 +22,11 @@ namespace constants {
 	static constexpr mathld_t SEMI_CIRCLE = 180.0;  // angular
 	static constexpr mathld_t CIRCLE = 360.0;
 	static constexpr mathld_t EPSILON = 1e-15L;
+
 	static constexpr mathui_t TAYLOR_CONVERGENCE = 10000U;
 	static constexpr mathld_t PRECISE_TOLERANCE = TAYLOR_CONVERGENCE * EPSILON;
 	static constexpr mathld_t LOW_PRECISE_TOLERANCE = TAYLOR_CONVERGENCE * PRECISE_TOLERANCE;
+
 	static constexpr mathul_t INFINITY_INT = 18446744073709551615ULL;
 	static constexpr mathld_t INFINITY_FLT = 1.7976931348623158e+308L;
 

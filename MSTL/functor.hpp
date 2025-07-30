@@ -8,6 +8,7 @@ struct MSTL_FUNC_ADAPTER_DEPRECATE unary_function {
 	using argument_type = Arg;
 	using result_type	= Result;
 };
+
 template <typename Arg1, typename Arg2, typename Result>
 struct MSTL_FUNC_ADAPTER_DEPRECATE binary_function {
 	using first_argument_type	= Arg1;

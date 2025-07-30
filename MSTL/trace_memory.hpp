@@ -25,6 +25,7 @@ public:
     };
 
     trace_allocator() = default;
+
     template <typename U>
     trace_allocator(const trace_allocator<U>& a) : traces_(a.traces_) {}
     self& operator =(const self& a) {
@@ -38,14 +39,18 @@ public:
         if (!traces_.empty()) {
             split_line(std::cerr);
             std::cerr << "Memory leaks detected! \n\n";
-            FOR_EACH(entry, traces_) {
-                if (entry->first == 0) continue;
-                std::cerr << "Leaked pointer: " << static_cast<void*>(entry->first) << "\n";
-                std::cerr << "Allocation stack trace:\n" << entry->second << "\n";
-            }
+            print_stacktrace();
             split_line(std::cerr);
         }
 #endif
+    }
+
+    void print_stacktrace() const {
+        FOR_EACH(entry, traces_) {
+            if (entry->first == 0) continue;
+            std::cerr << "Leaked pointer: " << static_cast<void*>(entry->first) << "\n";
+            std::cerr << "Allocation stack trace:\n" << entry->second << "\n";
+        }
     }
 
     MSTL_NODISCARD MSTL_ALLOC_OPTIMIZE pointer allocate(const size_type n) {
@@ -54,9 +59,11 @@ public:
         traces_[ptr] = st;
         return ptr;
     }
+
     MSTL_NODISCARD MSTL_ALLOC_OPTIMIZE pointer allocate() {
         return _MSTL allocator<T>::allocate(sizeof(value_type));
     }
+
     void deallocate(pointer p) noexcept {
         auto it = traces_.find(p);
         if (it != traces_.end()) {
@@ -64,6 +71,7 @@ public:
         }
         _MSTL allocator<T>::deallocate(p, sizeof(value_type));
     }
+
     void deallocate(pointer p, const size_type n) noexcept {
         auto it = traces_.find(p);
         if (it != traces_.end()) {

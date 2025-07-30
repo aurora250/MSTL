@@ -1,3 +1,4 @@
+
 #ifdef bool
 #undef bool
 #undef true

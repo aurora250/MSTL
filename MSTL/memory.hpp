@@ -3,6 +3,12 @@
 #include "algobase.hpp"
 #include "tuple.hpp"
 #include <atomic>
+#ifdef MSTL_PLATFORM_WINDOWS__
+#include <windows.h>
+#elif defined(MSTL_PLATFORM_LINUX__)
+#include <sys/sysinfo.h>
+#endif
+#include "undef_cmacro.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator1, typename Iterator2, enable_if_t<
@@ -363,6 +369,22 @@ struct allocator_traits {
 };
 
 
+inline size_t get_available_memory() {
+#ifdef MSTL_PLATFORM_WINDOWS__
+    MEMORYSTATUSEX statex;
+    statex.dwLength = sizeof(statex);
+    GlobalMemoryStatusEx(&statex);
+    return statex.ullAvailPhys + statex.ullAvailVirtual;
+#elif defined(MSTL_PLATFORM_LINUX__)
+    struct sysinfo info;
+    sysinfo(&info);
+    return info.freeram * info.mem_unit + info.free swap * info.mem_unit;
+#else
+    return 0;
+#endif
+}
+
+
 template <size_t>
 MSTL_ALLOC_OPTIMIZE MSTL_CONSTEXPR20 void* __allocate_aux(const size_t bytes) {
 #ifdef MSTL_COMPILER_MSVC__
@@ -550,12 +572,6 @@ public:
     static MSTL_CONSTEXPR20 void deallocate(pointer p) noexcept {
         standard_allocator::deallocate(p, 1);
     }
-
-    template <typename U, typename... Args>
-    static MSTL_CONSTEXPR20 void* construct(U* ptr, Args&&... args)
-    noexcept(is_nothrow_constructible_v<U, Args...>) {
-        return MSTL::construct(ptr, MSTL::forward<Args>(args)...);
-    }
 };
 template <typename T, typename U>
 MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator ==(
@@ -605,12 +621,6 @@ public:
     static MSTL_CONSTEXPR20 void deallocate(pointer p, const size_type = 1) noexcept {
         if(p) std::free(p);
     }
-
-    template <typename U, typename... Args>
-    static MSTL_CONSTEXPR20 void* construct(U* ptr, Args&&... args)
-    noexcept(is_nothrow_constructible_v<U, Args...>) {
-        return MSTL::construct(ptr, MSTL::forward<Args>(args)...);
-    }
 };
 template <typename T, typename U>
 MSTL_NODISCARD MSTL_CONSTEXPR20 bool operator ==(
@@ -659,12 +669,6 @@ public:
     }
     static MSTL_CONSTEXPR20 void deallocate(pointer p, const size_type = 1) noexcept {
         if(p) ::operator delete(p);
-    }
-
-    template <typename U, typename... Args>
-    static MSTL_CONSTEXPR20 void* construct(U* ptr, Args&&... args)
-    noexcept(is_nothrow_constructible_v<U, Args...>) {
-        return MSTL::construct(ptr, MSTL::forward<Args>(args)...);
     }
 };
 template <typename T, typename U>
@@ -718,12 +722,6 @@ public:
 
     static void deallocate(pointer p, size_type n = 0) noexcept {
         if (p) cudaFree(p);
-    }
-
-    template <typename U, typename... Args>
-    static MSTL_CONSTEXPR20 void* construct(U* ptr, Args&&... args)
-    noexcept(is_nothrow_constructible_v<U, Args...>) {
-        return MSTL::construct(ptr, MSTL::forward<Args>(args)...);
     }
 };
 template <typename T, typename U>

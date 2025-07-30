@@ -55,13 +55,16 @@
 #elif defined(__EDG__)
 	// defined when project is compiled with EDG.
 	#define MSTL_COMPILE_WITH_EDG__		1
+#elif defined(Q_SLOT)
+    // defined when project is compiled with QT Framework.
+    #define MSTL_COMPILE_WITH_QT__		1
 #else
 	// defined when project is compiled with OS.
 	#define MSTL_COMPILE_WITH_OS__		1
 #endif
 
 
-#if defined(DEBUG) || defined(_DEBUG) || !defined(NDEBUG) || defined(QT_QML_DEBUG)
+#if defined(DEBUG) || defined(_DEBUG) || !defined(NDEBUG) || !defined(QT_NO_DEBUG)
 	// defined when project compiled under debug statement.
 	#define MSTL_STATE_DEBUG__			1
 #else

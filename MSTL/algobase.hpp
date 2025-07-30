@@ -185,6 +185,7 @@ noexcept(noexcept(_MSTL clamp(value, lower, upper, _MSTL less<T>()))) {
 	return _MSTL clamp(value, lower, upper, _MSTL less<T>());
 }
 
+
 template <typename Iterator1, typename Iterator2, typename Compare, enable_if_t<
 	is_ranges_input_iter_v<Iterator1> && is_ranges_input_iter_v<Iterator2>, int> = 0>
 MSTL_NODISCARD constexpr bool lexicographical_compare(

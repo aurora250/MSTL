@@ -1,3 +1,4 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:749a5ba01a1abb62e95d9ff510f74f31f217fb33bac1e15d1f2139c42eb92dbc
-size 157
+ToolSet: 1.0 (local)Ninja: 1.12.1@/snap/clion/338/bin/ninja/linux/x64/ninja
+Options: 
+
+Options:-DCMAKE_MAKE_PROGRAM=/snap/clion/338/bin/ninja/linux/x64/ninja

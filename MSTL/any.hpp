@@ -96,7 +96,7 @@ private:
     }
 
 public:
-    constexpr any() noexcept : manage_(nullptr) { }
+    constexpr any() noexcept : manage_(nullptr) {}
 
     any(const any& x) {
         if (!x.has_value())
@@ -107,6 +107,7 @@ public:
 	        x.manage_(COPY, &x, &arg);
 	    }
     }
+
     any& operator =(const any& rh) {
         *this = any(rh);
         return *this;
@@ -121,6 +122,7 @@ public:
             x.manage_(SWAP, &x, &arg);
         }
     }
+
     any& operator =(any&& rh) noexcept {
         if (!rh.has_value())
             reset();
@@ -138,6 +140,7 @@ public:
     any(T&& value) : manage_(&Manager::manage) {
         Manager::create(storage_, _MSTL forward<T>(value));
     }
+
     template <typename T, typename VT = decay_t<T>,
         enable_if_t<!is_same_v<VT, any> && is_copy_constructible_v<VT>, int> = 0>
     any& operator =(T&& rh) {
@@ -220,6 +223,7 @@ template <typename T, typename... Args,
 any make_any(Args&&... args) {
 	return any(inplace_construct_tag{}, _MSTL forward<Args>(args)...);
 }
+
 template <typename T, typename U, typename... Args,
     enable_if_t<is_constructible_v<any, inplace_construct_tag, std::initializer_list<U>&, Args...>, int> = 0>
 any make_any(std::initializer_list<U> ilist, Args&&... args) {
@@ -239,6 +243,7 @@ const T* any_cast(const any* value) noexcept {
         }
     return nullptr;
 }
+
 template <typename T>
 T* any_cast(any* value) noexcept {
     return const_cast<T*>(any_cast<T>(const_cast<const any*>(value)));

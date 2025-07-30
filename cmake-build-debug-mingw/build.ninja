@@ -52,7 +52,7 @@ build cmake_object_order_depends_target_TRY: phony || cmake_object_order_depends
 build CMakeFiles/TRY.dir/main.cpp.obj: CXX_COMPILER__TRY_unscanned_Debug D$:/Workspace/Cpp$ Workspace/CLine$ Workspace/MSTL/main.cpp || cmake_object_order_depends_target_TRY
   DEFINES = -DBOOST_ATOMIC_NO_LIB -DBOOST_FILESYSTEM_NO_LIB -DBOOST_SYSTEM_NO_LIB -DMSTL_SUPPORT_BOOST__ -DMSTL_SUPPORT_MYSQL__
   DEP_FILE = CMakeFiles\TRY.dir\main.cpp.obj.d
-  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  FLAGS = -g -std=gnu++17 -fdiagnostics-color=always
   INCLUDES = -I"D:/MySQL/MySQL Server 8.0/include" -isystem D:/anaconda3/Library/include
   OBJECT_DIR = CMakeFiles\TRY.dir
   OBJECT_FILE_DIR = CMakeFiles\TRY.dir
@@ -60,7 +60,7 @@ build CMakeFiles/TRY.dir/main.cpp.obj: CXX_COMPILER__TRY_unscanned_Debug D$:/Wor
 build CMakeFiles/TRY.dir/try.cpp.obj: CXX_COMPILER__TRY_unscanned_Debug D$:/Workspace/Cpp$ Workspace/CLine$ Workspace/MSTL/try.cpp || cmake_object_order_depends_target_TRY
   DEFINES = -DBOOST_ATOMIC_NO_LIB -DBOOST_FILESYSTEM_NO_LIB -DBOOST_SYSTEM_NO_LIB -DMSTL_SUPPORT_BOOST__ -DMSTL_SUPPORT_MYSQL__
   DEP_FILE = CMakeFiles\TRY.dir\try.cpp.obj.d
-  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  FLAGS = -g -std=gnu++17 -fdiagnostics-color=always
   INCLUDES = -I"D:/MySQL/MySQL Server 8.0/include" -isystem D:/anaconda3/Library/include
   OBJECT_DIR = CMakeFiles\TRY.dir
   OBJECT_FILE_DIR = CMakeFiles\TRY.dir
@@ -123,7 +123,7 @@ build cmake_object_order_depends_target_MSTL: phony || .
 build MSTL/CMakeFiles/MSTL.dir/database_pool.cpp.obj: CXX_COMPILER__MSTL_unscanned_Debug D$:/Workspace/Cpp$ Workspace/CLine$ Workspace/MSTL/MSTL/database_pool.cpp || cmake_object_order_depends_target_MSTL
   DEFINES = -DBOOST_ATOMIC_NO_LIB -DBOOST_FILESYSTEM_NO_LIB -DBOOST_SYSTEM_NO_LIB -DMSTL_SUPPORT_BOOST__ -DMSTL_SUPPORT_MYSQL__
   DEP_FILE = MSTL\CMakeFiles\MSTL.dir\database_pool.cpp.obj.d
-  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  FLAGS = -g -std=gnu++17 -fdiagnostics-color=always
   INCLUDES = -I"D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/MSTL" -I"D:/MySQL/MySQL Server 8.0/include" -isystem D:/anaconda3/Library/include
   OBJECT_DIR = MSTL\CMakeFiles\MSTL.dir
   OBJECT_FILE_DIR = MSTL\CMakeFiles\MSTL.dir
@@ -131,7 +131,7 @@ build MSTL/CMakeFiles/MSTL.dir/database_pool.cpp.obj: CXX_COMPILER__MSTL_unscann
 build MSTL/CMakeFiles/MSTL.dir/rb_tree.cpp.obj: CXX_COMPILER__MSTL_unscanned_Debug D$:/Workspace/Cpp$ Workspace/CLine$ Workspace/MSTL/MSTL/rb_tree.cpp || cmake_object_order_depends_target_MSTL
   DEFINES = -DBOOST_ATOMIC_NO_LIB -DBOOST_FILESYSTEM_NO_LIB -DBOOST_SYSTEM_NO_LIB -DMSTL_SUPPORT_BOOST__ -DMSTL_SUPPORT_MYSQL__
   DEP_FILE = MSTL\CMakeFiles\MSTL.dir\rb_tree.cpp.obj.d
-  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  FLAGS = -g -std=gnu++17 -fdiagnostics-color=always
   INCLUDES = -I"D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/MSTL" -I"D:/MySQL/MySQL Server 8.0/include" -isystem D:/anaconda3/Library/include
   OBJECT_DIR = MSTL\CMakeFiles\MSTL.dir
   OBJECT_FILE_DIR = MSTL\CMakeFiles\MSTL.dir
@@ -139,7 +139,7 @@ build MSTL/CMakeFiles/MSTL.dir/rb_tree.cpp.obj: CXX_COMPILER__MSTL_unscanned_Deb
 build MSTL/CMakeFiles/MSTL.dir/thread_pool.cpp.obj: CXX_COMPILER__MSTL_unscanned_Debug D$:/Workspace/Cpp$ Workspace/CLine$ Workspace/MSTL/MSTL/thread_pool.cpp || cmake_object_order_depends_target_MSTL
   DEFINES = -DBOOST_ATOMIC_NO_LIB -DBOOST_FILESYSTEM_NO_LIB -DBOOST_SYSTEM_NO_LIB -DMSTL_SUPPORT_BOOST__ -DMSTL_SUPPORT_MYSQL__
   DEP_FILE = MSTL\CMakeFiles\MSTL.dir\thread_pool.cpp.obj.d
-  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  FLAGS = -g -std=gnu++17 -fdiagnostics-color=always
   INCLUDES = -I"D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/MSTL" -I"D:/MySQL/MySQL Server 8.0/include" -isystem D:/anaconda3/Library/include
   OBJECT_DIR = MSTL\CMakeFiles\MSTL.dir
   OBJECT_FILE_DIR = MSTL\CMakeFiles\MSTL.dir
@@ -147,7 +147,7 @@ build MSTL/CMakeFiles/MSTL.dir/thread_pool.cpp.obj: CXX_COMPILER__MSTL_unscanned
 build MSTL/CMakeFiles/MSTL.dir/timer.cpp.obj: CXX_COMPILER__MSTL_unscanned_Debug D$:/Workspace/Cpp$ Workspace/CLine$ Workspace/MSTL/MSTL/timer.cpp || cmake_object_order_depends_target_MSTL
   DEFINES = -DBOOST_ATOMIC_NO_LIB -DBOOST_FILESYSTEM_NO_LIB -DBOOST_SYSTEM_NO_LIB -DMSTL_SUPPORT_BOOST__ -DMSTL_SUPPORT_MYSQL__
   DEP_FILE = MSTL\CMakeFiles\MSTL.dir\timer.cpp.obj.d
-  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  FLAGS = -g -std=gnu++17 -fdiagnostics-color=always
   INCLUDES = -I"D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/MSTL" -I"D:/MySQL/MySQL Server 8.0/include" -isystem D:/anaconda3/Library/include
   OBJECT_DIR = MSTL\CMakeFiles\MSTL.dir
   OBJECT_FILE_DIR = MSTL\CMakeFiles\MSTL.dir

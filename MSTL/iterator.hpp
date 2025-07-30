@@ -9,11 +9,13 @@ MSTL_TRAITS_DEPRECATE MSTL_NODISCARD constexpr iter_cat_t<Iterator>
 iterator_category(const Iterator&) noexcept {
     return iter_cat_t<Iterator>();
 }
+
 template <typename Iterator>
 MSTL_TRAITS_DEPRECATE MSTL_NODISCARD constexpr iter_dif_t<Iterator>*
 distance_type(const Iterator&) noexcept {
     return nullptr;
 }
+
 template <typename Iterator>
 MSTL_TRAITS_DEPRECATE MSTL_NODISCARD constexpr
 iter_val_t<Iterator>* value_type(const Iterator&) noexcept {
@@ -187,6 +189,7 @@ public:
 private:
     Container* container;
 };
+
 template <typename Container>
 MSTL_NODISCARD constexpr front_insert_iterator<Container> front_inserter(Container& x) noexcept {
     return front_insert_iterator<Container>(x);
@@ -222,6 +225,7 @@ private:
     Container* container;
     typename Container::iterator iter;
 };
+
 template <typename Container>
 MSTL_NODISCARD constexpr insert_iterator<Container> 
 inserter(Container& x, typename Container::iterator it) noexcept {
@@ -280,6 +284,7 @@ public:
         Iterator iter = current;
         return *--iter;
     }
+
     MSTL_NODISCARD constexpr pointer operator ->() const
         noexcept(is_nothrow_copy_constructible_v<Iterator> && noexcept(--(_MSTL declval<Iterator&>()))
             && is_nothrow_arrow<Iterator&, pointer>)
@@ -297,17 +302,20 @@ public:
         --current;
         return *this;
     }
+
     constexpr self operator ++(int)
         noexcept(is_nothrow_copy_constructible_v<Iterator> && noexcept(--current)) {
         self tmp = *this;
         --current;
         return tmp;
     }
+
     constexpr self& operator --()
         noexcept(noexcept(++current)) {
         ++current;
         return *this;
     }
+
     constexpr self operator --(int)
         noexcept(is_nothrow_copy_constructible_v<Iterator> && noexcept(++current)) {
         self tmp = *this;
@@ -353,6 +361,7 @@ MSTL_NODISCARD constexpr bool operator ==(
 {
     return x.get_current() == y.get_current();
 }
+
 template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD constexpr bool operator !=(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
@@ -363,6 +372,7 @@ MSTL_NODISCARD constexpr bool operator !=(
 {
     return x.get_current() != y.get_current();
 }
+
 template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD constexpr bool operator <(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
@@ -373,6 +383,7 @@ MSTL_NODISCARD constexpr bool operator <(
 {
     return x.get_current() > y.get_current();
 }
+
 template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD constexpr bool operator >(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
@@ -383,6 +394,7 @@ MSTL_NODISCARD constexpr bool operator >(
 {
     return x.get_current() < y.get_current();
 }
+
 template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD constexpr bool operator <=(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
@@ -393,6 +405,7 @@ MSTL_NODISCARD constexpr bool operator <=(
 {
     return x.get_current() >= y.get_current();
 }
+
 template <typename Iterator1, typename Iterator2>
 MSTL_NODISCARD constexpr bool operator >=(
     const reverse_iterator<Iterator1>& x, const reverse_iterator<Iterator2>& y)
@@ -410,6 +423,7 @@ MSTL_NODISCARD constexpr decltype(auto) operator -(
     noexcept(noexcept(y.get_current() - x.get_current())) {
     return y.get_current() - x.get_current();
 }
+
 template <typename Iterator>
 constexpr reverse_iterator<Iterator> operator +(
     iter_dif_t<Iterator> n, const reverse_iterator<Iterator>& x)

@@ -35,6 +35,7 @@ private:
 
 public:
 	MSTL_CONSTEXPR20 vector_iterator() = default;
+    MSTL_CONSTEXPR20 vector_iterator(pointer ptr) : ptr_(ptr) {}
 	MSTL_CONSTEXPR20 vector_iterator(pointer ptr, const container_type* vec) : ptr_(ptr), vec_(vec) {}
 
 	MSTL_CONSTEXPR20 vector_iterator(const iterator& x) noexcept
@@ -94,6 +95,7 @@ public:
 		MSTL_DEBUG_VERIFY(vec_->start_ <= ptr_ && ptr_ <= vec_->finish_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(vector_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
 		return *ptr_;
 	}
+
 	MSTL_NODISCARD MSTL_CONSTEXPR20 pointer operator ->() const noexcept {
 		return &operator*();
 	}
@@ -104,17 +106,20 @@ public:
 		++ptr_;
 		return *this;
 	}
+
 	MSTL_CONSTEXPR20 self operator ++(int) noexcept {
 		self temp = *this;
 		++*this;
 		return temp;
 	}
+
 	MSTL_CONSTEXPR20 self& operator --() noexcept {
 		MSTL_DEBUG_VERIFY(ptr_ && vec_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(vector_iterator, __MSTL_DEBUG_TAG_DECREMENT));
 		MSTL_DEBUG_VERIFY(vec_->start_ < ptr_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(vector_iterator, __MSTL_DEBUG_TAG_DECREMENT));
 		--ptr_;
 		return *this;
 	}
+
 	MSTL_CONSTEXPR20 self operator --(int) noexcept {
 		self temp = *this;
 		--*this;
@@ -133,11 +138,13 @@ public:
 		ptr_ += n;
 		return *this;
 	}
+
 	MSTL_NODISCARD MSTL_CONSTEXPR20 self operator +(difference_type n) const noexcept {
 		auto tmp = *this;
 		tmp += n;
 		return tmp;
 	}
+
 	MSTL_NODISCARD friend MSTL_CONSTEXPR20 self operator +(difference_type n, const self& it) {
 		return it + n;
 	}
@@ -146,11 +153,13 @@ public:
 		ptr_ += -n;
 		return *this;
 	}
+
 	MSTL_NODISCARD MSTL_CONSTEXPR20 self operator -(difference_type n) const noexcept {
 		auto tmp = *this;
 		tmp -= n;
 		return tmp;
 	}
+
 	MSTL_NODISCARD MSTL_CONSTEXPR20 difference_type operator -(const self& x) const noexcept {
 		MSTL_DEBUG_VERIFY(vec_ == x.vec_, __MSTL_DEBUG_MESG_CONTAINER_INCOMPATIBLE(vector_iterator));
 		return static_cast<difference_type>(ptr_ - x.ptr_);
@@ -229,18 +238,6 @@ private:
 	template <typename Iterator>
 	MSTL_CONSTEXPR20 pointer allocate_and_copy(size_type n, Iterator first, Iterator last) {
 		pointer result = pair_.get_base().allocate(n);
-// #ifdef MSTL_SUPPORT_CUDA__
-// 		MSTL_IF_CONSTEXPR (is_same_v<typename Alloc::device_type, allocate_gpu_tag>) {
-// 			const auto n = static_cast<size_t>(last - first);
-// 			const auto bytes = n * sizeof(iter_val_t<Iterator>);
-// 			cudaError_t err = cudaMemcpy(result, MSTL::data(first), bytes, cudaMemcpyHostToDevice);
-// 			if (err != cudaSuccess) {
-// 				Exception(CUDAMemoryError(err));
-// 			}
-// 			result += n;
-// 		}
-// 		else
-// #endif
 			_MSTL uninitialized_copy(first, last, result);
 		return result;
 	}
@@ -314,6 +311,7 @@ private:
 		else
 			insert(finish_, first, last);
 	}
+
 	template <typename Iterator, enable_if_t<is_ranges_fwd_iter_v<Iterator>, int> = 0>
 	MSTL_CONSTEXPR20 void assign_aux(Iterator first, Iterator last) {
 		const size_t n = _MSTL distance(first, last);

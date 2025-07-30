@@ -1,0 +1,2 @@
+D:\mingw64\bin\ar.exe qc libMSTL.a CMakeFiles/MSTL.dir/database_pool.cpp.obj CMakeFiles/MSTL.dir/rb_tree.cpp.obj CMakeFiles/MSTL.dir/thread_pool.cpp.obj CMakeFiles/MSTL.dir/timer.cpp.obj
+D:\mingw64\bin\ranlib.exe libMSTL.a

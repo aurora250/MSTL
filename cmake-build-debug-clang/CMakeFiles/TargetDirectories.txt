@@ -1,3 +1,6 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:810f1a87c5e615de522e4b1fb1e00124b5d42322aeea889f171d084e03ea5c47
-size 482
+/media/huenqi/42A8-FDBE/MSTL/cmake-build-debug-clang/CMakeFiles/TRY.dir
+/media/huenqi/42A8-FDBE/MSTL/cmake-build-debug-clang/CMakeFiles/edit_cache.dir
+/media/huenqi/42A8-FDBE/MSTL/cmake-build-debug-clang/CMakeFiles/rebuild_cache.dir
+/media/huenqi/42A8-FDBE/MSTL/cmake-build-debug-clang/MSTL/CMakeFiles/MSTL.dir
+/media/huenqi/42A8-FDBE/MSTL/cmake-build-debug-clang/MSTL/CMakeFiles/edit_cache.dir
+/media/huenqi/42A8-FDBE/MSTL/cmake-build-debug-clang/MSTL/CMakeFiles/rebuild_cache.dir

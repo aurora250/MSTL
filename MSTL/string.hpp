@@ -17,6 +17,7 @@ struct hash<_MSTL string> {
         return string_hash(s.c_str(), _MSTL string_length(s.c_str()), 0);
     }
 };
+
 template <typename CharT, typename Traits, typename Alloc>
 struct hash<basic_string<CharT, Traits, Alloc>> {
     MSTL_NODISCARD size_t operator ()(
@@ -24,6 +25,7 @@ struct hash<basic_string<CharT, Traits, Alloc>> {
         return FNV_hash(reinterpret_cast<const byte_t*>(str.c_str()), sizeof(CharT) * str.size());
     }
 };
+
 template <>
 struct hash<std::string> {
     MSTL_NODISCARD size_t operator ()(const std::string& s) const noexcept {

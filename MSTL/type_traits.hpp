@@ -2147,16 +2147,17 @@ using iter_ref_t = typename iterator_traits<Iterator>::reference;
 // after C++ 11, compilers do NRVO when the following conditions are met:
 //   the function returns a class-type object and the object is a local object of the function.
 //   the function's return statement returns the local object directly.
-template <typename T,enable_if_t<is_default_constructible_v<T>, int> = 0>
+template <typename T, enable_if_t<is_default_constructible_v<T>, int> = 0>
 constexpr T initialize() noexcept(is_nothrow_default_constructible_v<T>) {
     return T();
 }
 
 #define INITIALIZE_BASIC_FUNCTION__(OPT) \
-template <> constexpr OPT initialize() noexcept { return static_cast<OPT>(0); }
+    template <> constexpr OPT initialize() noexcept { return static_cast<OPT>(0); }
 MSTL_MACRO_RANGE_CHARS(INITIALIZE_BASIC_FUNCTION__)
 MSTL_MACRO_RANGE_FLOAT(INITIALIZE_BASIC_FUNCTION__)
 MSTL_MACRO_RANGE_INT(INITIALIZE_BASIC_FUNCTION__)
+
 #undef INITIALIZE_BASIC_FUNCTION__
 
 MSTL_END_NAMESPACE__

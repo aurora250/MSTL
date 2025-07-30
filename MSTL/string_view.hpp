@@ -186,6 +186,7 @@ public:
 #endif // MSTL_VERSION_20__
         return reinterpret_cast<char_type*>(_MSTL wchar_memory_set(reinterpret_cast<wchar_t*>(str), chr, n));
     }
+
     static constexpr void assign(char_type& lh, const char_type& rh) noexcept {
 #if MSTL_VERSION_20__
         if (_MSTL is_constant_evaluated()) {
@@ -298,6 +299,7 @@ public:
 #endif // MSTL_VERSION_20__
         return static_cast<char_type*>(_MSTL memory_set(str, chr, n));
     }
+
     static constexpr void assign(char_type& lh, const char_type& rh) noexcept {
 #ifdef MSTL_VERSION_20__
         if (_MSTL is_constant_evaluated()) {

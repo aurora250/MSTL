@@ -25,7 +25,7 @@ MSTL_BEGIN_NAMESPACE__
 	static constexpr auto __type__ = TO_STRING(CLASS);
 
 #define __MSTL_ERROR_WHAT() \
-	const char* what() { \
+	const char* what() const { \
 		return info_; \
 	}
 
@@ -33,7 +33,6 @@ MSTL_BEGIN_NAMESPACE__
 	struct THIS : BASE { \
 		__MSTL_ERROR_CONSTRUCTOR(THIS, BASE, INFO) \
 		__MSTL_ERROR_DERIVED_DESTRUCTOR(THIS) \
-		__MSTL_ERROR_WHAT() \
 		__MSTL_ERROR_TYPE(THIS) \
 	};
 
@@ -41,7 +40,6 @@ MSTL_BEGIN_NAMESPACE__
 	struct THIS final : BASE { \
 		__MSTL_ERROR_CONSTRUCTOR(THIS, BASE, INFO) \
 		__MSTL_ERROR_FINAL_DESTRUCTOR(THIS) \
-		__MSTL_ERROR_WHAT() \
 		__MSTL_ERROR_TYPE(THIS) \
 	};
 
@@ -55,6 +53,7 @@ struct Error {
 
 	__MSTL_ERROR_DERIVED_DESTRUCTOR(Error)
 	__MSTL_ERROR_TYPE(Error)
+    __MSTL_ERROR_WHAT()
 };
 
 MSTL_ERROR_BUILD_DERIVED_CLASS(MemoryError, Error, "Memory Operation Failed.")
