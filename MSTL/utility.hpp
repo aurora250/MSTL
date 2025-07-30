@@ -82,8 +82,7 @@ MSTL_END_TAG__
 
 
 template <typename IfEmpty, typename T, bool = is_empty_v<IfEmpty> && !is_final_v<IfEmpty>>
-class compressed_pair final : public IfEmpty {
-public:
+struct compressed_pair final : IfEmpty {
     using base_type = IfEmpty;
 
     T value{};
@@ -102,7 +101,7 @@ public:
         : IfEmpty(), value(_MSTL forward<Args>(args)...) {}
 
     template <typename ToEmpty, typename... Args>
-    constexpr compressed_pair(exact_arg_construct_tag, ToEmpty&& first, Args&&... args)
+    constexpr explicit compressed_pair(exact_arg_construct_tag, ToEmpty&& first, Args&&... args)
         noexcept(conjunction_v<is_nothrow_constructible<IfEmpty, ToEmpty>, is_nothrow_constructible<T, Args...>>)
         : IfEmpty(_MSTL forward<ToEmpty>(first)), value(_MSTL forward<Args>(args)...) {}
 
@@ -133,8 +132,7 @@ noexcept(noexcept(lh.swap(rh))) {
 
 
 template <typename IfEmpty, typename T>
-class compressed_pair<IfEmpty, T, false> final {
-public:
+struct compressed_pair<IfEmpty, T, false> final {
 	IfEmpty no_compressed;
 	T value;
 

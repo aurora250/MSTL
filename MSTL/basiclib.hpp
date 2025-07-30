@@ -2,6 +2,7 @@
 #define MSTL_BASICLIB_H__
 #include "undef_cmacro.hpp"
 #include <locale>
+#include <iostream>
 #ifdef MSTL_SUPPORT_BOOST__
 #include "boost/version.hpp"
 #endif
@@ -29,6 +30,12 @@
 	// defined when project compiled in not supported systems.
 	#define MSTL_PLATFORM_UNSUPPORT__	1
 #endif
+
+#ifdef MSTL_PLATFORM_WINDOWS__
+#include <windows.h>
+#include "undef_cmacro.hpp"
+#endif
+
 
 #if defined(__GNUC__)
 	// defined when project compiled by gnuc compilers.
@@ -494,6 +501,18 @@ MSTL_INLINE17 constexpr size_t MEMORY_BIG_ALLOC_SENTINEL = 0xFAFAFAFAFAFAFAFAUL;
 MSTL_INLINE17 constexpr size_t MEMORY_BIG_ALLOC_SENTINEL = 0xFAFAFAFAUL;
 #endif
 #endif // MSTL_COMPILER_MSVC__
+
+
+inline void set_utf8_encoding() {
+    try {
+#ifdef MSTL_PLATFORM_WINDOWS__
+        SetConsoleOutputCP(65001);
+#endif
+        std::locale::global(std::locale("en_US.UTF-8"));
+        std::cout.imbue(std::locale());
+        std::cerr.imbue(std::locale());
+    } catch (...) {}
+}
 
 
 MSTL_CONST_FUNCTION constexpr bool is_alpha_or_number(const char c) noexcept {
