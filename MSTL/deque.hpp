@@ -312,6 +312,7 @@ private:
 
     void destroy_nodes(map_pointer nstart, map_pointer nfinish) noexcept {
         for (map_pointer cur = nstart; cur <= nfinish; ++cur) {
+            if (*cur == nullptr) continue;
             map_size_pair_.get_base().deallocate(*cur, buffer_size_);
             *cur = nullptr;
         }
@@ -864,9 +865,11 @@ public:
             _MSTL destroy(finish_.cur_);
         }
         else {
+            auto cur = finish_.node_;
             --finish_;
             _MSTL destroy(finish_.cur_);
-            this->destroy_nodes(finish_.node_ + 1, finish_.node_ + 1);
+            map_size_pair_.get_base().deallocate(*cur, buffer_size_);
+            *cur = nullptr;
         }
     }
 
@@ -878,9 +881,10 @@ public:
         }
         else {
             _MSTL destroy(start_.cur_);
+            auto cur = start_.node_;
             map_size_pair_.get_base().deallocate(start_.first_, buffer_size_);
+            *cur = nullptr;
             ++start_;
-            this->destroy_nodes(start_.node_ - 1, start_.node_ - 1);
         }
     }
 

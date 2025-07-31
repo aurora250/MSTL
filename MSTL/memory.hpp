@@ -3,12 +3,6 @@
 #include "algobase.hpp"
 #include "tuple.hpp"
 #include <atomic>
-#ifdef MSTL_PLATFORM_WINDOWS__
-#include <windows.h>
-#elif defined(MSTL_PLATFORM_LINUX__)
-#include <sys/sysinfo.h>
-#endif
-#include "undef_cmacro.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator1, typename Iterator2, enable_if_t<
@@ -367,22 +361,6 @@ struct allocator_traits {
         alloc.deallocate(ptr, n);
     }
 };
-
-
-inline size_t get_available_memory() {
-#ifdef MSTL_PLATFORM_WINDOWS__
-    MEMORYSTATUSEX statex;
-    statex.dwLength = sizeof(statex);
-    GlobalMemoryStatusEx(&statex);
-    return statex.ullAvailPhys + statex.ullAvailVirtual;
-#elif defined(MSTL_PLATFORM_LINUX__)
-    struct sysinfo info;
-    sysinfo(&info);
-    return info.freeram * info.mem_unit + info.free swap * info.mem_unit;
-#else
-    return 0;
-#endif
-}
 
 
 template <size_t>

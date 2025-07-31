@@ -13,7 +13,7 @@ using mathui_t	= uint32_t;
 using mathl_t	= int64_t;
 using mathul_t	= uint64_t;
 using mathd_t	= float64_t;
-using mathld_t	= float_ex_t;
+using mathld_t	= decimal_t;
 
 namespace constants {
 	static constexpr mathld_t EULER = 2.718281828459045L;

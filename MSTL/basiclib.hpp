@@ -34,6 +34,8 @@
 #ifdef MSTL_PLATFORM_WINDOWS__
 #include <windows.h>
 #include "undef_cmacro.hpp"
+#elif defined(MSTL_PLATFORM_LINUX__)
+#include <sys/sysinfo.h>
 #endif
 
 
@@ -444,7 +446,7 @@ using uint64_t	= unsigned long long;
 
 using float32_t	= float;
 using float64_t	= double;
-using float_ex_t = long double;
+using decimal_t = long double;
 
 #if defined(MSTL_PLATFORM_LINUX__)
 using uintptr_t = unsigned long;
@@ -512,6 +514,22 @@ inline void set_utf8_encoding() {
         std::cout.imbue(std::locale());
         std::cerr.imbue(std::locale());
     } catch (...) {}
+}
+
+
+inline size_t get_available_memory() {
+#ifdef MSTL_PLATFORM_WINDOWS__
+    MEMORYSTATUSEX statex;
+    statex.dwLength = sizeof(statex);
+    GlobalMemoryStatusEx(&statex);
+    return statex.ullAvailPhys + statex.ullAvailVirtual;
+#elif defined(MSTL_PLATFORM_LINUX__)
+    struct sysinfo info;
+    sysinfo(&info);
+    return info.freeram * info.mem_unit + info.free swap * info.mem_unit;
+#else
+    return 0;
+#endif
 }
 
 

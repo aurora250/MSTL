@@ -13,6 +13,10 @@ public:
     using size_type         = typename Sequence::size_type;
     using reference         = typename Sequence::reference;
     using const_reference   = typename Sequence::const_reference;
+
+    using iterator          = typename Sequence::iterator;
+    using const_iterator    = typename Sequence::const_iterator;
+
     using self              = queue<T, Sequence>;
 
     static_assert(is_object_v<T>, "queue only contains object types.");
@@ -39,6 +43,11 @@ public:
     MSTL_NODISCARD const_reference front() const noexcept(noexcept(seq_.front())) { return seq_.front(); }
     MSTL_NODISCARD reference back() noexcept(noexcept(seq_.back())) { return seq_.back(); }
     MSTL_NODISCARD const_reference back() const noexcept(noexcept(seq_.back())) { return seq_.back(); }
+
+    MSTL_NODISCARD iterator begin() noexcept(noexcept(seq_.begin())) { return seq_.begin(); }
+    MSTL_NODISCARD iterator end() noexcept(noexcept(seq_.end())) { return seq_.end(); }
+    MSTL_NODISCARD const_iterator cbegin() noexcept(noexcept(seq_.cbegin())) { return seq_.cbegin(); }
+    MSTL_NODISCARD const_iterator cend() noexcept(noexcept(seq_.cend())) { return seq_.cend(); }
 
     void push(const T& x) { seq_.push_back(x); }
     void push(T&& x) { seq_.push_back(_MSTL move(x)); }

@@ -7,7 +7,7 @@
 #endif
 MSTL_BEGIN_NAMESPACE__
 
-MSTL_ERROR_BUILD_DERIVED_CLASS(AnyCastError, MemoryError, "Cast from any type failed.")
+MSTL_ERROR_BUILD_DERIVED_CLASS(AnyCastError, TypeCastError, "Cast From any Type Failed.")
 
 class any {
 private:
