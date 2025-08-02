@@ -1,14 +1,14 @@
 #ifndef MSTL_DATABASE_POOL_H__
 #define MSTL_DATABASE_POOL_H__
-#include "list.hpp"
 #ifdef MSTL_SUPPORT_MYSQL__
 #include <mysql.h>
 #include "undef_cmacro.hpp"
 #include <mutex>
 #include <thread>
 #include <condition_variable>
-#include "string.hpp"
 #include "queue.hpp"
+#include "list.hpp"
+#include "datetime.h"
 #include "unordered_map.hpp"
 MSTL_BEGIN_NAMESPACE__
 
@@ -73,16 +73,25 @@ public:
         return false;
     }
 
-    MSTL_NODISCARD string_view at(const size_type n) const noexcept {
+    MSTL_NODISCARD _MSTL string_view at(const size_type n) const noexcept {
         MSTL_DEBUG_VERIFY(cursor, "database_result_row_value can`t dereference nullptr.")
         MSTL_DEBUG_VERIFY(columns > n, "database_result_row_value out of ranges.")
         return cursor[n];
     }
 
+    MSTL_NODISCARD bool at_bool(const size_type n) const {
+        MSTL_DEBUG_VERIFY(cursor, "database_result_row_value can`t dereference nullptr.")
+        MSTL_DEBUG_VERIFY(columns > n, "database_result_row_value out of ranges.")
+        if (column_types_->at(n) != MYSQL_TYPE_BOOL)
+            Exception(DatabaseTypeCastError("database type cast to bool mismatch"));
+        return static_cast<bool>(to_int8(cursor[n]));
+    }
+
     MSTL_NODISCARD int8_t at_int8(const size_type n) const {
         MSTL_DEBUG_VERIFY(cursor, "database_result_row_value can`t dereference nullptr.")
         MSTL_DEBUG_VERIFY(columns > n, "database_result_row_value out of ranges.")
-        if (column_types_->at(n) != MYSQL_TYPE_TINY)
+        const auto type = column_types_->at(n);
+        if (!(type == MYSQL_TYPE_TINY || type == MYSQL_TYPE_BOOL))
             Exception(DatabaseTypeCastError("database type cast to int8 mismatch"));
         return to_int8(cursor[n]);
     }
@@ -91,7 +100,7 @@ public:
         MSTL_DEBUG_VERIFY(cursor, "database_result_row_value can`t dereference nullptr.")
         MSTL_DEBUG_VERIFY(columns > n, "database_result_row_value out of ranges.")
         const auto type = column_types_->at(n);
-        if (!(type == MYSQL_TYPE_SHORT || type == MYSQL_TYPE_TINY))
+        if (!(type == MYSQL_TYPE_SHORT || type == MYSQL_TYPE_TINY || type == MYSQL_TYPE_BOOL))
             Exception(DatabaseTypeCastError("database type cast to int16 mismatch"));
         return to_int16(cursor[n]);
     }
@@ -100,7 +109,8 @@ public:
         MSTL_DEBUG_VERIFY(cursor, "database_result_row_value can`t dereference nullptr.")
         MSTL_DEBUG_VERIFY(columns > n, "database_result_row_value out of ranges.")
         const auto type = column_types_->at(n);
-        if (!(type == MYSQL_TYPE_LONG || type == MYSQL_TYPE_SHORT || type == MYSQL_TYPE_TINY))
+        if (!(type == MYSQL_TYPE_LONG || type == MYSQL_TYPE_INT24 || type == MYSQL_TYPE_SHORT ||
+            type == MYSQL_TYPE_TINY || type == MYSQL_TYPE_BOOL))
             Exception(DatabaseTypeCastError("database type cast to int32 mismatch"));
         return to_int32(cursor[n]);
     }
@@ -109,8 +119,8 @@ public:
         MSTL_DEBUG_VERIFY(cursor, "database_result_row_value can`t dereference nullptr.")
         MSTL_DEBUG_VERIFY(columns > n, "database_result_row_value out of ranges.")
         const auto type = column_types_->at(n);
-        if (!(type == MYSQL_TYPE_LONGLONG || type == MYSQL_TYPE_LONG ||
-            type == MYSQL_TYPE_SHORT || type == MYSQL_TYPE_TINY))
+        if (!(type == MYSQL_TYPE_LONGLONG || type == MYSQL_TYPE_LONG || type == MYSQL_TYPE_INT24 ||
+            type == MYSQL_TYPE_SHORT || type == MYSQL_TYPE_TINY || type == MYSQL_TYPE_BOOL))
             Exception(DatabaseTypeCastError("database type cast to int64 mismatch"));
         return to_int64(cursor[n]);
     }
@@ -146,36 +156,71 @@ public:
         return to_decimal(cursor[n]);
     }
 
-    MSTL_NODISCARD vector<char> at_blob(const size_type n) const {
+    MSTL_NODISCARD _MSTL vector<char> at_blob(const size_type n) const {
         MSTL_DEBUG_VERIFY(cursor, "database_result_row_value can`t dereference nullptr.")
         MSTL_DEBUG_VERIFY(columns > n, "database_result_row_value out of ranges.")
-        if (column_types_->at(n) != MYSQL_TYPE_BLOB)
+        const auto type = column_types_->at(n);
+        if (!(type == MYSQL_TYPE_BLOB || type == MYSQL_TYPE_TINY_BLOB ||
+            type == MYSQL_TYPE_MEDIUM_BLOB || type == MYSQL_TYPE_LONG_BLOB))
             Exception(DatabaseTypeCastError("database type cast to blob mismatch"));
         return {cursor[n], cursor[n] + mysql_fetch_lengths(result)[n]};
     }
 
-    MSTL_NODISCARD string_view at_date(const size_type n) const {
+    MSTL_NODISCARD _MSTL string at_set(const size_type n) const {
+        MSTL_DEBUG_VERIFY(cursor, "database_result_row_value can`t dereference nullptr.")
+        MSTL_DEBUG_VERIFY(columns > n, "database_result_row_value out of ranges.")
+        if (column_types_->at(n) != MYSQL_TYPE_SET) {
+            Exception(DatabaseTypeCastError("database type cast to SET mismatch"));
+        }
+        return cursor[n];
+    }
+
+    MSTL_NODISCARD uint64_t at_bit(const size_type n) const {
+        MSTL_DEBUG_VERIFY(cursor, "database_result_row_value can`t dereference nullptr.")
+        MSTL_DEBUG_VERIFY(columns > n, "database_result_row_value out of ranges.")
+        if (column_types_->at(n) != MYSQL_TYPE_BIT) {
+            Exception(DatabaseTypeCastError("database type cast to BIT mismatch"));
+        }
+        unsigned long length = mysql_fetch_lengths(result)[n];
+        const char* data = cursor[n];
+
+        uint64_t value = 0;
+        for (unsigned long i = 0; i < length; ++i) {
+            value = (value << 8) | static_cast<unsigned char>(data[i]);
+        }
+        return value;
+    }
+
+    MSTL_NODISCARD _MSTL date at_date(const size_type n) const {
         MSTL_DEBUG_VERIFY(cursor, "database_result_row_value can`t dereference nullptr.")
         MSTL_DEBUG_VERIFY(columns > n, "database_result_row_value out of ranges.")
         if (column_types_->at(n) != MYSQL_TYPE_DATE)
             Exception(DatabaseTypeCastError("database type cast to date mismatch"));
-        return at(n);
+        return _MSTL date::from_string(cursor[n]);
     }
 
-    MSTL_NODISCARD string_view at_datetime(const size_type n) const {
+    MSTL_NODISCARD _MSTL time at_time(const size_type n) const {
+        MSTL_DEBUG_VERIFY(cursor, "database_result_row_value can`t dereference nullptr.")
+        MSTL_DEBUG_VERIFY(columns > n, "database_result_row_value out of ranges.")
+        if (column_types_->at(n) != MYSQL_TYPE_DATE)
+            Exception(DatabaseTypeCastError("database type cast to time mismatch"));
+        return _MSTL time::from_string(cursor[n]);
+    }
+
+    MSTL_NODISCARD _MSTL datetime at_datetime(const size_type n) const {
         MSTL_DEBUG_VERIFY(cursor, "database_result_row_value can`t dereference nullptr.")
         MSTL_DEBUG_VERIFY(columns > n, "database_result_row_value out of ranges.")
         if (column_types_->at(n) != MYSQL_TYPE_DATETIME)
             Exception(DatabaseTypeCastError("database type cast to datetime mismatch"));
-        return at(n);
+        return _MSTL datetime::from_string(cursor[n]);
     }
 
-    MSTL_NODISCARD string_view at_timestamp(const size_type n) const {
+    MSTL_NODISCARD _MSTL timestamp at_timestamp(const size_type n) const {
         MSTL_DEBUG_VERIFY(cursor, "database_result_row_value can`t dereference nullptr.")
         MSTL_DEBUG_VERIFY(columns > n, "database_result_row_value out of ranges.")
         if (column_types_->at(n) != MYSQL_TYPE_TIMESTAMP)
             Exception(DatabaseTypeCastError("database type cast to timestamp mismatch"));
-        return at(n);
+        return _MSTL timestamp(_MSTL datetime::from_string(cursor[n]));
     }
 
     MSTL_NODISCARD string_view at_string(const size_type n) const noexcept {

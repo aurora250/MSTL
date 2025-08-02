@@ -3,6 +3,9 @@
 #include "undef_cmacro.hpp"
 #include <locale>
 #include <iostream>
+#include <fcntl.h>
+#include <io.h>
+#include "undef_cmacro.hpp"
 #ifdef MSTL_SUPPORT_BOOST__
 #include "boost/version.hpp"
 #endif
@@ -505,15 +508,44 @@ MSTL_INLINE17 constexpr size_t MEMORY_BIG_ALLOC_SENTINEL = 0xFAFAFAFAUL;
 #endif // MSTL_COMPILER_MSVC__
 
 
-inline void set_utf8_encoding() {
+inline void set_utf8_console() {
     try {
 #ifdef MSTL_PLATFORM_WINDOWS__
-        SetConsoleOutputCP(65001);
+        SetConsoleOutputCP(CP_UTF8);
+        SetConsoleCP(CP_UTF8);
 #endif
-        std::locale::global(std::locale("en_US.UTF-8"));
+        std::ios_base::sync_with_stdio(false);
+        static constexpr const char* locales[] = {"en_US.UTF-8", "C.UTF-8", "zh_CN.UTF-8", "en_GB.UTF-8"};
+        bool locale_set = false;
+        for (const char* loc : locales) {
+            try {
+                std::locale::global(std::locale(loc));
+                locale_set = true;
+                break;
+            } catch (...) {}
+        }
+        if (!locale_set)
+            std::locale::global(std::locale(""));
         std::cout.imbue(std::locale());
         std::cerr.imbue(std::locale());
-    } catch (...) {}
+        std::wcout.imbue(std::locale());
+        std::wcerr.imbue(std::locale());
+    } catch (...) {
+    	std::locale::global(std::locale(""));
+    	std::cout.imbue(std::locale());
+        std::cerr.imbue(std::locale());
+        std::wcout.imbue(std::locale());
+        std::wcerr.imbue(std::locale());
+    }
+}
+
+
+MSTL_INLINE17 constexpr uint32_t MSTL_SPLIT_LENGTH = 15U;
+
+inline void split_line(std::ostream& out = std::cout,
+    uint32_t size = MSTL_SPLIT_LENGTH, const char split = '-') {
+    while (size--) out << split;
+    out << '\n';
 }
 
 
@@ -524,9 +556,9 @@ inline size_t get_available_memory() {
     GlobalMemoryStatusEx(&statex);
     return statex.ullAvailPhys + statex.ullAvailVirtual;
 #elif defined(MSTL_PLATFORM_LINUX__)
-    struct sysinfo info;
-    sysinfo(&info);
-    return info.freeram * info.mem_unit + info.free swap * info.mem_unit;
+    struct ::sysinfo info{};
+    ::sysinfo(&info);
+    return info.freeram * info.mem_unit + info.freeswap * info.mem_unit;
 #else
     return 0;
 #endif

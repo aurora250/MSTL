@@ -90,13 +90,13 @@ noexcept(__apply_unpack_tuple<_MSTL is_nothrow_invocable, F, Tuple>::value) {
 }
 
 
-class undefined_utility_class;
+class __undefined_util;
 
 union __nocopy_type {
 	void* object_;
 	const void* const_object_;
 	void (* function_pointer_)();
-	void (undefined_utility_class::* member_pointer_)();
+	void (__undefined_util::* member_pointer_)();
 };
 
 union storage_data {
@@ -116,6 +116,7 @@ union storage_data {
 enum class FUNCTION_MANAGE_OPERATE {
     GET_TYPE_INFO, GET_PTR, COPY_PTR, DESTROY_PTR
 };
+
 
 template <typename Sign>
 class function;

@@ -2,9 +2,6 @@
 #define MSTL_DNS_REQUEST_HPP__
 #include "basiclib.hpp"
 #ifdef MSTL_PLATFORM_LINUX__
-#include <random>
-
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

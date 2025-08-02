@@ -329,10 +329,32 @@ struct remove_pointer<T* const volatile> {
     template <typename wrapper>
     using bind_pointer_t = volatile const wrapper*;
 };
+
 template <typename T>
 using remove_pointer_t = typename remove_pointer<T>::type;
 template <typename From, typename To>
 using copy_pointer_t = typename remove_pointer<From>::template bind_pointer_t<To>;
+
+
+template <typename T>
+struct remove_function_qualifiers {
+    using type = T;
+};
+template <typename Ret, typename... Args>
+struct remove_function_qualifiers<Ret(Args...) const> {
+    using type = Ret(Args...);
+};
+template <typename Ret, typename... Args>
+struct remove_function_qualifiers<Ret(Args...) noexcept> {
+    using type = Ret(Args...);
+};
+template <typename Ret, typename... Args>
+struct remove_function_qualifiers<Ret(Args...) const noexcept> {
+    using type = Ret(Args...);
+};
+
+template <typename T>
+using remove_function_qualifiers_t = typename remove_function_qualifiers<T>::type;
 
 
 template <typename T>
@@ -345,7 +367,7 @@ using void_t = void;
 
 
 template <typename T>
-MSTL_INLINE17 constexpr bool is_character_v = is_any_of_v<remove_cv_t<T>,
+MSTL_INLINE17 constexpr bool is_character_v = is_any_of_v<remove_cvref_t<T>,
     char, signed char, unsigned char, wchar_t,
 #ifdef MSTL_VERSION_20__
     char8_t,
@@ -357,26 +379,26 @@ struct is_character : bool_constant<is_character_v<T>> {};
 
 
 template <typename T>
-MSTL_INLINE17 constexpr bool is_bool_v = is_same_v<remove_cv_t<T>, bool>;
+MSTL_INLINE17 constexpr bool is_boolean_v = is_same_v<remove_cvref_t<T>, bool>;
 template <typename T>
-struct is_bool : bool_constant<is_bool_v<T>> {};
+struct is_boolean : bool_constant<is_boolean_v<T>> {};
 
 
 template <typename T>
-MSTL_INLINE17 constexpr bool is_standard_integer_v = is_any_of_v<remove_cv_t<T>, short, int, long, long long,
+MSTL_INLINE17 constexpr bool is_standard_integer_v = is_any_of_v<remove_cvref_t<T>, short, int, long, long long,
     unsigned short, unsigned int, unsigned long, unsigned long long>;
 template <typename T>
 struct is_standard_integral : bool_constant<is_standard_integer_v<T>> {};
 
 
 template <typename T>
-MSTL_INLINE17 constexpr bool is_integral_v = is_standard_integer_v<T> || is_character_v<T> || is_bool_v<T>;
+MSTL_INLINE17 constexpr bool is_integral_v = is_standard_integer_v<T> || is_character_v<T> || is_boolean_v<T>;
 template <typename T>
 struct is_integral : bool_constant<is_integral_v<T>> {};
 
 
 template <typename T>
-MSTL_INLINE17 constexpr bool is_floating_point_v = is_any_of_v<remove_cv_t<T>, float, double, long double>;
+MSTL_INLINE17 constexpr bool is_floating_point_v = is_any_of_v<remove_cvref_t<T>, float, double, long double>;
 template <typename T>
 struct is_floating_point : bool_constant<is_floating_point_v<T>> {};
 
@@ -389,7 +411,7 @@ struct is_arithmetic : bool_constant<is_arithmetic_v<T>> {};
 
 template <typename T, bool = is_integral_v<T>>
 struct __check_sign_aux {
-    static constexpr bool is_signed = static_cast<remove_cv_t<T>>(-1) < static_cast<remove_cv_t<T>>(0);
+    static constexpr bool is_signed = static_cast<remove_cvref_t<T>>(-1) < static_cast<remove_cv_t<T>>(0);
     static constexpr bool is_unsigned = !is_signed;
 };
 template <typename T>
@@ -568,6 +590,12 @@ template <typename T>
 struct is_reference : bool_constant<is_reference_v<T>> {};
 
 
+
+template <typename T>
+MSTL_INLINE17 constexpr bool is_null_pointer_v = is_same_v<remove_cvref_t<T>, nullptr_t>;
+template <typename T>
+struct is_null_pointer : bool_constant<is_null_pointer_v<T>> {};
+
 template <typename>
 MSTL_INLINE17 constexpr bool is_pointer_v = false;
 template <typename T>
@@ -581,12 +609,6 @@ MSTL_INLINE17 constexpr bool is_pointer_v<T* const volatile> = true;
 
 template <typename T>
 struct is_pointer : bool_constant<is_pointer_v<T>> {};
-
-
-template <typename T>
-MSTL_INLINE17 constexpr bool is_null_pointer_v = is_same_v<remove_cv_t<T>, nullptr_t>;
-template <typename T>
-struct is_null_pointer : bool_constant<is_null_pointer_v<T>> {};
 
 
 template<typename T>
@@ -652,6 +674,22 @@ template <typename T>
 MSTL_INLINE17 constexpr bool is_object_v = is_const_v<const T> && !is_void_v<T>;
 template <typename T>
 struct is_object : bool_constant<is_object_v<T>> {};
+
+
+template <typename T>
+constexpr bool is_ctype_string_v = (is_pointer_v<T> && is_character_v<remove_pointer_t<T>>) ||
+    (is_bounded_array_v<T> && is_character_v<remove_all_extents_t<T>>);
+template <typename T>
+struct is_ctype_string : bool_constant<is_ctype_string_v<T>> {};
+
+
+template <typename T>
+using char_of_string_t = remove_all_extents_t<remove_pointer_t<remove_cvref_t<T>>>;
+
+template <typename T>
+struct char_of_string {
+    using type = char_of_string_t<T>;
+};
 
 
 #ifdef MSTL_COMPILER_CLANG__
@@ -727,16 +765,16 @@ template <typename T>
 MSTL_INLINE17 constexpr bool is_final_v = is_final<T>::value;
 
 
-template <class T, bool = is_enum_v<T>>
+template <typename T, bool = is_enum_v<T>>
 struct __underlying_type_aux {
     using type = __underlying_type(T);
 };
-template <class T>
+template <typename T>
 struct __underlying_type_aux<T, false> {};
 
-template <class T>
+template <typename T>
 struct underlying_type : __underlying_type_aux<T> {};
-template <class T>
+template <typename T>
 using underlying_type_t = typename underlying_type<T>::type;
 
 
@@ -1227,7 +1265,7 @@ using __set_unsigned_byte = typename __sign_byte_aux<sizeof(T)>::template unsign
 
 template <typename T>
 struct __set_sign {
-    static_assert((is_integral_v<T> && !is_bool_v<T>) || is_enum_v<T>,
+    static_assert((is_integral_v<T> && !is_boolean_v<T>) || is_enum_v<T>,
         "make signed only support non bool integral types and enum types");
 
     using signed_type   = copy_cv_t<T, __set_signed_byte<T>>;
@@ -1779,13 +1817,16 @@ private:
 
     template <typename T, bool Nothrow = noexcept(_MSTL declvoid<T>(_MSTL declval<Res_t>())),
         typename = decltype(_MSTL declvoid<T>(_MSTL declval<Res_t>())),
-#ifdef MSTL_COMPILER_GNUC__
+#ifdef MSTL_COMPILER_GCC__
         bool Dangle = __reference_converts_from_temporary(T, Res_t)
+#elif defined(MSTL_COMPILER_CLANG__)
+        bool Dangle = __reference_converts_from_temporary(_MSTL declval<T>(), _MSTL declval<Res_t>())
 #else
         bool Dangle = false
 #endif
     >
-	static bool_constant<Nothrow && !Dangle> __test(int);
+    static bool_constant<Nothrow && !Dangle> __test(int);
+
     template <typename T, bool = false>
     static false_type __test(...);
 
@@ -2090,6 +2131,7 @@ concept is_pair_v = requires(T p) {
 template <typename Category, typename T, typename Distance = ptrdiff_t,
     typename Pointer = T*, typename Reference = T&>
 struct iterator {
+public:
     using iterator_category = Category;
     using value_type        = T;
     using difference_type   = Distance;

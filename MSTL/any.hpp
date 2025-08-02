@@ -1,13 +1,10 @@
 #ifndef MSTL_ANY_HPP__
 #define MSTL_ANY_HPP__
-#include "errorlib.hpp"
 #include "utility.hpp"
-#ifdef MSTL_COMPILER_GNUC__
-#include <cxxabi.h>
-#endif
 MSTL_BEGIN_NAMESPACE__
 
 MSTL_ERROR_BUILD_DERIVED_CLASS(AnyCastError, TypeCastError, "Cast From any Type Failed.")
+
 
 class any {
 private:

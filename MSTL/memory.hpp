@@ -184,60 +184,71 @@ template <typename Iterator, typename T = iter_val_t<Iterator>>
 struct temporary_buffer {
     static_assert(is_ranges_fwd_iter_v<Iterator>, "temporary buffer requires forward iterator types.");
 
-private:
-    ptrdiff_t original_len_ = 0;
-    ptrdiff_t len_ = 0;
-    T* buffer_ = nullptr;
+public:
+    using value_type        = T;
+    using pointer           = value_type*;
+    using const_pointer     = const value_type*;
+    using reference         = value_type&;
+    using const_reference   = const value_type&;
+    using size_type         = ptrdiff_t;
+    using difference_type   = ptrdiff_t;
 
+private:
+    size_type original_len_ = 0;
+    size_type len_ = 0;
+    pointer buffer_ = nullptr;
+
+private:
     MSTL_CONSTEXPR20 void allocate_buffer() {
         original_len_ = len_;
         buffer_ = 0;
-        if (len_ > static_cast<ptrdiff_t>(UINT32_MAX_SIZE / sizeof(T))) len_ = UINT32_MAX_SIZE / sizeof(T);
+        if (len_ > static_cast<size_type>(UINT32_MAX_SIZE / sizeof(value_type)))
+            len_ = UINT32_MAX_SIZE / sizeof(value_type);
+
         while (len_ > 0) {
-            buffer_ = static_cast<T*>(std::malloc(len_ * sizeof(T)));
+            buffer_ = static_cast<pointer>(std::malloc(len_ * sizeof(value_type)));
             if (buffer_) break;
             len_ /= 2;
         }
     }
 
-    template <typename U = T, enable_if_t<is_trivially_copy_assignable_v<U>, int> = 0>
-    MSTL_CONSTEXPR20 void initialize_buffer(const U&) {}
-    template <typename U = T, enable_if_t<!is_trivially_copy_assignable_v<U>, int> = 0>
+    template <typename U = value_type, enable_if_t<is_trivially_copy_assignable_v<U>, int> = 0>
+    MSTL_CONSTEXPR20 void initialize_buffer(const U&) noexcept {}
+    template <typename U = value_type, enable_if_t<!is_trivially_copy_assignable_v<U>, int> = 0>
     MSTL_CONSTEXPR20 void initialize_buffer(const U& val) {
         _MSTL uninitialized_fill_n(buffer_, len_, val);
     }
 
 public:
-    MSTL_NODISCARD MSTL_CONSTEXPR20 ptrdiff_t size() const { return len_; }
-    MSTL_NODISCARD MSTL_CONSTEXPR20 ptrdiff_t requested_size() const { return original_len_; }
-    MSTL_NODISCARD MSTL_CONSTEXPR20 T* begin() { return buffer_; }
-    MSTL_NODISCARD MSTL_CONSTEXPR20 T* end() { return buffer_ + len_; }
-
     temporary_buffer(const temporary_buffer&) = delete;
     void operator =(const temporary_buffer&) = delete;
+
     MSTL_CONSTEXPR20 temporary_buffer(Iterator first, Iterator last) {
         try {
             len_ = _MSTL distance(first, last);
-            allocate_buffer();
-            if (len_ > 0) initialize_buffer(*first);
-        }
-        catch (MemoryError&) {
-            std::free(buffer_);
-            buffer_ = 0;
-            len_ = 0;
-            throw;
+            this->allocate_buffer();
+            if (len_ > 0) this->initialize_buffer(*first);
         }
         catch (...) {
             std::free(buffer_);
             buffer_ = 0;
             len_ = 0;
-            Exception(MemoryError("temporary buffer construct buffer failed."));
+            throw;
         }
     }
+
     MSTL_CONSTEXPR20 ~temporary_buffer() {
         _MSTL destroy(buffer_, buffer_ + len_);
         std::free(buffer_);
     }
+
+    MSTL_NODISCARD MSTL_CONSTEXPR20 size_type size() const noexcept { return len_; }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 size_type requested_size() const noexcept { return original_len_; }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 pointer begin() noexcept { return buffer_; }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 pointer end() noexcept { return buffer_ + len_; }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 const_pointer cbegin() const noexcept { return buffer_; }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 const_pointer cend() const noexcept { return buffer_ + len_; }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 bool empty() const noexcept { return len_ == 0; }
 };
 
 

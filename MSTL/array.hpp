@@ -130,16 +130,25 @@ private:
     T array_[Size];
 
 public:
-    MSTL_NODISCARD MSTL_CONSTEXPR17 iterator begin() noexcept {
+    MSTL_CONSTEXPR17 array() noexcept = default;
+    MSTL_CONSTEXPR17 array(const self& rhs) noexcept = default;
+    MSTL_CONSTEXPR17 array(self&& rhs) noexcept = default;
+    MSTL_CONSTEXPR17 array(std::initializer_list<T> init) noexcept {
+        size_t size = init.size() < Size ? init.size() : Size;
+        _MSTL copy(init.begin(), init.begin() + size, array_);
+    }
+    MSTL_CONSTEXPR20 ~array() noexcept = default;
+
+    MSTL_CONST_FUNCTION MSTL_NODISCARD MSTL_CONSTEXPR17 iterator begin() noexcept {
         return iterator(array_, 0);
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR17 iterator end() noexcept {
+    MSTL_CONST_FUNCTION MSTL_NODISCARD MSTL_CONSTEXPR17 iterator end() noexcept {
         return iterator(array_, Size);
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR17 reverse_iterator rbegin() noexcept {
+    MSTL_CONST_FUNCTION MSTL_NODISCARD MSTL_CONSTEXPR17 reverse_iterator rbegin() noexcept {
         return reverse_iterator(end());
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR17 reverse_iterator rend() noexcept {
+    MSTL_CONST_FUNCTION MSTL_NODISCARD MSTL_CONSTEXPR17 reverse_iterator rend() noexcept {
         return reverse_iterator(begin());
     }
     MSTL_NODISCARD MSTL_CONSTEXPR17 const_iterator cbegin() const noexcept {
@@ -155,31 +164,34 @@ public:
         return reverse_iterator(cbegin());
     }
 
-    MSTL_NODISCARD constexpr size_type size() const noexcept {
+    MSTL_NODISCARD MSTL_CONST_FUNCTION MSTL_ALWAYS_INLINE
+    constexpr size_type size() const noexcept {
         return Size;
     }
-    MSTL_NODISCARD constexpr size_type max_size() const noexcept {
+    MSTL_NODISCARD MSTL_CONST_FUNCTION MSTL_ALWAYS_INLINE
+    constexpr size_type max_size() const noexcept {
         return Size;
     }
-    MSTL_NODISCARD constexpr bool empty() const noexcept {
+    MSTL_NODISCARD MSTL_CONST_FUNCTION MSTL_ALWAYS_INLINE
+    constexpr bool empty() const noexcept {
         return false;
     }
 
-    MSTL_NODISCARD MSTL_CONSTEXPR17 reference at(size_type _Pos) {
-        MSTL_DEBUG_VERIFY(_Pos < Size, "array subscript out of range");
-        return array_[_Pos];
+    MSTL_NODISCARD MSTL_CONSTEXPR17 reference at(size_type n) {
+        MSTL_DEBUG_VERIFY(n < Size, "array subscript out of range");
+        return array_[n];
     }
-    MSTL_NODISCARD constexpr const_reference at(size_type _Pos) const {
-        MSTL_DEBUG_VERIFY(_Pos < Size, "array subscript out of range");
-        return array_[_Pos];
+    MSTL_NODISCARD constexpr const_reference at(size_type n) const {
+        MSTL_DEBUG_VERIFY(n < Size, "array subscript out of range");
+        return array_[n];
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR17 reference operator[](size_type _Pos) noexcept {
-        MSTL_DEBUG_VERIFY(_Pos < Size, "array subscript out of range");
-        return array_[_Pos];
+    MSTL_NODISCARD MSTL_CONSTEXPR17 reference operator[](size_type n) noexcept {
+        MSTL_DEBUG_VERIFY(n < Size, "array subscript out of range");
+        return array_[n];
     }
-    MSTL_NODISCARD constexpr const_reference operator[](size_type _Pos) const noexcept {
-        MSTL_DEBUG_VERIFY(_Pos < Size, "array subscript out of range");
-        return array_[_Pos];
+    MSTL_NODISCARD constexpr const_reference operator[](size_type n) const noexcept {
+        MSTL_DEBUG_VERIFY(n < Size, "array subscript out of range");
+        return array_[n];
     }
 
     MSTL_NODISCARD MSTL_CONSTEXPR17 reference front() noexcept {
@@ -194,18 +206,19 @@ public:
     MSTL_NODISCARD constexpr const_reference back() const noexcept {
         return array_[Size - 1];
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR17 T* data() noexcept {
+    MSTL_NODISCARD MSTL_CONST_FUNCTION MSTL_ALWAYS_INLINE MSTL_CONSTEXPR17
+    T* data() noexcept {
         return array_;
     }
     MSTL_NODISCARD MSTL_CONSTEXPR17 const T* data() const noexcept {
         return array_;
     }
 
-    MSTL_CONSTEXPR20 void fill(const T& _Value) {
-        _MSTL fill_n(array_, Size, _Value);
+    MSTL_CONSTEXPR20 void fill(const T& value) {
+        _MSTL fill_n(array_, Size, value);
     }
-    MSTL_CONSTEXPR20 void swap(array& _Other) noexcept(is_nothrow_swappable_v<T>) {
-        _MSTL swap(array_, _Other.array_);
+    MSTL_CONSTEXPR20 void swap(array& x) noexcept(is_nothrow_swappable_v<T>) {
+        _MSTL swap(array_, x.array_);
     }
 };
 
@@ -233,38 +246,49 @@ private:
         T, _MSTL_TAG empty_array_element_tag> array_[1]{};
 
 public:
-    MSTL_NODISCARD MSTL_CONSTEXPR17 iterator begin() noexcept {
+    MSTL_NODISCARD MSTL_CONST_FUNCTION MSTL_ALWAYS_INLINE
+    MSTL_CONSTEXPR17 iterator begin() noexcept {
         return iterator{};
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR17 iterator end() noexcept {
+    MSTL_NODISCARD MSTL_CONST_FUNCTION MSTL_ALWAYS_INLINE
+    MSTL_CONSTEXPR17 iterator end() noexcept {
         return iterator{};
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR17 reverse_iterator rbegin() noexcept {
+    MSTL_NODISCARD MSTL_CONST_FUNCTION MSTL_ALWAYS_INLINE
+    MSTL_CONSTEXPR17 reverse_iterator rbegin() noexcept {
         return reverse_iterator(end());
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR17 reverse_iterator rend() noexcept {
+    MSTL_NODISCARD MSTL_CONST_FUNCTION MSTL_ALWAYS_INLINE
+    MSTL_CONSTEXPR17 reverse_iterator rend() noexcept {
         return reverse_iterator(begin());
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR17 const_iterator cbegin() const noexcept {
+    MSTL_NODISCARD MSTL_ALWAYS_INLINE
+    MSTL_CONSTEXPR17 const_iterator cbegin() const noexcept {
         return begin();
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR17 const_iterator cend() const noexcept {
+    MSTL_NODISCARD MSTL_ALWAYS_INLINE
+    MSTL_CONSTEXPR17 const_iterator cend() const noexcept {
         return end();
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR17 const_reverse_iterator crbegin() const noexcept {
+    MSTL_NODISCARD MSTL_ALWAYS_INLINE
+    MSTL_CONSTEXPR17 const_reverse_iterator crbegin() const noexcept {
         return rbegin();
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR17 const_reverse_iterator crend() const noexcept {
+    MSTL_NODISCARD MSTL_ALWAYS_INLINE
+    MSTL_CONSTEXPR17 const_reverse_iterator crend() const noexcept {
         return rend();
     }
 
-    MSTL_NODISCARD constexpr size_type size() const noexcept {
+    MSTL_NODISCARD MSTL_CONST_FUNCTION MSTL_ALWAYS_INLINE
+    constexpr size_type size() const noexcept {
         return 0;
     }
-    MSTL_NODISCARD constexpr size_type max_size() const noexcept {
+    MSTL_NODISCARD MSTL_CONST_FUNCTION MSTL_ALWAYS_INLINE
+    constexpr size_type max_size() const noexcept {
         return 0;
     }
-    MSTL_NODISCARD constexpr bool empty() const noexcept {
+    MSTL_NODISCARD MSTL_CONST_FUNCTION MSTL_ALWAYS_INLINE
+    constexpr bool empty() const noexcept {
         return true;
     }
 
@@ -306,15 +330,17 @@ public:
         return *data();
     }
 
-    MSTL_NODISCARD MSTL_CONSTEXPR17 T* data() noexcept {
+    MSTL_NODISCARD MSTL_CONST_FUNCTION MSTL_ALWAYS_INLINE
+    MSTL_CONSTEXPR17 T* data() noexcept {
         return nullptr;
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR17 const T* data() const noexcept {
+    MSTL_NODISCARD MSTL_CONST_FUNCTION MSTL_ALWAYS_INLINE
+    MSTL_CONSTEXPR17 const T* data() const noexcept {
         return nullptr;
     }
 
-    MSTL_CONSTEXPR20 void fill(const T&) {}
-    MSTL_CONSTEXPR20 void swap(array&) noexcept {}
+    MSTL_ALWAYS_INLINE MSTL_CONSTEXPR20 void fill(const T&) {}
+    MSTL_ALWAYS_INLINE MSTL_CONSTEXPR20 void swap(array&) noexcept {}
 };
 #if MSTL_SUPPORT_DEDUCTION_GUIDES__
 template <typename First, typename... Rest>
@@ -377,6 +403,22 @@ MSTL_NODISCARD constexpr const T&& get(const array<T, Size>&& arr) noexcept {
     static_assert(Idx < Size, "array index out of bounds");
     return _MSTL move(arr[Idx]);
 }
+
+
+template <typename T, size_t Size>
+struct tuple_size<array<T, Size>> : integral_constant<size_t, Size> { };
+
+template <size_t Idx, typename T, size_t Size>
+struct tuple_element<Idx, array<T, Size>> {
+    static_assert(Idx < Size, "array index is in range");
+    using type = T;
+};
+
+template <typename T, size_t Size>
+MSTL_INLINE17 constexpr size_t tuple_size_v<array<T, Size>> = Size;
+
+template <typename T, size_t Size>
+MSTL_INLINE17 constexpr size_t tuple_size_v<const array<T, Size>> = Size;
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_ARRAY_HPP__

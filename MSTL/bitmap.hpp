@@ -3,7 +3,7 @@
 #include "memory.hpp"
 MSTL_BEGIN_NAMESPACE__
 
-static constexpr int MSTL_WORD_BIT_SIZE = 8 * sizeof(unsigned int);
+static constexpr int MSTL_WORD_BIT_SIZE = 8 * sizeof(uint32_t);
 
 class bitmap;
 
@@ -14,7 +14,7 @@ private:
 
 public:
     MSTL_CONSTEXPR20 bit_reference() = default;
-    MSTL_CONSTEXPR20 bit_reference(unsigned int* x, const unsigned int y) noexcept : ptr_(x), mask_(y) {}
+    MSTL_CONSTEXPR20 bit_reference(uint32_t* x, const uint32_t y) noexcept : ptr_(x), mask_(y) {}
 
     MSTL_CONSTEXPR20 operator bool() const noexcept { return *ptr_ & mask_; }
 
@@ -84,18 +84,18 @@ private:
         }
     }
 
-    template <typename Ref1, enable_if_t<is_bool_v<Ref1>, int> = 0>
+    template <typename Ref1, enable_if_t<is_boolean_v<Ref1>, int> = 0>
     MSTL_NODISCARD MSTL_CONSTEXPR20 Ref1 reference_dispatch() const noexcept {
         return (*ptr_ & (1U << off_)) != 0;
     }
-    template <typename Ref1, enable_if_t<!is_bool_v<Ref1>, int> = 0>
+    template <typename Ref1, enable_if_t<!is_boolean_v<Ref1>, int> = 0>
     MSTL_NODISCARD MSTL_CONSTEXPR20 Ref1 reference_dispatch() const noexcept {
         return Ref1(ptr_, 1U << off_);
     }
 
 public:
     MSTL_CONSTEXPR20 bitmap_iterator() = default;
-    MSTL_CONSTEXPR20 bitmap_iterator(unsigned int* x, unsigned int y) noexcept : ptr_(x), off_(y) {}
+    MSTL_CONSTEXPR20 bitmap_iterator(uint32_t* x, const uint32_t y) noexcept : ptr_(x), off_(y) {}
 
     MSTL_CONSTEXPR20 bitmap_iterator(const iterator& other) noexcept
         : ptr_(other.ptr_), off_(other.off_) {}
@@ -129,10 +129,10 @@ public:
         ptr_ += n / MSTL_WORD_BIT_SIZE;
         n = n % MSTL_WORD_BIT_SIZE;
         if (n < 0) {
-            off_ = static_cast<unsigned int>(n) + MSTL_WORD_BIT_SIZE;
+            off_ = static_cast<uint32_t>(n) + MSTL_WORD_BIT_SIZE;
             --ptr_;
         } else
-            off_ = static_cast<unsigned int>(n);
+            off_ = static_cast<uint32_t>(n);
         return *this;
     }
     MSTL_CONSTEXPR20 bitmap_iterator& operator -=(const difference_type i) noexcept {
@@ -204,7 +204,7 @@ protected:
     MSTL_CONSTEXPR20 static uint32_t* bit_alloc(const size_type n) {
         return allocator_type::allocate((n + MSTL_WORD_BIT_SIZE - 1) / MSTL_WORD_BIT_SIZE);
     }
-    MSTL_CONSTEXPR20 void deallocate() {
+    MSTL_CONSTEXPR20 void deallocate() const {
         if (start_.ptr_)
             allocator_type::deallocate(start_.ptr_, end_of_storage_ - start_.ptr_);
     }
@@ -283,7 +283,7 @@ protected:
             else {
                 const size_type len = size() + max(size(), n);
                 uint32_t* q = bit_alloc(len);
-                iterator i = bit_copy(begin(), position, iterator(q, 0));
+                auto i = bit_copy(begin(), position, iterator(q, 0));
                 i = bit_copy(first, last, i);
                 finish_ = bit_copy(position, end(), i);
                 deallocate();
@@ -292,7 +292,6 @@ protected:
             }
         }
     }
-
 
 public:
     MSTL_CONSTEXPR20 bitmap() noexcept = default;
@@ -309,33 +308,18 @@ public:
         initialize(n);
         fill(start_.ptr_, end_of_storage_, value ? ~0 : 0);
     }
+
     MSTL_CONSTEXPR20 explicit bitmap(const size_type n) {
         initialize(n);
         fill(start_.ptr_, end_of_storage_, 0);
     }
+
     MSTL_CONSTEXPR20 bitmap(const bitmap& x) {
         initialize(x.size());
         bit_copy(x.cbegin(), x.cend(), start_);
     }
 
-    template <class InputIterator>
-    MSTL_CONSTEXPR20 bitmap(InputIterator first, InputIterator last) {
-        initialize_range(first, last, iterator_category(first));
-    }
-    MSTL_CONSTEXPR20 bitmap(const_iterator first, const_iterator last) {
-        size_type n = _MSTL distance(first, last);
-        initialize(n);
-        bit_copy(first, last, start_);
-    }
-    MSTL_CONSTEXPR20 bitmap(const bool* first, const bool* last) {
-        const size_type n = _MSTL distance(first, last);
-        initialize(n);
-        bit_copy(first, last, start_);
-    }
-
-    MSTL_CONSTEXPR20 ~bitmap() { deallocate(); }
-
-    MSTL_CONSTEXPR20 bitmap& operator=(const bitmap& x) {
+    MSTL_CONSTEXPR20 bitmap& operator =(const bitmap& x) {
         if (&x == this) return *this;
         if (x.size() > capacity()) {
             deallocate();
@@ -345,6 +329,26 @@ public:
         finish_ = begin() + static_cast<difference_type>(x.size());
         return *this;
     }
+
+    template <class InputIterator>
+    MSTL_CONSTEXPR20 bitmap(InputIterator first, InputIterator last) {
+        this->initialize_range(first, last);
+    }
+
+    MSTL_CONSTEXPR20 bitmap(const_iterator first, const_iterator last) {
+        size_type n = _MSTL distance(first, last);
+        initialize(n);
+        bit_copy(first, last, start_);
+    }
+
+    MSTL_CONSTEXPR20 bitmap(const bool* first, const bool* last) {
+        const size_type n = _MSTL distance(first, last);
+        initialize(n);
+        bit_copy(first, last, start_);
+    }
+
+    MSTL_CONSTEXPR20 ~bitmap() { deallocate(); }
+
 
     MSTL_NODISCARD MSTL_CONSTEXPR20 iterator begin() noexcept { return start_; }
     MSTL_NODISCARD MSTL_CONSTEXPR20 iterator end() noexcept { return finish_; }
@@ -378,6 +382,7 @@ public:
     MSTL_NODISCARD MSTL_CONSTEXPR20 reference back() { return *(end() - 1); }
     MSTL_NODISCARD MSTL_CONSTEXPR20 const_reference back() const { return *(cend() - 1); }
 
+
     MSTL_CONSTEXPR20 void reserve(const size_type n) {
         if (capacity() < n) {
             uint32_t* q = bit_alloc(n);
@@ -395,7 +400,7 @@ public:
             insert_aux(end(), x);
     }
 
-    MSTL_CONSTEXPR20 iterator insert(iterator position, const bool x = bool()) {
+    MSTL_CONSTEXPR20 iterator insert(const iterator& position, const bool x = bool()) {
         const difference_type n = position - begin();
         if (finish_.ptr_ != end_of_storage_ && position == end())
             *finish_++ = x;
@@ -409,7 +414,7 @@ public:
         insert_range(position, first, last, iterator_category(first));
     }
 
-    MSTL_CONSTEXPR20 void insert(iterator position, const bool* first, const bool* last) {
+    MSTL_CONSTEXPR20 void insert(const iterator& position, const bool* first, const bool* last) {
         if (first == last) return;
         size_type n = distance(first, last);
         if (capacity() - size() >= n) {
@@ -429,7 +434,7 @@ public:
         }
     }
 
-    MSTL_CONSTEXPR20 void insert(iterator position, const size_type n, const bool x) {
+    MSTL_CONSTEXPR20 void insert(const iterator& position, const size_type n, const bool x) {
         if (n == 0) return;
         if (capacity() - size() >= n) {
             bit_copy_backward(position, end(), finish_ + static_cast<difference_type>(n));
@@ -448,18 +453,18 @@ public:
         }
     }
 
-    MSTL_CONSTEXPR20 void insert(iterator pos, const int n, const bool x)  { insert(pos, static_cast<size_type>(n), x); }
-    MSTL_CONSTEXPR20 void insert(iterator pos, const long n, const bool x) { insert(pos, static_cast<size_type>(n), x); }
+    MSTL_CONSTEXPR20 void insert(const iterator& pos, const int n, const bool x)  { insert(pos, static_cast<size_type>(n), x); }
+    MSTL_CONSTEXPR20 void insert(const iterator& pos, const long n, const bool x) { insert(pos, static_cast<size_type>(n), x); }
 
     MSTL_CONSTEXPR20 void pop_back() { --finish_; }
 
-    MSTL_CONSTEXPR20 iterator erase(iterator position) {
+    MSTL_CONSTEXPR20 iterator erase(const iterator& position) {
       if (position + 1 != end())
           bit_copy(position + 1, end(), position);
       --finish_;
       return position;
     }
-    MSTL_CONSTEXPR20 iterator erase(iterator first, iterator last) {
+    MSTL_CONSTEXPR20 iterator erase(const iterator& first, const iterator& last) {
         finish_ = bit_copy(last, end(), first);
         return first;
     }

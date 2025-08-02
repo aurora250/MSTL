@@ -207,6 +207,8 @@ public:
     void swap(self& x) noexcept(is_nothrow_swappable_v<Sequence> && is_nothrow_swappable_v<Compare>) {
         pair_.swap(x.pair_);
     }
+
+    MSTL_NODISCARD const Sequence& get_container() const noexcept { return pair_.value; }
 };
 #ifdef MSTL_SUPPORT_DEDUCTION_GUIDES__
 template <typename Compare, typename Sequence>

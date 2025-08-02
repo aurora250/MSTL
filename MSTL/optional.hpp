@@ -1,6 +1,5 @@
 #ifndef MSTL_OPTIONAL_HPP__
 #define MSTL_OPTIONAL_HPP__
-#include "errorlib.hpp"
 #include "utility.hpp"
 MSTL_BEGIN_NAMESPACE__
 
@@ -13,16 +12,17 @@ static constexpr nullopt_t nullopt;
 
 
 template <typename T>
-struct optional {
+class optional {
     static_assert(!is_any_of_v<remove_cv_t<T>, nullopt_t, _MSTL_TAG inplace_construct_tag>,
         "optional do not contains _MSTL_TAG nullopt_t and inplace_construct_tag types.");
     static_assert(is_object_v<T> && !is_array_v<T>, "optional only contains non-array object types.");
 
-private:
+public:
     MSTL_BUILD_TYPE_ALIAS(T)
     using null_type     = nullopt_t;
     using self          = optional<T>;
 
+private:
     template <typename U>
     using is_valid_optional = bool_constant<!is_any_of_v<
         remove_cv_t<U>, nullopt_t, _MSTL_TAG inplace_construct_tag> && is_object_v<U> && !is_array_v<U>>;

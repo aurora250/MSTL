@@ -1,1 +1,0 @@
- MSTL/libMSTL.a D:/anaconda3/Library/lib/libboost_system.lib D:/anaconda3/Library/lib/libboost_filesystem.lib -lbcrypt -lsynchronization D:/anaconda3/Library/lib/libboost_atomic.lib "D:/MySQL/MySQL Server 8.0/lib/libmysql.lib" -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 

@@ -2,10 +2,6 @@
 #define MSTL_ERRORLIB_H__
 #include "basiclib.hpp"
 #include <cassert>
-#include <iostream>
-#ifdef MSTL_SUPPORT_STACKTRACE__
-#include <boost/stacktrace/stacktrace.hpp>
-#endif
 #ifdef MSTL_SUPPORT_CUDA__
 #include <cuda_runtime.h>
 #endif
@@ -57,11 +53,13 @@ struct Error {
 };
 
 MSTL_ERROR_BUILD_DERIVED_CLASS(MemoryError, Error, "Memory Operation Failed.")
-MSTL_ERROR_BUILD_FINAL_CLASS(StopIterator, MemoryError, "Iterator or Pointer Visit out of Range.")
+MSTL_ERROR_BUILD_FINAL_CLASS(StopIterator, MemoryError, "Iterator or Pointer Access out of Range.")
 MSTL_ERROR_BUILD_FINAL_CLASS(AssertionError, Error, "Assertion Failed.")
 MSTL_ERROR_BUILD_DERIVED_CLASS(TypeCastError, MemoryError, "Type Cast Mismatch.")
 MSTL_ERROR_BUILD_DERIVED_CLASS(ValueError, Error, "Function or Template Argument Invalid.")
 MSTL_ERROR_BUILD_DERIVED_CLASS(LinkError, Error, "External Link Actions Failed.")
+MSTL_ERROR_BUILD_DERIVED_CLASS(DeviceOperateError, Error, "Operate Device Failed.")
+MSTL_ERROR_BUILD_FINAL_CLASS(FileOperateError, DeviceOperateError, "Device File Operation Failed.")
 
 #ifdef MSTL_SUPPORT_CUDA__
 // specialization of MSTL_ERROR_BUILD_FINAL_CLASS for CUDA
@@ -78,23 +76,9 @@ struct CUDAMemoryError final : MemoryError {
 #endif
 
 
-inline void show_data_only(const Error& err, std::ostream& out) {
-	out << "Exception : (" << err.type_ << ") " << err.info_ << std::flush;
-}
-
-inline std::ostream& operator <<(std::ostream& out, const Error& err) {
-	show_data_only(err, out);
-	return out;
-}
-
-
 // throw a new error and print stacktrace of boost is imported.
 inline void Exception(const Error& err){
-	show_data_only(err, std::cerr);
-	std::cerr << "\nSTACK TRACING: " << std::endl;
-#ifdef MSTL_SUPPORT_STACKTRACE__
-	std::cerr << boost::stacktrace::stacktrace() << std::endl;
-#endif
+    std::cerr << "Exception : (" << err.type_ << ") " << err.info_;
 	throw err;
 }
 

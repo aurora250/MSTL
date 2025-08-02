@@ -715,7 +715,7 @@ public:
             this->erase(_MSTL copy(x.start_, x.finish_, start_), finish_);
         }
         else {
-            iterator mid = x.begin() + static_cast<difference_type>(len);
+            iterator mid = x.cbegin() + len;
             _MSTL copy(x.start_, mid, start_);
             this->insert(finish_, mid, x.finish_);
         }

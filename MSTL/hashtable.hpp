@@ -502,7 +502,7 @@ public:
         return pair_.value;
     }
     void max_load_factor(float new_max) noexcept {
-        MSTL_DEBUG_VERIFY(!std::isnan(new_max) && new_max > 0, "hashtable load factor invalid.");
+        MSTL_DEBUG_VERIFY(new_max > 0, "hashtable load factor invalid.");
         pair_.value = new_max;
     }
 

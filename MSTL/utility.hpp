@@ -1,6 +1,7 @@
 #ifndef MSTL_UTILITY_HPP__
 #define MSTL_UTILITY_HPP__
 #include "concepts.hpp"
+#include "errorlib.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T, T... Values>
@@ -13,6 +14,7 @@ struct integer_sequence {
         return sizeof...(Values);
     }
 };
+
 template <typename T, T Size>
 using make_integer_sequence =
 #ifdef MSTL_SUPPORT_MAKE_INTEGER_SEQ__
@@ -20,6 +22,7 @@ __make_integer_seq<integer_sequence, T, Size>;
 #else
 integer_sequence<T, __integer_pack(Size)...>;
 #endif
+
 template <size_t... Values>
 using index_sequence = integer_sequence<size_t, Values...>;
 template <size_t Size>
@@ -200,7 +203,7 @@ struct tuple;
 template <typename>
 struct tuple_size;
 template <typename T>
-constexpr size_t tuple_size_v = tuple_size<T>::value;
+constexpr size_t tuple_size_v = tuple_size<remove_cvref_t<T>>::value;
 
 template <size_t, typename...>
 struct tuple_element;
@@ -1026,6 +1029,107 @@ inline pair<size_t, size_t> MurmurHash_x64(const char* key, const size_t len, co
 
 #endif
 #pragma warning(pop)
+
+
+MSTL_NODISCARD inline float32_t to_float32(const char* str, size_t* idx = nullptr) {
+    int& errref = errno;
+    char* err;
+    errref = 0;
+
+    const float32_t num = std::strtof(str, &err);
+    Exception(!(str == err || errref == ERANGE), TypeCastError("Convert From string Failed."));
+
+    if (idx) *idx = static_cast<size_t>(err - str);
+    return num;
+}
+
+MSTL_NODISCARD inline float64_t to_float64(const char* str, size_t* idx = nullptr) {
+    int& errref = errno;
+    char* err;
+    errref = 0;
+
+    const float64_t num = std::strtod(str, &err);
+    Exception(!(str == err || errref == ERANGE), TypeCastError("Convert From string Failed."));
+
+    if (idx) *idx = static_cast<size_t>(err - str);
+    return num;
+}
+
+MSTL_NODISCARD inline decimal_t to_decimal(const char* str, size_t* idx = nullptr) {
+    int& errref = errno;
+    char* err;
+    errref = 0;
+
+    const decimal_t num = std::strtold(str, &err);
+    Exception(!(str == err || errref == ERANGE), TypeCastError("Convert From string Failed."));
+
+    if (idx) *idx = static_cast<size_t>(err - str);
+    return num;
+}
+
+MSTL_NODISCARD inline int64_t to_int64(const char* str, size_t* idx = nullptr, const int base = 10) {
+    int& errref = errno;
+    char* err;
+    errref = 0;
+
+    const int64_t num = std::strtoll(str, &err, base);
+    Exception(!(str == err || errref == ERANGE), TypeCastError("Convert From string Failed."));
+
+    if (idx) *idx = static_cast<size_t>(err - str);
+    return num;
+}
+
+MSTL_NODISCARD inline uint64_t to_uint64(const char* str, size_t* idx = nullptr, const int base = 10) {
+    int& errref = errno;
+    char* err;
+    errref = 0;
+
+    const uint64_t num = std::strtoull(str, &err, base);
+    Exception(!(str == err || errref == ERANGE), TypeCastError("Convert From string Failed."));
+
+    if (idx) *idx = static_cast<size_t>(err - str);
+    return num;
+}
+
+MSTL_NODISCARD inline int32_t to_int32(const char* str, size_t* idx = nullptr, const int base = 10) {
+    int& errref = errno;
+    char* err;
+    errref = 0;
+
+    const int32_t num = std::strtol(str, &err, base);
+    Exception(!(str == err || errref == ERANGE), TypeCastError("Convert From string Failed."));
+
+    if (idx) *idx = static_cast<size_t>(err - str);
+    return num;
+}
+
+MSTL_NODISCARD inline uint32_t to_uint32(const char* str, size_t* idx = nullptr, const int base = 10) {
+    int& errref = errno;
+    char* err;
+    errref = 0;
+
+    const uint32_t num = std::strtoul(str, &err, base);
+    Exception(!(str == err || errref == ERANGE), TypeCastError("Convert From string Failed."));
+
+    if (idx) *idx = static_cast<size_t>(err - str);
+    return num;
+}
+
+MSTL_NODISCARD inline int16_t to_int16(const char* str, size_t* idx = nullptr, const int base = 10) {
+    return static_cast<int16_t>(to_int32(str, idx, base));
+}
+
+MSTL_NODISCARD inline uint16_t to_uint16(const char* str, size_t* idx = nullptr, const int base = 10) {
+    return static_cast<int16_t>(to_uint32(str, idx, base));
+}
+
+MSTL_NODISCARD inline int8_t to_int8(const char* str, size_t* idx = nullptr, const int base = 10) {
+    return static_cast<int8_t>(to_int32(str, idx, base));
+}
+
+MSTL_NODISCARD inline uint8_t to_uint8(const char* str, size_t* idx = nullptr, const int base = 10) {
+    return static_cast<uint8_t>(to_uint32(str, idx, base));
+}
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_UTILITY_HPP__

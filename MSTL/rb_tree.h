@@ -1,6 +1,6 @@
 #ifndef MSTL_RB_TREE_H__
 #define MSTL_RB_TREE_H__
-#include "algo.hpp"
+#include "memory.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 static constexpr bool RB_TREE_RED__ = false;

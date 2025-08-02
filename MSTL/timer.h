@@ -62,6 +62,10 @@ private:
     static size_t timer_id_;
     _MSTL set<node_type> timer_set_;
 
+    static size_t generate_id() {
+        return ++timer_id_;
+    }
+
 public:
     timer() = default;
     ~timer() = default;
@@ -72,10 +76,6 @@ public:
         const auto sub
             = std::chrono::duration_cast<std::chrono::microseconds>(sc.time_since_epoch());
         return sub.count();
-    }
-
-    static size_t generate_id() {
-        return ++timer_id_;
     }
 
     node_type add(std::time_t ms, const func_type &func) {

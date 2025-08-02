@@ -1,7 +1,6 @@
 #ifndef MSTL_STRING_VIEW_HPP__
 #define MSTL_STRING_VIEW_HPP__
 #include "algobase.hpp"
-#include "bitmap.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename CharT, typename IntT>

@@ -83,8 +83,9 @@ struct check {
     MSTL_CONSTEXPR20 check(const output& out) : out_(out) {
 #ifdef MSTL_COMPILER_GNUC__
         auto deleter = [](char* p) { if (p) free(p); };
+        using FinT = remove_function_qualifiers_t<T>;
         _MSTL unique_ptr<char, decltype(deleter)> real_name {
-            ::abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, nullptr), deleter
+            ::abi::__cxa_demangle(typeid(FinT).name(), nullptr, nullptr, nullptr), deleter
         };
         out_(real_name.get());
 #else

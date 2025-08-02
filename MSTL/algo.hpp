@@ -3,7 +3,7 @@
 #include "mathlib.hpp"
 #include "memory.hpp"
 #include "heap.hpp"
-#include <random>
+#include "random.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator, typename Predicate, enable_if_t<is_ranges_input_iter_v<Iterator>, int> = 0>
@@ -905,16 +905,18 @@ MSTL_CONSTEXPR20 bool prev_permutation(Iterator first, Iterator last) {
 	return _MSTL prev_permutation(first, last, _MSTL less<iter_val_t<Iterator>>());
 }
 
+
+// based on Fisher-Yates algorithm to shuffle elements
 template <typename Iterator, enable_if_t<is_ranges_rnd_iter_v<Iterator>, int> = 0>
 void shuffle(Iterator first, Iterator last) {
 	if (first == last) return;
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	for (Iterator i = _MSTL next(first); i != last; ++i) {
-		auto dist = std::uniform_int_distribution<decltype(i - first)>(0, i - first);
-		Iterator j = _MSTL next(first, dist(gen));
-		_MSTL iter_swap(i, j);
-	}
+    _MSTL random rng;
+    for (Iterator i = _MSTL next(first); i != last; ++i) {
+        auto distance = _MSTL distance(first, i);
+        auto random_idx = rng.next_int(0, static_cast<int>(distance));
+        Iterator j = _MSTL next(first, random_idx);
+        _MSTL iter_swap(i, j);
+    }
 }
 
 template <typename Iterator, typename Generator, enable_if_t<is_ranges_rnd_iter_v<Iterator>, int> = 0>

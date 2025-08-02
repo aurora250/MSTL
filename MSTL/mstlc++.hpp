@@ -4,6 +4,7 @@
 #include "functional.hpp"
 #include "tuple.hpp"
 #include "sort.hpp"
+#include "bitmap.hpp"
 #include "any.hpp"
 #include "array.hpp"
 #include "list.hpp"
@@ -14,12 +15,12 @@
 #include "variant.hpp"
 #include "optional.hpp"
 
-#include "detailof.hpp"
 #include "trace_memory.hpp"
 #include "timer.h"
 #include "dns_request.hpp"
 #include "thread_pool.h"
 #include "database_pool.h"
 #include "undef_cmacro.hpp"
+#include "print.hpp"
 
 #endif // MSTL_MSTLCPP_HPP__
