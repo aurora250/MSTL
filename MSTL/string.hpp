@@ -57,6 +57,75 @@ inline namespace string_operator {
 #endif // MSTL_VERSION_17__
 
 
+inline string wstring_to_utf8(const wchar_t* str) {
+    string utf8_str;
+    if (!str) return utf8_str;
+
+    size_t len = char_traits<wchar_t>::length(str);
+#ifdef MSTL_PLATFORM_WINDOWS__
+    const int size_needed = WideCharToMultiByte(CP_UTF8, 0, str,
+        static_cast<int>(len), nullptr, 0, nullptr, nullptr);
+    if (size_needed <= 0) return utf8_str;
+
+    utf8_str.resize(size_needed);
+    WideCharToMultiByte(CP_UTF8, 0, str,
+        static_cast<int>(len), &utf8_str[0], size_needed, nullptr, nullptr);
+#else
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+    utf8_str = conv.to_bytes(str, str + len);
+#endif
+    return _MSTL move(utf8_str);
+}
+
+inline string u16string_to_utf8(const char16_t* str) {
+    return wstring_to_utf8(reinterpret_cast<const wchar_t*>(str));
+}
+
+inline string u32string_to_utf8(const char32_t* str) {
+    string utf8_str;
+    if (!str) return utf8_str;
+
+    size_t len = char_traits<char32_t>::length(str);
+#ifdef MSTL_PLATFORM_WINDOWS__
+    wstring utf16_buf;
+    // In the worst case, each UTF-32 character needs to be split into 2 UTF-16 surrogate pairs.
+    utf16_buf.reserve(len * 2);
+    for (size_t i = 0; i < len; ++i) {
+        char32_t cp = str[i];
+        if (cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF)) {
+            utf16_buf.push_back(0xFFFD);
+            continue;
+        }
+        if (cp <= 0xFFFF) {  // BMP
+            utf16_buf.push_back(static_cast<wchar_t>(cp));
+        } else {
+            cp -= 0x10000;
+            utf16_buf.push_back(static_cast<wchar_t>((cp >> 10) + 0xD800));
+            utf16_buf.push_back(static_cast<wchar_t>((cp & 0x3FF) + 0xDC00));
+        }
+    }
+    const int size_needed = WideCharToMultiByte(CP_UTF8, 0,
+        utf16_buf.data(), static_cast<int>(utf16_buf.size()),
+        nullptr, 0, nullptr, nullptr
+    );
+    if (size_needed <= 0) return utf8_str;
+
+    utf8_str.resize(size_needed);
+    const int written = WideCharToMultiByte(CP_UTF8, 0,
+        utf16_buf.data(), static_cast<int>(utf16_buf.size()),
+        &utf8_str[0], size_needed, nullptr, nullptr
+    );
+    if (written != size_needed) {
+        utf8_str.resize(written > 0 ? written : 0);
+    }
+#else
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+    utf8_str = conv.to_bytes(str, str + len);
+#endif
+    return _MSTL move(utf8_str);
+}
+
+
 #ifndef MSTL_DATA_BUS_WIDTH_64__
 template <typename CharT, typename UT, enable_if_t<(sizeof(UT) > 4), int> = 0>
 inline void __uint_to_buff_aux(CharT* riter, UT& ux) {

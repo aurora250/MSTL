@@ -76,17 +76,22 @@ using conditional_t = typename conditional<Test, T1, T2>::type;
 
 template <typename T>
 struct negation : bool_constant<!static_cast<bool>(T::value)> {};
+
+#ifdef MSTL_VERSION_14__
 template <typename T>
 MSTL_INLINE17 constexpr bool negation_v = negation<T>::value;
+#endif
 
 
 template <typename, typename>
-MSTL_INLINE17 constexpr bool is_same_v = false;
+struct is_same : false_type {};
 template <typename T>
-MSTL_INLINE17 constexpr bool is_same_v<T, T> = true;
+struct is_same<T, T> : true_type {};
 
+#ifdef MSTL_VERSION_14__
 template <typename T1, typename T2>
-struct is_same : bool_constant<is_same_v<T1, T2>> {};
+MSTL_INLINE17 constexpr bool is_same_v = is_same<T1, T2>::value;
+#endif
 
 
 template <typename T>
@@ -103,6 +108,7 @@ MSTL_INLINE17 constexpr bool is_any_of_v = (is_same_v<T, Types> || ...);
 template <typename T, typename... Types>
 struct is_any_of : bool_constant<is_any_of_v<T, Types...>> {};
 #else
+
 template <typename T, typename... Types>
 struct is_any_of : false_type {};
 template <typename T, typename U>
@@ -110,9 +116,13 @@ struct is_any_of<T, U> : is_same<T, U> {};
 
 template <typename T, typename U, typename... Types>
 struct is_any_of<T, U, Types...> 
-    : conditional<is_same_v<T, U>, true_type, is_any_of<T, Types...>>::type {};
+    : conditional<is_same<T, U>::value, true_type, is_any_of<T, Types...>>::type {};
+
+#ifdef MSTL_VERSION_14__
 template <typename T, typename... Types>
 MSTL_INLINE17 constexpr bool is_any_of_v = is_any_of<T, Types...>::value;
+#endif
+
 #endif // MSTL_VERSION_17__
 
 
@@ -136,8 +146,10 @@ struct disjunction<First, Rest...>
     : __disjunction_aux<static_cast<bool>(First::value), First, Rest...>::type {
 };
 
+#ifdef MSTL_VERSION_14__
 template <typename... Args>
 MSTL_INLINE17 constexpr bool disjunction_v = disjunction<Args...>::value;
+#endif
 
 
 // Test is false, stop recursion and set type
@@ -160,8 +172,10 @@ struct conjunction<First, Rest...>
     : __conjunction_aux<static_cast<bool>(First::value), First, Rest...>::type {
 };
 
+#ifdef MSTL_VERSION_14__
 template <typename... Args>
 MSTL_INLINE17 constexpr bool conjunction_v = conjunction<Args...>::value;
+#endif
 
 
 template <typename T>
@@ -345,6 +359,15 @@ struct remove_function_qualifiers<Ret(Args...) const> {
     using type = Ret(Args...);
 };
 template <typename Ret, typename... Args>
+struct remove_function_qualifiers<Ret(Args...) volatile> {
+    using type = Ret(Args...);
+};
+template <typename Ret, typename... Args>
+struct remove_function_qualifiers<Ret(Args...) const volatile> {
+    using type = Ret(Args...);
+};
+#ifdef MSTL_VERSION_17__
+template <typename Ret, typename... Args>
 struct remove_function_qualifiers<Ret(Args...) noexcept> {
     using type = Ret(Args...);
 };
@@ -352,30 +375,45 @@ template <typename Ret, typename... Args>
 struct remove_function_qualifiers<Ret(Args...) const noexcept> {
     using type = Ret(Args...);
 };
+template <typename Ret, typename... Args>
+struct remove_function_qualifiers<Ret(Args...) volatile noexcept> {
+    using type = Ret(Args...);
+};
+template <typename Ret, typename... Args>
+struct remove_function_qualifiers<Ret(Args...) const volatile noexcept> {
+    using type = Ret(Args...);
+};
+#endif
 
 template <typename T>
 using remove_function_qualifiers_t = typename remove_function_qualifiers<T>::type;
 
 
 template <typename T>
-MSTL_INLINE17 constexpr bool is_void_v = is_same_v<remove_cv_t<T>, void>;
+struct is_void : bool_constant<is_same<remove_cv_t<T>, void>::value> {};
+
+#ifdef MSTL_VERSION_14__
 template <typename T>
-struct is_void : bool_constant<is_void_v<T>> {};
+MSTL_INLINE17 constexpr bool is_void_v = is_void<T>::value;
+#endif
 
 template <typename...>
 using void_t = void;
 
 
 template <typename T>
-MSTL_INLINE17 constexpr bool is_character_v = is_any_of_v<remove_cvref_t<T>,
+struct is_character : bool_constant<is_any_of<remove_cvref_t<T>,
     char, signed char, unsigned char, wchar_t,
 #ifdef MSTL_VERSION_20__
     char8_t,
 #endif
     char16_t, char32_t
->;
+>::value> {};
+
+#ifdef MSTL_VERSION_14__
 template <typename T>
-struct is_character : bool_constant<is_character_v<T>> {};
+MSTL_INLINE17 constexpr bool is_character_v = is_character<T>::value;
+#endif
 
 
 template <typename T>
@@ -656,7 +694,8 @@ struct is_volatile : bool_constant<is_volatile_v<T>> {};
 
 // function cannot be const qualified.
 template <typename T>
-MSTL_INLINE17 constexpr bool is_function_v = !is_const_v<const T> && !is_reference_v<T>;
+MSTL_INLINE17 constexpr bool is_function_v =
+    !is_const_v<const remove_function_qualifiers_t<T>> && !is_reference_v<remove_function_qualifiers_t<T>>;
 template <typename T>
 struct is_function : bool_constant<is_function_v<T>> {};
 
@@ -684,7 +723,7 @@ struct is_ctype_string : bool_constant<is_ctype_string_v<T>> {};
 
 
 template <typename T>
-using char_of_string_t = remove_all_extents_t<remove_pointer_t<remove_cvref_t<T>>>;
+using char_of_string_t = remove_cv_t<remove_all_extents_t<remove_pointer_t<remove_cvref_t<T>>>>;
 
 template <typename T>
 struct char_of_string {

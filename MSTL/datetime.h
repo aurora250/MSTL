@@ -3,6 +3,11 @@
 #include "string.hpp"
 MSTL_BEGIN_NAMESPACE__
 
+MSTL_INLINE17 constexpr int32_t month_day[13] = { 0,
+    31, 28, 31, 30, 31, 30,
+    31, 31, 30, 31, 30, 31
+};
+
 class date {
 public:
     using date_type = int32_t;
@@ -11,11 +16,6 @@ private:
     date_type year_ = 1970;
     date_type month_ = 1;
     date_type day_ = 1;
-
-    static constexpr date_type month_day[13] = { 0,
-            31, 28, 31, 30, 31, 30,
-            31, 31, 30, 31, 30, 31
-        };
 
 public:
     constexpr explicit date(const date_type year = 1970,
@@ -165,7 +165,7 @@ public:
         return count * flag;
     }
 
-    MSTL_NODISCARD MSTL_CONSTEXPR20 string to_string() const noexcept {
+    MSTL_NODISCARD string to_string() const noexcept {
         char buf[11];
         std::snprintf(buf, sizeof(buf), "%04d-%02d-%02d",
             static_cast<int>(year_),

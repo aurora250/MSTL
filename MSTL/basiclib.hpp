@@ -215,6 +215,11 @@
 	#else
 		#define MSTL_CONSTEXPR14 inline
 	#endif // MSTL_VERSION_14__
+    #ifdef MSTL_VERSION_11__
+        #define MSTL_CONSTEXPR11 MSTL_CONSTEXPR
+    #else
+        #define MSTL_CONSTEXPR11 inline
+    #endif // MSTL_VERSION_11__
 #else
 	#define MSTL_CONSTEXPR inline
 	#define MSTL_CONSTEXPR23 inline
@@ -509,38 +514,34 @@ MSTL_INLINE17 constexpr size_t MEMORY_BIG_ALLOC_SENTINEL = 0xFAFAFAFAUL;
 
 
 inline void set_utf8_console() {
-    try {
 #ifdef MSTL_PLATFORM_WINDOWS__
-        SetConsoleOutputCP(CP_UTF8);
-        SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+    _setmode(_fileno(stdout), _O_BINARY);
+    _setmode(_fileno(stderr), _O_BINARY);
+    _setmode(_fileno(stdin), _O_BINARY);
 #endif
-        std::ios_base::sync_with_stdio(false);
-        static constexpr const char* locales[] = {"en_US.UTF-8", "C.UTF-8", "zh_CN.UTF-8", "en_GB.UTF-8"};
-        bool locale_set = false;
-        for (const char* loc : locales) {
-            try {
-                std::locale::global(std::locale(loc));
-                locale_set = true;
-                break;
-            } catch (...) {}
-        }
-        if (!locale_set)
+    std::setlocale(LC_ALL, "en_US.utf8");
+    std::ios_base::sync_with_stdio(false);
+    try {
+        std::locale::global(std::locale("en_US.utf8"));
+    } catch(...) {
+        try {
             std::locale::global(std::locale(""));
-        std::cout.imbue(std::locale());
-        std::cerr.imbue(std::locale());
-        std::wcout.imbue(std::locale());
-        std::wcerr.imbue(std::locale());
-    } catch (...) {
-    	std::locale::global(std::locale(""));
-    	std::cout.imbue(std::locale());
-        std::cerr.imbue(std::locale());
-        std::wcout.imbue(std::locale());
-        std::wcerr.imbue(std::locale());
+        } catch(...) {}
     }
+    std::cout.imbue(std::locale());
+    std::cerr.imbue(std::locale());
+    std::wcout.imbue(std::locale());
+    std::wcerr.imbue(std::locale());
+    std::cout.flush();
+    std::cerr.flush();
+    std::wcout.flush();
+    std::wcerr.flush();
 }
 
 
-MSTL_INLINE17 constexpr uint32_t MSTL_SPLIT_LENGTH = 15U;
+MSTL_INLINE17 constexpr uint32_t MSTL_SPLIT_LENGTH = 25U;
 
 inline void split_line(std::ostream& out = std::cout,
     uint32_t size = MSTL_SPLIT_LENGTH, const char split = '-') {
@@ -565,28 +566,28 @@ inline size_t get_available_memory() {
 }
 
 
-MSTL_CONST_FUNCTION constexpr bool is_alpha_or_number(const char c) noexcept {
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_alpha_or_number(const char c) noexcept {
 	const auto u = static_cast<byte_t>(c);
 	// 0x0000000080007FFF marked places of A-Z and a-z
 	// 0x00000000000003FF marked places of 0-9
 	return (u < 128) && ((0x000003FF & (1u << (u - '0'))) || (0x80007FFF & (1u << (u - 'A'))));
 }
 
-MSTL_CONST_FUNCTION constexpr bool is_alpha(const char c) noexcept {
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_alpha(const char c) noexcept {
 	if (c < 'A') return false;
 	if (c <= 'Z') return true;
 	if (c < 'a') return false;
 	return c <= 'z';
 }
 
-MSTL_CONST_FUNCTION constexpr bool is_digit(const char c) noexcept {
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_digit(const char c) noexcept {
 	if (c < '0') return false;
 	if (c > '9') return false;
 	return true;
 }
 
 // case characters to lower.
-MSTL_CONST_FUNCTION constexpr char to_lowercase(const char c) noexcept {
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 char to_lowercase(const char c) noexcept {
 	constexpr size_t diff = 'a' - 'A';
 	if (c >= 'A' && c <= 'Z')
 		return static_cast<char>(c - diff);
@@ -594,7 +595,7 @@ MSTL_CONST_FUNCTION constexpr char to_lowercase(const char c) noexcept {
 }
 
 // case characters to upper.
-MSTL_CONST_FUNCTION constexpr char to_uppercase(const char c) noexcept {
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 char to_uppercase(const char c) noexcept {
 	constexpr size_t diff = 'a' - 'A';
 	if (c >= 'a' && c <= 'z')
 		return static_cast<char>(c + diff);
@@ -605,7 +606,7 @@ MSTL_CONST_FUNCTION constexpr char to_uppercase(const char c) noexcept {
 // copy from source memory to destination memory with specific length.
 // if any parameter pointer is nullptr, return nullptr.
 // it`s similar with std::memcpy.
-constexpr void* memory_copy(void* MSTL_RESTRICT dest, const void* MSTL_RESTRICT src, size_t byte) noexcept {
+MSTL_CONSTEXPR14 void* memory_copy(void* MSTL_RESTRICT dest, const void* MSTL_RESTRICT src, size_t byte) noexcept {
 	if(dest == nullptr || src == nullptr) return nullptr;
 	void* res = dest;
 	while (byte--) {
@@ -617,7 +618,7 @@ constexpr void* memory_copy(void* MSTL_RESTRICT dest, const void* MSTL_RESTRICT 
 }
 
 // mempcpy
-constexpr void* memory_copy_offset(void* MSTL_RESTRICT dest, const void* MSTL_RESTRICT src, size_t byte) noexcept {
+MSTL_CONSTEXPR14 void* memory_copy_offset(void* MSTL_RESTRICT dest, const void* MSTL_RESTRICT src, size_t byte) noexcept {
 	if(dest == nullptr || src == nullptr) return nullptr;
 	while (byte--) {
 		*static_cast<char*>(dest) = *static_cast<const char*>(src);
@@ -630,7 +631,7 @@ constexpr void* memory_copy_offset(void* MSTL_RESTRICT dest, const void* MSTL_RE
 // copy from source memory to destination memory with specific length if not encounter target character.
 // if any parameter pointer is nullptr, return nullptr.
 // it`s similar with std::memccpy.
-constexpr void* memory_char_copy(void* dest, const void* src, const int chr, size_t byte) noexcept {
+MSTL_CONSTEXPR14 void* memory_char_copy(void* dest, const void* src, const int chr, size_t byte) noexcept {
 	if (dest == nullptr || src == nullptr) return nullptr;
 	const auto target = static_cast<byte_t>(chr);
 	while (byte--) {
@@ -648,7 +649,7 @@ constexpr void* memory_char_copy(void* dest, const void* src, const int chr, siz
 // return a positive number when left-hand memory is greater, a negative number when right-hand memory is greater
 // and return zero when they are equal in specific length.
 // it`s similar with std::memcmp.
-MSTL_PURE_FUNCTION constexpr int memory_compare(const void* lh, const void* rh, size_t byte) noexcept {
+MSTL_PURE_FUNCTION MSTL_CONSTEXPR14 int memory_compare(const void* lh, const void* rh, size_t byte) noexcept {
     if (lh == nullptr && rh == nullptr) return 0;
 	if (lh == nullptr) return -1;
     if (rh == nullptr) return 1;
@@ -666,7 +667,7 @@ MSTL_PURE_FUNCTION constexpr int memory_compare(const void* lh, const void* rh, 
 // return a positive number when left-hand memory is greater, a negative number when right-hand memory is greater
 // and return zero when they are equal in specific length.
 // it`s similar with std::memicmp.
-MSTL_PURE_FUNCTION constexpr int memory_compare_ignore_case(const void* ptr1, const void* ptr2, size_t count) noexcept {
+MSTL_PURE_FUNCTION MSTL_CONSTEXPR14 int memory_compare_ignore_case(const void* ptr1, const void* ptr2, size_t count) noexcept {
 	if ((ptr1 == nullptr && ptr2 == nullptr) || count == 0) return 0;
 	if (ptr1 == nullptr) return -1;
 	if (ptr2 == nullptr) return 1;
@@ -686,7 +687,7 @@ MSTL_PURE_FUNCTION constexpr int memory_compare_ignore_case(const void* ptr1, co
 // return a pointer which is pointing to the first place that equal to target value in a specific length.
 // if parameter pointer is nullptr, return nullptr. if not found, return nullptr.
 // it`s similar with std::memchr.
-MSTL_PURE_FUNCTION constexpr void* memory_char(const void* dest, const int value, size_t byte) noexcept {
+MSTL_PURE_FUNCTION MSTL_CONSTEXPR14 void* memory_char(const void* dest, const int value, size_t byte) noexcept {
 	if(dest == nullptr) return nullptr;
 	auto p = static_cast<const char *>(dest);
 	while (byte--) {
@@ -700,7 +701,7 @@ MSTL_PURE_FUNCTION constexpr void* memory_char(const void* dest, const int value
 //
 // if any parameter pointer is nullptr, return nullptr.
 // it`s similar with std::memmove.
-constexpr void* memory_move(void* dest, const void* src, size_t byte) noexcept {
+MSTL_CONSTEXPR14 void* memory_move(void* dest, const void* src, size_t byte) noexcept {
 	if(dest == nullptr || src == nullptr) return nullptr;
 	void* res = dest;
 	if (dest < src) {
@@ -721,7 +722,7 @@ constexpr void* memory_move(void* dest, const void* src, size_t byte) noexcept {
 // fill the destination memory with target value in the specific length.
 // if parameter pointer is nullptr, return nullptr.
 // it`s similar with std::memset.
-constexpr void* memory_set(void* dest, const int value, size_t byte) noexcept {
+MSTL_CONSTEXPR14 void* memory_set(void* dest, const int value, size_t byte) noexcept {
 	if(dest == nullptr) return nullptr;
 	void* ret = static_cast<char *>(dest);
 	while (byte--) {
@@ -734,7 +735,7 @@ constexpr void* memory_set(void* dest, const int value, size_t byte) noexcept {
 // clear the destination memory with zero in the specific length.
 // if parameter pointer is nullptr, do nothing.
 // it`s similar with std::bzero.
-constexpr void memory_zero(void* dest, const size_t byte) noexcept {
+MSTL_CONSTEXPR14 void memory_zero(void* dest, const size_t byte) noexcept {
 	if (dest == nullptr) return;
 	const auto ptr = static_cast<char*>(dest);
 	for (size_t i = 0; i < byte; ++i) {
@@ -758,7 +759,7 @@ MSTL_CONSTEXPR20 void explicit_memory_zero(void* ptr, size_t size) noexcept {
 }
 
 // std::memmem
-constexpr void* memory_in_memory(void* data, size_t data_len, const void* pattern, size_t pattern_len) noexcept {
+MSTL_CONSTEXPR14 void* memory_in_memory(void* data, size_t data_len, const void* pattern, size_t pattern_len) noexcept {
 	if (data == nullptr || pattern == nullptr || data_len == 0 || pattern_len == 0 || pattern_len > data_len) {
 		return nullptr;
 	}
@@ -777,7 +778,7 @@ constexpr void* memory_in_memory(void* data, size_t data_len, const void* patter
 }
 
 // memfrob
-constexpr void* memory_frobnicate(void* s, const size_t n) {
+MSTL_CONSTEXPR14 void* memory_frobnicate(void* s, const size_t n) {
 	auto *p = static_cast<byte_t *>(s);
 	for (size_t i = 0; i < n; i++) {
 		p[i] ^= 42;
@@ -789,7 +790,7 @@ constexpr void* memory_frobnicate(void* s, const size_t n) {
 // copy from source string to destination string.
 // if any parameter pointer is nullptr, return nullptr.
 // it`s similar with std::strcpy.
-constexpr char* string_copy(char* MSTL_RESTRICT dest, const char* MSTL_RESTRICT src) noexcept {
+MSTL_CONSTEXPR14 char* string_copy(char* MSTL_RESTRICT dest, const char* MSTL_RESTRICT src) noexcept {
 	if(dest == nullptr || src == nullptr) return nullptr;
 	char* ret = dest;
 	while (*src != '\0') {
@@ -802,7 +803,7 @@ constexpr char* string_copy(char* MSTL_RESTRICT dest, const char* MSTL_RESTRICT 
 }
 
 // stpcpy
-constexpr char* string_copy_offset(char* MSTL_RESTRICT dest, const char* MSTL_RESTRICT src) noexcept {
+MSTL_CONSTEXPR14 char* string_copy_offset(char* MSTL_RESTRICT dest, const char* MSTL_RESTRICT src) noexcept {
 	if(dest == nullptr || src == nullptr) return nullptr;
 	while (*src != '\0') {
 		*dest = *src;
@@ -816,7 +817,7 @@ constexpr char* string_copy_offset(char* MSTL_RESTRICT dest, const char* MSTL_RE
 // concatenate source string to the tail of destination string.
 // if any parameter pointer is nullptr, return nullptr.
 // it`s similar with std::strcat.
-constexpr char* string_concatenate(char* MSTL_RESTRICT dest, const char* MSTL_RESTRICT src) noexcept {
+MSTL_CONSTEXPR14 char* string_concatenate(char* MSTL_RESTRICT dest, const char* MSTL_RESTRICT src) noexcept {
 	if (dest == nullptr || src == nullptr) return nullptr;
 	char* original_dest = dest;
 	while (*dest != '\0')
@@ -835,7 +836,7 @@ constexpr char* string_concatenate(char* MSTL_RESTRICT dest, const char* MSTL_RE
 // return a positive number when left-hand string is greater, a negative number when right-hand string is greater
 // and return zero when they are equal in specific length.
 // it`s similar with std::strcmp.
-MSTL_PURE_FUNCTION constexpr int string_compare(const char* dest, const char* src) noexcept {
+MSTL_PURE_FUNCTION MSTL_CONSTEXPR14 int string_compare(const char* dest, const char* src) noexcept {
 	if (dest == nullptr && src == nullptr) return 0;
 	if (dest == nullptr) return -1;
 	if (src == nullptr) return 1;
@@ -853,7 +854,7 @@ MSTL_PURE_FUNCTION constexpr int string_compare(const char* dest, const char* sr
 // return a positive number when left-hand string is greater, a negative number when right-hand string is greater
 // and return zero when they are equal in specific length.
 // it`s similar with std::stricmp.
-MSTL_PURE_FUNCTION constexpr int string_compare_ignore_case(const char* s1, const char* s2) {
+MSTL_PURE_FUNCTION MSTL_CONSTEXPR14 int string_compare_ignore_case(const char* s1, const char* s2) {
 	if (s1 == nullptr && s2 == nullptr) return 0;
 	if (s1 == nullptr) return -1;
 	if (s2 == nullptr) return 1;
@@ -869,7 +870,7 @@ MSTL_PURE_FUNCTION constexpr int string_compare_ignore_case(const char* s1, cons
 	return *s1 == *s2 ? 0 : *s1 < *s2 ? -1 : 1;
 }
 
-MSTL_PURE_FUNCTION constexpr int string_compare_natural(const char* s1, const char* s2) noexcept {
+MSTL_PURE_FUNCTION MSTL_CONSTEXPR14 int string_compare_natural(const char* s1, const char* s2) noexcept {
 	if (s1 == nullptr && s2 == nullptr) return 0;
 	if (s1 == nullptr) return -1;
 	if (s2 == nullptr) return 1;
@@ -916,7 +917,7 @@ MSTL_PURE_FUNCTION constexpr int string_compare_natural(const char* s1, const ch
 
 // return the length of string when the loop encounter '\0'
 // it`s similar with std::strlen.
-MSTL_PURE_FUNCTION constexpr size_t string_length(const char* str) noexcept {
+MSTL_PURE_FUNCTION MSTL_CONSTEXPR14 size_t string_length(const char* str) noexcept {
 	const char* p = str;
 	while (*p != '\0')
 		++p;
@@ -926,7 +927,7 @@ MSTL_PURE_FUNCTION constexpr size_t string_length(const char* str) noexcept {
 // return a pointer which is pointing to the first place that equal to target character.
 // if parameter pointer is nullptr, return nullptr. if not found, return nullptr.
 // it`s similar with std::strchr.
-MSTL_PURE_FUNCTION constexpr const char* string_char(const char* str, const char chr) noexcept {
+MSTL_PURE_FUNCTION MSTL_CONSTEXPR14 const char* string_char(const char* str, const char chr) noexcept {
 	if (str == nullptr) return nullptr;
 	while (*str != '\0') {
 		if (*str == static_cast<char>(chr))
@@ -942,7 +943,7 @@ MSTL_PURE_FUNCTION constexpr const char* string_char(const char* str, const char
 // return a pointer which is pointing to the last place that equal to target character.
 // if parameter pointer is nullptr, return nullptr. if not found, return nullptr.
 // it`s similar with std::strchr.
-MSTL_PURE_FUNCTION constexpr const char* string_last_char(const char* str, const char chr) noexcept {
+MSTL_PURE_FUNCTION MSTL_CONSTEXPR14 const char* string_last_char(const char* str, const char chr) noexcept {
 	if (str == nullptr) return nullptr;
 	const char* last = nullptr;
 
@@ -957,7 +958,7 @@ MSTL_PURE_FUNCTION constexpr const char* string_last_char(const char* str, const
 // return the index which is pointing to the last place that equal to target character.
 // if any parameter pointer is nullptr, return zero. if not found, return nullptr.
 // it`s similar with std::strspn.
-MSTL_PURE_FUNCTION constexpr size_t string_span_in(const char* str, const char* accept) noexcept {
+MSTL_PURE_FUNCTION MSTL_CONSTEXPR14 size_t string_span_in(const char* str, const char* accept) noexcept {
 	if (str == nullptr || *str == '\0' || accept == nullptr || *accept == '\0')
 		return 0;
 
@@ -979,7 +980,7 @@ MSTL_PURE_FUNCTION constexpr size_t string_span_in(const char* str, const char* 
 	return static_cast<size_t>(str - original_str);
 }
 
-MSTL_PURE_FUNCTION constexpr size_t string_span_not_in(const char* str, const char* reject) noexcept {
+MSTL_PURE_FUNCTION MSTL_CONSTEXPR14 size_t string_span_not_in(const char* str, const char* reject) noexcept {
 	if (str == nullptr || *str == '\0') return 0;
 	if (reject == nullptr || *reject == '\0') {
 		size_t len = 0;
@@ -1000,7 +1001,7 @@ MSTL_PURE_FUNCTION constexpr size_t string_span_not_in(const char* str, const ch
 	return static_cast<size_t>(str - original_str);
 }
 
-constexpr char* string_to_lowercase(char* str) noexcept {
+MSTL_CONSTEXPR14 char* string_to_lowercase(char* str) noexcept {
 	if (str == nullptr) return nullptr;
 
 	constexpr size_t diff = 'a' - 'A';
@@ -1013,7 +1014,7 @@ constexpr char* string_to_lowercase(char* str) noexcept {
 	return original;
 }
 
-constexpr char* string_to_uppercase(char* str) noexcept {
+MSTL_CONSTEXPR14 char* string_to_uppercase(char* str) noexcept {
 	if (str == nullptr) return nullptr;
 
 	constexpr size_t diff = 'a' - 'A';
@@ -1027,7 +1028,7 @@ constexpr char* string_to_uppercase(char* str) noexcept {
 }
 
 // same to std::strpbrk
-MSTL_PURE_FUNCTION constexpr char* string_find_any(char* str, const char* accept) noexcept {
+MSTL_PURE_FUNCTION MSTL_CONSTEXPR14 char* string_find_any(char* str, const char* accept) noexcept {
 	if (str == nullptr || *str == '\0' || accept == nullptr || *accept == '\0')
 		return nullptr;
 
@@ -1043,7 +1044,7 @@ MSTL_PURE_FUNCTION constexpr char* string_find_any(char* str, const char* accept
 	return nullptr;
 }
 
-MSTL_PURE_FUNCTION constexpr const char* string_in_string(const char* dest, const char* src) noexcept {
+MSTL_PURE_FUNCTION MSTL_CONSTEXPR14 const char* string_in_string(const char* dest, const char* src) noexcept {
 	if(dest == nullptr || src == nullptr) return nullptr;
 	const char* cur = dest;
 	while (*cur) {
@@ -1059,7 +1060,7 @@ MSTL_PURE_FUNCTION constexpr const char* string_in_string(const char* dest, cons
 	return nullptr;
 }
 
-MSTL_PURE_FUNCTION constexpr const char* string_in_string_ignored_case(const char* dest, const char* src) noexcept {
+MSTL_PURE_FUNCTION MSTL_CONSTEXPR14 const char* string_in_string_ignored_case(const char* dest, const char* src) noexcept {
 	if (dest == nullptr || src == nullptr) return nullptr;
 	if (*src == '\0') return dest;
 
@@ -1155,7 +1156,7 @@ MSTL_MALLOC_FUNCTION MSTL_CONSTEXPR20 char* string_duplicate(const char* str) no
 	return new_str;
 }
 
-constexpr char* string_set(char* str, const char value) noexcept {
+MSTL_CONSTEXPR14 char* string_set(char* str, const char value) noexcept {
 	if (str == nullptr) return nullptr;
 	char* original = str;
 	while (*str != '\0') {
@@ -1165,7 +1166,7 @@ constexpr char* string_set(char* str, const char value) noexcept {
 	return original;
 }
 
-constexpr char* string_reverse(char* str) noexcept {
+MSTL_CONSTEXPR14 char* string_reverse(char* str) noexcept {
 	if (str == nullptr || *str == '\0') return str;
 
 	char* end = str;
@@ -1182,7 +1183,7 @@ constexpr char* string_reverse(char* str) noexcept {
 }
 
 
-constexpr char* string_n_copy(char* MSTL_RESTRICT dest, const char* MSTL_RESTRICT src, const size_t count) noexcept {
+MSTL_CONSTEXPR14 char* string_n_copy(char* MSTL_RESTRICT dest, const char* MSTL_RESTRICT src, const size_t count) noexcept {
 	if (dest == nullptr || src == nullptr) return nullptr;
 	char* ret = dest;
 	size_t i = 0;
@@ -1201,7 +1202,7 @@ constexpr char* string_n_copy(char* MSTL_RESTRICT dest, const char* MSTL_RESTRIC
 }
 
 // stpncpy
-constexpr char* string_n_copy_offset(char* MSTL_RESTRICT dest, const char* MSTL_RESTRICT src, const size_t count) noexcept {
+MSTL_CONSTEXPR14 char* string_n_copy_offset(char* MSTL_RESTRICT dest, const char* MSTL_RESTRICT src, const size_t count) noexcept {
 	if (dest == nullptr || src == nullptr) return nullptr;
 	size_t i = 0;
 	while (i < count && *src != '\0') {
@@ -1218,7 +1219,7 @@ constexpr char* string_n_copy_offset(char* MSTL_RESTRICT dest, const char* MSTL_
 	return dest;
 }
 
-constexpr char* string_n_concatenate(char* MSTL_RESTRICT dest, const char* MSTL_RESTRICT src, size_t count) noexcept {
+MSTL_CONSTEXPR14 char* string_n_concatenate(char* MSTL_RESTRICT dest, const char* MSTL_RESTRICT src, size_t count) noexcept {
 	if (dest == nullptr || src == nullptr) return nullptr;
 
 	char* original_dest = dest;
@@ -1235,7 +1236,7 @@ constexpr char* string_n_concatenate(char* MSTL_RESTRICT dest, const char* MSTL_
 	return original_dest;
 }
 
-MSTL_PURE_FUNCTION constexpr int string_n_compare(const char* dest, const char* src, size_t count) noexcept {
+MSTL_PURE_FUNCTION MSTL_CONSTEXPR14 int string_n_compare(const char* dest, const char* src, size_t count) noexcept {
 	if (dest == nullptr && src == nullptr) return 0;
 	if (dest == nullptr) return -1;
 	if (src == nullptr) return 1;
@@ -1251,7 +1252,7 @@ MSTL_PURE_FUNCTION constexpr int string_n_compare(const char* dest, const char* 
 	return *dest < *src ? -1 : *dest > *src ? 1 : 0;
 }
 
-MSTL_PURE_FUNCTION constexpr int string_n_compare_ignore_case(const char* s1, const char* s2, size_t count) noexcept {
+MSTL_PURE_FUNCTION MSTL_CONSTEXPR14 int string_n_compare_ignore_case(const char* s1, const char* s2, size_t count) noexcept {
 	if ((s1 == nullptr && s2 == nullptr) || count == 0) return 0;
 	if (s1 == nullptr) return -1;
 	if (s2 == nullptr) return 1;
@@ -1273,7 +1274,7 @@ MSTL_PURE_FUNCTION constexpr int string_n_compare_ignore_case(const char* s1, co
 	return c1 < c2 ? -1 : c1 > c2 ? 1 : 0;
 }
 
-MSTL_PURE_FUNCTION constexpr size_t string_n_length(const char* str, const size_t max_len) noexcept {
+MSTL_PURE_FUNCTION MSTL_CONSTEXPR14 size_t string_n_length(const char* str, const size_t max_len) noexcept {
 	const char* p = str;
 	ptrdiff_t len = 0;
 	while (*p != '\0' && len < max_len) {
@@ -1283,7 +1284,7 @@ MSTL_PURE_FUNCTION constexpr size_t string_n_length(const char* str, const size_
 	return len;
 }
 
-constexpr char* string_n_set(char* str, const char value, size_t count) noexcept {
+MSTL_CONSTEXPR14 char* string_n_set(char* str, const char value, size_t count) noexcept {
 	if (str == nullptr || count == 0) return str;
 	char* original = str;
 	size_t processed = 0;
@@ -1297,7 +1298,7 @@ constexpr char* string_n_set(char* str, const char value, size_t count) noexcept
 
 
 // strlcpy
-constexpr size_t string_copy_safe(char* MSTL_RESTRICT dest, const char* MSTL_RESTRICT src, size_t size) noexcept {
+MSTL_CONSTEXPR14 size_t string_copy_safe(char* MSTL_RESTRICT dest, const char* MSTL_RESTRICT src, size_t size) noexcept {
 	if (dest == nullptr || src == nullptr || size == 0) {
 		return src != nullptr ? string_length(src) : 0;
 	}
@@ -1319,7 +1320,7 @@ constexpr size_t string_copy_safe(char* MSTL_RESTRICT dest, const char* MSTL_RES
 	return src_length;
 }
 
-constexpr size_t string_concatenate_safe(char* MSTL_RESTRICT dest, const char* MSTL_RESTRICT src, const size_t size) noexcept {
+MSTL_CONSTEXPR14 size_t string_concatenate_safe(char* MSTL_RESTRICT dest, const char* MSTL_RESTRICT src, const size_t size) noexcept {
 	const size_t src_size_len = string_n_length(src, size);
 	if (dest == nullptr || src == nullptr || size == 0) {
 		return src != nullptr ? src_size_len : 0;
@@ -1349,7 +1350,7 @@ constexpr size_t string_concatenate_safe(char* MSTL_RESTRICT dest, const char* M
 }
 
 
-constexpr wchar_t* wchar_memory_copy(wchar_t* dest, const wchar_t* src, size_t count) noexcept {
+MSTL_CONSTEXPR14 wchar_t* wchar_memory_copy(wchar_t* dest, const wchar_t* src, size_t count) noexcept {
 	if(dest == nullptr || src == nullptr) return nullptr;
 	wchar_t* res = dest;
 	while (count--) {
@@ -1360,7 +1361,7 @@ constexpr wchar_t* wchar_memory_copy(wchar_t* dest, const wchar_t* src, size_t c
 	return res;
 }
 
-constexpr int wchar_memory_compare(const wchar_t* dest, const wchar_t* src, size_t count) noexcept {
+MSTL_CONSTEXPR14 int wchar_memory_compare(const wchar_t* dest, const wchar_t* src, size_t count) noexcept {
 	if (dest == nullptr && src == nullptr) return 0;
 	if (dest == nullptr) return -1;
 	if (src == nullptr) return 1;
@@ -1373,7 +1374,7 @@ constexpr int wchar_memory_compare(const wchar_t* dest, const wchar_t* src, size
 	return 0;
 }
 
-constexpr wchar_t* wchar_memory_char(const wchar_t* dest, const wchar_t value, size_t count) noexcept {
+MSTL_CONSTEXPR14 wchar_t* wchar_memory_char(const wchar_t* dest, const wchar_t value, size_t count) noexcept {
 	if(dest == nullptr) return nullptr;
 	const wchar_t* p = dest;
 	while (count--) {
@@ -1384,12 +1385,12 @@ constexpr wchar_t* wchar_memory_char(const wchar_t* dest, const wchar_t value, s
 	return nullptr;
 }
 
-constexpr wchar_t* wchar_memory_move(wchar_t* dest, const wchar_t* src, const size_t count) noexcept {
+MSTL_CONSTEXPR14 wchar_t* wchar_memory_move(wchar_t* dest, const wchar_t* src, const size_t count) noexcept {
 	if(dest == nullptr || src == nullptr) return nullptr;
 	return static_cast<wchar_t *>(memory_move(dest, src, count * sizeof(wchar_t)));
 }
 
-constexpr wchar_t* wchar_memory_set(wchar_t* dest, const wchar_t value, size_t count) noexcept {
+MSTL_CONSTEXPR14 wchar_t* wchar_memory_set(wchar_t* dest, const wchar_t value, size_t count) noexcept {
 	if(dest == nullptr) return nullptr;
 	wchar_t* ret = dest;
 	while (count--) {
@@ -1400,7 +1401,7 @@ constexpr wchar_t* wchar_memory_set(wchar_t* dest, const wchar_t value, size_t c
 }
 
 
-constexpr ptrdiff_t wstring_length(const wchar_t* str) noexcept {
+MSTL_CONSTEXPR14 ptrdiff_t wstring_length(const wchar_t* str) noexcept {
 	const wchar_t* p = str;
 	while (*p != L'\0')
 		++p;
@@ -1408,7 +1409,7 @@ constexpr ptrdiff_t wstring_length(const wchar_t* str) noexcept {
 }
 
 #ifdef MSTL_VERSION_20__
-constexpr ptrdiff_t u8string_length(const char8_t* str) noexcept {
+MSTL_CONSTEXPR14 ptrdiff_t u8string_length(const char8_t* str) noexcept {
 	const char8_t* p = str;
 	while (*p != u8'\0')
 		++p;
@@ -1416,14 +1417,14 @@ constexpr ptrdiff_t u8string_length(const char8_t* str) noexcept {
 }
 #endif
 
-constexpr ptrdiff_t u16string_length(const char16_t* str) noexcept {
+MSTL_CONSTEXPR14 ptrdiff_t u16string_length(const char16_t* str) noexcept {
 	const char16_t* p = str;
 	while (*p != u'\0')
 		++p;
 	return p - str;
 }
 
-constexpr ptrdiff_t u32string_length(const char32_t* str) noexcept {
+MSTL_CONSTEXPR14 ptrdiff_t u32string_length(const char32_t* str) noexcept {
 	const char32_t* p = str;
 	while (*p != U'\0')
 		++p;

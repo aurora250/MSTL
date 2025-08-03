@@ -66,7 +66,7 @@ struct base_char_traits {
 
     MSTL_NODISCARD static constexpr size_t length(const char_type* str) noexcept {
         size_t count = 0;
-        while (*str != static_cast<char_type>('0')) {
+        while (*str != static_cast<char_type>(0)) {
             ++count;
             ++str;
         }
