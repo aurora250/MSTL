@@ -112,14 +112,15 @@ public:
     }
 
     template <typename T, enable_if_t<disjunction_v<is_same<T, Types>...>, int> = 0>
-    MSTL_CONSTEXPR20 variant(T&& value)
+    MSTL_CONSTEXPR20 explicit variant(T&& value)
     noexcept(is_nothrow_move_constructible_v<T>)
     : index_(variant_index_v<variant, T>) {
         T* p = reinterpret_cast<T*>(union_);
-        new (p) T(_MSTL move(value));
+        new (p) T(_MSTL forward<T>(value));
     }
+
     template <typename T, enable_if_t<disjunction_v<is_same<T, Types>...>, int> = 0>
-    MSTL_CONSTEXPR20 variant(const T& value)
+    MSTL_CONSTEXPR20 explicit variant(const T& value)
     noexcept(is_nothrow_copy_constructible_v<T>)
     : index_(variant_index_v<variant, T>) {
         T* p = reinterpret_cast<T*>(union_);
@@ -399,13 +400,23 @@ noexcept(noexcept(static_cast<const variant<Types...>&&>(var).visit(_MSTL forwar
 
 template <typename... Types>
 struct hash<_MSTL variant<Types...>> {
-    static constexpr auto hasher = [](const auto& value) -> size_t {
-        return hash<decay_t<decltype(value)>>{}(value);
+private:
+    struct __variant_elem_hasher {
+        template <typename T>
+        size_t operator()(const T& value) const {
+            return hash<decay_t<T>>{}(value);
+        }
     };
 
+    static const __variant_elem_hasher& get_hasher() {
+        static const __variant_elem_hasher hasher;
+        return hasher;
+    }
+
+public:
     MSTL_CONSTEXPR20 size_t operator()(const _MSTL variant<Types...>& var) const
-    noexcept(noexcept(var.visit(hasher))) {
-        return var.visit(hasher);
+    noexcept(noexcept(var.visit(get_hasher()))) {
+        return var.visit(get_hasher());
     }
 };
 

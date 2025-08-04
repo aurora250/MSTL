@@ -78,7 +78,7 @@ struct CUDAMemoryError final : MemoryError {
 
 // throw a new error and print stacktrace of boost is imported.
 inline void Exception(const Error& err){
-    std::cerr << "Exception : (" << err.type_ << ") " << err.info_;
+    std::cerr << "\nException : (" << err.type_ << ") " << err.info_ << "\n";
 	throw err;
 }
 

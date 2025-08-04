@@ -1,6 +1,6 @@
 #ifndef MSTL_RANDOM_HPP__
 #define MSTL_RANDOM_HPP__
-#include "datetime.h"
+#include "datetime.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 // based on LCD algorithm to generate pseudorandom number
@@ -9,42 +9,50 @@ public:
     using seed_type = uint32_t;
 
 private:
-    seed_type seed;
     static constexpr seed_type a = 1103515245;
     static constexpr seed_type c = 12345;
     static constexpr seed_type m = 1u << 31;
 
+    static seed_type& get_seed() {
+        static seed_type seed = 0;
+        return seed;
+    }
+
 public:
-    explicit random(const seed_type seed = 0) {
+    static void set_seed(const seed_type seed = 0) {
         if (seed == 0) {
-            this->seed = static_cast<seed_type>(_MSTL timestamp::now().get_seconds());
+            get_seed() = static_cast<seed_type>(_MSTL timestamp::now().get_seconds());
         } else {
-            this->seed = seed;
+            get_seed() = seed;
         }
     }
 
-    void set_seed(const seed_type seed) {
-        this->seed = seed;
+    static int next_int(const int max) {
+        get_seed() = a * get_seed() + c;
+        get_seed() %= m;
+        return static_cast<int>(static_cast<double>(get_seed()) / m * max);
     }
 
-    int next_int(const int max) {
-        seed = a * seed + c;
-        seed %= m;
-        return static_cast<int>(static_cast<double>(seed) / m * max);
-    }
-
-    int next_int(const int min, const int max) {
+    static int next_int(const int min, const int max) {
         return min + next_int(max - min);
     }
 
-    double next_double() {
-        seed = a * seed + c;
-        seed %= m;
-        return static_cast<double>(seed) / m;
+    static int next_int() {
+        return next_int(0, INT32_MAX_SIZE);
     }
 
-    double next_double(const double min, const double max) {
+    static double next_double() {
+        get_seed() = a * get_seed() + c;
+        get_seed() %= m;
+        return static_cast<double>(get_seed()) / m;
+    }
+
+    static double next_double(const double min, const double max) {
         return min + (max - min) * next_double();
+    }
+
+    static double next_double(const double max) {
+        return next_double(0, max);
     }
 };
 

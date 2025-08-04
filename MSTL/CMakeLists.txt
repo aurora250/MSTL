@@ -59,11 +59,7 @@ file(GLOB_RECURSE SUB_DIR_SRC_LIST
 set(SUB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "MSTL project codes")
 include_directories(${SUB_INCLUDE_DIR})
 add_library(MSTL ${SUB_DIR_SRC_LIST}
-        lock_free_queue.hpp
-        datetime.h
-        datetime.cpp
-        random.hpp
-)
+        file.hpp)
 
 
 # ------------------- Boost -------------------
@@ -114,7 +110,7 @@ endif()
 
 
 # ------------------- CUDA -------------------
-if(MSTL_ENABLE_CUDA)
+if(MSTL_ENABLE_CUDA AND MSVC)
     if(DEFINED CMAKE_CUDA_COMPILER)
         find_package(CUDAToolkit QUIET REQUIRED)
 

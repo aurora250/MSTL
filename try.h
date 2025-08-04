@@ -50,6 +50,7 @@ void try_str();
 void try_opt();
 
 void try_any();
+void try_timer();
 void try_db();
 void try_pool();
 void try_dns();

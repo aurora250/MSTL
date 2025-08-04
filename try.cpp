@@ -1,5 +1,6 @@
 #include "try.h"
 USE_MSTL
+using MSTL::size_t;
 
 void test_date() {
     _MSTL date d1(2024, 2, 29);
@@ -39,7 +40,7 @@ void test_date() {
     assert(_MSTL date::from_string("2024-05-10") == _MSTL date(2024, 5, 10));
     assert(_MSTL date::from_string("invalid") == _MSTL date::epoch());
 
-    std::cout << "test_date passed\n";
+    println("test_date passed");
 }
 
 void test_time() {
@@ -67,7 +68,7 @@ void test_time() {
     assert(_MSTL time::from_string("09:08:07") == _MSTL time(9, 8, 7));
     assert(_MSTL time::from_string("invalid") == _MSTL time(0, 0, 0));
 
-    std::cout << "test_time passed\n";
+    println("test_time passed");
 }
 
 void test_datetime() {
@@ -92,7 +93,7 @@ void test_datetime() {
         == _MSTL datetime(2024, 5, 10, 9, 8, 7));
     assert(_MSTL datetime::from_string("invalid") == _MSTL datetime::epoch());
 
-    std::cout << "test_datetime passed\n";
+    println("test_datetime passed");
 }
 
 void test_timestamp() {
@@ -110,7 +111,7 @@ void test_timestamp() {
     assert(ts3 < ts4);
     assert(ts4 - ts3 == 100);
 
-    std::cout << "test_timestamp passed\n";
+    println("test_timestamp passed");
 }
 
 void test_utc_conversion() {
@@ -119,7 +120,7 @@ void test_utc_conversion() {
     _MSTL datetime local = _MSTL datetime::from_utc(utc);
     assert(local == dt);
 
-    std::cout << "test_utc_conversion passed\n";
+    println("test_utc_conversion passed");
 }
 
 
@@ -164,7 +165,7 @@ void try_print() {
     unique_ptr<int> up = make_unique<int>(1);
     hash<int> ih;
     array<int, 5> arr{1,2,3,4,5};
-    variant<int, char> var = {v[0]};
+    variant<int, char> var{v[0]};
     var.emplace<1>('c');
     list<int> lls{arr.begin(), arr.end()};
     map<int, int> mmi{{1,2}};
@@ -232,8 +233,7 @@ void try_print() {
 
 void try_rnd() {
     print(_MSTL secret::is_supported(), secret::next_double(), secret::next_int(1, 10));
-    random rnd;
-    print(rnd.next_int(10, 20), rnd.next_int(10, 20), rnd.next_int(10, 20));
+    print(_MSTL random::next_int(10, 20), random::next_int(10, 20), random::next_int(10, 20));
 }
 
 void try_exc() {
@@ -269,35 +269,43 @@ void try_lls() {
     // nocopy.emplace_back(2); also not support in std
     lls.clear();
 
-    // list<int> long_list;
-    // constexpr MSTL::size_t element_count = 100000;
-    // for (MSTL::size_t i = 0; i < element_count; ++i) {
-    //     if (i % 2 == 0) {
-    //         long_list.push_back(i);
-    //     } else {
-    //         long_list.push_front(i);
-    //     }
-    // }
+    list<int> long_list;
+    constexpr MSTL::size_t element_count = 100000;
+    for (MSTL::size_t i = 0; i < element_count; ++i) {
+        if (i % 2 == 0) {
+            long_list.push_back(i);
+        } else {
+            long_list.push_front(i);
+        }
+    }
+    for (MSTL::size_t i = 0; i < element_count; ++i) {
+        if (i % 2 == 0) {
+            long_list.pop_back();
+        } else {
+            long_list.pop_back();
+        }
+    }
     // println(long_list);
 }
 
 void try_check() {
-    std::cout << check_type<string>() << std::endl;
-    std::cout << check_type<const volatile void* const*&>() << std::endl;
-    std::cout << check_type<int(*)[]>() << std::endl;
-    std::cout << check_type<const volatile void* (&)[10]>() << std::endl; // void const volatile * (&) [10]
-    std::cout << check_type<int[1][2][3]>() << std::endl;              // int [1] [2] [3]
-    std::cout << check_type<char(*(* const)(const int(&)[10]))[10]>() << std::endl;
-    std::cout << check_type<int (Foo::* const)[3]>() << std::endl;
-    std::cout << check_type<int (Foo::* const)(int, Foo&&, int) volatile>() << std::endl;
+    println(check_type<string>());
+    println(check_type<const volatile void* const*&>());
+    println(check_type<int(*)[]>());
+    println(check_type<const volatile void* (&)[10]>()); // void const volatile * (&) [10]
+    println(check_type<int[1][2][3]>());              // int [1] [2] [3]
+    println(check_type<char(*(* const)(const int(&)[10]))[10]>());
+    println(check_type<int (Foo::* const)[3]>());
+    println(check_type<int (Foo::* const)(int, Foo&&, int) volatile>());
     string cstr("const string");
     const string* sr = new string("hai");
     split_line();
-    std::cout << check_type<decltype((cstr))>() << std::endl;
-    std::cout << check_type<decltype(MSTL::move(cstr))>() << std::endl;
+    println(check_type<decltype((cstr))>());
+    println(check_type<decltype(MSTL::move(cstr))>());
     split_line();
-    std::cout << check_type<decltype(sr)>() << std::endl;
+    println(check_type<decltype(sr)>());
     split_line();
+    delete sr;
 }
 
 void try_copy() {
@@ -309,7 +317,6 @@ void try_copy() {
     int ia[] = { 0,1,2,3,4,5,6,7,8 };
     MSTL::copy(ia + 2, ia + 7, ia + 4);
     println(ia); //0 1 2 3 2 3 4 5 6
-    std::cout << std::endl;
     //int ia[] = { 0,1,2,3,4,5,6,7,8 };
     //vector<int>id(ia, ia + 9);
     //vector<int>::iterator first = id.begin();
@@ -396,6 +403,9 @@ void try_stack() {
     for (MSTL::size_t i = 0; i < element_count; ++i) {
         long_stack.push(i);
     }
+    for (MSTL::size_t i = 0; i < element_count; ++i) {
+        long_stack.pop();
+    }
     // println(long_stack);
 }
 void try_vec() {
@@ -409,7 +419,7 @@ void try_vec() {
         println(v);
         v.pop_back();
         v.clear();
-        std::cout << v.empty() << std::endl;
+        println(v.empty());
         v.insert(v.end(), v2.cbegin(), v2.cend());
         println(v);
         const auto v3 = MSTL::move(v2);
@@ -435,7 +445,6 @@ void try_vec() {
     }
     catch (Error& error) {
         println(error);
-        std::cout << std::endl;
     }
 
     vector<int> long_vector;
@@ -443,29 +452,32 @@ void try_vec() {
     for (MSTL::size_t i = 0; i < element_count; ++i) {
         long_vector.push_back(i);
     }
+    for (MSTL::size_t i = 0; i < element_count; ++i) {
+        long_vector.pop_back();
+    }
     // println(long_vector);
 }
 void try_pque() {
     priority_queue<int> q;
-    std::cout << typeid(priority_queue<int*>).name() << std::endl;
+    println(typeid(priority_queue<int*>).name());
     q.push(6); q.push(9); q.push(1); q.push(5);
     q.push(8); q.push(4); q.emplace(7);
     println(q); // 9 8 7 5 6 1 4
     q.pop();
     println(q);
 
-    random rnd(timestamp::now().get_seconds());
     priority_queue<int> long_pque;
     constexpr MSTL::size_t element_count = 100000;
     for (int i = 0; i < element_count; ++i) {
-        long_pque.push(rnd.next_int(10000));
+        long_pque.push(random::next_int(10000));
+    }
+    for (int i = 0; i < element_count; ++i) {
+        long_pque.pop();
     }
     // println(long_pque);
 }
 
 void try_rb() {
-    random rnd(timestamp::now().get_seconds());
-
     map<int, char> m;
     m.insert(pair<int, char>(1, 'c'));
     m.emplace(3, 'c');
@@ -481,7 +493,10 @@ void try_rb() {
     map<int, float> long_map;
     for (int i = 0; i < 100000; ++i) {
         int key = i;
-        long_map.insert({key, rnd.next_double(0, 10000)});
+        long_map.insert({key, random::next_double(0, 10000)});
+    }
+    for (int i = 0; i < 100000; ++i) {
+        long_map.erase(i);
     }
     // println(long_map);
 
@@ -499,7 +514,10 @@ void try_rb() {
     multimap<int, float> long_multimap;
     for (int i = 0; i < 100000; ++i) {
         int key = i;
-        long_multimap.insert({key, rnd.next_double(0, 10000)});
+        long_multimap.insert({key, random::next_double(0, 10000)});
+    }
+    for (int i = 0; i < 100000; ++i) {
+        long_multimap.erase(i);
     }
     // println(long_multimap);
 
@@ -517,6 +535,9 @@ void try_rb() {
     for (int i = 0; i < 100000; ++i) {
         long_set.emplace(i);
     }
+    for (int i = 0; i < 100000; ++i) {
+        long_set.erase(i);
+    }
     // println(long_set);
 
 
@@ -529,13 +550,16 @@ void try_rb() {
     for (int i = 0; i < 100000; ++i) {
         long_multiset.emplace(i);
     }
+    for (int i = 0; i < 100000; ++i) {
+        long_multiset.erase(i);
+    }
     // println(long_multiset);
 }
 
 void try_tup() {
     tuple<int, char, const char*> t(1, 't', "MSTL");
     auto a = get<0>(t);
-    std::cout << MSTL::get<1>(t) << std::endl;
+    println(MSTL::get<1>(t));
     auto forw = MSTL::make_tuple(9, 0);
 
     tuple<int, double> tuple1(1, 3.14);
@@ -543,21 +567,21 @@ void try_tup() {
     tuple<char> tuple3('A');
 
     auto combinedTuple = MSTL::tuple_cat(tuple1, tuple2, tuple3);
-    std::cout << check_type<decltype(combinedTuple)>() << std::endl;
+    println(check_type<decltype(combinedTuple)>());
 
-    std::cout << "Combined tuple elements:" << std::endl;
-    std::cout << MSTL::get<0>(combinedTuple) << std::endl;
-    std::cout << MSTL::get<1>(combinedTuple) << std::endl;
-    std::cout << MSTL::get<2>(combinedTuple) << std::endl;
-    std::cout << MSTL::get<3>(combinedTuple) << std::endl;
+    println("Combined tuple elements:");
+    println(MSTL::get<0>(combinedTuple));
+    println(MSTL::get<1>(combinedTuple));
+    println(MSTL::get<2>(combinedTuple));
+    println(MSTL::get<3>(combinedTuple));
 
     tuple<int, int, int> args(1, 2, 3);
     int sum = MSTL::apply(sum_3, args);
-    std::cout << "Sum: " << sum << std::endl;
+    println("Sum:", sum);
 
     tuple<int, int> mulArgs(4, 5);
     int product = MSTL::apply(multiplies<int>(), mulArgs);
-    std::cout << "Product: " << product << std::endl;
+    println("Product:", product);
 }
 
 void try_hash() {
@@ -601,22 +625,25 @@ void try_hash() {
 }
 
 void try_math() {
-    std::cout << power(2, 10) << std::endl;
-    std::cout << factorial(10) << std::endl;
-    std::cout << sine(1) << " : " << std::endl;
-    std::cout << cosine(angular2radian(270)) << std::endl;
-    //std::cout << remainder(73.263, 0.9973) << std::endl;
-    std::cout << float_part(constants::PI) << std::endl;
-    std::cout << exponential(3) << std::endl;
-    std::cout << logarithm_e(165) << std::endl;
-    std::cout << logarithm_10(147) << std::endl;
-    std::cout << logarithm_2(500) << std::endl;
-    std::cout << arctangent(100) << std::endl;
-    std::cout << radian2angular(arctangent(100)) << std::endl;
-    std::cout << arcsine(0.21) << std::endl;
-    std::cout << arccosine(0.62) << std::endl;
-    //std::cout << tangent(PI / 2) << std::endl;  // MathError
-    std::cout << around_pi(constants::PI * 2 + 0.00000001) << " : " << around_pi(6.28) << std::endl;
+    println(power(2, 10));
+    println(power(3, 10));
+    println(factorial(10));
+    println(sine(1));
+    println(cosine(angular2radian(270)));
+    println(remainder(73.263, 0.9973));
+    println(float_part(constants::PI));
+    println(exponential(3));
+    println(logarithm_e(165));
+    println(logarithm_10(147));
+    println(logarithm_2(500));
+    println(arctangent(100));
+    println(radian2angular(arctangent(100)));
+    println(arcsine(1), arcsine(0), arcsine(-1));
+    println(arccosine(1), arccosine(0), arccosine(-1));
+    println(arctangent(DECIMAL_MAX_POSI_SIZE), arctangent(DECIMAL_MIN_NEGA_SIZE));
+    // println(tangent(constants::PI / 2));  // MathError
+    println(tangent(0));
+    println(around_pi(constants::PI), " : ", around_pi(6.28));
 }
 
 void try_sort() {
@@ -655,53 +682,45 @@ void try_sort() {
 void try_ss() {
     stringstream ss;
     ss << "a" << 'b' << 333 << " " << 9.333 << MSTL::string("hello") << false << MSTL::move(MSTL::string("a"));
-    std::cout << ss.str() << std::endl;
+    println(ss);
     ss.str("where");
-    std::cout << ss.str() << std::endl;
+    println(ss);
 }
 
+struct var_visitor {
+    int operator()(int arg) const { return arg * 2; }
+    int operator()(const string& arg) const { return arg.length(); }
+};
+
 void try_var() {
-#ifdef MSTL_VERSION_17__
     variant<int, string> v1;
-    std::cout << v1.index() << std::endl;
+    println(v1.index());
     variant<int, string> v2;
     v2.emplace<1>("hello");
-    std::cout << v2.index() << std::endl;
+    println(v2.index());
 
     auto& str = v2.get<string>();
-    std::cout << str << std::endl;
+    println(str);
     auto ptr = v2.get_if<string>();
     if (!ptr || *ptr != "hello") {
-        std::cerr << "get_if method test failed." << std::endl;
+        println("get_if method test failed.");
         return;
     }
     v2.emplace<int>(42);
-    std::cout << v2.index() << ":" << v2.get<int>() << std::endl;
-    auto visitor = [](auto&& arg) {
-        using T = decay_t<decltype(arg)>;
-        if constexpr (is_same_v<T, int>) {
-            return arg * 2;
-        } else if constexpr (is_same_v<T, string>) {
-            return arg.length();
-        }
-    };
-    int result = v2.visit(visitor);
-    std::cout << result << std::endl;
+    println(v2.index(), ":", v2.get<int>());
+    int result = v2.visit(var_visitor());
+    println(result);
 
     hash<variant<int, string>> hasher{};
-    std::cout << hasher(v1) << std::endl;
-#endif
+    println(hasher(v1));
 }
-
-
-using MSTL::size_t;
 
 string generate_random_string(MSTL::size_t length) {
     const string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     string s;
     s.reserve(length);
     for (size_t i = 0; i < length; ++i) {
-        s += chars[rand() % chars.size()];
+        s += chars[random::next_int() % chars.size()];
     }
     return s;
 }
@@ -711,13 +730,15 @@ void test_short_strings(size_t count, size_t length) {
     strings.reserve(count);
 
     for (size_t i = 0; i < count; ++i) {
+        if (i % 10000 == 0)
+            print(i, " ");
         strings.emplace_back(generate_random_string(length));
     }
 
     strings.clear();
     strings.shrink_to_fit();
 
-    std::cout << "Test 1: " << count << " short strings (" << length << " chars)\n";
+    println("Test 1:", count, "short strings (", length, " chars)");
 }
 
 void test_long_string_concat(size_t iterations, size_t chunk_size) {
@@ -728,8 +749,8 @@ void test_long_string_concat(size_t iterations, size_t chunk_size) {
         long_str += generate_random_string(chunk_size);
     }
 
-    std::cout << "Test 2: Long string concat (" << iterations << " chunks, "
-              << chunk_size << " chars each, total: " << long_str.size() << " chars)\n";
+    println("Test 2: Long string concat (", iterations, "chunks,"
+              , chunk_size, "chars each, total: ", long_str.size(), " chars)");
 }
 
 void test_string_modification(size_t initial_length, size_t operations) {
@@ -737,17 +758,17 @@ void test_string_modification(size_t initial_length, size_t operations) {
 
     for (size_t i = 0; i < operations; ++i) {
         if (i % 2 == 0) {
-            size_t pos = rand() % (str.size() + 1);
+            size_t pos = random::next_int() % (str.size() + 1);
             str.insert(pos, 1, 'X');
         } else {
             if (str.empty()) break;
-            size_t pos = rand() % str.size();
+            size_t pos = random::next_int() % str.size();
             str.erase(pos, 1);
         }
     }
 
-    std::cout << "Test 3: " << operations << " modify operations (initial: "
-              << initial_length << " chars, final: " << str.size() << " chars)\n";
+    println("Test 3: ", operations, " modify operations (initial: "
+              , initial_length, " chars, final: ", str.size(), " chars)");
 }
 
 void test_string_search_replace(size_t str_length, size_t pattern_count) {
@@ -756,7 +777,7 @@ void test_string_search_replace(size_t str_length, size_t pattern_count) {
     const string replacement = "XYZ";
 
     for (size_t i = 0; i < pattern_count; ++i) {
-        size_t pos = rand() % (str.size() - pattern.size() + 1);
+        size_t pos = random::next_int() % (str.size() - pattern.size() + 1);
         str.replace(pos, pattern.size(), pattern);
     }
 
@@ -768,8 +789,8 @@ void test_string_search_replace(size_t str_length, size_t pattern_count) {
         replace_count++;
     }
 
-    std::cout << "Test 4: Search & replace (str length: " << str_length
-              << ", patterns found: " << replace_count << ")\n";
+    println("Test 4: Search & replace (str length: ", str_length
+              , ", patterns found: ", replace_count, ")");
 }
 
 void test_max_memory_string() {
@@ -781,7 +802,7 @@ void test_max_memory_string() {
         max_test_size = _MSTL min(max_test_size, upper_limit);
 
         if (max_test_size == 0) {
-            throw Error("Insufficient system memory for test.");
+            Exception(MemoryError("Insufficient system memory for test."));
         }
 
         string huge_str;
@@ -790,8 +811,8 @@ void test_max_memory_string() {
         size_t chunk = 1024 * 1024;
         size_t total_written = 0;
 
-        std::cout << "Testing max memory string (target size: "
-                  << max_test_size / (1024 * 1024) << " MB)\n";
+        println("Testing max memory string (target size: "
+                  , max_test_size / (1024 * 1024), " MB)");
 
         while (total_written < max_test_size) {
             size_t write = _MSTL min(chunk, max_test_size - total_written);
@@ -799,20 +820,19 @@ void test_max_memory_string() {
             total_written += write;
 
             if (total_written % (100 * 1024 * 1024) == 0) {
-                std::cout << "Allocated " << total_written / (1024 * 1024) << " MB...\n";
+                println("Allocated ", total_written / (1024 * 1024), " MB...");
             }
         }
-        std::cout << "Test 5: Success. Allocated "
-                  << total_written / (1024 * 1024) << " MB string.\n";
+        println("Test 5: Success. Allocated "
+                  , total_written / (1024 * 1024), " MB string.");
     }
     catch (const Error& e) {
-        std::cout << "Test 5: " << e.what() << "\n";
+        println("Test 5: ", e.what());
     }
 }
 
 void try_str() {
-    srand(std::time(nullptr));
-    test_short_strings(1000000, 32);
+    // test_short_strings(1000000, 32);
     test_long_string_concat(100000, 1024);
     test_string_modification(100000, 500000);
     test_string_search_replace(1000000, 10000);
@@ -849,13 +869,13 @@ void try_opt() {
     println(opt1);
 
     if (opt3.has_value()) {
-        std::cout << "opt3 has a value." << std::endl;
+        println("opt3 has a value.");
     } else {
-        std::cout << "opt3 has no value." << std::endl;
+        println("opt3 has no value.");
     }
 
     int default_val = opt1.value_or(300);
-    std::cout << "Value of opt1 or default: " << default_val << std::endl;
+    println("Value of opt1 or default: ", default_val);
 
     auto result1 = opt1.or_else([]() { return MSTL::optional<int>(400); });
     println(result1);
@@ -869,106 +889,141 @@ void try_opt() {
 
 void try_any() {
     MSTL::any a1;
-    std::cout << "Testing default constructor:" << std::endl;
+    println("Testing default constructor:");
     println(a1);
-    std::cout << "Has value: " << (a1.has_value() ? "Yes" : "No") << std::endl;
+    println("Has value: ", (a1.has_value() ? "Yes" : "No"));
 
     MSTL::any a2(42);
-    std::cout << "\nTesting constructor with value:" << std::endl;
+    println("\nTesting constructor with value:");
     println(a2);
-    std::cout << "Has value: " << (a2.has_value() ? "Yes" : "No") << std::endl;
+    println("Has value: ", (a2.has_value() ? "Yes" : "No"));
     const int* ptr = MSTL::any_cast<int>(&a2);
     if (ptr) {
-        std::cout << "Value: " << *ptr << std::endl;
+        println("Value: ", *ptr);
     }
 
     MSTL::any a3(a2);
-    std::cout << "\nTesting copy constructor:" << std::endl;
+    println("\nTesting copy constructor:");
     println(a3);
-    std::cout << "Has value: " << (a3.has_value() ? "Yes" : "No") << std::endl;
+    println("Has value: ", (a3.has_value() ? "Yes" : "No"));
     ptr = MSTL::any_cast<int>(&a3);
     if (ptr) {
-        std::cout << "Value: " << *ptr << std::endl;
+        println("Value: ", *ptr);
     }
 
     MSTL::any a4(MSTL::any(123));
-    std::cout << "\nTesting move constructor:" << std::endl;
+    println("\nTesting move constructor:");
     println(a4);
-    std::cout << "Has value: " << (a4.has_value() ? "Yes" : "No") << std::endl;
+    println("Has value: ", (a4.has_value() ? "Yes" : "No"));
     ptr = MSTL::any_cast<int>(&a4);
     if (ptr) {
-        std::cout << "Value: " << *ptr << std::endl;
+        println("Value: ", *ptr);
     }
 
     a1 = a4;
-    std::cout << "\nTesting assignment operator:" << std::endl;
+    println("\nTesting assignment operator:");
     println(a1);
-    std::cout << "Has value: " << (a1.has_value() ? "Yes" : "No") << std::endl;
+    println("Has value: ", (a1.has_value() ? "Yes" : "No"));
     ptr = MSTL::any_cast<int>(&a1);
     if (ptr) {
-        std::cout << "Value: " << *ptr << std::endl;
+        println("Value: ", *ptr);
     }
 
     string str = "Hello, World!";
     string result = a1.emplace<string>(str);
-    std::cout << "\nTesting emplace method:" << std::endl;
+    println("\nTesting emplace method:");
     println(a1);
-    std::cout << "Has value: " << (a1.has_value() ? "Yes" : "No") << std::endl;
+    println("Has value: ", (a1.has_value() ? "Yes" : "No"));
     const string* strPtr = MSTL::any_cast<string>(&a1);
     if (strPtr) {
-        std::cout << "Value: " << *strPtr << std::endl;
+        println("Value: ", *strPtr);
     }
 
     a1.reset();
-    std::cout << "\nTesting reset method:" << std::endl;
+    println("\nTesting reset method:");
     println(a1);
-    std::cout << "Has value: " << (a1.has_value() ? "Yes" : "No") << std::endl;
+    println("Has value: ", (a1.has_value() ? "Yes" : "No"));
 
     a1 = 10;
     a2 = 20;
-    std::cout << "\nBefore swap:" << std::endl;
-    std::cout << "a1: "; println(a1);
-    std::cout << "a2: "; println(a2);
+    println("\nBefore swap:");
+    println("a1: ", a1);
+    println("a2: ", a2);
     a1.swap(a2);
-    std::cout << "After swap:" << std::endl;
-    std::cout << "a1: "; println(a1);
-    std::cout << "a2: "; println(a2);
+    println("After swap:");
+    println("a1: ", a1);
+    println("a2: ", a2);
 }
+
+void try_timer(){
+    timer t;
+
+    auto node1 = t.add(1000, [](const timer_node& node) {
+        println("定时器1（ID: ", node.id(), "）执行，到期时间: ", node.expire());
+    });
+    println("已添加定时器1，ID: ", node1.id());
+
+    auto node2 = t.add(2000, [](const timer_node& node) {
+        println("定时器2（ID: ", node.id(), "）执行，到期时间: ", node.expire());
+    });
+    println("已添加定时器2，ID: ", node2.id());
+
+    auto node3 = t.add(1500, [](const timer_node& node) {
+        println("定时器3（ID: ", node.id(), "）执行（此信息不应输出）");
+    });
+    println("已添加定时器3，ID: ", node3.id() , "，准备移除...");
+    bool is_erased = t.erase(node3);
+    if (is_erased) {
+        println("定时器3移除成功");
+    }
+    while (true) {
+        int64_t sleep_us = t.sleep();
+        if (sleep_us == -1) {
+            break;
+        }
+        if (sleep_us > 0) {
+            println("距离下一个定时器到期还有 ", sleep_us, " 微秒，休眠中...");
+            std::this_thread::sleep_for(std::chrono::microseconds(sleep_us));
+        }
+        while (t.check()) {}
+    }
+}
+
 
 void try_db() {
 #ifdef MSTL_SUPPORT_MYSQL__
     std::clock_t begin = clock();
-    database_settings::dbname = "book";
-    database_settings::password = "147258hu";
+    database_settings::dbname("book");
+    database_settings::password("147258hu");
 
     database_pool& pool = get_instance_database_pool();
     for (int i = 0; i < 5000; i++) {
         bool fin = pool.get_connect()->update("SELECT 1");
-        // std::cout << fin << " ";
+        // print(fin, " ");
     }
-    std::cout << std::endl << (1.0 * (clock() - begin) / CLOCKS_PER_SEC) << std::endl;
+    println(1.0 * (clock() - begin) / CLOCKS_PER_SEC);
 
     auto result = pool.get_connect()->query("SELECT * FROM book");
     while (result.next()) {
         for (int i = 0; i < result.column_count(); i++) {
             if (i == 2) {
                 int count = result.at_int16(i);
-                std::cout << "collected :" << count << ", ";
+                println("collected :", count, ", ");
             }
             else if (i == 3) {
                 float count = result.at_float32(i);
-                std::cout << "usable :" << count << ", ";
+                println("usable :", count, ", ");
             }
             else if (i == 5) {
                 _MSTL datetime dt = result.at_datetime(i);
-                std::cout << "date: " << dt.to_string() << ", ";
+                println("date: ", dt, ", ");
             }
             else
                 println(result.at(i), ", ");
         }
-        std::cout << std::endl;
+        println();
     }
-    std::cout << result.row_count() << ", " << result.column_count() << std::endl;
+    println(result.row_count(), ", ", result.column_count());
 
     split_line();
 
@@ -979,11 +1034,11 @@ void try_db() {
         auto* conn = new database_connect();
         if(conn->connect_to()) {
             bool fin = conn->update(sql);
-            // std::cout << fin << " ";
+            // print(fin, " ");
         }
         delete conn;
     }
-    std::cout << std::endl << (1.0 * (clock() - begin) / CLOCKS_PER_SEC) << std::endl;
+    println(1.0 * (clock() - begin) / CLOCKS_PER_SEC);
 #endif
 }
 
@@ -1010,10 +1065,11 @@ void try_pool() {
     pool.submit_task(try_deq);
     pool.submit_task(try_hash);
     pool.submit_task(try_vec);
-    pool.submit_task(try_math);
     pool.stop();
     pool.set_mode(THREAD_POOL_MODE::MODE_CACHED);
     pool.start();
+    pool.submit_task(try_math);
+    pool.submit_task(try_timer);
     pool.submit_task(try_str);
     pool.submit_task(try_tup);
     pool.submit_task(try_rb);

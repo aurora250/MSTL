@@ -432,34 +432,34 @@ public:
     }
 
     MSTL_CONSTEXPR20 basic_string(const self& str) {
-        construct_from_ptr(str.data_, 0, str.size_);
+        this->construct_from_ptr(str.data_, 0, str.size_);
     }
 
     MSTL_CONSTEXPR20 self& operator =(const self& str) {
         if (_MSTL addressof(str) == this) return *this;
-        construct_from_ptr(str.data_, 0, str.size_);
+        this->construct_from_ptr(str.data_, 0, str.size_);
         return *this;
     }
 
     MSTL_CONSTEXPR20 basic_string(self&& str) noexcept
-        : data_(_MSTL move(str.data_)), size_(str.size_),
-        alloc_pair_(default_construct_tag{}, str.alloc_pair_.value) {
+    : data_(_MSTL move(str.data_)), size_(str.size_),
+    alloc_pair_(_MSTL move(str.alloc_pair_)) {
         str.set_empty();
     }
 
     MSTL_CONSTEXPR20 self& operator =(self&& str) noexcept {
         if (_MSTL addressof(str) == this) return *this;
         this->clear();
-        swap(str);
+        this->swap(str);
         return *this;
     }
 
-    MSTL_CONSTEXPR20 basic_string(view_type str) {
-        construct_from_ptr(str.data(), 0, str.size());
+    MSTL_CONSTEXPR20 explicit basic_string(view_type str) {
+        this->construct_from_ptr(str.data(), 0, str.size());
     }
 
     MSTL_CONSTEXPR20 basic_string(view_type str, const size_type n) {
-        construct_from_ptr(str.data(), 0, n);
+        this->construct_from_ptr(str.data(), 0, n);
     }
 
     MSTL_CONSTEXPR20 self& operator =(view_type str) {
@@ -477,19 +477,19 @@ public:
     }
 
     MSTL_CONSTEXPR20 basic_string(const self& str, size_type position) {
-        construct_from_ptr(str.data_, position, str.size_ - position);
+        this->construct_from_ptr(str.data_, position, str.size_ - position);
     }
 
     MSTL_CONSTEXPR20 basic_string(const self& str, size_type position, size_type n) {
-        construct_from_ptr(str.data_, position, n);
+        this->construct_from_ptr(str.data_, position, n);
     }
 
     MSTL_CONSTEXPR20 basic_string(const_pointer str) {
-        construct_from_ptr(str, 0, traits_type::length(str));
+        this->construct_from_ptr(str, 0, traits_type::length(str));
     }
 
     MSTL_CONSTEXPR20 basic_string(const_pointer str, const size_type n) {
-        construct_from_ptr(str, 0, n);
+        this->construct_from_ptr(str, 0, n);
     }
 
     MSTL_CONSTEXPR20 self& operator =(const_pointer str) {
@@ -508,13 +508,13 @@ public:
 
     template <typename Iterator>
     MSTL_CONSTEXPR20 basic_string(Iterator first, Iterator last) {
-        construct_from_iter(first, last);
+        this->construct_from_iter(first, last);
     }
 
     MSTL_CONSTEXPR20 basic_string(std::initializer_list<value_type> l) : basic_string(l.begin(), l.end()) {}
     MSTL_CONSTEXPR20 self& operator =(std::initializer_list<value_type> l) {
         this->clear();
-        insert(begin(), l.begin(), l.end());
+        this->insert(begin(), l.begin(), l.end());
         return *this;
     }
 

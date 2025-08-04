@@ -5,7 +5,7 @@ events:
     kind: "message-v1"
     backtrace:
       - "D:/JetBrains/CLion 2024.2/bin/cmake/win/x64/share/cmake-3.29/Modules/CMakeDetermineSystem.cmake:205 (message)"
-      - "CMakeLists.txt:25 (project)"
+      - "CMakeLists.txt:27 (project)"
     message: |
       The system is: Windows - 10.0.22631 - AMD64
   -
@@ -14,7 +14,7 @@ events:
       - "D:/JetBrains/CLion 2024.2/bin/cmake/win/x64/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
       - "D:/JetBrains/CLion 2024.2/bin/cmake/win/x64/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
       - "D:/JetBrains/CLion 2024.2/bin/cmake/win/x64/share/cmake-3.29/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
-      - "CMakeLists.txt:25 (project)"
+      - "CMakeLists.txt:27 (project)"
     message: |
       Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
       Compiler: D:/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe 
@@ -47,7 +47,7 @@ events:
       - "D:/JetBrains/CLion 2024.2/bin/cmake/win/x64/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:1216 (message)"
       - "D:/JetBrains/CLion 2024.2/bin/cmake/win/x64/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:250 (CMAKE_DETERMINE_MSVC_SHOWINCLUDES_PREFIX)"
       - "D:/JetBrains/CLion 2024.2/bin/cmake/win/x64/share/cmake-3.29/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
-      - "CMakeLists.txt:25 (project)"
+      - "CMakeLists.txt:27 (project)"
     message: |
       Detecting CXX compiler /showIncludes prefix:
         main.c
@@ -59,12 +59,12 @@ events:
     backtrace:
       - "D:/JetBrains/CLion 2024.2/bin/cmake/win/x64/share/cmake-3.29/Modules/CMakeDetermineCompilerABI.cmake:67 (try_compile)"
       - "D:/JetBrains/CLion 2024.2/bin/cmake/win/x64/share/cmake-3.29/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
-      - "CMakeLists.txt:25 (project)"
+      - "CMakeLists.txt:27 (project)"
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-      source: "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-msvc/CMakeFiles/CMakeScratch/TryCompile-ybpi99"
-      binary: "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-msvc/CMakeFiles/CMakeScratch/TryCompile-ybpi99"
+      source: "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-msvc/CMakeFiles/CMakeScratch/TryCompile-x7kkyu"
+      binary: "D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-msvc/CMakeFiles/CMakeScratch/TryCompile-x7kkyu"
     cmakeVariables:
       CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /GR /EHsc"
       CMAKE_CXX_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
@@ -74,11 +74,11 @@ events:
       variable: "CMAKE_CXX_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: 'D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-msvc/CMakeFiles/CMakeScratch/TryCompile-ybpi99'
+        Change Dir: 'D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-msvc/CMakeFiles/CMakeScratch/TryCompile-x7kkyu'
         
-        Run Build Command(s): "D:/JetBrains/CLion 2024.2/bin/ninja/win/x64/ninja.exe" -v cmTC_04f4c
-        [1/2] "D:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe"  /nologo /TP   /DWIN32 /D_WINDOWS /GR /EHsc  /Zi /Ob0 /Od /RTC1 -std:c++17 -MDd /showIncludes /FoCMakeFiles\\cmTC_04f4c.dir\\CMakeCXXCompilerABI.cpp.obj /FdCMakeFiles\\cmTC_04f4c.dir\\ /FS -c "D:\\JetBrains\\CLion 2024.2\\bin\\cmake\\win\\x64\\share\\cmake-3.29\\Modules\\CMakeCXXCompilerABI.cpp"
-        [2/2] C:\\Windows\\system32\\cmd.exe /C "cd . && "D:\\JetBrains\\CLion 2024.2\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_04f4c.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100261~1.0\\x64\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100261~1.0\\x64\\mt.exe --manifests  -- "D:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\link.exe" /nologo CMakeFiles\\cmTC_04f4c.dir\\CMakeCXXCompilerABI.cpp.obj  /out:cmTC_04f4c.exe /implib:cmTC_04f4c.lib /pdb:cmTC_04f4c.pdb /version:0.0 /machine:x64  /debug /INCREMENTAL /subsystem:console  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
+        Run Build Command(s): "D:/JetBrains/CLion 2024.2/bin/ninja/win/x64/ninja.exe" -v cmTC_4bbe7
+        [1/2] "D:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe"  /nologo /TP   /DWIN32 /D_WINDOWS /GR /EHsc  /Zi /Ob0 /Od /RTC1 -std:c++14 -MDd /showIncludes /FoCMakeFiles\\cmTC_4bbe7.dir\\CMakeCXXCompilerABI.cpp.obj /FdCMakeFiles\\cmTC_4bbe7.dir\\ /FS -c "D:\\JetBrains\\CLion 2024.2\\bin\\cmake\\win\\x64\\share\\cmake-3.29\\Modules\\CMakeCXXCompilerABI.cpp"
+        [2/2] C:\\Windows\\system32\\cmd.exe /C "cd . && "D:\\JetBrains\\CLion 2024.2\\bin\\cmake\\win\\x64\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_4bbe7.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100261~1.0\\x64\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100261~1.0\\x64\\mt.exe --manifests  -- "D:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\link.exe" /nologo CMakeFiles\\cmTC_4bbe7.dir\\CMakeCXXCompilerABI.cpp.obj  /out:cmTC_4bbe7.exe /implib:cmTC_4bbe7.lib /pdb:cmTC_4bbe7.pdb /version:0.0 /machine:x64  /debug /INCREMENTAL /subsystem:console  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
         
       exitCode: 0
   -
@@ -86,7 +86,7 @@ events:
     backtrace:
       - "D:/JetBrains/CLion 2024.2/bin/cmake/win/x64/share/cmake-3.29/Modules/CMakeDetermineCompilerABI.cmake:173 (message)"
       - "D:/JetBrains/CLion 2024.2/bin/cmake/win/x64/share/cmake-3.29/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
-      - "CMakeLists.txt:25 (project)"
+      - "CMakeLists.txt:27 (project)"
     message: |
       Parsed CXX implicit link information:
         link line regex: [^( *|.*[/\\])(ld[0-9]*(\\.[a-z]+)?|link\\.exe|lld-link(\\.exe)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]

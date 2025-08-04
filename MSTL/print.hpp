@@ -1,7 +1,5 @@
 #ifndef MSTL_PRINT_HPP__
 #define MSTL_PRINT_HPP__
-#include "basiclib.hpp"
-//#ifdef MSTL_VERSION_17__
 #include "check_type.hpp"
 #include "variant.hpp"
 #include "optional.hpp"
@@ -70,11 +68,22 @@ struct printer<T, enable_if_t<is_boolean_v<T>>> {
 
 template <typename T>
 struct printer<T, enable_if_t<is_standard_integer_v<T>>> {
+private:
+    template <typename U, enable_if_t<is_signed_v<U>, int> = 0>
+    static void __print_feature_dispatch(const U& t) {
+        std::cout << t;
+    }
+    template <typename U, enable_if_t<is_unsigned_v<U>, int> = 0>
+    static void __print_feature_dispatch(const U& t) {
+        std::cout << t << "u";
+    }
+
+public:
     static void print(const T& t) {
         std::cout << t;
     }
     static void print_feature(const T& t) {
-        printer::print(t);
+        printer::__print_feature_dispatch<T>(t);
     }
 };
 
@@ -133,7 +142,7 @@ struct printer<T, enable_if_t<is_bounded_array_v<T> && !is_ctype_string_v<T>>> {
         }
         std::cout << " ](" << check_type<value_type>() << "[";
         _MSTL printer<size_type>::print_feature(s);
-        std::cout << "]@" << _MSTL addressof(t) << ")";
+        std::cout << "])";
     }
 };
 
@@ -152,8 +161,7 @@ struct printer<T, enable_if_t<is_unbounded_array_v<T>>> {
             return;
         }
         using raw_type = remove_extent_t<T>;
-        std::cout << "[](" << check_type<raw_type>() <<
-            "[]@" << _MSTL addressof(t) << ")";
+        std::cout << "[](" << check_type<raw_type>() << "[])";
     }
 };
 
@@ -233,15 +241,14 @@ struct printer<T, enable_if_t<is_member_function_pointer_v<T>>> {
 
 template <typename T>
 struct printer<T, enable_if_t<is_enum_v<T>>> {
+    using underlying_type = underlying_type_t<T>;
+
     static void print(const T& t) {
-        using underlying_type = underlying_type_t<T>;
         std::cout << static_cast<underlying_type>(t);
     }
-
     static void print_feature(const T& t) {
-        using underlying_type = underlying_type_t<T>;
-        std::cout << static_cast<underlying_type>(t) <<
-            "(" << check_type<T>() << ":" << check_type<underlying_type>() << ")";
+        printer::print(t);
+        std::cout << "(" << check_type<T>() << ": " << check_type<underlying_type>() << ")";
     }
 };
 
@@ -684,10 +691,10 @@ std::ostream& operator <<(std::ostream& out, basic_string<CharT, Traits, Alloc> 
 template <typename CharT>
 struct printer<basic_stringstream<CharT>> {
     static void print(const basic_stringstream<CharT>& t) {
-        __raw_string_printer<CharT>::print(t.str());
+        __raw_string_printer<CharT>::print(t.str().c_str());
     }
     static void print_feature(const basic_stringstream<CharT>& t) {
-        __raw_string_printer<CharT>::print_feature(t.str());
+        __raw_string_printer<CharT>::print_feature(t.str().c_str());
         std::cout << "ss";
     }
 };
@@ -1018,6 +1025,9 @@ struct printer<timestamp> {
 #endif
 
 #ifndef MSTL_VERSION_17__
+inline void __print_single() {
+    std::cout.flush();
+}
 template <typename Last>
 void __print_single(Last&& last) {
     printer<remove_cvref_t<Last>>::print(_MSTL forward<Last>(last));
@@ -1029,6 +1039,9 @@ void __print_single(First&& first, Second&& second, Rest&&... rest) {
     __print_single(_MSTL forward<Second>(second), _MSTL forward<Rest>(rest)...);
 }
 
+inline void __print_feature_single() {
+    std::cout.flush();
+}
 template <typename Last>
 void __print_feature_single(Last&& last) {
     printer<remove_cvref_t<Last>>::print_feature(_MSTL forward<Last>(last));
@@ -1062,7 +1075,9 @@ void println_feature(Args&&... args) {
     __print_feature_single(_MSTL forward<Args>(args)...);
     std::cout << "\n";
 }
+
 #else
+
 template <typename This, typename ...Rests>
 void print(const This& t, const Rests&... r) {
     printer<remove_cvref_t<This>>::print(t);
@@ -1088,6 +1103,7 @@ void println_feature(const This& t, const Rests&... r) {
     ((std::cout << " ", printer<remove_cvref_t<Rests>>::print_feature(r)), ...);
     std::cout << "\n";
 }
+
 #endif
 
 #ifdef MSTL_COMPILER_MSVC__
@@ -1095,5 +1111,4 @@ void println_feature(const This& t, const Rests&... r) {
 #endif
 
 MSTL_END_NAMESPACE__
-//#endif
 #endif // MSTL_PRINT_HPP__

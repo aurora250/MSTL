@@ -1,6 +1,6 @@
 #ifndef MSTL_SET_HPP__
 #define MSTL_SET_HPP__
-#include "rb_tree.h"
+#include "rb_tree.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Key, typename Compare = less<Key>, typename Alloc = allocator<__rb_tree_node<Key>>>

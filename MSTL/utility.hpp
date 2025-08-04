@@ -808,7 +808,7 @@ bool empty(T (&)[Size]) noexcept {
 }
 template <typename T>
 MSTL_NODISCARD MSTL_ALWAYS_INLINE constexpr
-bool empty(T* ptr) noexcept {
+bool empty(const T* ptr) noexcept {
 	return ptr != nullptr;
 }
 template <typename T>

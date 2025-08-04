@@ -414,7 +414,7 @@ public:
 	}
 
 	MSTL_CONSTEXPR20 ~vector() {
-		_MSTL destroy(start_, finish_);
+		clear();
 		deallocate();
 	}
 
@@ -530,14 +530,18 @@ public:
 			_MSTL construct(finish_, _MSTL forward<U>(args)...);
 			++finish_;
 		}
-		else (emplace)(end(), _MSTL forward<U>(args)...);
+		else this->emplace(end(), _MSTL forward<U>(args)...);
 	}
 
 	MSTL_CONSTEXPR20 void push_back(const T& val) {
-		(emplace_back)(val);
+	    if (finish_ != pair_.value) {
+	        _MSTL construct(finish_, val);
+	        ++finish_;
+	    }
+	    else this->emplace(end(), val);
 	}
 	MSTL_CONSTEXPR20 void push_back(T&& val) {
-		(emplace_back)(_MSTL forward<T>(val));
+		this->emplace_back(_MSTL move(val));
 	}
 
 	MSTL_CONSTEXPR20 void pop_back() noexcept {
@@ -633,10 +637,15 @@ public:
 	MSTL_CONSTEXPR20 iterator erase(iterator first, iterator last)
 		noexcept(is_nothrow_move_assignable_v<value_type>) {
 		MSTL_DEBUG_VERIFY(_MSTL distance(first, last) >= 0, "vector erase out of ranges.");
-		pointer i = _MSTL copy(&*last, finish_, &*first);
-		_MSTL destroy(i, finish_);
-		finish_ = finish_ - (last - first);
-		return iterator(finish_, this);
+
+	    const auto elems_after = end() - last;
+	    if (elems_after > 0) {
+	        _MSTL move(last, end(), first);
+	    }
+	    pointer new_finish = finish_ - (last - first);
+	    _MSTL destroy(new_finish, finish_);
+	    finish_ = new_finish;
+	    return first;
 	}
 
 	MSTL_CONSTEXPR20 iterator erase(iterator position)
@@ -648,7 +657,11 @@ public:
 		return position;
 	}
 
-	MSTL_CONSTEXPR20 void clear() noexcept { erase(begin(), end()); }
+	MSTL_CONSTEXPR20 void clear() noexcept {
+	    if (empty()) return;
+	    _MSTL destroy(start_, finish_);
+	    finish_ = start_;
+	}
 
 	MSTL_CONSTEXPR20 void shrink_to_fit() {
 		if (capacity() == size()) return;
