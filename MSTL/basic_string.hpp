@@ -409,7 +409,10 @@ public:
         }
     }
 
-    MSTL_CONSTEXPR20 basic_string(size_type n, value_type chr) {
+    MSTL_CONSTEXPR20 explicit basic_string(size_type n, int32_t chr)
+    : basic_string(n, static_cast<value_type>(chr)) {}
+
+    MSTL_CONSTEXPR20 explicit basic_string(size_type n, value_type chr) {
         const size_type init_size = _MSTL max(MEMORY_ALIGN_THRESHHOLD, n + 1);
         data_ = alloc_pair_.get_base().allocate(init_size);
         traits_type::assign(data_, n, chr);
@@ -506,7 +509,8 @@ public:
         return *this;
     }
 
-    template <typename Iterator>
+    template <typename Iterator, enable_if_t<
+        !is_convertible_v<Iterator, value_type>, int> = 0>
     MSTL_CONSTEXPR20 basic_string(Iterator first, Iterator last) {
         this->construct_from_iter(first, last);
     }

@@ -22,5 +22,6 @@
 #include "database_pool.hpp"
 #include "undef_cmacro.hpp"
 #include "print.hpp"
+#include "file.hpp"
 
 #endif // MSTL_MSTLCPP_HPP__

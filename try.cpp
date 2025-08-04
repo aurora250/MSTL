@@ -2,6 +2,48 @@
 USE_MSTL
 using MSTL::size_t;
 
+void test_file() {
+    string filePath = "file_test.txt";
+    try {
+        using size_type = file::size_type;
+        string content = "Windows API Write\n Second Line \n Hello, Windows File API!";
+
+        bool success = file::create_and_write(filePath, content);
+        if (success) {
+            println("Successfully created file!\n");
+        } else {
+            println("Failed to create file!\n");
+        }
+
+        string readContent;
+        success = file::read_all(filePath, readContent);
+        if (success) {
+            println("Successfully read file!: \n", readContent);
+        } else {
+            println("Failed to read file!");
+        }
+
+        file file;
+        file.open(filePath);
+        println("File size: ", file.size());
+        println(file.seek(0, FILE_POINT_ORIGIN::END));
+
+        string appendContent = "\nAdditional content";
+        size_type bytesWritten = file.write(appendContent.c_str(), appendContent.size());
+        println("Added", bytesWritten, "bytes");
+
+        println(file.seek(0));
+        size_type newSize = file.size();
+        file.read(content, newSize);
+
+        println("\nFile after Addition Write:\n", content);
+    }
+    catch (const Error& e) {
+        println("Error!", e.what());
+    }
+}
+
+
 void test_date() {
     _MSTL date d1(2024, 2, 29);
     assert(d1.get_year() == 2024 && d1.get_month() == 2 && d1.get_day() == 29);
@@ -124,7 +166,7 @@ void test_utc_conversion() {
 }
 
 
-void try_datetime() {
+void test_datetimes() {
     test_date();
     test_time();
     test_datetime();
@@ -133,7 +175,7 @@ void try_datetime() {
     println(datetime::now());
 }
 
-void try_print() {
+void test_print() {
     decimal_t f = constants::PI;
     FUNCTION_MANAGE_OPERATE enu = FUNCTION_MANAGE_OPERATE::GET_PTR;
     __nocopy_type uni{};
@@ -193,7 +235,7 @@ void try_print() {
     println_feature(f, enu);
     println_feature(uni, obj);
     println_feature("\n\\\"\v", cs, err);
-    println_feature(try_any, try_check, initialize<int>, make_shared<int, int>, _MSTL datetime::epoch);
+    println_feature(test_any, test_check, initialize<int>, make_shared<int, int>, _MSTL datetime::epoch);
     println_feature(mop, null_mop, mfp);
     println_feature(p, iter);
     println_feature(tb);
@@ -215,7 +257,7 @@ void try_print() {
     println(f, enu);
     println(uni, obj);
     println("\n\\\"\v", cs, err);
-    println(try_any, try_check, initialize<int>, make_shared<int, int>, _MSTL datetime::epoch);
+    println(test_any, test_check, initialize<int>, make_shared<int, int>, _MSTL datetime::epoch);
     println(mop, null_mop, mfp);
     println(p, iter);
     println(tb);
@@ -231,21 +273,21 @@ void try_print() {
     println(s, us);
 }
 
-void try_rnd() {
+void test_rnd() {
     print(_MSTL secret::is_supported(), secret::next_double(), secret::next_int(1, 10));
     print(_MSTL random::next_int(10, 20), random::next_int(10, 20), random::next_int(10, 20));
 }
 
-void try_exc() {
+void test_exce() {
     try {
         Exception(MemoryError("test"));
     }
     catch (Error&) {
-        Exit(true, try_lls);
-        try_lls();
+        Exit(true, test_list);
+        test_list();
     }
 }
-void try_lls() {
+void test_list() {
     list<int> lls{ 1,2,3,4,5,6,7 };
     println(lls);
     lls.push_back(3);
@@ -288,7 +330,7 @@ void try_lls() {
     // println(long_list);
 }
 
-void try_check() {
+void test_check() {
     println(check_type<string>());
     println(check_type<const volatile void* const*&>());
     println(check_type<int(*)[]>());
@@ -308,7 +350,7 @@ void try_check() {
     delete sr;
 }
 
-void try_copy() {
+void test_copy() {
     //int ia[] = { 0,1,2,3,4,5,6,7,8 };
     //MSTL::copy(ia + 2, ia + 7, ia);
     //MSTL::for_each(ia, ia + 9, [](int x) { std::cout << x << std::endl; }); //2 3 4 5 6 5 6 7 8
@@ -346,7 +388,7 @@ void try_copy() {
     //std::for_each(id.begin(), id.end(), display<int>()); //0 1 2 3 2 3 4 5 6
     //std::cout << std::endl;
 }
-void try_deq() {
+void test_deque() {
     deque<int> a{1,2,3,4,5,6,7,8,9,10};
     println(a);
     a.push_back(2);
@@ -388,7 +430,7 @@ void try_deq() {
     // println(long_deque);
 }
 
-void try_stack() {
+void test_stack() {
     stack<int> s;
     s.push(2);
     s.push(3);
@@ -408,7 +450,7 @@ void try_stack() {
     }
     // println(long_stack);
 }
-void try_vec() {
+void test_vector() {
     try{
         vector<int> v{ 1,2,3,4 };
         v.push_back(3);
@@ -457,7 +499,7 @@ void try_vec() {
     }
     // println(long_vector);
 }
-void try_pque() {
+void test_pqueue() {
     priority_queue<int> q;
     println(typeid(priority_queue<int*>).name());
     q.push(6); q.push(9); q.push(1); q.push(5);
@@ -477,7 +519,7 @@ void try_pque() {
     // println(long_pque);
 }
 
-void try_rb() {
+void test_rbtree() {
     map<int, char> m;
     m.insert(pair<int, char>(1, 'c'));
     m.emplace(3, 'c');
@@ -556,7 +598,7 @@ void try_rb() {
     // println(long_multiset);
 }
 
-void try_tup() {
+void test_tuple() {
     tuple<int, char, const char*> t(1, 't', "MSTL");
     auto a = get<0>(t);
     println(MSTL::get<1>(t));
@@ -584,7 +626,7 @@ void try_tup() {
     println("Product:", product);
 }
 
-void try_hash() {
+void test_hash() {
     unordered_map<int, char> m;
     m[1] = 'a';
     m[2] = 'b';
@@ -624,7 +666,7 @@ void try_hash() {
     println(ms);
 }
 
-void try_math() {
+void test_math() {
     println(power(2, 10));
     println(power(3, 10));
     println(factorial(10));
@@ -646,7 +688,7 @@ void try_math() {
     println(around_pi(constants::PI), " : ", around_pi(6.28));
 }
 
-void try_sort() {
+void test_sort() {
     USE_MSTL;
     MSTL::vector<int> vec{ 6,9,1,5,8,4,7 };
     //insertion_sort(vec.begin(), vec.end());
@@ -679,20 +721,12 @@ void try_sort() {
     //println(people);
 }
 
-void try_ss() {
-    stringstream ss;
-    ss << "a" << 'b' << 333 << " " << 9.333 << MSTL::string("hello") << false << MSTL::move(MSTL::string("a"));
-    println(ss);
-    ss.str("where");
-    println(ss);
-}
-
 struct var_visitor {
     int operator()(int arg) const { return arg * 2; }
     int operator()(const string& arg) const { return arg.length(); }
 };
 
-void try_var() {
+void test_variant() {
     variant<int, string> v1;
     println(v1.index());
     variant<int, string> v2;
@@ -831,16 +865,22 @@ void test_max_memory_string() {
     }
 }
 
-void try_str() {
-    // test_short_strings(1000000, 32);
+void test_string() {
+    test_short_strings(1000000, 32);
     test_long_string_concat(100000, 1024);
     test_string_modification(100000, 500000);
     test_string_search_replace(1000000, 10000);
     test_max_memory_string();
+
+    stringstream ss;
+    ss << "a" << 'b' << 333 << " " << 9.333 << MSTL::string("hello") << false << MSTL::move(MSTL::string("a"));
+    println_feature(ss);
+    ss.str("where");
+    println_feature(ss);
 }
 
 
-void try_opt() {
+void test_option() {
     optional<int> opt1;
     println(opt1);
 
@@ -887,7 +927,7 @@ void try_opt() {
     println(result3);
 }
 
-void try_any() {
+void test_any() {
     MSTL::any a1;
     println("Testing default constructor:");
     println(a1);
@@ -955,7 +995,7 @@ void try_any() {
     println("a2: ", a2);
 }
 
-void try_timer(){
+void test_timer(){
     timer t;
 
     auto node1 = t.add(1000, [](const timer_node& node) {
@@ -990,7 +1030,7 @@ void try_timer(){
 }
 
 
-void try_db() {
+void test_dbpool() {
 #ifdef MSTL_SUPPORT_MYSQL__
     std::clock_t begin = clock();
     database_settings::dbname("book");
@@ -1042,7 +1082,7 @@ void try_db() {
 #endif
 }
 
-void try_dns() {
+void test_dns() {
 #ifdef MSTL_PLATFORM_LINUX__
     int n = 10;
     while (n--) {
@@ -1058,28 +1098,28 @@ void try_dns() {
 #endif
 }
 
-void try_pool() {
+void test_tpool() {
     thread_pool& pool = get_instance_thread_pool();
     pool.start();
-    pool.submit_task(try_lls);
-    pool.submit_task(try_deq);
-    pool.submit_task(try_hash);
-    pool.submit_task(try_vec);
+    pool.submit_task(test_list);
+    pool.submit_task(test_deque);
+    pool.submit_task(test_hash);
+    pool.submit_task(test_vector);
     pool.stop();
     pool.set_mode(THREAD_POOL_MODE::MODE_CACHED);
     pool.start();
-    pool.submit_task(try_math);
-    pool.submit_task(try_timer);
-    pool.submit_task(try_str);
-    pool.submit_task(try_tup);
-    pool.submit_task(try_rb);
-    pool.submit_task(try_var);
-    pool.submit_task(try_opt);
-    pool.submit_task(try_check);
-    pool.submit_task(try_any);
-    pool.submit_task(try_datetime);
-    pool.submit_task(try_rnd);
-    pool.submit_task(try_print);
+    pool.submit_task(test_math);
+    pool.submit_task(test_timer);
+    pool.submit_task(test_string);
+    pool.submit_task(test_tuple);
+    pool.submit_task(test_rbtree);
+    pool.submit_task(test_variant);
+    pool.submit_task(test_option);
+    pool.submit_task(test_check);
+    pool.submit_task(test_any);
+    pool.submit_task(test_datetimes);
+    pool.submit_task(test_rnd);
+    pool.submit_task(test_print);
     // pool.submit_task(try_db);
     pool.stop();
 }

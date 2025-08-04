@@ -1,0 +1,4 @@
+Windows API Write
+ Second Line 
+ Hello, Windows File API!
+Additional content

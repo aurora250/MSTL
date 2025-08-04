@@ -24,6 +24,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         message(STATUS "BUILD TYPE：Release (GNU/Clang)")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
     endif()
+
 else()
     message(WARNING "Unsupported Compiler: UTF-8 Encoding Options Not Set")
 endif()
@@ -58,8 +59,7 @@ file(GLOB_RECURSE SUB_DIR_SRC_LIST
 
 set(SUB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "MSTL project codes")
 include_directories(${SUB_INCLUDE_DIR})
-add_library(MSTL ${SUB_DIR_SRC_LIST}
-        file.hpp)
+add_library(MSTL ${SUB_DIR_SRC_LIST})
 
 
 # ------------------- Boost -------------------

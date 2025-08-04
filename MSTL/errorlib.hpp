@@ -60,6 +60,8 @@ MSTL_ERROR_BUILD_DERIVED_CLASS(ValueError, Error, "Function or Template Argument
 MSTL_ERROR_BUILD_DERIVED_CLASS(LinkError, Error, "External Link Actions Failed.")
 MSTL_ERROR_BUILD_DERIVED_CLASS(DeviceOperateError, Error, "Operate Device Failed.")
 MSTL_ERROR_BUILD_FINAL_CLASS(FileOperateError, DeviceOperateError, "Device File Operation Failed.")
+MSTL_ERROR_BUILD_FINAL_CLASS(MathError, ValueError, "Math Function Argument Invalid.")
+
 
 #ifdef MSTL_SUPPORT_CUDA__
 // specialization of MSTL_ERROR_BUILD_FINAL_CLASS for CUDA

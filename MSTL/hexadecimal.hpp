@@ -1,0 +1,90 @@
+#ifndef MSTL_HEXADECIMAL_HPP__
+#define MSTL_HEXADECIMAL_HPP__
+#include "string.hpp"
+MSTL_BEGIN_NAMESPACE__
+
+class hexadecimal {
+private:
+    int64_t value;
+
+    static int64_t parse_hex(const string& str) {
+        if (str.empty()) return 0;
+
+        string s = str;
+        bool negative = false;
+        size_t start = 0;
+
+        while (start < s.size() && std::isspace(s[start])) ++start;
+        if (start == s.size()) return 0;
+
+        if (s[start] == '-') {
+            negative = true;
+            ++start;
+        } else if (s[start] == '+') {
+            ++start;
+        }
+
+        if (start + 1 < s.size() && s[start] == '0' &&
+            (s[start+1] == 'x' || s[start+1] == 'X')) {
+            start += 2;
+        }
+
+        string hex_digits;
+        while (start < s.size()) {
+            char c = s[start++];
+            if (std::isxdigit(c)) {
+                hex_digits += c;
+            } else if (!std::isspace(c)) {
+                Exception(ValueError("Invalid hexadecimal character"));
+            }
+        }
+
+        if (hex_digits.empty()) return 0;
+
+        size_t pos = 0;
+        const uint64_t raw = to_uint64(hex_digits.data(), &pos, 16);
+        if (pos != hex_digits.size()) {
+            Exception(ValueError("Invalid hexadecimal format"));
+        }
+
+        if (negative) {
+            if (raw > static_cast<uint64_t>(INT64_MAX_SIZE) + 1) {
+                Exception(ValueError("Hexadecimal value out of range"));
+            }
+            return -static_cast<long long>(raw);
+        }
+        if (raw > static_cast<uint64_t>(INT64_MAX_SIZE)) {
+            Exception(ValueError("Hexadecimal value out of range"));
+        }
+        return static_cast<int64_t>(raw);
+    }
+
+public:
+    hexadecimal() : value(0) {}
+    hexadecimal(const int64_t v) : value(v) {}
+    explicit hexadecimal(const string& s) : value(parse_hex(s)) {}
+
+    long long to_decimal() const { return value; }
+
+    hexadecimal operator +(const hexadecimal& other) const { return {value + other.value}; }
+    hexadecimal operator -(const hexadecimal& other) const { return {value - other.value}; }
+    hexadecimal operator *(const hexadecimal& other) const { return {value * other.value}; }
+    hexadecimal operator /(const hexadecimal& other) const {
+        if (other.value == 0) throw std::domain_error("Division by zero");
+        return {value / other.value};
+    }
+    hexadecimal operator %(const hexadecimal& other) const {
+        if (other.value == 0) Exception(MathError("Modulo by zero"));
+        return {value % other.value};
+    }
+
+    bool operator ==(const hexadecimal& other) const { return value == other.value; }
+    bool operator !=(const hexadecimal& other) const { return value != other.value; }
+    bool operator <(const hexadecimal& other) const { return value < other.value; }
+    bool operator <=(const hexadecimal& other) const { return value <= other.value; }
+    bool operator >(const hexadecimal& other) const { return value > other.value; }
+    bool operator >=(const hexadecimal& other) const { return value >= other.value; }
+};
+
+MSTL_END_NAMESPACE__
+#endif // MSTL_HEXADECIMAL_HPP__

@@ -8,6 +8,6 @@
 -- Boost toolset is unknown (compiler MSVC 19.44.35213.0)
 -- Boost toolset is unknown (compiler MSVC 19.44.35213.0)
 -- CUDA support disabled.
--- Configuring done (0.0s)
+-- Configuring done (0.1s)
 -- Generating done (0.0s)
 -- Build files have been written to: D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-msvc

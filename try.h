@@ -3,29 +3,30 @@
 #include "MSTL/mstlc++.hpp"
 USE_MSTL
 
-void try_datetime();
-void try_print();
-void try_rnd();
-void try_lls();
-void try_exc();
+void test_file();
+void test_datetimes();
+void test_print();
+void test_rnd();
+void test_list();
+void test_exce();
 
 class Foo {};
-void try_check();
+void test_check();
 
-void try_copy();
-void try_deq();
-void try_stack();
-void try_vec();
-void try_pque();
-void try_rb();
+void test_copy();
+void test_deque();
+void test_stack();
+void test_vector();
+void test_pqueue();
+void test_rbtree();
 
 inline int sum_3(int a, int b, int c) {
     return a + b + c;
 }
 
-void try_tup();
-void try_hash();
-void try_math();
+void test_tuple();
+void test_hash();
+void test_math();
 
 struct Person {
     string name;
@@ -42,17 +43,16 @@ struct MSTL::printer <Person> {
     }
 };
 
-void try_sort();
-void try_ss();
-void try_var();
-void try_str();
+void test_sort();
+void test_variant();
+void test_string();
 
-void try_opt();
+void test_option();
 
-void try_any();
-void try_timer();
-void try_db();
-void try_pool();
-void try_dns();
+void test_any();
+void test_timer();
+void test_dbpool();
+void test_tpool();
+void test_dns();
 
 #endif //TRY_H

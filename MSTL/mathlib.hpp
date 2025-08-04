@@ -4,8 +4,6 @@
 #include "type_traits.hpp"
 MSTL_BEGIN_NAMESPACE__
 
-MSTL_ERROR_BUILD_FINAL_CLASS(MathError, ValueError, "Math Function Argument Invalid.")
-
 using maths_t   = int16_t;
 using mathus_t	= uint16_t;
 using mathi_t	= int32_t;
