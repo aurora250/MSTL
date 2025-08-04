@@ -7,6 +7,7 @@
 #include "unordered_map.hpp"
 #include "unordered_set.hpp"
 #include "stack.hpp"
+#include "file.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T>
@@ -707,6 +708,17 @@ struct printer<function<Res(Args...)>> {
     }
     static void print_feature(const function<Res(Args...)>& t) {
         printer::print(t);
+    }
+};
+
+
+template <>
+struct printer<file> {
+    static void print(const file& t) {
+        std::cout << check_type<file>();
+    }
+    static void print_feature(const file& t) {
+        std::cout << check_type<file>() << "(" << t.;
     }
 };
 

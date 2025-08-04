@@ -2,44 +2,179 @@
 USE_MSTL
 using MSTL::size_t;
 
-void test_file() {
-    string filePath = "file_test.txt";
-    try {
-        using size_type = file::size_type;
-        string content = "Windows API Write\n Second Line \n Hello, Windows File API!";
 
-        bool success = file::create_and_write(filePath, content);
-        if (success) {
-            println("Successfully created file!\n");
-        } else {
-            println("Failed to create file!\n");
-        }
+const string TEST_FILE = "test_temp_file.txt";
+const string TEST_DIR = "test_temp_dir";
+const string TEST_SUB_DIR = TEST_DIR + "/sub_dir";
+const string TEST_CONTENT = "Hello, File Class!\nSecond line.\r\nThird line";
 
-        string readContent;
-        success = file::read_all(filePath, readContent);
-        if (success) {
-            println("Successfully read file!: \n", readContent);
-        } else {
-            println("Failed to read file!");
-        }
+void test_file_basic_operations() {
+    bool create_ok = file::create_and_write(TEST_FILE, TEST_CONTENT);
+    assert(create_ok);
+    assert(file::exists(TEST_FILE));
+    assert(file::is_file(TEST_FILE));
+    assert(!file::is_directory(TEST_FILE));
 
-        file file;
-        file.open(filePath);
-        println("File size: ", file.size());
-        println(file.seek(0, FILE_POINT_ORIGIN::END));
+    assert(file::file_size(TEST_FILE) == TEST_CONTENT.size());
 
-        string appendContent = "\nAdditional content";
-        size_type bytesWritten = file.write(appendContent.c_str(), appendContent.size());
-        println("Added", bytesWritten, "bytes");
+    string read_content;
+    bool read_ok = file::read_all(TEST_FILE, read_content);
+    assert(read_ok);
+    assert(read_content == TEST_CONTENT);
 
-        println(file.seek(0));
-        size_type newSize = file.size();
-        file.read(content, newSize);
+    file f;
+    assert(!f.opened());
+    assert(f.open(TEST_FILE, FILE_ACCESS_MODE::READ_WRITE));
+    assert(f.opened());
+    assert(f.file_path() == TEST_FILE);
 
-        println("\nFile after Addition Write:\n", content);
+    string line;
+    assert(f.read_line(line));
+    assert(line == "Hello, File Class!");
+    assert(f.read_line(line));
+    assert(line == "Second line.");
+    assert(f.read_line(line));
+    assert(line == "Third line");
+
+    assert(f.seek(0, FILE_POINT_ORIGIN::BEGIN));
+    assert(f.tell() == 0);
+    assert(f.seek(5, FILE_POINT_ORIGIN::CURRENT));
+    assert(f.tell() == 5);
+
+    assert(f.seek(0));
+    string append_str = " Append";
+    size_t written = f.write(append_str, append_str.size());
+    assert(written == append_str.size());
+    assert(f.flush());
+    assert(f.size() == TEST_CONTENT.size() + append_str.size());
+
+    assert(f.truncate(10));
+    assert(f.size() == 10);
+
+    f.close();
+    assert(!f.opened());
+}
+
+void test_directory_operations() {
+    assert(!file::exists(TEST_SUB_DIR));
+    bool dir_ok = file::create_directories(TEST_SUB_DIR);
+    assert(dir_ok);
+    assert(file::exists(TEST_SUB_DIR));
+    assert(file::is_directory(TEST_SUB_DIR));
+
+    string sub_file = TEST_SUB_DIR + "/sub_file.txt";
+    assert(file::create_and_write(sub_file, "sub content"));
+    assert(file::exists(sub_file));
+}
+
+void test_file_attributes_and_times() {
+    file f(TEST_FILE);
+    assert(f.open(TEST_FILE));
+
+    // 测试属性操作
+    _MSTL FILE_ATTRIBUTE original_attr = f.attributes();
+    bool set_attr_ok = f.set_attributes(_MSTL FILE_ATTRIBUTE::READONLY);
+    assert(set_attr_ok);
+    assert(static_cast<bool>(f.attributes() & _MSTL FILE_ATTRIBUTE::READONLY));
+    // 恢复属性
+    assert(f.set_attributes(original_attr));
+    assert(f.attributes() == original_attr);
+
+    // 测试时间操作
+    _MSTL datetime now = _MSTL datetime::now();
+    bool set_time_ok = f.set_last_write_time(now);
+    assert(set_time_ok);
+    assert(f.last_write_time().to_string() == now.to_string());
+
+    f.close();
+}
+
+void test_file_lock_and_other_operations() {
+    file f(TEST_FILE);
+    assert(f.open(TEST_FILE));
+
+    // 测试文件锁定（简单验证调用成功）
+    bool locked = f.lock(0, 10, _MSTL FILE_LOCK_MODE::EXCLUSIVE);
+    assert(locked);
+    bool unlocked = f.unlock(0, 10);
+    assert(unlocked);
+
+    // 测试文件复制
+    string copy_file = TEST_FILE + ".copy";
+    assert(file::copy(TEST_FILE, copy_file));
+    assert(file::exists(copy_file));
+    string copy_content;
+    file::read_all(copy_file, copy_content);
+    assert(copy_content.size() == f.size());  // 之前已截断为10字节
+
+    // 测试文件移动
+    string move_file = TEST_DIR + "/moved_file.txt";
+    assert(file::move(copy_file, move_file));
+    assert(!file::exists(copy_file));
+    assert(file::exists(move_file));
+
+    // 测试文件重命名
+    string rename_file = TEST_DIR + "/renamed_file.txt";
+    assert(file::rename(move_file, rename_file));
+    assert(!file::exists(move_file));
+    assert(file::exists(rename_file));
+
+    f.close();
+}
+
+void test_move_semantics() {
+    // 测试移动构造
+    file f1(TEST_FILE);
+    assert(f1.open(TEST_FILE));
+    file f2 = _MSTL move(f1);
+    assert(!f1.opened());  // 原对象失效
+    assert(f2.opened());
+    assert(f2.file_path() == TEST_FILE);
+
+    // 测试移动赋值
+    file f3;
+    f3 = _MSTL move(f2);
+    assert(!f2.opened());
+    assert(f3.opened());
+    assert(f3.file_path() == TEST_FILE);
+}
+
+void clean_up() {
+    // 清理临时文件
+    if (file::exists(TEST_FILE)) {
+        file::remove(TEST_FILE);
     }
-    catch (const Error& e) {
-        println("Error!", e.what());
+    // 清理子目录文件
+    string sub_file = TEST_SUB_DIR + "/sub_file.txt";
+    if (file::exists(sub_file)) {
+        file::remove(sub_file);
+    }
+    // 清理重命名文件
+    string rename_file = TEST_DIR + "/renamed_file.txt";
+    if (file::exists(rename_file)) {
+        file::remove(rename_file);
+    }
+    // 清理目录（需先删除内容）
+    if (file::exists(TEST_SUB_DIR)) {
+        file::remove_directory(TEST_SUB_DIR);
+    }
+    if (file::exists(TEST_DIR)) {
+        file::remove_directory(TEST_DIR);
+    }
+}
+
+void test_file() {
+    try {
+        test_file_basic_operations();
+        test_directory_operations();
+        test_file_attributes_and_times();
+        test_file_lock_and_other_operations();
+        test_move_semantics();
+        clean_up();
+        println("All test passed");
+    } catch (...) {
+        clean_up();
+        println("Test failed");
     }
 }
 
@@ -1120,6 +1255,7 @@ void test_tpool() {
     pool.submit_task(test_datetimes);
     pool.submit_task(test_rnd);
     pool.submit_task(test_print);
+    pool.submit_task(test_file);
     // pool.submit_task(try_db);
     pool.stop();
 }

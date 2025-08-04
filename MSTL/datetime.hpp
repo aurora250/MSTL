@@ -4,7 +4,7 @@
 MSTL_BEGIN_NAMESPACE__
 
 namespace constants {
-    MSTL_INLINE17 static constexpr int32_t month_day[12] = {
+    MSTL_INLINE17 static constexpr int32_t MONTH_DAYS[12] = {
         31, 28, 31, 30, 31, 30,
         31, 31, 30, 31, 30, 31
     };
@@ -47,7 +47,7 @@ public:
 
     static constexpr date_type get_month_day_(
         const date_type year, const date_type month) noexcept {
-        date_type day = constants::month_day[month - 1];
+        date_type day = constants::MONTH_DAYS[month - 1];
         if (month == 2 && is_leap_year(year)) {
             day += 1;
         }
