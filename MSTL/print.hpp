@@ -718,7 +718,7 @@ struct printer<file> {
         std::cout << check_type<file>();
     }
     static void print_feature(const file& t) {
-        std::cout << check_type<file>() << "(" << t.;
+        std::cout << check_type<file>() << "(" << t.file_path() << ")";
     }
 };
 

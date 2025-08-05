@@ -1,10 +1,14 @@
 #ifndef MSTL_RANDOM_HPP__
 #define MSTL_RANDOM_HPP__
 #include "datetime.hpp"
+#ifdef MSTL_PLATFORM_LINUX__
+#include <sys/fcntl.h>
+#include <unistd.h>
+#endif
 MSTL_BEGIN_NAMESPACE__
 
 // based on LCD algorithm to generate pseudorandom number
-class random {
+class random_lcd {
 public:
     using seed_type = uint32_t;
 
@@ -57,6 +61,124 @@ public:
 };
 
 
+// based on Mersenne Twister algorithm to generate pseudorandom number
+class random_mt {
+public:
+    using seed_type = uint32_t;
+
+private:
+    static constexpr size_t n = 624;
+    static constexpr size_t m = 397;
+    static constexpr seed_type a = 0x9908b0df;
+    static constexpr seed_type u = 11;
+    static constexpr seed_type s = 7;
+    static constexpr seed_type b = 0x9d2c5680;
+    static constexpr seed_type t = 15;
+    static constexpr seed_type c = 0xefc60000;
+    static constexpr seed_type l = 18;
+
+    static seed_type* state() {
+        static seed_type state[n] = {};
+        return state;
+    }
+    static size_t& index() {
+        static size_t index = n;
+        return index;
+    }
+
+    static void twist() {
+        for (size_t i = 0; i < n; ++i) {
+            const seed_type y = (state()[i] & 0x80000000) + (state()[(i + 1) % n] & 0x7fffffff);
+            state()[i] = state()[(i + m) % n] ^ (y >> 1);
+            if (y % 2 != 0) {
+                state()[i] ^= a;
+            }
+        }
+        index() = 0;
+    }
+
+    static seed_type* get_state() {
+        static bool initialized = false;
+        if (!initialized) {
+            set_seed();
+            initialized = true;
+        }
+        return state();
+    }
+
+    static size_t& get_index() {
+        return index();
+    }
+
+public:
+    static void set_seed(const seed_type seed = 0) {
+        seed_type init_seed = seed;
+        if (init_seed == 0) {
+            init_seed = static_cast<seed_type>(_MSTL timestamp::now().get_seconds());
+        }
+
+        state()[0] = init_seed;
+        for (size_t i = 1; i < n; ++i) {
+            state()[i] = 1812433253 * (state()[i - 1] ^ (state()[i - 1] >> 30)) + i;
+        }
+        index() = n;
+    }
+
+    static int next_int(const int max) {
+        if (max <= 0) return 0;
+
+        seed_type* state = get_state();
+        size_t& idx = get_index();
+
+        if (idx >= n) {
+            twist();
+        }
+
+        seed_type y = state[idx++];
+        y ^= (y >> u);
+        y ^= (y << s) & b;
+        y ^= (y << t) & c;
+        y ^= (y >> l);
+
+        return static_cast<int>(static_cast<double>(y) / UINT32_MAX * max);
+    }
+    static int next_int(const int min, const int max) {
+        if (min >= max) return min;
+        return min + next_int(max - min);
+    }
+
+    static int next_int() {
+        return next_int(0, INT32_MAX);
+    }
+
+    static double next_double() {
+        seed_type* state = get_state();
+        size_t& idx = get_index();
+
+        if (idx >= n) {
+            twist();
+        }
+
+        seed_type y = state[idx++];
+        y ^= (y >> u);
+        y ^= (y << s) & b;
+        y ^= (y << t) & c;
+        y ^= (y >> l);
+
+        return static_cast<double>(y) / UINT32_MAX;
+    }
+
+    static double next_double(const double min, const double max) {
+        if (min >= max) return min;
+        return min + (max - min) * next_double();
+    }
+
+    static double next_double(const double max) {
+        return next_double(0.0, max);
+    }
+};
+
+
 // based on hardware noise to generate true random number
 class secret {
 public:
@@ -100,7 +222,7 @@ public:
         }
         return supported;
 #elif defined(MSTL_PLATFORM_LINUX__)
-        int fd = open("/dev/urandom", O_RDONLY);
+        const int fd = open("/dev/urandom", O_RDONLY);
         if (fd == -1) {
             return false;
         }
@@ -113,7 +235,7 @@ public:
 
 private:
     static void get_random_bytes(byte_t* buffer, size_t length) {
-        Exception(!(buffer == nullptr || length == 0), ValueError("Invalid buffer or length"));
+        Exception(buffer != nullptr && length != 0, ValueError("Invalid buffer or length"));
 
 #ifdef MSTL_PLATFORM_WINDOWS__
         HCRYPTPROV hProv = 0;
@@ -129,18 +251,15 @@ private:
 
         CryptReleaseContext(hProv, 0);
 #elif defined(MSTL_PLATFORM_LINUX__)
-        int fd = open("/dev/urandom", O_RDONLY);
-        if (fd == -1) {
-            throw std::runtime_error("Failed to open /dev/urandom");
-        }
-        Exception(fd != -1, FileOperateError("Failed to open /dev/urandom"))
+        const int fd = open("/dev/urandom", O_RDONLY);
+        Exception(fd != -1, FileOperateError("Failed to open /dev/urandom"));
 
         ssize_t bytesRead = 0;
         while (bytesRead < static_cast<ssize_t>(length)) {
-            ssize_t result = read(fd, buffer + bytesRead, length - bytesRead);
+            const ssize_t result = read(fd, buffer + bytesRead, length - bytesRead);
             if (result == -1) {
                 close(fd);
-                Exception(fd != -1, FileOperateError("Failed to open /dev/urandom"))
+                Exception(fd != -1, FileOperateError("Failed to open /dev/urandom"));
             }
             bytesRead += result;
         }

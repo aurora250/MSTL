@@ -910,7 +910,7 @@ MSTL_CONSTEXPR20 bool prev_permutation(Iterator first, Iterator last) {
 template <typename Iterator, enable_if_t<is_ranges_rnd_iter_v<Iterator>, int> = 0>
 void shuffle(Iterator first, Iterator last) {
 	if (first == last) return;
-    _MSTL random rng;
+    _MSTL random_lcd rng;
     for (Iterator i = _MSTL next(first); i != last; ++i) {
         auto distance = _MSTL distance(first, i);
         auto random_idx = rng.next_int(0, static_cast<int>(distance));

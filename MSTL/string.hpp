@@ -70,16 +70,98 @@ inline string wstring_to_utf8(const wchar_t* str) {
     utf8_str.resize(size_needed);
     WideCharToMultiByte(CP_UTF8, 0, str,
         static_cast<int>(len), &utf8_str[0], size_needed, nullptr, nullptr);
-#else
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-    utf8_str = conv.to_bytes(str, str + len);
+#elif defined(MSTL_PLATFORM_LINUX__)
+    for (size_t i = 0; i < len; ++i) {
+        const auto cp = static_cast<uint32_t>(str[i]);
+
+        if (cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF)) {
+            utf8_str += "\xEF\xBF\xBD";
+            continue;
+        }
+        if (cp <= 0x7F) {
+            utf8_str += static_cast<char>(cp);
+        } else if (cp <= 0x7FF) {
+            utf8_str += static_cast<char>(0xC0 | (cp >> 6));
+            utf8_str += static_cast<char>(0x80 | (cp & 0x3F));
+        } else if (cp <= 0xFFFF) {
+            utf8_str += static_cast<char>(0xE0 | (cp >> 12));
+            utf8_str += static_cast<char>(0x80 | ((cp >> 6) & 0x3F));
+            utf8_str += static_cast<char>(0x80 | (cp & 0x3F));
+        } else {
+            utf8_str += static_cast<char>(0xF0 | (cp >> 18));
+            utf8_str += static_cast<char>(0x80 | ((cp >> 12) & 0x3F));
+            utf8_str += static_cast<char>(0x80 | ((cp >> 6) & 0x3F));
+            utf8_str += static_cast<char>(0x80 | (cp & 0x3F));
+        }
+    }
 #endif
     return _MSTL move(utf8_str);
 }
 
+#ifdef MSTL_PLATFORM_WINDOWS__
 inline string u16string_to_utf8(const char16_t* str) {
     return wstring_to_utf8(reinterpret_cast<const wchar_t*>(str));
 }
+#elif defined(MSTL_PLATFORM_LINUX__)
+constexpr bool is_high_surrogate(const char16_t c) {
+    return (c >= 0xD800 && c <= 0xDBFF);
+}
+constexpr bool is_low_surrogate(const char16_t c) {
+    return (c >= 0xDC00 && c <= 0xDFFF);
+}
+
+constexpr uint32_t combine_surrogates(const char16_t high, const char16_t low) {
+    return 0x10000 + ((static_cast<uint32_t>(high) - 0xD800) << 10) +
+           (static_cast<uint32_t>(low) - 0xDC00);
+}
+
+inline string u16string_to_utf8(const char16_t* str) {
+    string utf8_str;
+    if (!str) return utf8_str;
+
+    for (size_t i = 0; str[i] != u'\0'; ++i) {
+        const char16_t c1 = str[i];
+        if (i == 0 && c1 == 0xFEFF) {
+            continue;
+        }
+        if (!is_high_surrogate(c1) && !is_low_surrogate(c1)) {
+            const auto cp = static_cast<uint32_t>(c1);
+
+            if (cp > 0x10FFFF) {
+                utf8_str += "\xEF\xBF\xBD";
+                continue;
+            }
+            if (cp <= 0x7F) {
+                utf8_str += static_cast<char>(cp);
+            } else if (cp <= 0x7FF) {
+                utf8_str += static_cast<char>(0xC0 | (cp >> 6));
+                utf8_str += static_cast<char>(0x80 | (cp & 0x3F));
+            } else {
+                utf8_str += static_cast<char>(0xE0 | (cp >> 12));
+                utf8_str += static_cast<char>(0x80 | ((cp >> 6) & 0x3F));
+                utf8_str += static_cast<char>(0x80 | (cp & 0x3F));
+            }
+        }
+        else if (is_high_surrogate(c1)) {
+            if (str[i+1] == u'\0' || !is_low_surrogate(str[i+1])) {
+                utf8_str += "\xEF\xBF\xBD";
+                continue;
+            }
+            const char16_t c2 = str[++i];
+            const uint32_t cp = combine_surrogates(c1, c2);
+
+            utf8_str += static_cast<char>(0xF0 | (cp >> 18));
+            utf8_str += static_cast<char>(0x80 | ((cp >> 12) & 0x3F));
+            utf8_str += static_cast<char>(0x80 | ((cp >> 6) & 0x3F));
+            utf8_str += static_cast<char>(0x80 | (cp & 0x3F));
+        }
+        else {
+            utf8_str += "\xEF\xBF\xBD";
+        }
+    }
+    return _MSTL move(utf8_str);
+}
+#endif
 
 inline string u32string_to_utf8(const char32_t* str) {
     string utf8_str;
@@ -118,9 +200,30 @@ inline string u32string_to_utf8(const char32_t* str) {
     if (written != size_needed) {
         utf8_str.resize(written > 0 ? written : 0);
     }
-#else
-    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
-    utf8_str = conv.to_bytes(str, str + len);
+#elif defined(MSTL_PLATFORM_LINUX__)
+    for (size_t i = 0; i < len; ++i) {
+        auto cp = static_cast<uint32_t>(str[i]);
+
+        if (cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF)) {
+            utf8_str += "\xEF\xBF\xBD";
+            continue;
+        }
+        if (cp <= 0x7F) {
+            utf8_str += static_cast<char>(cp);
+        } else if (cp <= 0x7FF) {
+            utf8_str += static_cast<char>(0xC0 | (cp >> 6));
+            utf8_str += static_cast<char>(0x80 | (cp & 0x3F));
+        } else if (cp <= 0xFFFF) {
+            utf8_str += static_cast<char>(0xE0 | (cp >> 12));
+            utf8_str += static_cast<char>(0x80 | ((cp >> 6) & 0x3F));
+            utf8_str += static_cast<char>(0x80 | (cp & 0x3F));
+        } else {
+            utf8_str += static_cast<char>(0xF0 | (cp >> 18));
+            utf8_str += static_cast<char>(0x80 | ((cp >> 12) & 0x3F));
+            utf8_str += static_cast<char>(0x80 | ((cp >> 6) & 0x3F));
+            utf8_str += static_cast<char>(0x80 | (cp & 0x3F));
+        }
+    }
 #endif
     return _MSTL move(utf8_str);
 }

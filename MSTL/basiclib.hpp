@@ -3,9 +3,6 @@
 #include "undef_cmacro.hpp"
 #include <locale>
 #include <iostream>
-#include <fcntl.h>
-#include <io.h>
-#include "undef_cmacro.hpp"
 #ifdef MSTL_SUPPORT_BOOST__
 #include "boost/version.hpp"
 #endif
@@ -36,6 +33,8 @@
 
 #ifdef MSTL_PLATFORM_WINDOWS__
 #include <windows.h>
+#include <fcntl.h>
+#include <io.h>
 #include "undef_cmacro.hpp"
 #elif defined(MSTL_PLATFORM_LINUX__)
 #include <sys/sysinfo.h>
@@ -446,11 +445,20 @@ using byte_t    = unsigned char;
 using int8_t	= signed char;
 using int16_t	= short;
 using int32_t	= int;
+#ifdef MSTL_PLATFORM_WINDOWS__
 using int64_t	= long long;
+#elif defined(MSTL_PLATFORM_LINUX__)
+using int64_t	= long;
+#endif
+
 using uint8_t	= unsigned char;
 using uint16_t	= unsigned short;
 using uint32_t	= unsigned int;
+#ifdef MSTL_PLATFORM_WINDOWS__
 using uint64_t	= unsigned long long;
+#elif defined(MSTL_PLATFORM_LINUX__)
+using uint64_t	= unsigned long;
+#endif
 
 using float32_t	= float;
 using float64_t	= double;
@@ -459,16 +467,19 @@ using decimal_t = long double;
 #if defined(MSTL_PLATFORM_LINUX__)
 using uintptr_t = unsigned long;
 using size_t	= unsigned long;
+using ssize_t	= long;
 using ptrdiff_t = long;
 using intptr_t	= long;
 #elif defined(MSTL_PLATFORM_WIN64__)
 using uintptr_t = unsigned long long;
 using size_t	= unsigned long long;
+using ssize_t	= long long;
 using ptrdiff_t = long long;
 using intptr_t	= long long;
 #elif defined(MSTL_PLATFORM_WIN32__)
 using uintptr_t = unsigned int;
 using size_t	= unsigned int;
+using ssize_t	= int;
 using ptrdiff_t = int;
 using intptr_t	= int;
 #endif
@@ -587,40 +598,138 @@ inline size_t get_available_memory() {
 }
 
 
-MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_alpha_or_number(const char c) noexcept {
-	const auto u = static_cast<byte_t>(c);
-	// 0x0000000080007FFF marked places of A-Z and a-z
-	// 0x00000000000003FF marked places of 0-9
-	return (u < 128) && ((0x000003FF & (1u << (u - '0'))) || (0x80007FFF & (1u << (u - 'A'))));
+constexpr uint64_t SPACE_MASK =
+	(1ULL << 9)  |  // \t
+	(1ULL << 10) |  // \n
+	(1ULL << 11) |  // \v
+	(1ULL << 12) |  // \f
+	(1ULL << 13) |  // \r
+	(1ULL << 32);   // space
+
+
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_space(const char c) {
+	return (SPACE_MASK & (1ULL << static_cast<byte_t>(c))) != 0;
 }
+
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_space(const wchar_t c) {
+	return c < 64 && (SPACE_MASK & (1ULL << c)) != 0;
+}
+
+#ifdef MSTL_VERSION_20__
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_space(const char8_t c) {
+	return c < 64 && (mask & (1ULL << c)) != 0;
+}
+#endif
+
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_space(const char16_t c) {
+	return c < 64 && (SPACE_MASK & (1ULL << c)) != 0;
+}
+
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_space(const char32_t c) {
+	return c < 64 && (SPACE_MASK & (1ULL << c)) != 0;
+}
+
 
 MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_alpha(const char c) noexcept {
-	if (c < 'A') return false;
-	if (c <= 'Z') return true;
-	if (c < 'a') return false;
-	return c <= 'z';
+	const auto uc = static_cast<byte_t>(c);
+	return (uc & 0xDF) >= 'A' && (uc & 0xDF) <= 'Z';
 }
 
-MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_digit(const char c) noexcept {
-	if (c < '0') return false;
-	if (c > '9') return false;
-	return true;
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_alpha(const wchar_t c) noexcept {
+	if (c < 0 || c > 127) return false;
+	const auto uc = static_cast<unsigned>(c);
+	return (uc & 0xDF) >= 'A' && (uc & 0xDF) <= 'Z';
 }
+
+#ifdef MSTL_VERSION_20__
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_alpha(const char8_t c) noexcept {
+	if (c > 127) return false;
+	return (c & 0xDF) >= 'A' && (c & 0xDF) <= 'Z';
+}
+#endif
+
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_alpha(const char16_t c) noexcept {
+	if (c > 127) return false;
+	return (c & 0xDF) >= 'A' && (c & 0xDF) <= 'Z';
+}
+
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_alpha(const char32_t c) noexcept {
+	if (c > 127) return false;
+	return (c & 0xDF) >= 'A' && (c & 0xDF) <= 'Z';
+}
+
+
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_digit(const char c) noexcept {
+	const auto uc = static_cast<byte_t>(c);
+	return (uc & 0xF0) == 0x30 && (uc & 0x0F) <= 9;
+}
+
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_digit(const wchar_t c) noexcept {
+	if (c < 0 || c > 127) return false;
+	const auto uc = static_cast<unsigned>(c);
+	return (uc & 0xF0) == 0x30 && (uc & 0x0F) <= 9;
+}
+
+#ifdef MSTL_VERSION_20__
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_digit(const char8_t c) noexcept {
+	if (c > 127) return false;
+	return (c & 0xF0) == 0x30 && (c & 0x0F) <= 9;
+}
+#endif
+
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_digit(const char16_t c) noexcept {
+	if (c > 127) return false;
+	return (c & 0xF0) == 0x30 && (c & 0x0F) <= 9;
+}
+
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_digit(const char32_t c) noexcept {
+	if (c > 127) return false;
+	return (c & 0xF0) == 0x30 && (c & 0x0F) <= 9;
+}
+
+
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_alpha_or_digit(const char c) noexcept {
+	return is_digit(c) || is_alpha(c);
+}
+
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_alpha_or_digit(const wchar_t c) noexcept {
+	return is_digit(c) || is_alpha(c);
+}
+
+#ifdef MSTL_VERSION_20__
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_alpha_or_digit(const char8_t c) noexcept {
+	if (c > 127) return false;
+	const auto uc = static_cast<unsigned>(c);
+	const bool digit = (uc & 0xF0) == 0x30 && (uc & 0x0F) <= 9;
+	return digit || ((uc & 0xDF) >= 'A' && (uc & 0xDF) <= 'Z');
+}
+#endif
+
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_alpha_or_digit(const char16_t c) noexcept {
+	if (c > 127) return false;
+	const auto uc = static_cast<unsigned>(c);
+	const bool digit = (uc & 0xF0) == 0x30 && (uc & 0x0F) <= 9;
+	return digit || ((uc & 0xDF) >= 'A' && (uc & 0xDF) <= 'Z');
+}
+
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_alpha_or_digit(const char32_t c) noexcept {
+	if (c > 127) return false;
+	const auto uc = static_cast<unsigned>(c);
+	const bool digit = (uc & 0xF0) == 0x30 && (uc & 0x0F) <= 9;
+	return digit || ((uc & 0xDF) >= 'A' && (uc & 0xDF) <= 'Z');
+}
+
 
 // case characters to lower.
 MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 char to_lowercase(const char c) noexcept {
-	constexpr size_t diff = 'a' - 'A';
-	if (c >= 'A' && c <= 'Z')
-		return static_cast<char>(c - diff);
-	return c;
+	const auto uc = static_cast<byte_t>(c);
+	return (uc >= 'A' && uc <= 'Z') ? static_cast<char>(uc | 0x20) : c;
 }
 
 // case characters to upper.
 MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 char to_uppercase(const char c) noexcept {
-	constexpr size_t diff = 'a' - 'A';
-	if (c >= 'a' && c <= 'z')
-		return static_cast<char>(c + diff);
-	return c;
+	const auto uc = static_cast<byte_t>(c);
+	return (uc >= 'a' && uc <= 'z') ? static_cast<char>(uc & 0xDF) : c;
 }
 
 

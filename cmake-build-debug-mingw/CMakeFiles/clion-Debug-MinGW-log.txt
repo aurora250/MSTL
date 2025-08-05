@@ -5,6 +5,6 @@
 --   MSTL_ENABLE_MYSQL: ON
 --   MSTL_ENABLE_CUDA : OFF
 -- CUDA support disabled.
--- Configuring done (0.3s)
+-- Configuring done (0.7s)
 -- Generating done (0.0s)
 -- Build files have been written to: D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-debug-mingw

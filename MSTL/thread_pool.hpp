@@ -47,6 +47,15 @@ private:
 #ifdef MSTL_PLATFORM_LINUX__
 class pthread {
 private:
+	enum class STATE {
+		Created,
+		Detached,
+		Joined,
+		Cancelled
+	};
+
+	STATE state = STATE::Created;
+
 	pthread_t thread = 0;
 	int created = 1;
 
@@ -55,14 +64,59 @@ public:
 	explicit pthread(F&& func, Args&&... args) {
 		created = pthread_create(&thread, nullptr, func, this);
 	}
-	~pthread() = default;
+	template <typename F, typename... Args>
+	explicit pthread(const pthread_attr_t* attr, F&& func, Args&&... args) {
+		created = pthread_create(&thread, attr, func, this);
+	}
 
-	MSTL_NODISCARD bool is_created() const {
+	~pthread() {
+		if (is_created() && state == STATE::Created) {
+			pthread_detach(thread);
+		}
+	}
+
+	MSTL_NODISCARD bool is_created() const noexcept {
 		return created == 0;
 	}
-	MSTL_NODISCARD bool join() const {
-		void* result;
-		return pthread_join(thread, &result) == 0;
+	MSTL_NODISCARD bool is_joinable() const {
+		return is_created() && state != STATE::Detached;
+	}
+
+	MSTL_NODISCARD bool set_name(const char* name) const {
+		return pthread_setname_np(thread, name) == 0;
+	}
+
+	MSTL_NODISCARD size_t get_id() const noexcept {
+		return thread;
+	}
+	MSTL_NODISCARD STATE get_state() const {
+		return state;
+	}
+
+	static MSTL_NODISCARD pthread_t current_thread_id() {
+		return pthread_self();
+	}
+
+
+	MSTL_NODISCARD bool join() {
+		if (state != STATE::Created) return false;
+		const bool res = (pthread_join(thread, nullptr) == 0);
+		if (res) state = STATE::Joined;
+		return res;
+	}
+
+	MSTL_NODISCARD bool detach() {
+		if (state != STATE::Created) return false;
+		const bool res = (pthread_detach(thread) == 0);
+		if (res) state = STATE::Detached;
+		return res;
+	}
+
+	MSTL_NODISCARD bool cancel() {
+		if (state != STATE::Created) return false;
+		const bool res = (pthread_cancel(thread) == 0);
+		if (res) state = STATE::Cancelled;
+		return res;
 	}
 };
 #endif
@@ -94,6 +148,7 @@ public:
         t.detach();
     }
 };
+
 
 class thread_pool {
 public:

@@ -8,7 +8,7 @@
 #include <arpa/inet.h>
 MSTL_BEGIN_NAMESPACE__
 
-constexpr const char* DNS_SVR = "114.114.114.114";
+constexpr auto DNS_SVR = "114.114.114.114";
 constexpr int DNS_HOST = 1;
 constexpr int DNS_CNAME = 5;
 
@@ -64,17 +64,14 @@ constexpr const char* DOMAINS[44] = {
 class dns_header {
 public:
     unsigned short id;
-    unsigned short flags;
+    unsigned short flags{};
     unsigned short qdcount;
     unsigned short ancount;
     unsigned short nscount;
     unsigned short arcount;
 
     dns_header() {
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<> dis(0, 65535);
-        id = dis(gen);
+        id = random_lcd::next_int(0, 65535);
         flags |= htons(0x0100);
         qdcount = htons(1);
         ancount = 0;
@@ -266,8 +263,8 @@ inline int dns_client_commit(const char *domain) {
     const int ret = connect(sockfd, reinterpret_cast<struct sockaddr *>(&dest), sizeof(dest));
     printf("connect :%d\n", ret);
 
-    dns_header header;
-    dns_question question(domain);
+    const dns_header header;
+    const dns_question question(domain);
 
     char request[1024] = {};
     const size_t req_len = dns_build_request(header, question, request);

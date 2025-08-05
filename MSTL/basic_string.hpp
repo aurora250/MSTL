@@ -1052,13 +1052,13 @@ public:
 
     MSTL_CONSTEXPR20 self& trim_left() {
         return this->trim_left_if([](value_type ch) {
-            return ch == ' ';
+            return is_space(ch);
         });
     }
 
     MSTL_CONSTEXPR20 self& trim_right() {
         return this->trim_right_if([](value_type ch) {
-            return ch == ' ';
+            return is_space(ch);
         });
     }
 

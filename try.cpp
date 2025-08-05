@@ -71,19 +71,17 @@ void test_file_attributes_and_times() {
     file f(TEST_FILE);
     assert(f.open(TEST_FILE));
 
-    // 测试属性操作
     _MSTL FILE_ATTRIBUTE original_attr = f.attributes();
     bool set_attr_ok = f.set_attributes(_MSTL FILE_ATTRIBUTE::READONLY);
     assert(set_attr_ok);
     assert(static_cast<bool>(f.attributes() & _MSTL FILE_ATTRIBUTE::READONLY));
-    // 恢复属性
     assert(f.set_attributes(original_attr));
     assert(f.attributes() == original_attr);
 
-    // 测试时间操作
     _MSTL datetime now = _MSTL datetime::now();
     bool set_time_ok = f.set_last_write_time(now);
     assert(set_time_ok);
+    println(f.last_write_time(), now);
     assert(f.last_write_time().to_string() == now.to_string());
 
     f.close();
@@ -93,27 +91,23 @@ void test_file_lock_and_other_operations() {
     file f(TEST_FILE);
     assert(f.open(TEST_FILE));
 
-    // 测试文件锁定（简单验证调用成功）
     bool locked = f.lock(0, 10, _MSTL FILE_LOCK_MODE::EXCLUSIVE);
     assert(locked);
     bool unlocked = f.unlock(0, 10);
     assert(unlocked);
 
-    // 测试文件复制
     string copy_file = TEST_FILE + ".copy";
     assert(file::copy(TEST_FILE, copy_file));
     assert(file::exists(copy_file));
     string copy_content;
     file::read_all(copy_file, copy_content);
-    assert(copy_content.size() == f.size());  // 之前已截断为10字节
+    assert(copy_content.size() == f.size());
 
-    // 测试文件移动
     string move_file = TEST_DIR + "/moved_file.txt";
     assert(file::move(copy_file, move_file));
     assert(!file::exists(copy_file));
     assert(file::exists(move_file));
 
-    // 测试文件重命名
     string rename_file = TEST_DIR + "/renamed_file.txt";
     assert(file::rename(move_file, rename_file));
     assert(!file::exists(move_file));
@@ -123,15 +117,13 @@ void test_file_lock_and_other_operations() {
 }
 
 void test_move_semantics() {
-    // 测试移动构造
     file f1(TEST_FILE);
     assert(f1.open(TEST_FILE));
     file f2 = _MSTL move(f1);
-    assert(!f1.opened());  // 原对象失效
+    assert(!f1.opened());
     assert(f2.opened());
     assert(f2.file_path() == TEST_FILE);
 
-    // 测试移动赋值
     file f3;
     f3 = _MSTL move(f2);
     assert(!f2.opened());
@@ -140,21 +132,24 @@ void test_move_semantics() {
 }
 
 void clean_up() {
-    // 清理临时文件
+    if (file::exists(TEST_FILE)) {
+        if (file::is_directory(TEST_FILE)) {
+            file::remove_directory(TEST_FILE);
+        } else {
+            file::remove(TEST_FILE);
+        }
+    }
     if (file::exists(TEST_FILE)) {
         file::remove(TEST_FILE);
     }
-    // 清理子目录文件
     string sub_file = TEST_SUB_DIR + "/sub_file.txt";
     if (file::exists(sub_file)) {
         file::remove(sub_file);
     }
-    // 清理重命名文件
     string rename_file = TEST_DIR + "/renamed_file.txt";
     if (file::exists(rename_file)) {
         file::remove(rename_file);
     }
-    // 清理目录（需先删除内容）
     if (file::exists(TEST_SUB_DIR)) {
         file::remove_directory(TEST_SUB_DIR);
     }
@@ -164,6 +159,7 @@ void clean_up() {
 }
 
 void test_file() {
+    clean_up();
     try {
         test_file_basic_operations();
         test_directory_operations();
@@ -354,10 +350,10 @@ void test_print() {
     string_view sv = cs;
     wstring ws = L"WSTRING胡";
     // ensure you used external utf-8 console
-    const char* emoji = "\n胡Hello, World! 😊 🌟 🚀 ✔";
-    const wchar_t* wemoji = L"\n胡Hello, World! 😊 🌟 🚀 ✔";
-    const char16_t* u16emoji = u"\n胡Hello, World! 😊 🌟 🚀 ✔";
-    const char32_t* u32emoji = U"\n胡Hello, World! 😊 🌟 🚀 ✔";
+    const char* emoji = "\n胡Hello, World! 😇👩‍🦳🎗️⚽🥠🍋‍🟩⛴️🪣💖🚯🕕😊🌟🚀✔";
+    const wchar_t* wemoji = L"\n胡Hello, World! 😇👩‍🦳🎗️⚽🥠🍋‍🟩⛴️🪣💖🚯🕕😊🌟🚀✔";
+    const char16_t* u16emoji = u"\n胡Hello, World! 😇👩‍🦳🎗️⚽🥠🍋‍🟩⛴️🪣💖🚯🕕😊🌟🚀✔";
+    const char32_t* u32emoji = U"\n胡Hello, World! 😇👩‍🦳🎗️⚽🥠🍋‍🟩⛴️🪣💖🚯🕕😊🌟🚀✔";
 #ifdef MSTL_VERSION_20__
     const char8_t* u8emoji = u8"\n胡Hello, World! 😊 🌟 🚀 ✔";
     println_feature(u8emoji);
@@ -409,8 +405,9 @@ void test_print() {
 }
 
 void test_rnd() {
-    print(_MSTL secret::is_supported(), secret::next_double(), secret::next_int(1, 10));
-    print(_MSTL random::next_int(10, 20), random::next_int(10, 20), random::next_int(10, 20));
+    println(_MSTL secret::is_supported(), secret::next_double(), secret::next_int(1, 10));
+    println(_MSTL random_lcd::next_int(10, 20), random_lcd::next_int(10, 20), random_lcd::next_int(10, 20));
+    println(_MSTL random_mt::next_int(10, 20), random_mt::next_int(10, 20), random_mt::next_int(10, 20));
 }
 
 void test_exce() {
@@ -646,7 +643,7 @@ void test_pqueue() {
     priority_queue<int> long_pque;
     constexpr MSTL::size_t element_count = 100000;
     for (int i = 0; i < element_count; ++i) {
-        long_pque.push(random::next_int(10000));
+        long_pque.push(random_lcd::next_int(10000));
     }
     for (int i = 0; i < element_count; ++i) {
         long_pque.pop();
@@ -670,7 +667,7 @@ void test_rbtree() {
     map<int, float> long_map;
     for (int i = 0; i < 100000; ++i) {
         int key = i;
-        long_map.insert({key, random::next_double(0, 10000)});
+        long_map.insert({key, random_lcd::next_double(0, 10000)});
     }
     for (int i = 0; i < 100000; ++i) {
         long_map.erase(i);
@@ -691,7 +688,7 @@ void test_rbtree() {
     multimap<int, float> long_multimap;
     for (int i = 0; i < 100000; ++i) {
         int key = i;
-        long_multimap.insert({key, random::next_double(0, 10000)});
+        long_multimap.insert({key, random_lcd::next_double(0, 10000)});
     }
     for (int i = 0; i < 100000; ++i) {
         long_multimap.erase(i);
@@ -889,7 +886,7 @@ string generate_random_string(MSTL::size_t length) {
     string s;
     s.reserve(length);
     for (size_t i = 0; i < length; ++i) {
-        s += chars[random::next_int() % chars.size()];
+        s += chars[random_lcd::next_int() % chars.size()];
     }
     return s;
 }
@@ -927,11 +924,11 @@ void test_string_modification(size_t initial_length, size_t operations) {
 
     for (size_t i = 0; i < operations; ++i) {
         if (i % 2 == 0) {
-            size_t pos = random::next_int() % (str.size() + 1);
+            size_t pos = random_lcd::next_int() % (str.size() + 1);
             str.insert(pos, 1, 'X');
         } else {
             if (str.empty()) break;
-            size_t pos = random::next_int() % str.size();
+            size_t pos = random_lcd::next_int() % str.size();
             str.erase(pos, 1);
         }
     }
@@ -946,7 +943,7 @@ void test_string_search_replace(size_t str_length, size_t pattern_count) {
     const string replacement = "XYZ";
 
     for (size_t i = 0; i < pattern_count; ++i) {
-        size_t pos = random::next_int() % (str.size() - pattern.size() + 1);
+        size_t pos = random_lcd::next_int() % (str.size() - pattern.size() + 1);
         str.replace(pos, pattern.size(), pattern);
     }
 

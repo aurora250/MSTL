@@ -9,7 +9,6 @@
 #include "queue.hpp"
 #include "list.hpp"
 #include "datetime.hpp"
-#include "unordered_map.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 MSTL_ERROR_BUILD_FINAL_CLASS(DatabaseError, LinkError, "Database Operations Failed.")
