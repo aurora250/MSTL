@@ -4,7 +4,7 @@ USE_MSTL
 int main() {
     // set_utf8_console();
 
-    test_tpool();
+    test_file();
 
     std::cin.get();
 }
