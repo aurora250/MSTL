@@ -1,7 +1,7 @@
 .idea/
 .vs/
-cmake-build-debug-mingw-x64/
-cmake-build-release-mingw-x64/
+cmake-build-debug-gcc-x64/
+cmake-build-release-gcc-x64/
 cmake-build-debug-msvc-x64/
 cmake-build-release-msvc-x64/
 cmake-build-debug-msvc-x86/
