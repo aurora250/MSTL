@@ -964,7 +964,12 @@ void test_max_memory_string() {
         size_t available_memory = get_available_memory();
         size_t max_test_size = available_memory / 2;
 
-        const size_t upper_limit = 4ULL * 1024 * 1024 * 1024;
+        const size_t upper_limit =
+#ifdef MSTL_DATA_BUS_WIDTH_64__
+            4ULL * 1024 * 1024 * 1024;  // 4GB
+#else
+            1ULL * 1024 * 1024 * 1024;  // 1GB
+#endif
         max_test_size = _MSTL min(max_test_size, upper_limit);
 
         if (max_test_size == 0) {

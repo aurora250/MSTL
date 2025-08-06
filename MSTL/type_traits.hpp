@@ -2103,15 +2103,6 @@ struct hash<T*> {
     }
 };
 
-#define INT_HASH_STRUCT__(OPT) \
-    template <> struct hash<OPT> { \
-        MSTL_NODISCARD constexpr size_t operator ()(OPT x) const noexcept { return static_cast<size_t>(x); } \
-    };
-MSTL_MACRO_RANGE_CHARS(INT_HASH_STRUCT__)
-MSTL_MACRO_RANGE_INT(INT_HASH_STRUCT__)
-#undef INT_HASH_STRUCT__
-
-
 #ifdef MSTL_DATA_BUS_WIDTH_64__
 static constexpr size_t FNV_OFFSET_BASIS = 14695981039346656037ULL;
 static constexpr size_t FNV_PRIME = 1099511628211ULL;
@@ -2135,10 +2126,12 @@ constexpr size_t FNV_hash(const byte_t* first, const size_t count) noexcept {
 #define FLOAT_HASH_STRUCT__(OPT) \
     template <> struct hash<OPT> { \
         MSTL_NODISCARD constexpr size_t operator ()(const OPT& x) const noexcept { \
-            return x == 0.0f ? 0 : FNV_hash((const byte_t*)&x, sizeof(OPT)); \
+            return x == 0.0f ? 0 : FNV_hash(reinterpret_cast<const byte_t*>(&x), sizeof(OPT)); \
         } \
     };
 MSTL_MACRO_RANGE_FLOAT(FLOAT_HASH_STRUCT__)
+MSTL_MACRO_RANGE_CHARS(FLOAT_HASH_STRUCT__)
+MSTL_MACRO_RANGE_INT(FLOAT_HASH_STRUCT__)
 #undef FLOAT_HASH_STRUCT__
 
 
