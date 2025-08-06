@@ -1,6 +1,0 @@
-D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-mingw/CMakeFiles/TRY.dir
-D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-mingw/CMakeFiles/edit_cache.dir
-D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-mingw/CMakeFiles/rebuild_cache.dir
-D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-mingw/MSTL/CMakeFiles/MSTL.dir
-D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-mingw/MSTL/CMakeFiles/edit_cache.dir
-D:/Workspace/Cpp Workspace/CLine Workspace/MSTL/cmake-build-release-mingw/MSTL/CMakeFiles/rebuild_cache.dir

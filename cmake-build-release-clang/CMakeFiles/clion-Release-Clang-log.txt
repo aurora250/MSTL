@@ -1,4 +1,0 @@
-/snap/clion/338/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_MAKE_PROGRAM=/snap/clion/338/bin/ninja/linux/x64/ninja -G Ninja -S /media/huenqi/42A8-FDBE/MSTL -B /media/huenqi/42A8-FDBE/MSTL/cmake-build-release-clang
--- Configuring done (0.0s)
--- Generating done (0.0s)
--- Build files have been written to: /media/huenqi/42A8-FDBE/MSTL/cmake-build-release-clang

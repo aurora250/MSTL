@@ -209,11 +209,11 @@ static constexpr uint32_t HASH_PRIME_LIST[HASH_PRIMER_COUNT] = {
     1610612741, 3221225473u,  4294967291u
 };
 
-MSTL_NODISCARD inline size_t hashtable_next_prime(size_t n) {
+MSTL_NODISCARD inline size_t hashtable_next_prime(const size_t n) {
     const uint32_t* first = HASH_PRIME_LIST;
     const uint32_t* last = HASH_PRIME_LIST + HASH_PRIMER_COUNT;
-    const uint32_t* pos = MSTL_ lower_bound(first, last, n);
-    return pos == last ? size_t(*(last - 1)) : size_t(*pos);
+    const uint32_t* pos = _MSTL lower_bound(first, last, n);
+    return pos == last ? static_cast<size_t>(*(last - 1)) : static_cast<size_t>(*pos);
 }
 
 #endif

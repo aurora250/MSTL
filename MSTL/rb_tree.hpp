@@ -347,7 +347,7 @@ public:
         return *this;
     }
 
-    rb_tree_iterator(iterator&& it) {
+    rb_tree_iterator(iterator&& it) noexcept {
         node_ = it.node_;
         tree_ = it.tree_;
         it.node_ = nullptr;

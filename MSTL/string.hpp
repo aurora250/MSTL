@@ -231,7 +231,7 @@ inline string u32string_to_utf8(const char32_t* str) {
 
 #ifndef MSTL_DATA_BUS_WIDTH_64__
 template <typename CharT, typename UT, enable_if_t<(sizeof(UT) > 4), int> = 0>
-inline void __uint_to_buff_aux(CharT* riter, UT& ux) {
+void __uint_to_buff_aux(CharT* riter, UT& ux) {
     while (ux > 0xFFFFFFFFU) {
         auto chunk = static_cast<unsigned long>(ux % 1000000000);
         ux /= 1000000000;
@@ -241,8 +241,8 @@ inline void __uint_to_buff_aux(CharT* riter, UT& ux) {
         }
     }
 }
-template <typename CharT, typename UT, enable_if_t<!(sizeof(UT) > 4), int> = 0>
-MSTL_NODISCARD inline void __uint_to_buff_aux(CharT* riter, UT& ux) {}
+template <typename CharT, typename UT, enable_if_t<sizeof(UT) <= 4, int> = 0>
+void __uint_to_buff_aux(CharT*, UT&) {}
 #endif // MSTL_DATA_BUS_WIDTH_64__
 
 template <typename CharT, typename UT>
@@ -251,7 +251,7 @@ MSTL_NODISCARD CharT* uint_to_buff(CharT* riter, UT ux) {
 #ifdef MSTL_DATA_BUS_WIDTH_64__
     auto holder = ux;
 #else
-    MSTL_ __uint_to_buff_aux(riter, ux);
+    _MSTL __uint_to_buff_aux(riter, ux);
     auto holder = static_cast<unsigned long>(ux);
 #endif
     do {
@@ -261,9 +261,8 @@ MSTL_NODISCARD CharT* uint_to_buff(CharT* riter, UT ux) {
     return riter;
 }
 
-template <typename CharT, typename T>
+template <typename CharT, typename T, enable_if_t<is_integral_v<T>, int> = 0>
 MSTL_NODISCARD basic_string<CharT> int_to_string(const T x) {
-    static_assert(is_integral_v<T>, "T must be integral types.");
     CharT buffer[21];
     CharT* const buffer_end = buffer + 21;
     CharT* rnext = buffer_end;
@@ -277,10 +276,9 @@ MSTL_NODISCARD basic_string<CharT> int_to_string(const T x) {
     return basic_string<CharT>(rnext, buffer_end);
 }
 
-template <typename CharT, typename T>
+template <typename CharT, typename T,
+    enable_if_t<is_integral_v<T> && is_unsigned_v<T>, int> = 0>
 MSTL_NODISCARD basic_string<CharT> uint_to_string(const T x) {
-    static_assert(is_integral_v<T> && is_unsigned_v<T>, "T must be unsigned integral types.");
-
     CharT buffer[21];
     CharT* const buffer_end = buffer + 21;
     CharT* const rnext = (uint_to_buff)(buffer_end, x);

@@ -2,15 +2,13 @@ cmake_minimum_required(VERSION 3.17)
 
 if(MSVC)
     add_compile_options(/utf-8)
+    add_compile_options(/WX)
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         message(STATUS "BUILD TYPE：Debug (MSVC)")
-        add_compile_options(/WX)
         add_compile_options(/Od /Zi)
-        add_link_options(/DEBUG)
     elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
         message(STATUS "BUILD TYPE：Release (MSVC)")
         add_compile_options(/O2)
-        add_link_options(/LTCG)
     endif()
 
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -27,6 +25,13 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 
 else()
     message(WARNING "Unsupported Compiler: UTF-8 Encoding Options Not Set")
+endif()
+
+
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    message(STATUS "Current Arch: x64")
+else()
+    message(STATUS "Current Arch: x86")
 endif()
 
 
@@ -59,12 +64,20 @@ file(GLOB_RECURSE SUB_DIR_SRC_LIST
 
 set(SUB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "MSTL project codes")
 include_directories(${SUB_INCLUDE_DIR})
-add_library(MSTL ${SUB_DIR_SRC_LIST})
+
+add_library(MSTL STATIC ${SUB_DIR_SRC_LIST}
+        datetime.cpp)
+
 set_target_properties(MSTL PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(MSTL PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
 
 
 # ------------------- Boost -------------------
-if(MSTL_ENABLE_BOOST)
+if(MSTL_ENABLE_BOOST AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     if(POLICY CMP0167)
         cmake_policy(SET CMP0167 OLD)
     endif()
@@ -85,7 +98,7 @@ endif()
 
 
 # ------------------- MySQL -------------------
-if(MSTL_ENABLE_MYSQL)
+if(MSTL_ENABLE_MYSQL AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     if(WIN32)
         set(MYSQL_ROOT_DIR "D:/MySQL/MySQL Server 8.0" CACHE PATH "MySQL root directory for Windows")
         find_path(MySQL_INCLUDE_DIRS NAMES mysql.h HINTS "${MYSQL_ROOT_DIR}/include" NO_DEFAULT_PATH QUIET)
@@ -111,7 +124,7 @@ endif()
 
 
 # ------------------- CUDA -------------------
-if(MSTL_ENABLE_CUDA AND MSVC)
+if(MSTL_ENABLE_CUDA AND MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     if(DEFINED CMAKE_CUDA_COMPILER)
         find_package(CUDAToolkit QUIET REQUIRED)
 

@@ -1,6 +1,0 @@
-/media/huenqi/42A8-FDBE/MSTL/cmake-build-release-clang/CMakeFiles/TRY.dir
-/media/huenqi/42A8-FDBE/MSTL/cmake-build-release-clang/CMakeFiles/edit_cache.dir
-/media/huenqi/42A8-FDBE/MSTL/cmake-build-release-clang/CMakeFiles/rebuild_cache.dir
-/media/huenqi/42A8-FDBE/MSTL/cmake-build-release-clang/MSTL/CMakeFiles/MSTL.dir
-/media/huenqi/42A8-FDBE/MSTL/cmake-build-release-clang/MSTL/CMakeFiles/edit_cache.dir
-/media/huenqi/42A8-FDBE/MSTL/cmake-build-release-clang/MSTL/CMakeFiles/rebuild_cache.dir

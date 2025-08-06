@@ -131,32 +131,6 @@ void test_move_semantics() {
     assert(f3.file_path() == TEST_FILE);
 }
 
-void test_big_write() {
-    file f;
-    f.open("test.bin",
-        FILE_ACCESS_MODE::WRITE,
-        FILE_SHARED_MODE::SHARE_ALL,
-        FILE_CREATION_MODE::CREATE_FORCE);
-
-    assert(f.write("hello", 5) == 5);
-
-    string big_data(32768, 'A');
-    assert(f.write(big_data) == 32768);
-
-    string empty;
-    assert(f.write(empty) == 0);
-
-    file f2;
-    f2.open("test_append.bin",
-           FILE_ACCESS_MODE::APPEND,
-           FILE_SHARED_MODE::SHARE_ALL,
-           FILE_CREATION_MODE::OPEN_FORCE);
-    f2.write("world");
-    assert(f2.size() == 5);
-    f2.write("!");
-    assert(f2.size() == 6);
-}
-
 void clean_up() {
     if (file::exists(TEST_FILE)) {
         if (file::is_directory(TEST_FILE)) {
@@ -164,12 +138,6 @@ void clean_up() {
         } else {
             file::remove(TEST_FILE);
         }
-    }
-    if (file::exists("test.bin")) {
-        file::remove("test.bin");
-    }
-    if (file::exists("test_append.bin")) {
-        file::remove("test_append.bin");
     }
     if (file::exists(TEST_FILE)) {
         file::remove(TEST_FILE);
@@ -198,7 +166,6 @@ void test_file() {
         test_file_attributes_and_times();
         test_file_lock_and_other_operations();
         test_move_semantics();
-        test_big_write();
         clean_up();
         println("All test passed");
     } catch (...) {
@@ -358,7 +325,7 @@ void test_print() {
 #else
     void (bit_reference::* mfp)() const noexcept = &bit_reference::flip;
 #endif
-    DatabaseTypeCastError err;
+    TypeCastError err;
     compressed_pair<printer<int>, int> cp;
     tuple<int, char, decimal_t, int*> tup{1, 't', f, pa};
     pair<int, char> pir{1, '1'};

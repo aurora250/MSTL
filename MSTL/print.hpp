@@ -1096,11 +1096,20 @@ void print(const This& t, const Rests&... r) {
     ((std::cout << " ", printer<remove_cvref_t<Rests>>::print(r)), ...);
 }
 
+inline void print() {
+    std::cout.flush();
+}
+
 template <typename This, typename ...Rests>
 void println(const This& t, const Rests&... r) {
     printer<remove_cvref_t<This>>::print(t);
     ((std::cout << " ", printer<remove_cvref_t<Rests>>::print(r)), ...);
     std::cout << "\n";
+}
+
+inline void println() {
+    std::cout << "\n";
+    std::cout.flush();
 }
 
 template <typename This, typename ...Rests>
@@ -1109,11 +1118,20 @@ void print_feature(const This& t, const Rests&... r) {
     ((std::cout << " ", printer<remove_cvref_t<Rests>>::print_feature(r)), ...);
 }
 
+inline void print_feature() {
+    std::cout.flush();
+}
+
 template <typename This, typename ...Rests>
 void println_feature(const This& t, const Rests&... r) {
     printer<remove_cvref_t<This>>::print_feature(t);
     ((std::cout << " ", printer<remove_cvref_t<Rests>>::print_feature(r)), ...);
     std::cout << "\n";
+}
+
+inline void println_feature() {
+    std::cout << "\n";
+    std::cout.flush();
 }
 
 #endif
