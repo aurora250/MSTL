@@ -7,6 +7,8 @@
 #include <sys/file.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <string.h>
+#include <errno.h>
 #endif
 MSTL_BEGIN_NAMESPACE__
 
@@ -53,7 +55,6 @@ enum class FILE_SHARED_MODE : file_flag_type {
 inline FILE_SHARED_MODE operator |(FILE_SHARED_MODE a, FILE_SHARED_MODE b) {
     return static_cast<FILE_SHARED_MODE>(static_cast<int>(a) | static_cast<int>(b));
 }
-
 inline FILE_SHARED_MODE operator &(FILE_SHARED_MODE a, FILE_SHARED_MODE b) {
     return static_cast<FILE_SHARED_MODE>(static_cast<int>(a) & static_cast<int>(b));
 }
@@ -101,12 +102,10 @@ enum class FILE_ATTRIBUTE : file_flag_type {
 #endif
 };
 
-
 inline FILE_ATTRIBUTE operator |(FILE_ATTRIBUTE a, FILE_ATTRIBUTE b) {
     return static_cast<FILE_ATTRIBUTE>(
         static_cast<file_flag_type>(a) | static_cast<file_flag_type>(b));
 }
-
 inline FILE_ATTRIBUTE operator &(FILE_ATTRIBUTE a, FILE_ATTRIBUTE b) {
     return static_cast<FILE_ATTRIBUTE>(
         static_cast<file_flag_type>(a) & static_cast<file_flag_type>(b));
@@ -136,6 +135,13 @@ enum class FILE_LOCK_MODE : file_flag_type {
     FAIL_IMMEDIATELY = LOCK_NB
 #endif
 };
+
+inline FILE_LOCK_MODE operator |(FILE_LOCK_MODE a, FILE_LOCK_MODE b) {
+    return static_cast<FILE_LOCK_MODE>(static_cast<int>(a) | static_cast<int>(b));
+}
+inline FILE_LOCK_MODE operator &(FILE_LOCK_MODE a, FILE_LOCK_MODE b) {
+    return static_cast<FILE_LOCK_MODE>(static_cast<int>(a) & static_cast<int>(b));
+}
 
 
 class file {

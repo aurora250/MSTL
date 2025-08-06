@@ -1,13 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
 
-if(POLICY CMP0167)
-    cmake_policy(SET CMP0167 NEW)
-endif()
-
-if(UNIX AND NOT APPLE)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
-endif()
-
 set(MSTL_ENABLE_CUDA OFF CACHE BOOL "Disable CUDA GPU acceleration" FORCE)
 
 

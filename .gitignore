@@ -1,5 +1,6 @@
 .idea/
 .vs/
+build/
 cmake-build-debug-gcc-x64/
 cmake-build-release-gcc-x64/
 cmake-build-debug-msvc-x64/
