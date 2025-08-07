@@ -51,9 +51,11 @@ public:
     unordered_map(const self& ht) : ht_(ht.ht_) {}
     self& operator =(const self& x) = default;
 
-    unordered_map(self&& x) noexcept(noexcept(ht_.swap(x.ht_))) : ht_(_MSTL forward<base_type>(x.ht_)) {}
+    unordered_map(self&& x) noexcept(noexcept(ht_.swap(x.ht_)))
+    : ht_(_MSTL forward<base_type>(x.ht_)) {}
+
     self& operator =(self&& x) noexcept(noexcept(ht_.swap(x.ht_))) {
-        ht_ = _MSTL forward<self>(x.ht_);
+        ht_ = _MSTL move(x.ht_);
         return *this;
     }
 
@@ -86,6 +88,8 @@ public:
 
     MSTL_NODISCARD iterator begin() noexcept { return ht_.begin(); }
     MSTL_NODISCARD iterator end() noexcept { return ht_.end(); }
+    MSTL_NODISCARD const_iterator begin() const noexcept { return ht_.begin(); }
+    MSTL_NODISCARD const_iterator end() const noexcept { return ht_.end(); }
     MSTL_NODISCARD const_iterator cbegin() const noexcept { return ht_.cbegin(); }
     MSTL_NODISCARD const_iterator cend() const noexcept { return ht_.cend(); }
 
@@ -283,6 +287,8 @@ public:
 
     MSTL_NODISCARD iterator begin() noexcept { return ht_.begin(); }
     MSTL_NODISCARD iterator end() noexcept { return ht_.end(); }
+    MSTL_NODISCARD const_iterator begin() const noexcept { return ht_.begin(); }
+    MSTL_NODISCARD const_iterator end() const noexcept { return ht_.end(); }
     MSTL_NODISCARD const_iterator cbegin() const noexcept { return ht_.cbegin(); }
     MSTL_NODISCARD const_iterator cend() const noexcept { return ht_.cend(); }
 

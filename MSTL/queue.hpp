@@ -43,8 +43,10 @@ public:
 
     MSTL_NODISCARD iterator begin() noexcept(noexcept(seq_.begin())) { return seq_.begin(); }
     MSTL_NODISCARD iterator end() noexcept(noexcept(seq_.end())) { return seq_.end(); }
-    MSTL_NODISCARD const_iterator cbegin() noexcept(noexcept(seq_.cbegin())) { return seq_.cbegin(); }
-    MSTL_NODISCARD const_iterator cend() noexcept(noexcept(seq_.cend())) { return seq_.cend(); }
+    MSTL_NODISCARD const_iterator begin() const noexcept(noexcept(seq_.begin())) { return seq_.begin(); }
+    MSTL_NODISCARD const_iterator end() const noexcept(noexcept(seq_.end())) { return seq_.end(); }
+    MSTL_NODISCARD const_iterator cbegin() const noexcept(noexcept(seq_.cbegin())) { return seq_.cbegin(); }
+    MSTL_NODISCARD const_iterator cend() const noexcept(noexcept(seq_.cend())) { return seq_.cend(); }
 
     void push(const T& x) { seq_.push_back(x); }
     void push(T&& x) { seq_.push_back(_MSTL move(x)); }

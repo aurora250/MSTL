@@ -84,6 +84,8 @@ public:
 
     MSTL_NODISCARD iterator begin() noexcept { return ht_.begin(); }
     MSTL_NODISCARD iterator end() noexcept { return ht_.end(); }
+    MSTL_NODISCARD const_iterator begin() const noexcept { return ht_.begin(); }
+    MSTL_NODISCARD const_iterator end() const noexcept { return ht_.end(); }
     MSTL_NODISCARD const_iterator cbegin() const noexcept { return ht_.cbegin(); }
     MSTL_NODISCARD const_iterator cend() const noexcept { return ht_.cend(); }
 
@@ -267,6 +269,8 @@ public:
 
     MSTL_NODISCARD iterator begin() noexcept { return ht_.begin(); }
     MSTL_NODISCARD iterator end() noexcept { return ht_.end(); }
+    MSTL_NODISCARD const_iterator begin() const noexcept { return ht_.begin(); }
+    MSTL_NODISCARD const_iterator end() const noexcept { return ht_.end(); }
     MSTL_NODISCARD const_iterator cbegin() const noexcept { return ht_.cbegin(); }
     MSTL_NODISCARD const_iterator cend() const noexcept { return ht_.cend(); }
 

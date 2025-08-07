@@ -98,6 +98,12 @@ struct compressed_pair final : IfEmpty {
     constexpr compressed_pair(compressed_pair&& p)
         noexcept(is_nothrow_move_constructible_v<T>) : value(_MSTL move(p.value)) {}
 
+    constexpr compressed_pair& operator =(compressed_pair&& pir)
+    noexcept(is_nothrow_move_assignable_v<T>) {
+        value = _MSTL move(pir.value);
+        return *this;
+    }
+
     template <typename... Args>
     constexpr explicit compressed_pair(default_construct_tag, Args&&... args)
         noexcept(conjunction_v<is_nothrow_default_constructible<IfEmpty>, is_nothrow_constructible<T, Args...>>)
@@ -150,6 +156,13 @@ struct compressed_pair<IfEmpty, T, false> final {
 	constexpr compressed_pair(compressed_pair&& pir)
         noexcept(conjunction_v<is_nothrow_move_constructible<IfEmpty>, is_nothrow_move_constructible<T>>)
 		: no_compressed(_MSTL move(pir.no_compressed)), value(_MSTL move(pir.value)) {}
+
+    constexpr compressed_pair& operator=(compressed_pair&& pir) noexcept(
+        conjunction_v<is_nothrow_move_assignable<IfEmpty>, is_nothrow_move_assignable<T>>) {
+	    no_compressed = _MSTL move(pir.no_compressed);
+	    value = _MSTL move(pir.value);
+	    return *this;
+	}
 
 	template <typename... Args>
 	constexpr explicit compressed_pair(default_construct_tag, Args&&... args)

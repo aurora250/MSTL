@@ -33,6 +33,7 @@ protected:
     base_ptr right_ = nullptr;
 
     friend __rb_tree_base_iterator;
+    template <bool, typename> friend struct rb_tree_iterator;
     template <typename, typename, typename, typename, typename> friend class rb_tree;
     friend void rb_tree_rotate_left(__rb_tree_node_base*, __rb_tree_node_base*&) noexcept;
     friend void rb_tree_rotate_right(__rb_tree_node_base*, __rb_tree_node_base*&) noexcept;
@@ -180,6 +181,7 @@ inline __rb_tree_node_base* rb_tree_rebalance_for_erase(
         while (x != root && (x == nullptr || x->color_ == RB_TREE_BLACK__)) {
             if (x == x_parent->left_) {
                 __rb_tree_node_base* w = x_parent->right_;
+                if (!w) continue;
                 if (w->color_ == RB_TREE_RED__) {
                     w->color_ = RB_TREE_BLACK__;
                     x_parent->color_ = RB_TREE_RED__;
@@ -278,7 +280,9 @@ protected:
     }
 
     void decrement() noexcept {
-        if (node_->color_ == RB_TREE_RED__ && node_->parent_->parent_ == node_) {
+        if (node_->color_ == RB_TREE_RED__ &&
+            node_->parent_ != nullptr &&
+            node_->parent_->parent_ == node_) {
             node_ = node_->right_;
         }
         else if (node_->left_ != nullptr) {
@@ -393,7 +397,8 @@ public:
     MSTL_NODISCARD reference operator *() const noexcept {
         MSTL_DEBUG_VERIFY(node_ && tree_, __MSTL_DEBUG_MESG_OPERATE_NULLPTR(rb_tree_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
         link_type link = link_type(node_);
-        MSTL_DEBUG_VERIFY(link != tree_->header_, __MSTL_DEBUG_MESG_OUT_OF_RANGE(rb_tree_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
+        MSTL_DEBUG_VERIFY(node_ != tree_->header_ && node_->parent_ != nullptr,
+            __MSTL_DEBUG_MESG_OUT_OF_RANGE(rb_tree_iterator, __MSTL_DEBUG_TAG_DEREFERENCE));
         return link->data_;
     }
     MSTL_NODISCARD pointer operator ->() const noexcept {
@@ -521,6 +526,7 @@ private:
             left(y) = p;
             if (y == header_) {
                 root() = p;
+                leftmost() = p;
                 rightmost() = p;
             }
             else if (y == leftmost()) leftmost() = p;
@@ -554,6 +560,13 @@ private:
                 parent = y;
                 x = left(x);
             }
+            if (root() != nullptr) {
+                leftmost() = minimum(root());
+                rightmost() = maximum(root());
+            } else {
+                leftmost() = header_;
+                rightmost() = header_;
+            }
         }
         catch (MemoryError&) {
             erase_under_node(top);
@@ -567,6 +580,13 @@ private:
         link_type y = left(x);
         destroy_node(x);
         x = y;
+        if (root() == nullptr) {
+            leftmost() = header_;
+            rightmost() = header_;
+        } else {
+            leftmost() = minimum(root());
+            rightmost() = maximum(root());
+        }
     }
 
     void header_init() {
@@ -648,28 +668,44 @@ public:
     }
 
     rb_tree(self&& x) 
-        noexcept(is_nothrow_move_constructible_v<Compare> && is_nothrow_move_constructible_v<KeyOfValue>)
-        : header_(_MSTL move(x.header_)), key_compare_(_MSTL move(x.key_compare_)), extracter_(_MSTL move(x.extracter_)),
-        size_pair_(_MSTL move(x.size_pair_)) {}
+    noexcept(is_nothrow_move_constructible_v<Compare>
+        && is_nothrow_move_constructible_v<KeyOfValue>)
+    : header_(_MSTL move(x.header_)),
+    key_compare_(_MSTL move(x.key_compare_)),
+    extracter_(_MSTL move(x.extracter_)),
+    size_pair_(_MSTL move(x.size_pair_)) {
+        x.header_ = nullptr;
+        x.size_pair_.value = 0;
+    }
 
     self& operator =(self&& x) noexcept(noexcept(swap(x))) {
         if (_MSTL addressof(x) == this) return *this;
         clear();
-        swap(x);
+        size_pair_.get_base().deallocate(header_);
+        header_ = x.header_;
+        key_compare_ = _MSTL move(x.key_compare_);
+        size_pair_ = _MSTL move(x.size_pair_);
+        x.header_ = nullptr;
+        x.size_pair_.value = 0;
         return *this;
     }
 
     ~rb_tree() {
         clear();
-        size_pair_.get_base().deallocate(header_);
+        if (header_)
+            size_pair_.get_base().deallocate(header_);
     }
 
     MSTL_NODISCARD iterator begin() noexcept { return {leftmost(), this}; }
     MSTL_NODISCARD iterator end() noexcept { return {header_, this}; }
+    MSTL_NODISCARD const_iterator begin() const noexcept { return cbegin(); }
+    MSTL_NODISCARD const_iterator end() const noexcept { return cend(); }
     MSTL_NODISCARD const_iterator cbegin() const noexcept { return {leftmost(), this}; }
     MSTL_NODISCARD const_iterator cend() const noexcept { return {header_, this}; }
     MSTL_NODISCARD reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
     MSTL_NODISCARD reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+    MSTL_NODISCARD const_reverse_iterator rbegin() const noexcept { return crbegin(); }
+    MSTL_NODISCARD const_reverse_iterator rend() const noexcept { return crend(); }
     MSTL_NODISCARD const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cend()); }
     MSTL_NODISCARD const_reverse_iterator crend() const noexcept { return const_reverse_iterator(cbegin()); }
 
@@ -805,7 +841,7 @@ public:
         && is_nothrow_swappable_v<KeyOfValue>
         && noexcept(size_pair_.swap(x.size_pair_))) {
         _MSTL swap(header_, x.header_);
-        size_pair_.swap(x.size_pair_);
+        _MSTL swap(size_pair_, x.size_pair_);
         _MSTL swap(key_compare_, x.key_compare_);
         _MSTL swap(extracter_, x.extracter_);
     }
@@ -821,7 +857,9 @@ public:
             else x = right(x);
         }
         iterator j(y, this);
-        return j == end() || key_compare_(k, key(y)) ? end() : j;
+        if (j == end())
+            return end();
+        return key_compare_(k, key(y)) ? end() : j;
     }
     MSTL_NODISCARD const_iterator find(const key_type& k) const {
         link_type y = header_;
@@ -834,7 +872,9 @@ public:
             else x = right(x);
         }
         const_iterator j(y, this);
-        return j == cend() || key_compare_(k, key(y)) ? cend() : j;
+        if (j == cend())
+            return cend();
+        return key_compare_(k, key(y)) ? cend() : j;
     }
 
     MSTL_NODISCARD size_type count(const key_type& k) const {

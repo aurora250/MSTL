@@ -419,25 +419,17 @@ public:
 	}
 
 	MSTL_NODISCARD MSTL_CONSTEXPR20 iterator begin() noexcept { return iterator(start_, this); }
-	MSTL_NODISCARD MSTL_CONSTEXPR20 iterator end() noexcept { return iterator(finish_, this); }
-	MSTL_NODISCARD MSTL_CONSTEXPR20 const_iterator cbegin() const noexcept {
-		return const_iterator(start_, this);
-	}
-	MSTL_NODISCARD MSTL_CONSTEXPR20 const_iterator cend() const noexcept {
-		return const_iterator(finish_, this);
-	}
-	MSTL_NODISCARD MSTL_CONSTEXPR20 reverse_iterator rbegin() noexcept {
-		return reverse_iterator(end());
-	}
-	MSTL_NODISCARD MSTL_CONSTEXPR20 reverse_iterator rend() noexcept {
-		return reverse_iterator(begin());
-	}
-	MSTL_NODISCARD MSTL_CONSTEXPR20 const_reverse_iterator crbegin() const noexcept {
-		return const_reverse_iterator(cend());
-	}
-	MSTL_NODISCARD MSTL_CONSTEXPR20 const_reverse_iterator crend() const noexcept {
-		return const_reverse_iterator(cbegin());
-	}
+    MSTL_NODISCARD MSTL_CONSTEXPR20 iterator end() noexcept { return iterator(finish_, this); }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 const_iterator begin() const noexcept { return cbegin(); }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 const_iterator end() const noexcept { return cend(); }
+	MSTL_NODISCARD MSTL_CONSTEXPR20 const_iterator cbegin() const noexcept { return const_iterator(start_, this); }
+	MSTL_NODISCARD MSTL_CONSTEXPR20 const_iterator cend() const noexcept { return const_iterator(finish_, this); }
+	MSTL_NODISCARD MSTL_CONSTEXPR20 reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 const_reverse_iterator rbegin() const noexcept { return crbegin(); }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 const_reverse_iterator rend() const noexcept { return crend(); }
+	MSTL_NODISCARD MSTL_CONSTEXPR20 const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cend()); }
+	MSTL_NODISCARD MSTL_CONSTEXPR20 const_reverse_iterator crend() const noexcept { return const_reverse_iterator(cbegin()); }
 
 	MSTL_NODISCARD MSTL_CONSTEXPR20 size_type size() const noexcept {
 		return static_cast<size_type>(finish_ - start_);

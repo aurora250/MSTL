@@ -459,6 +459,9 @@ public:
     }
     MSTL_NODISCARD iterator end() noexcept { return iterator(nullptr, this, -1); }
 
+    MSTL_NODISCARD const_iterator begin() const noexcept { return cbegin(); }
+    MSTL_NODISCARD const_iterator end() const noexcept { return cend(); }
+
     MSTL_NODISCARD const_iterator cbegin() const noexcept {
         for (size_type n = 0; n < buckets_.size(); ++n) {
             if (buckets_[n] != nullptr) 
@@ -694,7 +697,7 @@ public:
 
     MSTL_NODISCARD const_iterator find(const key_type& key) const noexcept(is_nothrow_hashable_v<key_type>) {
         size_type n = bkt_num_key(key, buckets_.size());
-        const node_type* first;
+        node_type* first;
         for (first = buckets_[n]; first != nullptr && !equals_(extracter_(first->data_), key);
             first = first->next_) {}
         return const_iterator(first, this, n);

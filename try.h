@@ -13,12 +13,24 @@ class example_servlet final : public servlet {
 public:
     using servlet::servlet;
 
-    http_response handle_request(const http_request& req) override {
+   http_response handle_request(const http_request& req) override {
         http_response res;
 
         println("[", req.method, "]", req.path,
                 "Query:", req.query,
                 "Body size:", req.body.size());
+
+        if (req.path == "/old-link") {
+            return res.redirect("/new-link");
+        }
+        if (req.path == "/forward-me") {
+            return req.forward("/forward-target");
+        }
+        if (req.path == "/forward-target") {
+            res.status_code = 200;
+            res.body = "Forwarded successfully!";
+            return res;
+        }
 
         if (req.path == "/detail.css" ||
             req.path == "/apple.jpg" ||
@@ -60,10 +72,10 @@ public:
             static file f("../resource/detail.html");
             res.body = f.read();
         }
-        else if (req.path == "/example/test") {
+        else if (req.path == "/new-link") {
             res.status_code = 200;
             res.status_msg = "OK";
-            println("dispatch to index");
+            println("redirect to index");
             static file f("../resource/index.html");
             res.body = f.read();
         }

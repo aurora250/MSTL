@@ -271,10 +271,14 @@ public:
 
     MSTL_NODISCARD iterator begin() noexcept { return {head_->next_, this}; }
     MSTL_NODISCARD iterator end() noexcept { return {head_, this}; }
+    MSTL_NODISCARD const_iterator begin() const noexcept { return cbegin(); }
+    MSTL_NODISCARD const_iterator end() const noexcept { return cend(); }
     MSTL_NODISCARD const_iterator cbegin() const noexcept { return {head_->next_, this}; }
     MSTL_NODISCARD const_iterator cend() const noexcept { return {head_, this}; }
     MSTL_NODISCARD reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
     MSTL_NODISCARD reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+    MSTL_NODISCARD const_reverse_iterator rbegin() const noexcept { return crbegin(); }
+    MSTL_NODISCARD const_reverse_iterator rend() const noexcept { return crend(); }
     MSTL_NODISCARD const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cend()); }
     MSTL_NODISCARD const_reverse_iterator crend() const noexcept { return const_reverse_iterator(cbegin()); }
 

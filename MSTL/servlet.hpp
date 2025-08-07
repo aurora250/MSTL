@@ -8,6 +8,7 @@
 #include <thread>
 #include "errorlib.hpp"
 #include "stringstream.hpp"
+#include "unordered_map.hpp"
 #include "map.hpp"
 #include "vector.hpp"
 
@@ -15,13 +16,15 @@ MSTL_BEGIN_NAMESPACE__
 
 MSTL_ERROR_BUILD_FINAL_CLASS(HttpError, LinkError, "Http Actions Failed");
 
+struct http_response;
+
 struct http_request {
     string method = "GET";
     string path = "/";
     string version = "HTTP/1.1";
-    map<string, string> headers;
-    string query;
-    string body;
+    unordered_map<string, string> headers;
+    string query{};
+    string body{};
 
     http_request() = default;
 
@@ -45,14 +48,19 @@ struct http_request {
     }
 
     ~http_request() = default;
+
+    http_response forward(string url) const;
 };
 
 struct http_response {
+public:
     string version = "HTTP/1.1";
     int status_code = 404;
     string status_msg = "Not Found";
-    map<string, string> headers;
-    string body;
+    unordered_map<string, string> headers;
+    string body{};
+    string redirect_url{}; // return 302 and location automatically, raise new request
+    string forward_path{}; // no new request
 
     http_response() {
         headers["Content-Type"] = "text/html";
@@ -64,7 +72,8 @@ struct http_response {
 
     http_response(http_response&& res) noexcept
     : version(_MSTL move(res.version)), status_code(res.status_code),
-    status_msg(_MSTL move(res.status_msg)), headers(_MSTL move(res.headers)),
+    status_msg(_MSTL move(res.status_msg)),
+    headers(_MSTL move(res.headers)),
     body(_MSTL move(res.body)) {}
 
     http_response& operator =(http_response&& res) noexcept {
@@ -76,7 +85,19 @@ struct http_response {
         body = _MSTL move(res.body);
         return *this;
     }
+
+    http_response redirect(string url) {
+        http_response res = _MSTL move(*this);
+        res.redirect_url = _MSTL move(url);
+        return res;
+    }
 };
+
+inline http_response http_request::forward(string url) const {
+    http_response res;
+    res.forward_path = _MSTL move(url);
+    return res;
+}
 
 
 class servlet {
@@ -118,9 +139,22 @@ private:
     }
 
     void handle_client(const int client_socket) {
-        const http_request request = parse_request(client_socket);
-        const http_response response = handle_request(request);
-        send_response(client_socket, response);
+        http_request request = parse_request(client_socket);
+        int forward_count = 0;
+        constexpr int MAX_FORWARD = 5;
+        do {
+            http_response response = handle_request(request);
+            if (!response.forward_path.empty() && forward_count < MAX_FORWARD) {
+                request.path = response.forward_path;
+                forward_count++;
+                continue;
+            }
+            for (auto iter = response.headers.begin(); iter != response.headers.end(); ++iter) {
+                std::cout << iter->first << ": " << iter->second << std::endl;
+            }
+            send_response(client_socket, response);
+            return;
+        } while (true);
     }
 
 protected:
@@ -186,12 +220,14 @@ protected:
             }
         }
 
+        // url query
         const size_t query_pos = req.path.find('?');
         if (query_pos != string::npos) {
             req.query = req.path.substr(query_pos+1);
             req.path = req.path.substr(0, query_pos);
         }
 
+        // request header
         while (iss.getline(line)) {
             line.trim();
             if (line.empty())
@@ -205,6 +241,7 @@ protected:
             }
         }
 
+        // request body
         const size_t body_start = request_data.find("\r\n\r\n");
         if (body_start != string::npos && body_start + 4 < request_data.size()) {
             req.body = request_data.substr(body_start + 4);
@@ -214,11 +251,19 @@ protected:
 
     virtual string build_response_str(const http_response& response) {
         ostringstream ss;
+
+        if (!response.redirect_url.empty()) {
+            ss << response.version << " 302 Found\r\n";
+            ss << "Location: " << response.redirect_url << "\r\n";
+            ss << "Content-Length: 0\r\n\r\n";
+            return ss.str();
+        }
+
         ss << response.version << " "
            << response.status_code << " "
            << response.status_msg << "\r\n";
 
-        if (response.headers.find("Content-Length") == response.headers.cend()) {
+        if (response.headers.find("Content-Length") == response.headers.end()) {
             ss << "Content-Length: " << response.body.size() << "\r\n";
         }
         for (const auto& [key, value] : response.headers) {
