@@ -25,9 +25,6 @@ public:
 private:
     Sequence seq_;
 
-    template <typename T1, typename Sequence1>
-    friend void detailof(const queue<T1, Sequence1>&, std::ostream&);
-
 public:
 
     queue() = default;

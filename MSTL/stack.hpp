@@ -19,9 +19,6 @@ public:
 private:
     Sequence seq_;
 
-    template <typename T1, typename Sequence1>
-    friend void detailof(const stack<T1, Sequence1>&, std::ostream&);
-
 public:
     stack() = default;
     explicit stack(const Sequence& seq) : seq_(seq) {}
