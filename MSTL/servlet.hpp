@@ -12,10 +12,6 @@ MSTL_BEGIN_NAMESPACE__
 
 MSTL_ERROR_BUILD_FINAL_CLASS(HttpError, LinkError, "Http Actions Failed");
 
-enum class HTTP_METHOD {
-    GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD
-};
-
 struct http_request {
     string method;
     string path;

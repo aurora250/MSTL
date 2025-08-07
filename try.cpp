@@ -1029,7 +1029,7 @@ void test_string() {
     test_string_search_replace(1000000, 10000);
     test_max_memory_string();
 
-    stringstream ss;
+    ostringstream ss;
     ss << "a" << 'b' << 333 << " " << 9.333 << MSTL::string("hello") << false << MSTL::move(MSTL::string("a"));
     println_feature(ss);
     ss.str("where");

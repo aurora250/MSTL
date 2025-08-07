@@ -690,6 +690,28 @@ std::ostream& operator <<(std::ostream& out, basic_string<CharT, Traits, Alloc> 
 }
 
 template <typename CharT>
+struct printer<basic_istringstream<CharT>> {
+    static void print(const basic_istringstream<CharT>& t) {
+        __raw_string_printer<CharT>::print(t.str().c_str());
+    }
+    static void print_feature(const basic_istringstream<CharT>& t) {
+        __raw_string_printer<CharT>::print_feature(t.str().c_str());
+        std::cout << "iss";
+    }
+};
+
+template <typename CharT>
+struct printer<basic_ostringstream<CharT>> {
+    static void print(const basic_ostringstream<CharT>& t) {
+        __raw_string_printer<CharT>::print(t.str().c_str());
+    }
+    static void print_feature(const basic_ostringstream<CharT>& t) {
+        __raw_string_printer<CharT>::print_feature(t.str().c_str());
+        std::cout << "oss";
+    }
+};
+
+template <typename CharT>
 struct printer<basic_stringstream<CharT>> {
     static void print(const basic_stringstream<CharT>& t) {
         __raw_string_printer<CharT>::print(t.str().c_str());
@@ -1086,35 +1108,6 @@ template <typename... Args>
 void println_feature(Args&&... args) {
     __print_feature_single(_MSTL forward<Args>(args)...);
     std::cout << "\n";
-}
-
-
-template <typename... Args>
-void print_log(Args&&... args) {
-#ifdef MSTL_STATE_DEBUG__
-    print(_MSTL forward<Args>(args)...);
-#endif
-}
-
-template <typename... Args>
-void println_log(Args&&... args) {
-#ifdef MSTL_STATE_DEBUG__
-    println(_MSTL forward<Args>(args)...);
-#endif
-}
-
-template <typename... Args>
-void print_feature_log(Args&&... args) {
-#ifdef MSTL_STATE_DEBUG__
-    print_feature(_MSTL forward<Args>(args)...);
-#endif
-}
-
-template <typename... Args>
-void println_feature_log(Args&&... args) {
-#ifdef MSTL_STATE_DEBUG__
-    println_feature(_MSTL forward<Args>(args)...);
-#endif
 }
 
 #else
