@@ -93,7 +93,9 @@ public:
 	~map() = default;
 
 	MSTL_NODISCARD iterator begin() noexcept { return tree_.begin(); }
-	MSTL_NODISCARD iterator end() noexcept { return tree_.end(); }
+    MSTL_NODISCARD iterator end() noexcept { return tree_.end(); }
+    MSTL_NODISCARD const_iterator begin() const noexcept { return tree_.cbegin(); }
+    MSTL_NODISCARD const_iterator end() const noexcept { return tree_.cend(); }
 	MSTL_NODISCARD const_iterator cbegin() const noexcept { return tree_.cbegin(); }
 	MSTL_NODISCARD const_iterator cend() const noexcept { return tree_.cend(); }
 	MSTL_NODISCARD reverse_iterator rbegin() noexcept { return tree_.rbegin(); }
@@ -332,7 +334,9 @@ public:
 	~multimap() = default;
 
 	MSTL_NODISCARD iterator begin() noexcept { return tree_.begin(); }
-	MSTL_NODISCARD iterator end() noexcept { return tree_.end(); }
+    MSTL_NODISCARD iterator end() noexcept { return tree_.end(); }
+    MSTL_NODISCARD const_iterator begin() const noexcept { return tree_.cbegin(); }
+    MSTL_NODISCARD const_iterator end() const noexcept { return tree_.cend(); }
 	MSTL_NODISCARD const_iterator cbegin() const noexcept { return tree_.cbegin(); }
 	MSTL_NODISCARD const_iterator cend() const noexcept { return tree_.cend(); }
 	MSTL_NODISCARD reverse_iterator rbegin() noexcept { return reverse_iterator(tree_.begin()); }

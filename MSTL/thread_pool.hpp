@@ -93,7 +93,7 @@ public:
 		return state;
 	}
 
-	static MSTL_NODISCARD pthread_t current_thread_id() {
+	static pthread_t current_thread_id() {
 		return pthread_self();
 	}
 

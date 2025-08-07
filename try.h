@@ -11,46 +11,69 @@ void test_rnd();
 #ifdef MSTL_PLATFORM_LINUX__
 class example_servlet final : public servlet {
 public:
-    explicit example_servlet(const uint16_t port) : servlet(port) {}
+    using servlet::servlet;
 
-    http_response handle_request(const http_request& request) override {
-        http_response response;
-        response.version = "HTTP/1.1";
+    http_response handle_request(const http_request& req) override {
+        http_response res;
 
-        std::cout << "Received " << request.method << " request for " << request.path << std::endl;
+        println("[", req.method, "]", req.path,
+                "Query:", req.query,
+                "Body size:", req.body.size());
 
-        if (request.path == "/favicon.ico") {
-            response.status_code = 404;
-            response.status_msg = "Not Found";
-            response.body = "";
-            response.content_type = "text/plain";
-            return response;
+        if (req.path == "/detail.css" ||
+            req.path == "/apple.jpg" ||
+            req.path.ends_with(".css") ||
+            req.path.ends_with(".jpg")) {
+
+            file f("../resource" + req.path);
+            if (f.exists()) {
+                res.status_code = 200;
+
+                if (req.path.ends_with(".css")) {
+                    res.headers["Content-Type"] = "text/css";
+                    res.body = f.read();
+                } else if (req.path.ends_with(".jpg")) {
+                    res.headers["Content-Type"] = "image/jpeg";
+                    res.body = f.read_binary();
+                }
+            } else {
+                res.status_code = 404;
+                res.body = "Resource not found: " + req.path;
+            }
+            return res;
+            }
+
+        if (req.path == "/") {
+            res.status_code = 200;
+            res.status_msg = "OK";
+            static file f("../resource/index.html");
+            res.body = f.read();
+        }
+        else if (req.path == "/api/data") {
+            res.status_code = 200;
+            res.headers["Content-Type"] = "application/json";
+            res.body = R"({"status":"success"})";
+        }
+        else if (req.path == "/detail") {
+            res.status_code = 200;
+            res.status_msg = "OK";
+            static file f("../resource/detail.html");
+            res.body = f.read();
+        }
+        else if (req.path == "/example/test") {
+            res.status_code = 200;
+            res.status_msg = "OK";
+            println("dispatch to index");
+            static file f("../resource/index.html");
+            res.body = f.read();
+        }
+        else {
+            res.status_code = 404;
+            static file f("../resource/404err.html");
+            res.body = f.read();
         }
 
-        if (request.path == "/") {
-            response.status_code = 200;
-            response.status_msg = "OK";
-            response.content_type = "text/html";
-            response.body = "<html><head><title>Example Servlet</title></head>"
-                           "<body><h1>Welcome to Example Servlet</h1>"
-                           "<p>This is a C++ servlet implementation</p>"
-                           "</body></html>";
-        } else if (request.path == "/hello") {
-            response.status_code = 200;
-            response.status_msg = "OK";
-            response.content_type = "text/plain";
-            response.body = "Hello, World!";
-        } else {
-            response.status_code = 404;
-            response.status_msg = "Not Found";
-            response.content_type = "text/html";
-            response.body = "<html><head><title>Not Found</title></head>"
-                           "<body><h1>404 Not Found</h1>"
-                           "<p>The requested resource was not found</p>"
-                           "</body></html>";
-        }
-
-        return response;
+        return res;
     }
 };
 

@@ -23,14 +23,14 @@ MSTL_NODISCARD constexpr bool equal(Iterator1 first1, Iterator1 last1, Iterator2
 
 template <typename Iterator, typename T, enable_if_t<
 	is_ranges_input_iter_v<Iterator>, int> = 0>
-constexpr void fill(Iterator first, Iterator last, const T& value) {
-	for (; first != last; ++first) *first = value;
+constexpr void fill(Iterator first, Iterator last, T&& value) {
+	for (; first != last; ++first) *first = _MSTL forward<T>(value);
 }
 
 template <typename Iterator, typename T, enable_if_t<
 	is_ranges_input_iter_v<Iterator>, int> = 0>
-constexpr Iterator fill_n(Iterator first, size_t n, const T& value) {
-	for (; n > 0; --n, ++first) *first = value;
+constexpr Iterator fill_n(Iterator first, size_t n, T&& value) {
+	for (; n > 0; --n, ++first) *first = _MSTL forward<T>(value);
 	return first;
 }
 

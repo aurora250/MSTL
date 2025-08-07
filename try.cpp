@@ -18,7 +18,7 @@ void test_file_basic_operations() {
     assert(file::file_size(TEST_FILE) == TEST_CONTENT.size());
 
     string read_content;
-    bool read_ok = file::read_all(TEST_FILE, read_content);
+    bool read_ok = file::read(TEST_FILE, read_content);
     assert(read_ok);
     assert(read_content == TEST_CONTENT);
 
@@ -100,7 +100,7 @@ void test_file_lock_and_other_operations() {
     assert(file::copy(TEST_FILE, copy_file));
     assert(file::exists(copy_file));
     string copy_content;
-    file::read_all(copy_file, copy_content);
+    file::read(copy_file, copy_content);
     assert(copy_content.size() == f.size());
 
     string move_file = TEST_DIR + "/moved_file.txt";
@@ -425,16 +425,14 @@ void test_serv() {
     try {
         example_servlet servlet(8080);
         if (!servlet.start()) {
-            std::cerr << "Failed to start servlet" << std::endl;
+            println("Failed to start servlet");
             return;
         }
-
-        std::cout << "Press Enter to stop..." << std::endl;
+        println("Press Enter to stop...");
         std::cin.get();
-
         servlet.stop();
     } catch (const Error& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        println(e);
     }
 }
 #endif

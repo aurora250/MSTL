@@ -223,14 +223,14 @@ private:
 		);
 	}
 
-	MSTL_CONSTEXPR20 pointer allocate_and_fill(size_type n, const T& x) {
+	MSTL_CONSTEXPR20 pointer allocate_and_fill(size_type n, T&& x) {
 		pointer result = pair_.get_base().allocate(n);
-		_MSTL uninitialized_fill_n(result, n, x);
+		_MSTL uninitialized_fill_n(result, n, _MSTL forward<T>(x));
 		return result;
 	}
 
-	MSTL_CONSTEXPR20 void fill_initialize(size_type n, const T& x) {
-		start_ = (allocate_and_fill)(n, x);
+	MSTL_CONSTEXPR20 void fill_initialize(size_type n, T&& x) {
+		start_ = allocate_and_fill(n, _MSTL forward<T>(x));
 		finish_ = start_ + n;
 		pair_.value = finish_;
 	}
@@ -335,31 +335,31 @@ private:
 public:
 	MSTL_CONSTEXPR20 vector()
 		noexcept(is_nothrow_default_constructible_v<T>) {
-		(fill_initialize)(1, T());
+		fill_initialize(1, _MSTL move(T()));
 		finish_ = start_;
 		pair_.value = finish_;
 	}
 
 	MSTL_CONSTEXPR20 explicit vector(const size_type n) {
-		(fill_initialize)(n, T());
+		fill_initialize(n, _MSTL move(T()));
 	}
 	MSTL_CONSTEXPR20 explicit vector(const size_type n, const T& value) {
-		(fill_initialize)(n, value);
+		fill_initialize(n, value);
 	}
 	MSTL_CONSTEXPR20 explicit vector(const int n, const T& value) {
-		(fill_initialize)(n, value);
+		fill_initialize(n, value);
 	}
 	MSTL_CONSTEXPR20 explicit vector(const long n, const T& value) {
-		(fill_initialize)(n, value);
+		fill_initialize(n, value);
 	}
 	MSTL_CONSTEXPR20 explicit vector(const size_type n, T&& value) {
-		(fill_initialize)(n, _MSTL forward<T>(value));
+		fill_initialize(n, _MSTL forward<T>(value));
 	}
 	MSTL_CONSTEXPR20 explicit vector(const int n, T&& value) {
-		(fill_initialize)(n, _MSTL forward<T>(value));
+		fill_initialize(n, _MSTL forward<T>(value));
 	}
 	MSTL_CONSTEXPR20 explicit vector(const long n, T&& value) {
-		(fill_initialize)(n, _MSTL forward<T>(value));
+		fill_initialize(n, _MSTL forward<T>(value));
 	}
 
 	MSTL_CONSTEXPR20 vector(const self& x) {
@@ -504,19 +504,19 @@ public:
 	template <typename... U>
 	MSTL_CONSTEXPR20 void emplace(iterator position, U&&... args) {
 		if (finish_ != pair_.value) {
-			_MSTL construct(finish_, *(finish_ - 1));
+			_MSTL construct(finish_, _MSTL move(*(finish_ - 1)));
 			++finish_;
-			_MSTL copy_backward(position, _MSTL prev(end(), -2), _MSTL prev(end()));
+			_MSTL move_backward(position, _MSTL prev(end(), -2), _MSTL prev(end()));
 			_MSTL construct(&*position, _MSTL forward<U>(args)...);
 			return;
 		}
 		const size_type old_size = size();
 		const size_type len = old_size != 0 ? 2 * old_size : 1;
 		pointer new_start = pair_.get_base().allocate(len);
-		pointer new_finish = _MSTL uninitialized_copy(begin(), position, new_start);
+		pointer new_finish = _MSTL uninitialized_move(begin(), position, new_start);
 		_MSTL construct(new_finish, _MSTL forward<U>(args)...);
 		++new_finish;
-		new_finish = _MSTL uninitialized_copy(position, end(), new_finish);
+		new_finish = _MSTL uninitialized_move(position, end(), new_finish);
 		_MSTL destroy(begin(), end());
 		deallocate();
 		start_ = new_start;

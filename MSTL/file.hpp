@@ -348,7 +348,15 @@ private:
 
 public:
     file() = default;
-    explicit file(string path) : path_(_MSTL move(path)) {}
+
+    explicit file(string path,
+        const FILE_ACCESS_MODE access = FILE_ACCESS_MODE::READ_WRITE,
+        const FILE_SHARED_MODE share_mode = FILE_SHARED_MODE::SHARE_READ,
+        const FILE_CREATION_MODE creation = FILE_CREATION_MODE::OPEN_EXIST,
+        const FILE_ATTRIBUTE attributes = FILE_ATTRIBUTE::NORMAL,
+        const bool append = false) : path_(_MSTL move(path)) {
+        open(access, share_mode, creation, attributes, append);
+    }
 
     file(const file&) = delete;
     file& operator =(const file&) = delete;
@@ -426,6 +434,14 @@ public:
         return true;
     }
 
+    bool open(const FILE_ACCESS_MODE access = FILE_ACCESS_MODE::READ_WRITE,
+        const FILE_SHARED_MODE share_mode = FILE_SHARED_MODE::SHARE_READ,
+        const FILE_CREATION_MODE creation = FILE_CREATION_MODE::OPEN_EXIST,
+        const FILE_ATTRIBUTE attributes = FILE_ATTRIBUTE::NORMAL,
+        const bool append = false) {
+        return open(path_, access, share_mode, creation, attributes, append);
+    }
+
     void close() {
         if (opened_ && handle_ != INVALID_HANDLE()) {
             flush_write_buffer();
@@ -476,9 +492,10 @@ public:
             do {
                 written = ::write(handle_, data.data(), real_size);
             } while (written == -1 && errno == EINTR);
-            return (written > 0) ? static_cast<size_type>(written) : 0;
-#endif
+            return written > 0 ? static_cast<size_type>(written) : 0;
+#else
             return 0;
+#endif
         }
 
         const char* ptr = data.data();
@@ -487,9 +504,9 @@ public:
 
         while (remaining > 0) {
             const size_type available = BUFFER_SIZE - write_buffer_pos_;
-            const size_type to_copy = (remaining < available) ? remaining : available;
+            const size_type to_copy = remaining < available ? remaining : available;
 
-            _MSTL copy_n(ptr, to_copy, write_buffer_.begin() + write_buffer_pos_);
+            _MSTL copy_n(ptr, to_copy, write_buffer_.begin() + static_cast<ptrdiff_t>(write_buffer_pos_));
             write_buffer_pos_ += to_copy;
             total_written += to_copy;
             ptr += to_copy;
@@ -532,6 +549,60 @@ public:
         return total_read;
     }
 
+    string read() const {
+        string lines;
+        if (!opened_ || handle_ == INVALID_HANDLE())
+            return lines;
+
+        string content;
+        if (read(path_, content)) {
+            size_t start = 0;
+            size_t end = content.find('\n');
+
+            while (end != string::npos) {
+                string line = content.substr(start, end - start);
+                if (!line.empty() && line.back() == '\r') {
+                    line.pop_back();
+                }
+                lines += line;
+                start = end + 1;
+                end = content.find('\n', start);
+            }
+
+            if (start < content.size()) {
+                lines += content.substr(start);
+            }
+        }
+        return _MSTL move(lines);
+    }
+
+    size_type read_binary(char* buffer, const size_type size) const {
+        if (!opened_ || handle_ == INVALID_HANDLE() || buffer == nullptr || size == 0)
+            return 0;
+
+        size_type total_read = 0;
+
+        while (total_read < size) {
+            if (read_buffer_pos_ >= read_buffer_size_) {
+                if (!fill_read_buffer() || read_buffer_size_ == 0) {
+                    break;
+                }
+            }
+            const size_type available = read_buffer_size_ - read_buffer_pos_;
+            const size_type to_read =
+                size - total_read < available ? size - total_read : available;
+
+            _MSTL copy_n(read_buffer_.data() + read_buffer_pos_, to_read, buffer + total_read);
+            read_buffer_pos_ += to_read;
+            total_read += to_read;
+        }
+        return total_read;
+    }
+
+    string read_binary() const {
+        return file::read_binary(path_);
+    }
+
     bool read_line(string& line) const {
         if (!opened_ || handle_ == INVALID_HANDLE())
             return false;
@@ -558,13 +629,13 @@ public:
         return !line.empty() || line_complete;
     }
 
-    vector<string> read_all_lines() const {
+    vector<string> read_lines() const {
         vector<string> lines;
         if (!opened_ || handle_ == INVALID_HANDLE())
             return lines;
 
         string content;
-        if (read_all(path_, content)) {
+        if (read(path_, content)) {
             size_t start = 0;
             size_t end = content.find('\n');
 
@@ -601,7 +672,7 @@ public:
         return static_cast<size_type>(file_size.QuadPart);
 #elif defined(MSTL_PLATFORM_LINUX__)
         struct ::stat st{};
-        if (fstat(handle_, &st) == -1) {
+        if (::fstat(handle_, &st) == -1) {
             return 0;
         }
         return static_cast<size_type>(st.st_size);
@@ -630,7 +701,7 @@ public:
 #endif
     }
 
-    size_type tell() const {
+    difference_type tell() const {
         if (!opened_ || handle_ == INVALID_HANDLE())
             return 0;
 
@@ -643,21 +714,21 @@ public:
         return static_cast<size_type>(new_pos.QuadPart);
 #elif defined(MSTL_PLATFORM_LINUX__)
         const ::off_t pos = lseek(handle_, 0, SEEK_CUR);
-        return pos == static_cast<::off_t>(-1) ? 0 : static_cast<size_type>(pos);
+        return pos == static_cast<::off_t>(-1) ? 0 : pos;
 #endif
     }
 
-//     bool prefetch(const size_type hint_size = 0) const {
-//         if (read_buffer_pos_ < read_buffer_size_) return true;
-//
-//         size_type read_size = hint_size > 0 ?
-//             min(hint_size * 2, BUFFER_SIZE) :
-//             BUFFER_SIZE;
-// #ifdef MSTL_PLATFORM_LINUX__
-//         posix_fadvise(handle_, tell(), read_size, POSIX_FADV_WILLNEED);
-// #endif
-//         return fill_read_buffer();
-//     }
+    bool prefetch(const size_type hint_size = 0) const {
+        if (read_buffer_pos_ < read_buffer_size_) return true;
+
+        const size_type read_size = hint_size > 0 ?
+            min(hint_size * 2, BUFFER_SIZE) :
+            BUFFER_SIZE;
+#ifdef MSTL_PLATFORM_LINUX__
+        posix_fadvise(handle_, tell(), static_cast<difference_type>(read_size), POSIX_FADV_WILLNEED);
+#endif
+        return fill_read_buffer();
+    }
 
     bool truncate(const difference_type size) const {
         if (!opened_ || handle_ == INVALID_HANDLE())
@@ -749,7 +820,7 @@ public:
         return SetFileAttributesA(path_.c_str(), static_cast<file_flag_type>(attr)) != 0;
 #elif defined(MSTL_PLATFORM_LINUX__)
         struct ::stat st_old{};
-        if (fstat(handle_, &st_old) == -1) {
+        if (::fstat(handle_, &st_old) == -1) {
             return false;
         }
         const mode_t current_mode = st_old.st_mode;
@@ -877,8 +948,13 @@ public:
 
 
     const string& file_path() const { return path_; }
+    string extension() const { return file::get_extension(path_); }
     bool opened() const { return opened_; }
     bool is_append_mode() const { return append_mode_; }
+
+    bool exists() const { return file::exists(path_); }
+    bool is_directory() const { return file::is_directory(path_); }
+    bool is_file() const { return file::is_file(path_); }
 
 
     static bool exists(const string& path) {
@@ -912,6 +988,17 @@ public:
         if (stat(path.c_str(), &st) == -1) return false;
         return S_ISREG(st.st_mode) || S_ISLNK(st.st_mode);
 #endif
+    }
+
+    static string get_extension(const string& path) {
+        const size_t last_sep = path.find_last_of(FILE_SPLITER);
+        string filename = last_sep == string::npos ? path : path.substr(last_sep + 1);
+
+        const size_t last_dot = filename.find_last_of('.');
+        if (last_dot == string::npos || last_dot == 0 || last_dot == filename.size() - 1) {
+            return {};
+        }
+        return filename.substr(last_dot + 1);
     }
 
     static bool create_directories(const string& path) {
@@ -1001,7 +1088,7 @@ public:
         return false;
     }
 
-    static bool read_all(const string& path, string& content) {
+    static bool read(const string& path, string& content) {
 #ifdef MSTL_PLATFORM_WINDOWS__
         file file;
         if (!file.open(path, FILE_ACCESS_MODE::READ, FILE_SHARED_MODE::SHARE_READ,
@@ -1032,13 +1119,35 @@ public:
 #endif
     }
 
+    static string read_binary(const string& path) {
+        file f;
+        if (!f.open(path,
+            FILE_ACCESS_MODE::READ,
+            FILE_SHARED_MODE::SHARE_READ,
+            FILE_CREATION_MODE::OPEN_EXIST)) {
+            return {};
+        }
+
+        const size_type sz = f.size();
+        string content;
+        content.resize(sz);
+
+        if (sz > 0) {
+            const size_type bytes_read = f.read_binary(&content[0], sz);
+            if (bytes_read != sz) {
+                content.resize(bytes_read);
+            }
+        }
+        return content;
+    }
+
     static bool copy(const string& from, const string& to, const bool overwrite = true) {
 #ifdef MSTL_PLATFORM_WINDOWS__
         return CopyFileA(from.c_str(), to.c_str(), !overwrite) != 0;
 #elif defined(MSTL_PLATFORM_LINUX__)
         if (!overwrite && exists(to)) return false;
         string content;
-        if (!read_all(from, content)) return false;
+        if (!read(from, content)) return false;
         return create_and_write(to, content, false);
 #endif
     }
