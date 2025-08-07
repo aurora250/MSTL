@@ -23,5 +23,6 @@
 #include "undef_cmacro.hpp"
 #include "print.hpp"
 #include "file.hpp"
+#include "servlet.hpp"
 
 #endif // MSTL_MSTLCPP_HPP__

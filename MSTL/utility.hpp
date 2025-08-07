@@ -1131,5 +1131,9 @@ MSTL_NODISCARD inline uint8_t to_uint8(const char* str, size_t* idx = nullptr, c
     return static_cast<uint8_t>(to_uint32(str, idx, base));
 }
 
+MSTL_NODISCARD inline bool to_bool(const char* str, size_t* idx = nullptr, const int base = 10) {
+    return static_cast<bool>(to_int32(str, idx, base));
+}
+
 MSTL_END_NAMESPACE__
 #endif // MSTL_UTILITY_HPP__

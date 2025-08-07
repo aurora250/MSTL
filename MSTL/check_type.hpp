@@ -19,7 +19,7 @@ private:
     MSTL_CONSTEXPR20 void out(const T& val) {
         if (this->check_empty(val)) return;
         if (!this->is_compact_) sr_ += " ";
-        this->sr_ += static_cast<stringstream>(stringstream() << val).str();
+        this->sr_ += (stringstream() << val).str();
         this->is_compact_ = false;
     }
 

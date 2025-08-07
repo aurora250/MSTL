@@ -3,6 +3,8 @@
 build/
 cmake-build-debug-gcc-x64/
 cmake-build-release-gcc-x64/
+cmake-build-debug-clang-x64/
+cmake-build-release-clang-x64/
 cmake-build-debug-msvc-x64/
 cmake-build-release-msvc-x64/
 cmake-build-debug-msvc-x86/

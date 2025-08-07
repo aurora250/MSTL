@@ -419,6 +419,26 @@ void test_exce() {
         test_list();
     }
 }
+
+#ifdef MSTL_PLATFORM_LINUX__
+void test_serv() {
+    try {
+        example_servlet servlet(8080);
+        if (!servlet.start()) {
+            std::cerr << "Failed to start servlet" << std::endl;
+            return;
+        }
+
+        std::cout << "Press Enter to stop..." << std::endl;
+        std::cin.get();
+
+        servlet.stop();
+    } catch (const Error& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+}
+#endif
+
 void test_list() {
     list<int> lls{ 1,2,3,4,5,6,7 };
     println(lls);

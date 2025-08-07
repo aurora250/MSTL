@@ -1088,6 +1088,35 @@ void println_feature(Args&&... args) {
     std::cout << "\n";
 }
 
+
+template <typename... Args>
+void print_log(Args&&... args) {
+#ifdef MSTL_STATE_DEBUG__
+    print(_MSTL forward<Args>(args)...);
+#endif
+}
+
+template <typename... Args>
+void println_log(Args&&... args) {
+#ifdef MSTL_STATE_DEBUG__
+    println(_MSTL forward<Args>(args)...);
+#endif
+}
+
+template <typename... Args>
+void print_feature_log(Args&&... args) {
+#ifdef MSTL_STATE_DEBUG__
+    print_feature(_MSTL forward<Args>(args)...);
+#endif
+}
+
+template <typename... Args>
+void println_feature_log(Args&&... args) {
+#ifdef MSTL_STATE_DEBUG__
+    println_feature(_MSTL forward<Args>(args)...);
+#endif
+}
+
 #else
 
 template <typename This, typename ...Rests>
