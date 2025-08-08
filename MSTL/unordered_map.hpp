@@ -131,8 +131,10 @@ public:
     void insert(Iterator first, Iterator last) { ht_.insert_unique(first, last); }
 
     size_type erase(const key_type& key) noexcept { return ht_.erase(key); }
-    void erase(iterator it) noexcept { ht_.erase(it); }
-    void erase(iterator first, iterator last) noexcept { ht_.erase(first, last); }
+    iterator erase(iterator it) noexcept { return ht_.erase(it); }
+    iterator erase(iterator first, iterator last) noexcept { return ht_.erase(first, last); }
+    const_iterator erase(const_iterator it) noexcept { return ht_.erase(it); }
+    const_iterator erase(const_iterator first, const_iterator last) noexcept { return ht_.erase(first, last); }
     void clear() noexcept { ht_.clear(); }
 
     void swap(self& x) noexcept(noexcept(ht_.swap(x.ht_))) { ht_.swap(x.ht_); }
@@ -330,8 +332,10 @@ public:
     void insert(Iterator first, Iterator last) { ht_.insert_equal(first, last); }
 
     size_type erase(const key_type& key) noexcept { return ht_.erase(key); }
-    void erase(iterator it) noexcept { ht_.erase(it); }
-    void erase(iterator first, iterator last) noexcept { ht_.erase(first, last); }
+    iterator erase(iterator it) noexcept { return ht_.erase(it); }
+    iterator erase(iterator first, iterator last) noexcept { return ht_.erase(first, last); }
+    const_iterator erase(const_iterator it) noexcept { return ht_.erase(it); }
+    const_iterator erase(const_iterator first, const_iterator last) noexcept { return ht_.erase(first, last); }
     void clear() noexcept { ht_.clear(); }
 
     void swap(self& x) noexcept(noexcept(ht_.swap(x.ht_))) { ht_.swap(x.ht_); }

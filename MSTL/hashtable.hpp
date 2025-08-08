@@ -617,51 +617,67 @@ public:
         }
         return erased;
     }
-    void erase(const iterator& it) noexcept(is_nothrow_hashable_v<key_type>) {
+    iterator erase(const iterator& it) noexcept(is_nothrow_hashable_v<key_type>) {
         node_type* const p = it.cur_;
-        if (p != nullptr) {
-            const size_type n = bkt_num(p->data_, buckets_.size());
-            node_type* cur = buckets_[n];
-            if (cur == p) {
-                buckets_[n] = cur->next_;
-                delete_node(cur);
-                --size_;
-            }
-            else {
-                node_type* next = cur->next_;
-                while (next != nullptr) {
-                    if (next == p) {
-                        cur->next_ = next->next_;
-                        delete_node(next);
-                        --size_;
-                        break;
-                    }
-                    cur = next;
-                    next = cur->next_;
-                }
-            }
+        if (p == nullptr) {
+            return end();
         }
-    }
-    void erase(iterator first, iterator last) noexcept(is_nothrow_hashable_v<key_type>) {
-        const size_type f_bucket = first.cur_ ? first.hash_val_ : buckets_.size();
-        size_type l_bucket = last.cur_ ? last.hash_val_ : buckets_.size();
-        if (first.cur_ == last.cur_) return;
-        if (f_bucket == l_bucket)
-            erase_bucket(f_bucket, first.cur_, last.cur_);
-        else {
-            erase_bucket(f_bucket, first.cur_, nullptr);
-            for (size_type n = f_bucket + 1; n < l_bucket; ++n)
-                erase_bucket(n, nullptr);
-            if (l_bucket != buckets_.size())
-                erase_bucket(l_bucket, last.cur_);
+
+        const size_type n = bkt_num(p->data_, buckets_.size());
+        node_type* next_node = p->next_;
+
+        if (buckets_[n] == p) {
+            buckets_[n] = next_node;
+        } else {
+            node_type* prev = buckets_[n];
+            while (prev->next_ != p) {
+                prev = prev->next_;
+            }
+            prev->next_ = next_node;
+        }
+
+        delete_node(p);
+        --size_;
+
+        if (next_node != nullptr) {
+            return iterator(next_node, this, n);
+        } else {
+            size_type bucket = n + 1;
+            while (bucket < buckets_.size() && buckets_[bucket] == nullptr) {
+                ++bucket;
+            }
+            return bucket < buckets_.size() ? iterator(buckets_[bucket], this, bucket) : end();
         }
     }
 
-    void erase(const const_iterator& it) noexcept(is_nothrow_hashable_v<key_type>) {
-        erase(iterator(it));
+    iterator erase(iterator first, iterator last) noexcept(is_nothrow_hashable_v<key_type>) {
+        if (first == last) {
+            return last;
+        }
+
+        const size_type f_bucket = first.cur_ ? first.bucket_ : buckets_.size(); // 修正hash_val_为bucket_
+        size_type l_bucket = last.cur_ ? last.bucket_ : buckets_.size();         // 修正hash_val_为bucket_
+
+        if (f_bucket == l_bucket) {
+            erase_bucket(f_bucket, first.cur_, last.cur_);
+        } else {
+            erase_bucket(f_bucket, first.cur_, nullptr);
+            for (size_type n = f_bucket + 1; n < l_bucket; ++n) {
+                erase_bucket(n, nullptr);
+            }
+            if (l_bucket != buckets_.size()) {
+                erase_bucket(l_bucket, last.cur_);
+            }
+        }
+        return last;
     }
-    void erase(const_iterator first, const_iterator last) noexcept(is_nothrow_hashable_v<key_type>) {
-        erase(iterator(first), iterator(last));
+
+    const_iterator erase(const const_iterator& it) noexcept(is_nothrow_hashable_v<key_type>) {
+        return erase(iterator(it));
+    }
+
+    const_iterator erase(const_iterator first, const_iterator last) noexcept(is_nothrow_hashable_v<key_type>) {
+        return erase(iterator(first), iterator(last));
     }
 
     void clear() noexcept {

@@ -420,17 +420,62 @@ void test_exce() {
     }
 }
 
+void test_json() {
+    string json_str = R"(
+    {
+        "name": "John Doe",
+        "age": 30,
+        "isStudent": false,
+        "grades": [90.5, 85.0, 95.5],
+        "address": {
+            "street": "123 Main St",
+            "city": "Anytown"
+        },
+        "hobbies": ["reading", "gaming", null]
+    }
+    )";
+
+    try {
+        json_parser parser(json_str);
+        unique_ptr<json_value> root = parser.parse();
+        println(*root.get());
+        println();
+
+        if (root->is_object()) {
+            const json_object* obj = root->as_object();
+            const json_value* nameVal = obj->get_member("name");
+            if (nameVal && nameVal->is_string()) {
+                println("Name: ", nameVal->as_string()->get_value());
+            }
+            const json_value* ageVal = obj->get_member("age");
+            if (ageVal && ageVal->is_number()) {
+                println("Age: ", ageVal->as_number()->get_value());
+            }
+            const json_value* gradesVal = obj->get_member("grades");
+            if (gradesVal && gradesVal->is_array()) {
+                const json_array* grades = gradesVal->as_array();
+                print("Grades: ");
+                for (size_t i = 0; i < grades->size(); ++i) {
+                    const json_value* grade = grades->get_element(i);
+                    if (grade && grade->is_number()) {
+                        print(grade->as_number()->get_value(), " ");
+                    }
+                }
+                println();
+            }
+        }
+    } catch (const Error& e) {
+        println(e);
+    }
+}
+
 #ifdef MSTL_PLATFORM_LINUX__
 void test_serv() {
     try {
-        example_servlet servlet(8080);
-        if (!servlet.start()) {
-            println("Failed to start servlet");
-            return;
-        }
-        println("Press Enter to stop...");
-        std::cin.get();
-        servlet.stop();
+        example_servlet server(8080);
+        server.start(4);
+        getchar();
+        server.stop();
     } catch (const Error& e) {
         println(e);
     }

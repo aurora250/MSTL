@@ -698,6 +698,50 @@ MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_digit(const char32_t c) noexcept {
 }
 
 
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_xdigit(const char c) noexcept {
+    const auto uc = static_cast<byte_t>(c);
+    bool is_09 = (uc & 0xF0) == 0x30 && (uc & 0x0F) <= 0x09;
+    bool is_AF = (uc & 0xF0) == 0x40 && (uc & 0x0F) >= 0x01 && (uc & 0x0F) <= 0x06;
+    bool is_af = (uc & 0xF0) == 0x60 && (uc & 0x0F) >= 0x01 && (uc & 0x0F) <= 0x06;
+    return is_09 || is_AF || is_af;
+}
+
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_xdigit(const wchar_t c) noexcept {
+    if (c < 0 || c > 127) return false;
+    const auto uc = static_cast<unsigned>(c);
+    bool is_09 = (uc & 0xF0) == 0x30 && (uc & 0x0F) <= 0x09;
+    bool is_AF = (uc & 0xF0) == 0x40 && (uc & 0x0F) >= 0x01 && (uc & 0x0F) <= 0x06;
+    bool is_af = (uc & 0xF0) == 0x60 && (uc & 0x0F) >= 0x01 && (uc & 0x0F) <= 0x06;
+    return is_09 || is_AF || is_af;
+}
+
+#ifdef MSTL_VERSION_20__
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_xdigit(const char8_t c) noexcept {
+    if (c > 127) return false;
+    bool is_09 = (c & 0xF0) == 0x30 && (c & 0x0F) <= 0x09;
+    bool is_AF = (c & 0xF0) == 0x40 && (c & 0x0F) >= 0x01 && (c & 0x0F) <= 0x06;
+    bool is_af = (c & 0xF0) == 0x60 && (c & 0x0F) >= 0x01 && (c & 0x0F) <= 0x06;
+    return is_09 || is_AF || is_af;
+}
+#endif
+
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_xdigit(const char16_t c) noexcept {
+    if (c > 127) return false;
+    bool is_09 = (c & 0xF0) == 0x30 && (c & 0x0F) <= 0x09;
+    bool is_AF = (c & 0xF0) == 0x40 && (c & 0x0F) >= 0x01 && (c & 0x0F) <= 0x06;
+    bool is_af = (c & 0xF0) == 0x60 && (c & 0x0F) >= 0x01 && (c & 0x0F) <= 0x06;
+    return is_09 || is_AF || is_af;
+}
+
+MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_xdigit(const char32_t c) noexcept {
+    if (c > 127) return false;
+    bool is_09 = (c & 0xF0) == 0x30 && (c & 0x0F) <= 0x09;
+    bool is_AF = (c & 0xF0) == 0x40 && (c & 0x0F) >= 0x01 && (c & 0x0F) <= 0x06;
+    bool is_af = (c & 0xF0) == 0x60 && (c & 0x0F) >= 0x01 && (c & 0x0F) <= 0x06;
+    return is_09 || is_AF || is_af;
+}
+
+
 MSTL_CONST_FUNCTION MSTL_CONSTEXPR14 bool is_alpha_or_digit(const char c) noexcept {
 	return is_digit(c) || is_alpha(c);
 }

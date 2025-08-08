@@ -8,6 +8,7 @@
 #include "unordered_set.hpp"
 #include "stack.hpp"
 #include "file.hpp"
+#include "json.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T>
@@ -675,10 +676,10 @@ std::ostream& operator <<(std::ostream& out, basic_string_view<CharT, Traits> co
 template <typename CharT, typename Traits, typename Alloc>
 struct printer<basic_string<CharT, Traits, Alloc>> {
     static void print(const basic_string<CharT, Traits, Alloc>& t) {
-        __raw_string_printer<CharT>::print(t.c_str());
+        __raw_string_printer<CharT>::print(t.data());
     }
     static void print_feature(const basic_string<CharT, Traits, Alloc>& t) {
-        __raw_string_printer<CharT>::print_feature(t.c_str());
+        __raw_string_printer<CharT>::print_feature(t.data());
         std::cout << "s";
     }
 };
@@ -1008,6 +1009,73 @@ struct printer<unordered_multiset<Value, HashFcn, EqualKey, Alloc>> {
     }
     static void print_feature(const type& t) {
         __range_printer<type>::print_feature(t);
+    }
+};
+
+
+template <>
+struct printer<json_value> {
+private:
+    static void print_json(const json_value* value, int indent = 0) {
+        if (!value) {
+            std::cout << "null";
+            return;
+        }
+        switch (value->type()) {
+            case json_value::Null:
+                std::cout << "null";
+                break;
+            case json_value::Bool:
+                printer<bool>::print(value->as_bool()->get_value());
+                break;
+            case json_value::Number:
+                printer<double>::print(value->as_number()->get_value());
+                break;
+            case json_value::String:
+                std::cout << "\"";
+                printer<string>::print(value->as_string()->get_value());
+                std::cout << "\"";
+                break;
+            case json_value::Array: {
+                const json_array* array = value->as_array();
+                std::cout << "[\n";
+                for (size_t i = 0; i < array->size(); ++i) {
+                    std::cout << string(indent + 2, ' ');
+                    print_json(array->get_element(i), indent + 2);
+                    if (i < array->size() - 1) {
+                        std::cout << ",";
+                    }
+                    std::cout << "\n";
+                }
+                std::cout << string(indent, ' ') << "]";
+                break;
+            }
+            case json_value::Object: {
+                const json_object* object = value->as_object();
+                std::cout << "{\n";
+                auto& members = object->get_members();
+                size_t count = 0;
+                for (auto& pair : members) {
+                    std::cout << string(indent + 2, ' ') << "\"" << pair.first << "\": ";
+                    print_json(pair.second.get(), indent + 2);
+                    if (count < members.size() - 1) {
+                        std::cout << ",";
+                    }
+                    std::cout << "\n";
+                    count++;
+                }
+                std::cout << string(indent, ' ') << "}";
+                break;
+            }
+        }
+    }
+
+public:
+    static void print(const json_value& value) {
+        printer::print_json(&value);
+    }
+    static void print_feature(const json_value& value) {
+        printer::print_json(&value);
     }
 };
 

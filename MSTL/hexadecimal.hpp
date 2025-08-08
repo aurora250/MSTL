@@ -14,7 +14,7 @@ private:
         bool negative = false;
         size_t start = 0;
 
-        while (start < s.size() && std::isspace(s[start])) ++start;
+        while (start < s.size() && _MSTL is_space(s[start])) ++start;
         if (start == s.size()) return 0;
 
         if (s[start] == '-') {
@@ -32,9 +32,9 @@ private:
         string hex_digits;
         while (start < s.size()) {
             char c = s[start++];
-            if (std::isxdigit(c)) {
+            if (_MSTL is_xdigit(c)) {
                 hex_digits += c;
-            } else if (!std::isspace(c)) {
+            } else if (!_MSTL is_space(c)) {
                 Exception(ValueError("Invalid hexadecimal character"));
             }
         }
@@ -84,6 +84,53 @@ public:
     bool operator <=(const hexadecimal& other) const { return value <= other.value; }
     bool operator >(const hexadecimal& other) const { return value > other.value; }
     bool operator >=(const hexadecimal& other) const { return value >= other.value; }
+
+
+    string to_string() const {
+        if (value == 0) {
+            return "0x0";
+        }
+
+        bool is_negative = value < 0;
+        uint64_t abs_value = is_negative ?
+            static_cast<uint64_t>(-value) :
+            static_cast<uint64_t>(value);
+
+        static const string hex_digits = "0123456789abcdef";
+        string result_digits;
+
+        while (abs_value > 0) {
+            uint64_t remainder = abs_value % 16;
+            result_digits += hex_digits[remainder];
+            abs_value /= 16;
+        }
+        _MSTL reverse(result_digits.begin(), result_digits.end());
+
+        string output;
+        if (is_negative) {
+            output += "-";
+        }
+        output += "0x";
+        output += result_digits;
+        return output;
+    }
+
+    string to_std_string() const {
+        if (value == 0) {
+            return "0";
+        }
+        uint64_t num = static_cast<uint64_t>(value);
+        constexpr char hex_digits[] = "0123456789abcdef";
+        string result;
+
+        while (num > 0) {
+            const uint64_t remainder = num % 16;
+            result += hex_digits[remainder];
+            num /= 16;
+        }
+        _MSTL reverse(result.begin(), result.end());
+        return result;
+    }
 };
 
 MSTL_END_NAMESPACE__

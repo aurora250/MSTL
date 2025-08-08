@@ -377,7 +377,6 @@ public:
     MSTL_NODISCARD static datetime now() noexcept;
     MSTL_NODISCARD static datetime from_utc(const datetime& utc_dt) noexcept;
     MSTL_NODISCARD static datetime to_utc(const datetime& local_dt) noexcept;
-
     MSTL_NODISCARD timestamp to_timestamp() const noexcept;
 
 
@@ -465,6 +464,31 @@ public:
         return sec_diff;
     }
 
+
+    MSTL_NODISCARD string to_gmt() const noexcept {
+        const datetime utc_dt = datetime::to_utc(*this);
+        const date& utc_date = utc_dt.get_date();
+        const time& utc_time = utc_dt.get_time();
+        static const char* weekdays[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+
+        static const char* months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+        int wday = utc_date.day_of_week();
+        if (wday < 0 || wday >= 7) wday = 0;
+
+        int mon_idx = utc_date.get_month() - 1;
+        if (mon_idx < 0 || mon_idx >= 12) mon_idx = 0;
+
+        char buf[30];
+        std::snprintf(buf, sizeof(buf), "%s, %02d %s %d %s GMT",
+            weekdays[wday],
+            utc_date.get_day(),
+            months[mon_idx],
+            utc_date.get_year(),
+            utc_time.to_string().c_str());
+        return string(buf);
+    }
 
     MSTL_NODISCARD string to_string() const noexcept {
         return date_.to_string() + " " + time_.to_string();

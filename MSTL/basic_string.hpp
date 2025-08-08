@@ -417,8 +417,8 @@ public:
         data_ = alloc_pair_.get_base().allocate(init_size);
         traits_type::assign(data_, n, chr);
         size_ = n;
-        null_terminate();
         alloc_pair_.value = init_size;
+        null_terminate();
     }
 
     MSTL_CONSTEXPR20 self& operator =(value_type chr) {
