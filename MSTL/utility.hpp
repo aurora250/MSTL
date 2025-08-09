@@ -684,6 +684,10 @@ using get_iter_pair_t = pair<add_const_t<typename iterator_traits<Iterator>::val
 	typename iterator_traits<Iterator>::value_type::second_type>;
 
 
+template <typename, typename>
+struct printer;
+
+
 template <typename Container>
 MSTL_NODISCARD MSTL_ALWAYS_INLINE MSTL_CONSTEXPR17
 decltype(auto) begin(Container& cont) noexcept(noexcept(cont.begin())) {

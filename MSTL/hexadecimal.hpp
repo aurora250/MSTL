@@ -1,6 +1,7 @@
 #ifndef MSTL_HEXADECIMAL_HPP__
 #define MSTL_HEXADECIMAL_HPP__
 #include "string.hpp"
+#include "algo.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 class hexadecimal {

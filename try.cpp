@@ -439,7 +439,6 @@ void test_json() {
         json_parser parser(json_str);
         unique_ptr<json_value> root = parser.parse();
         println(*root.get());
-        println();
 
         if (root->is_object()) {
             const json_object* obj = root->as_object();

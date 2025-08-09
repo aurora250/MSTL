@@ -939,6 +939,13 @@ public:
     MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find(const CharT* const str, const size_type off = 0) const noexcept {
         return (char_traits_find<Traits>)(data_, size_, off, str, Traits::length(str));
     }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find(
+        const string_view& str, const size_type off, const size_type count) const noexcept {
+        return (char_traits_find<Traits>)(data_, size_, off, str.data(), count);
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find(const string_view& str, const size_type off = 0) const noexcept {
+        return (char_traits_find<Traits>)(data_, size_, off, str.data(), str.size());
+    }
 
     MSTL_NODISCARD MSTL_CONSTEXPR20 size_type rfind(const self& str, const size_type off = npos) const noexcept {
         return (char_traits_rfind<Traits>)(data_, size_, off, str.data_, str.size_);
@@ -952,6 +959,13 @@ public:
     }
     MSTL_NODISCARD MSTL_CONSTEXPR20 size_type rfind(const CharT* const str, const size_type off = npos) const noexcept {
         return (char_traits_rfind<Traits>)(data_, size_, off, str, Traits::length(str));
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 size_type rfind(
+        const string_view& str, const size_type off, const size_type count) const noexcept {
+        return (char_traits_rfind<Traits>)(data_, size_, off, str.data(), count);
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 size_type rfind(const string_view& str, const size_type off = 0) const noexcept {
+        return (char_traits_rfind<Traits>)(data_, size_, off, str.data(), str.size());
     }
 
     MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find_first_of(const self& str, const size_type off = 0) const noexcept {
@@ -967,6 +981,13 @@ public:
     MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find_first_of(const CharT* const str, const size_type off = 0) const noexcept {
         return (char_traits_find_first_of<Traits>)(data_, size_, off, str, Traits::length(str));
     }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find_first_of(
+        const string_view& str, const size_type off, const size_type n) const noexcept {
+        return (char_traits_find_first_of<Traits>)(data_, size_, off, str.data(), n);
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find_first_of(const string_view& str, const size_type off = 0) const noexcept {
+        return (char_traits_find_first_of<Traits>)(data_, size_, off, str.data(), str.size());
+    }
 
     MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find_last_of(const self& str, const size_type off = npos) const noexcept {
         return (char_traits_find_last_of<Traits>)(data_, size_, off, str.data_, str.size_);
@@ -980,6 +1001,13 @@ public:
     }
     MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find_last_of(const CharT* const str, const size_type off = npos) const noexcept {
         return (char_traits_find_last_of<Traits>)(data_, size_, off, str, Traits::length(str));
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find_last_of(
+        const string_view& str, const size_type off, const size_type n) const noexcept {
+        return (char_traits_find_last_of<Traits>)(data_, size_, off, str.data(), n);
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find_last_of(const string_view& str, const size_type off = npos) const noexcept {
+        return (char_traits_find_last_of<Traits>)(data_, size_, off, str.data(), str.size());
     }
 
     MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find_first_not_of(const self& str, const size_type off = 0) const noexcept {
@@ -995,6 +1023,13 @@ public:
     MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find_first_not_of(const CharT* const str, const size_type off = 0) const noexcept {
         return (char_traits_find_first_not_of<Traits>)(data_, size_, off, str, Traits::length(str));
     }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find_first_not_of(
+        const string_view& str, const size_type off, const size_type n) const noexcept {
+        return (char_traits_find_first_not_of<Traits>)(data_, size_, off, str.data(), n);
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find_first_not_of(const string_view& str, const size_type off = 0) const noexcept {
+        return (char_traits_find_first_not_of<Traits>)(data_, size_, off, str.data(), str.size());
+    }
 
     MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find_last_not_of(const self& str, const size_type off = npos) const noexcept {
         return (char_traits_find_last_not_of<Traits>)(data_, size_, off, str.data_, str.size_);
@@ -1002,13 +1037,21 @@ public:
     MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find_last_not_of(const CharT chr, const size_type off = npos) const noexcept {
         return (char_traits_rfind_not_char<Traits>)(data_, size_, off, chr);
     }
-    MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find_last_not_of(const CharT* const str, const size_type off,
-        const size_type n) const noexcept {
+    MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find_last_not_of(
+        const CharT* const str, const size_type off, const size_type n) const noexcept {
         return (char_traits_find_last_not_of<Traits>)(data_, size_, off, str, n);
     }
     MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find_last_not_of(const CharT* const str,
         const size_type off = npos) const noexcept {
         return (char_traits_find_last_not_of<Traits>)(data_, size_, off, str, Traits::length(str));
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find_last_not_of(
+        const string_view& str, const size_type off, const size_type n) const noexcept {
+        return (char_traits_find_last_not_of<Traits>)(data_, size_, off, str.data(), n);
+    }
+    MSTL_NODISCARD MSTL_CONSTEXPR20 size_type find_last_not_of(
+        const string_view& str, const size_type off = npos) const noexcept {
+        return (char_traits_find_last_not_of<Traits>)(data_, size_, off, str.data(), str.size());
     }
 
 
@@ -1158,6 +1201,22 @@ MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     tmp.append(rh);
     return tmp;
 }
+
+template <typename CharT, typename Traits, typename Alloc>
+MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
+    const string_view& lh, const basic_string<CharT, Traits, Alloc>& rh) {
+    basic_string<CharT, Traits, Alloc> tmp(lh);
+    tmp.append(rh);
+    return tmp;
+}
+template <typename CharT, typename Traits, typename Alloc>
+MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
+    const basic_string<CharT, Traits, Alloc>& lh, const string_view& rh) {
+    basic_string<CharT, Traits, Alloc> tmp(lh);
+    tmp.append(rh);
+    return tmp;
+}
+
 template <typename CharT, typename Traits, typename Alloc>
 MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     CharT lh, const basic_string<CharT, Traits, Alloc>& rh) {
@@ -1183,6 +1242,7 @@ MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     const basic_string<CharT, Traits, Alloc>& lh, basic_string<CharT, Traits, Alloc>&& rh) {
     return _MSTL move(rh.append(lh));
 }
+
 template <typename CharT, typename Traits, typename Alloc>
 MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     basic_string<CharT, Traits, Alloc>&& lh, basic_string<CharT, Traits, Alloc>&& rh) {
@@ -1203,6 +1263,7 @@ MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     basic_string<CharT, Traits, Alloc>&& lh, const CharT* rh) {
     return _MSTL move(lh.append(rh));
 }
+
 template <typename CharT, typename Traits, typename Alloc>
 MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     CharT lh, basic_string<CharT, Traits, Alloc>&& rh) {

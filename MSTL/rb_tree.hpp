@@ -569,24 +569,17 @@ private:
             }
         }
         catch (MemoryError&) {
-            erase_under_node(top);
+            this->erase_under_node(top);
             throw;
         }
         return top;
     }
+
     void erase_under_node(link_type x) noexcept {
-        while (x == nullptr) return;
-        erase_under_node(right(x));
-        link_type y = left(x);
-        destroy_node(x);
-        x = y;
-        if (root() == nullptr) {
-            leftmost() = header_;
-            rightmost() = header_;
-        } else {
-            leftmost() = minimum(root());
-            rightmost() = maximum(root());
-        }
+        if (x == nullptr) return;
+        this->erase_under_node(this->right(x));
+        this->erase_under_node(this->left(x));
+        this->destroy_node(x);
     }
 
     void header_init() {
@@ -830,7 +823,7 @@ public:
 
     void clear() noexcept {
         if (size_pair_.value == 0) return;
-        erase_under_node(root());
+        this->erase_under_node(root());
         leftmost() = header_;
         root() = nullptr;
         rightmost() = header_;

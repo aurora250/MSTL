@@ -3,12 +3,19 @@
 #include "check_type.hpp"
 #include "variant.hpp"
 #include "optional.hpp"
+#include "functional.hpp"
+#include "array.hpp"
+#include "list.hpp"
+#include "bitmap.hpp"
+#include "queue.hpp"
+#include "stack.hpp"
 #include "any.hpp"
+#include "set.hpp"
 #include "unordered_map.hpp"
 #include "unordered_set.hpp"
-#include "stack.hpp"
 #include "file.hpp"
 #include "json.hpp"
+#include "hexadecimal.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T>
@@ -1117,6 +1124,16 @@ struct printer<timestamp> {
     }
     static void print_feature(const timestamp& t) {
         std::cout << t.get_seconds() << "(timestamp)";
+    }
+};
+
+template <>
+struct printer<hexadecimal> {
+    static void print(const hexadecimal& t) {
+        std::cout << t.to_decimal();
+    }
+    static void print_feature(const hexadecimal& t) {
+        std::cout << t.to_string();
     }
 };
 

@@ -45,7 +45,7 @@ if(NOT DEFINED MSTL_ENABLE_MYSQL)
     set(MSTL_ENABLE_MYSQL ON CACHE BOOL "Enable MySQL database support")
 endif()
 if(NOT DEFINED MSTL_ENABLE_CUDA)
-    set(MSTL_ENABLE_CUDA ON CACHE BOOL "Enable CUDA GPU acceleration")
+    set(MSTL_ENABLE_CUDA OFF CACHE BOOL "Disable CUDA GPU acceleration")
 endif()
 
 message(STATUS "Project Configuration:")
@@ -60,14 +60,16 @@ file(GLOB_RECURSE SUB_DIR_SRC_LIST
         "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
         "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/web/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/web/*.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/web/*.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/web/*.h"
 )
 
 set(SUB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "MSTL project codes")
 include_directories(${SUB_INCLUDE_DIR})
 
-add_library(MSTL STATIC ${SUB_DIR_SRC_LIST}
-        datetime.cpp
-        json.hpp)
+add_library(MSTL STATIC ${SUB_DIR_SRC_LIST})
 
 set_target_properties(MSTL PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(MSTL PROPERTIES

@@ -1,207 +1,22 @@
 #ifndef MSTL_SERVLET_HPP__
 #define MSTL_SERVLET_HPP__
-#include "basiclib.hpp"
+#include "../basiclib.hpp"
 #ifdef MSTL_PLATFORM_LINUX__
 #include <atomic>
-#include <mutex>
-#include <thread>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include "errorlib.hpp"
-#include "stringstream.hpp"
-#include "unordered_map.hpp"
-#include "vector.hpp"
-#include "hexadecimal.hpp"
-#include "json.hpp"
+#include "../print.hpp"
+#include "session.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 MSTL_ERROR_BUILD_FINAL_CLASS(HttpError, LinkError, "Http Actions Failed");
 
+class servlet;
 
-class cookie {
-public:
-    string name;
-    string value;
-    string domain;
-    string path = "/";
-    int max_age = -1;  // -1 means session cookie
-    bool secure = false;
-    bool http_only = false;
-    string same_site; // "Strict", "Lax", "None"
-    datetime expires;
-
-    cookie() = default;
-    cookie(string name, string value) : name(_MSTL move(name)), value(_MSTL move(value)) {}
-
-    string to_string() const {
-        ostringstream ss;
-        ss << name << "=" << value;
-
-        if (!domain.empty()) ss << "; Domain=" << domain;
-        if (!path.empty()) ss << "; Path=" << path;
-
-        if (max_age >= 0) {
-            ss << "; Max-Age=" << max_age;
-        }
-
-        if (expires > datetime::epoch()) {
-            ss << "; Expires=" << expires.to_gmt();
-        }
-
-        if (secure) ss << "; Secure";
-        if (http_only) ss << "; HttpOnly";
-        if (!same_site.empty()) ss << "; SameSite=" << same_site;
-
-        return ss.str();
-    }
-};
-
-
-class session {
-public:
-    string id;
-    unordered_map<string, string> data;
-    datetime last_access;
-    datetime create_time;
-    int max_age = 1800;  // 30 minutes default
-    bool is_new = true;
-    bool invalidated = false;
-
-    explicit session(string session_id)
-        : id(_MSTL move(session_id)),
-          last_access(datetime::now()),
-          create_time(last_access) {}
-
-    string& operator[](const string& key) {
-        last_access = datetime::now();
-        return data[key];
-    }
-
-    bool contains(const string& key) const {
-        return data.find(key) != data.end();
-    }
-
-    void remove_attribute(const string& key) {
-        data.erase(key);
-        last_access = datetime::now();
-    }
-
-    void invalidate() {
-        invalidated = true;
-        data.clear();
-    }
-
-    bool is_valid() const {
-        return !invalidated && !expired();
-    }
-
-    bool expired(int max_inactive = 0) const {
-        if (max_inactive <= 0) max_inactive = max_age;
-        const datetime now = datetime::now();
-        const int64_t diff = now - last_access;
-        return diff > max_inactive;
-    }
-
-    void set_max_inactive_interval(int seconds) {
-        max_age = seconds;
-    }
-
-    int get_max_inactive_interval() const {
-        return max_age;
-    }
-};
-
-
-class __session_manager {
-private:
-    unordered_map<string, session> sessions_;
-    std::mutex mutex_;
-    std::atomic<bool> cleanup_running_{false};
-    std::thread cleanup_thread_;
-
-    static string generate_session_id() {
-        ostringstream ss;
-        for (int i = 0; i < 32; ++i) {
-            ss << hexadecimal(random_mt::next_int(0, 15)).to_std_string();
-        }
-        return ss.str();
-    }
-
-    void cleanup_expired_sessions() {
-        while (cleanup_running_) {
-            {
-                std::lock_guard<std::mutex> lock(mutex_);
-                datetime now = datetime::now();
-                auto it = sessions_.begin();
-                while (it != sessions_.end()) {
-                    const int64_t diff = now - it->second.last_access;
-                    if (!it->second.is_valid() ||
-                        diff > it->second.get_max_inactive_interval()) {
-                        it = sessions_.erase(it);
-                    } else {
-                        ++it;
-                    }
-                }
-            }
-            std::this_thread::sleep_for(std::chrono::minutes(5));
-        }
-    }
-
-
-public:
-    __session_manager() {
-        cleanup_running_ = true;
-        cleanup_thread_ = std::thread(&__session_manager::cleanup_expired_sessions, this);
-    }
-
-    ~__session_manager() {
-        cleanup_running_ = false;
-        if (cleanup_thread_.joinable()) {
-            cleanup_thread_.join();
-        }
-    }
-
-    session* get_session(const string& session_id, bool create = true) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        auto it = sessions_.find(session_id);
-        if (it != sessions_.end()) {
-            if (it->second.is_valid()) {
-                it->second.is_new = false;
-                return &it->second;
-            } else {
-                sessions_.erase(it);
-            }
-        }
-
-        if (create) {
-            string new_id = session_id.empty() ? generate_session_id() : session_id;
-            auto [new_it, inserted] = sessions_.emplace(new_id, session(new_id));
-            return &new_it->second;
-        }
-
-        return nullptr;
-    }
-
-    session* create_session() {
-        return get_session("", true);
-    }
-
-    void remove_session(const string& session_id) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        sessions_.erase(session_id);
-    }
-
-    bool session_exists(const string& session_id) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        auto it = sessions_.find(session_id);
-        return it != sessions_.end() && it->second.is_valid();
-    }
-};
-
-// Request 结构体增强
 struct http_request {
-    string method = "GET";
+private:
+    HTTP_METHOD method = HTTP_METHOD::GET;
     string path = "/";
     string version = "HTTP/1.1";
     unordered_map<string, string> headers;
@@ -211,6 +26,11 @@ struct http_request {
     string body{};
     session* session = nullptr;
 
+    friend class servlet;
+
+    static const string EMPTY_MARK;
+
+public:
     http_request() = default;
     http_request(const http_request&) = delete;
     http_request& operator=(const http_request&) = delete;
@@ -218,37 +38,102 @@ struct http_request {
     http_request& operator=(http_request&& req) noexcept = default;
     ~http_request() = default;
 
-    string get_parameter(const string& name) const {
+    void set_version(string version) {
+        this->version = _MSTL move(version);
+    }
+    const string& get_version() const {
+        return version;
+    }
+
+    void set_parameter(const string& name, const string& value) {
+        parameters[name] = value;
+    }
+    const string& get_parameter(const string& name) const {
         auto it = parameters.find(name);
-        return it != parameters.end() ? it->second : string{};
+        return it != parameters.end() ? it->second : EMPTY_MARK;
     }
 
-    string get_cookie(const string& name) const {
+    void set_cookie(const string& name, const string& value) {
+        cookies[name] = value;
+    }
+    const string& get_cookie(const string& name) const {
         auto it = cookies.find(name);
-        return it != cookies.end() ? it->second : string{};
+        return it != cookies.end() ? it->second : EMPTY_MARK;
     }
 
-    string get_header(const string& name) const {
+    void set_session(class session* session) {
+        this->session = session;
+    }
+    class session* get_session() const {
+        return session;
+    }
+
+    void set_header(const string& name, const string& value) {
+        headers[name] = value;
+    }
+    const string& get_header(const string& name) const {
         auto it = headers.find(name);
-        return it != headers.end() ? it->second : string{};
+        return it != headers.end() ? it->second : EMPTY_MARK;
+    }
+
+    void set_content_type(const string& value) {
+        cookies["Content-Type"] = value;
+    }
+    const string& get_content_type() const {
+        return get_header("Content-Type");
+    }
+
+    void set_method(const HTTP_METHOD& method) {
+        this->method = method;
+    }
+    void set_method(const string& method) {
+        this->method = method;
+    }
+    const HTTP_METHOD& get_method() const {
+        return method;
+    }
+
+    void set_path(const string& path) {
+        this->path = path;
+    }
+    const string& get_path() const {
+        return path;
+    }
+
+    void set_query(string query) {
+        this->query = _MSTL move(query);
+    }
+    const string& get_query() const {
+        return query;
+    }
+
+    const string& get_body() const {
+        return body;
+    }
+    void set_body(string body) {
+        this->body = _MSTL move(body);
     }
 };
 
 
 struct http_response {
-public:
+private:
     string version = "HTTP/1.1";
-    int status_code = 404;
-    string status_msg = "Not Found";
+    HTTP_STATUS status_code = HTTP_STATUS::S4_NOT_FOUNT;
+    string status_msg = "";
     unordered_map<string, string> headers;
     vector<cookie> cookies;
     string body{};
     string redirect_url{};
     string forward_path{};
 
+    friend class servlet;
+
+public:
     http_response() {
-        headers["Content-Type"] = "text/html; charset=utf-8";
-        headers["Connection"] = "close";
+        set_content_type(HTTP_CONTENT::HTML_TEXT);
+        set_content_encode("utf-8");
+        set_header("Connection", "close");
     }
 
     http_response(const http_response&) = delete;
@@ -256,10 +141,16 @@ public:
     http_response(http_response&& res) noexcept = default;
     http_response& operator=(http_response&& res) noexcept = default;
 
+    const string& get_version() const {
+        return version;
+    }
+    void set_version(string version) {
+        this->version = _MSTL move(version);
+    }
+
     void add_cookie(const cookie& cookie) {
         cookies.push_back(cookie);
     }
-
     void add_cookie(const string& name, const string& value) {
         cookies.emplace_back(name, value);
     }
@@ -267,13 +158,81 @@ public:
     void set_header(const string& name, const string& value) {
         headers[name] = value;
     }
+    string get_header(const string& name) const {
+        auto it = headers.find(name);
+        return it != headers.end() ? it->second : string{};
+    }
+
+    void set_content_type(const string& value) {
+        headers["Content-Type"] = value;
+    }
+    void set_content_type(const string_view& value) {
+        headers["Content-Type"] = value;
+    }
+    void set_content_encode(const string& value) {
+        headers["Content-Type"] += "; charset=" + value;
+    }
+
+    void set_allow_method(const HTTP_METHOD& method) {
+        headers["Access-Control-Allow-Methods"] = method.to_string();
+    }
+    void set_max_age(const size_t age) {
+        headers["Access-Control-Max-Age"] = to_string(age);
+    }
+    void set_allow_credentials(const bool allow) {
+        if (allow) headers["Access-Control-Allow-Credentials"] = "true";
+        else headers["Access-Control-Allow-Credentials"] = "false";
+    }
+    void set_allow_origin(string origin) {
+        headers["Access-Control-Allow-Origin"] = _MSTL move(origin);
+    }
+    void set_allow_headers(string header) {
+        headers["Access-Control-Allow-Headers"] = _MSTL move(header);
+    }
+
+    void set_status(const HTTP_STATUS status) {
+        status_code = status;
+    }
+    void set_ok() {
+        status_code = HTTP_STATUS::S2_OK;
+    }
+    void set_not_found() {
+        status_code = HTTP_STATUS::S4_NOT_FOUNT;
+    }
+    void set_bad_request() {
+        status_code = HTTP_STATUS::S4_BAD_REQUEST;
+    }
+    HTTP_STATUS get_status() const {
+        return status_code;
+    }
+
+    void set_status_msg(string status_msg) {
+        this->status_msg = _MSTL move(status_msg);
+    }
+    const string& get_status_msg() const {
+        return status_msg;
+    }
+
+    void set_body(string body) {
+        this->body = _MSTL move(body);
+    }
+    const string& get_body() const {
+        return body;
+    }
+
 
     void redirect(string url) {
         redirect_url = _MSTL move(url);
     }
+    const string& get_redirect() const {
+        return redirect_url;
+    }
 
     void forward(string url) {
         forward_path = _MSTL move(url);
+    }
+    const string& get_forward() const {
+        return forward_path;
     }
 };
 
@@ -319,43 +278,56 @@ public:
 };
 
 
-class cors_filter : public filter {
+class cors_filter final : public filter {
 private:
     string allowed_origins_ = "*";
-    string allowed_methods_ = "GET, POST, PUT, DELETE, OPTIONS";
-    string allowed_headers_ = "Content-Type, Authorization";
+    HTTP_METHOD allowed_methods_ = HTTP_METHOD::GET & HTTP_METHOD::POST &
+        HTTP_METHOD::DELETE & HTTP_METHOD::PUT & HTTP_METHOD::OPTIONS;
+    string allowed_headers_ = "Content-Type, Cookie, Accept, X-Requested-With";
 
 public:
     void set_allowed_origins(const string& origins) { allowed_origins_ = origins; }
-    void set_allowed_methods(const string& methods) { allowed_methods_ = methods; }
+    void set_allowed_methods(const HTTP_METHOD& methods) { allowed_methods_ = methods; }
     void set_allowed_headers(const string& headers) { allowed_headers_ = headers; }
 
     void do_filter(http_request& request, http_response& response) override {
-        response.set_header("Access-Control-Allow-Origin", allowed_origins_);
-        response.set_header("Access-Control-Allow-Methods", allowed_methods_);
-        response.set_header("Access-Control-Allow-Headers", allowed_headers_);
-        response.set_header("Access-Control-Allow-Credentials", "true");
+        response.set_allow_origin(allowed_origins_);
+        response.set_allow_method(allowed_methods_);
+        response.set_allow_headers(allowed_headers_);
+        response.set_allow_credentials(true);
 
-        if (request.method == "OPTIONS") {
-            response.status_code = 200;
-            response.status_msg = "OK";
-            response.body = "";
+        if (request.get_method().is_options()) {
+            response.set_ok();
+            response.set_status_msg("OK");
+            response.set_body("");
         }
     }
 };
 
-class logging_filter : public filter {
+class logging_filter final : public filter {
 public:
     bool pre_filter(http_request& request, http_response& response) override {
-        println("[", datetime::now(), "] Request: ", request.method, " ", request.path);
+        print();
+        println("[", datetime::now(), "] Request: ", request.get_method(), " ", request.get_path());
+        print();
         return true;
     }
 
     void post_filter(http_request& request, http_response& response) override {
-        println("[", datetime::now(), "] Response: ", response.status_code, " ", response.status_msg);
+        print();
+        println("[", datetime::now(), "] Response: ", response.get_status(), " ", response.get_status_msg());
+        print();
     }
 
     void do_filter(http_request& request, http_response& response) override {}
+};
+
+
+struct HTTP_COOKIE {
+    static constexpr auto JSESSIONID = "JSESSIONID";
+    static constexpr auto SESSIONID = "SESSIONID";
+    static constexpr auto PHPSESSID = "PHPSESSID";
+    static constexpr auto ASPSESSIONID = "ASP.NET_SessionId";
 };
 
 
@@ -369,7 +341,7 @@ private:
     vector<std::thread> worker_threads_;
     __session_manager session_manager_;
     filter_chain filter_chain_;
-    string session_cookie_name_ = "JSESSIONID";
+    string session_cookie_name_ = HTTP_COOKIE::JSESSIONID;
 
 private:
     void start_workers(const int thread_count) {
@@ -405,11 +377,10 @@ private:
         http_request request = parse_request(client_socket);
         int forward_count = 0;
         constexpr int MAX_FORWARD = 5;
-
         do {
             http_response response = handle_request(request);
-            if (!response.forward_path.empty() && forward_count < MAX_FORWARD) {
-                request.path = response.forward_path;
+            if (!response.get_forward().empty() && forward_count < MAX_FORWARD) {
+                request.set_path(response.get_forward());
                 forward_count++;
                 continue;
             }
@@ -438,19 +409,19 @@ private:
             if (eq_pos != string::npos) {
                 string name = pair.substr(0, eq_pos).trim();
                 string value = pair.substr(eq_pos + 1).trim();
-                request.cookies[name] = value;
+                request.set_cookie(name, value);
             }
         }
     }
 
     static void parse_parameters(http_request &request) {
-        if (!request.query.empty()) {
-            parse_url_encoded(request.query, request.parameters);
+        if (!request.get_query().empty()) {
+            parse_url_encoded(request.get_query(), request.parameters);
         }
-        if (request.method == "POST" && !request.body.empty()) {
+        if (request.get_method().is_post() && !request.get_body().empty()) {
             string content_type = request.get_header("Content-Type");
-            if (content_type.find("application/x-www-form-urlencoded") == 0) {
-                parse_url_encoded(request.body, request.parameters);
+            if (content_type.find(HTTP_CONTENT::FORM_APP) == 0) {
+                parse_url_encoded(request.get_body(), request.parameters);
             }
         }
     }
@@ -487,7 +458,7 @@ private:
                 try {
                     hexadecimal hex_val(str.substr(i + 1, 2));
                     result += static_cast<char>(hex_val.to_decimal());
-                } catch (const Error&) {
+                } catch (...) {
                     result += str[i];
                 }
             } else if (str[i] == '+') {
@@ -507,7 +478,7 @@ protected:
 
         ssize_t total_read = 0;
         while (true) {
-            ssize_t bytes_read = ::read(client_socket, buffer, sizeof(buffer)-1);
+            ssize_t bytes_read = ::read(client_socket, buffer, sizeof(buffer) - 1);
             if (bytes_read <= 0) break;
 
             buffer[bytes_read] = '\0';
@@ -553,20 +524,20 @@ protected:
             line.trim();
             const size_t pos1 = line.find(' ');
             if (pos1 != string::npos) {
-                req.method = line.substr(0, pos1);
+                req.set_method(line.substr(0, pos1));
                 const size_t pos2 = line.find(' ', pos1 + 1);
                 if (pos2 != string::npos) {
-                    req.path = line.substr(pos1 + 1, pos2 - pos1 - 1);
-                    req.version = line.substr(pos2 + 1);
+                    req.set_path(line.substr(pos1 + 1, pos2 - pos1 - 1));
+                    req.set_version(line.substr(pos2 + 1));
                 }
             }
         }
 
         // url query
-        const size_t query_pos = req.path.find('?');
+        const size_t query_pos = req.get_path().find('?');
         if (query_pos != string::npos) {
-            req.query = req.path.substr(query_pos+1);
-            req.path = req.path.substr(0, query_pos);
+            req.set_query(req.get_path().substr(query_pos+1));
+            req.set_path(req.get_path().substr(0, query_pos));
         }
 
         // request header
@@ -578,20 +549,20 @@ protected:
             if (colon_pos != string::npos) {
                 string key = line.substr(0, colon_pos).trim();
                 string value = line.substr(colon_pos+1).trim();
-                req.headers[key] = _MSTL move(value);
+                req.set_header(key, _MSTL move(value));
             }
         }
 
         // request body
-        const size_t body_start = request_data.find("\r \r");
+        const size_t body_start = request_data.find("\r\n\r\n");
         if (body_start != string::npos && body_start + 4 < request_data.size()) {
-            req.body = request_data.substr(body_start + 4);
+            req.set_body(request_data.substr(body_start + 4));
         }
 
         // Parse cookies
-        auto cookie_it = req.headers.find("Cookie");
-        if (cookie_it != req.headers.end()) {
-            parse_cookies(cookie_it->second, req);
+        auto cookie_str = req.get_header("Cookie");
+        if (!cookie_str.empty()) {
+            parse_cookies(cookie_str, req);
         }
 
         // Parse parameters
@@ -600,7 +571,7 @@ protected:
         // Handle session
         string session_id = req.get_cookie(session_cookie_name_);
         if (!session_id.empty() && session_manager_.session_exists(session_id)) {
-            req.session = session_manager_.get_session(session_id, false);
+            req.set_session(session_manager_.get_session(session_id, false));
         }
 
         return req;
@@ -609,30 +580,30 @@ protected:
     virtual string build_response_str(const http_response& response) {
         ostringstream ss;
 
-        if (!response.redirect_url.empty()) {
-            ss << response.version << " 302 Found\r\n";
-            ss << "Location: " << response.redirect_url << "\r\n";
+        if (!response.get_redirect().empty()) {
+            ss << response.get_version() << " 302 Found\r\n";
+            ss << "Location: " << response.get_redirect() << "\r\n";
         } else {
-            ss << response.version << " "
-               << response.status_code << " "
-               << response.status_msg << "\r\n";
+            ss << response.get_version() << " "
+               << static_cast<uint16_t>(response.get_status()) << " "
+               << response.get_status_msg() << "\r\n";
         }
 
         for (const auto& cookie : response.cookies) {
             ss << "Set-Cookie: " << cookie.to_string() << "\r\n";
         }
-        if (response.redirect_url.empty() &&
-            response.headers.find("Content-Length") == response.headers.end()) {
-            ss << "Content-Length: " << response.body.size() << "\r\n";
+        if (response.get_redirect().empty() &&
+            response.get_header("Content-Length").empty()) {
+            ss << "Content-Length: " << response.get_body().size() << "\r\n";
         }
         for (const auto& [key, value] : response.headers) {
             ss << key << ": " << value << "\r\n";
         }
         ss << "\r\n";
 
-        if (!response.redirect_url.empty()) {
+        if (!response.get_redirect().empty()) {
         } else {
-            ss << response.body;
+            ss << response.get_body();
         }
         return ss.str();
     }
@@ -658,12 +629,11 @@ protected:
         filter_chain_.add_filter(filter);
     }
 
-    session* get_session(http_request& request, bool create = true) {
-        if (request.session) return request.session;
+    session* get_session(http_request& request, const bool create) {
+        session* session = request.get_session();
+        if (session) return session;
 
         string session_id = request.get_cookie(session_cookie_name_);
-        session* session = nullptr;
-
         if (!session_id.empty()) {
             session = session_manager_.get_session(session_id, false);
         }
@@ -671,24 +641,27 @@ protected:
         if (!session && create) {
             session = session_manager_.create_session();
         }
-
-        request.session = session;
+        request.set_session(session);
         return session;
     }
 
+    session* get_session(http_request& request) {
+        return get_session(request, false);
+    }
+
     void add_session_cookie(http_request& request, http_response& response, session* session) const {
-        if (session && session->is_new) {
-            cookie session_cookie(session_cookie_name_, session->id);
-            session_cookie.path = "/";
-            session_cookie.http_only = true;
+        if (session && session->is_new()) {
+            cookie session_cookie(session_cookie_name_, session->get_id());
+            session_cookie.set_path("/");
+            session_cookie.set_http_only(true);
 
             auto proto_header = request.get_header("X-Forwarded-Proto");
             const bool is_https = proto_header == "https";
-            session_cookie.secure = is_https;
-            session_cookie.same_site = is_https ? "Strict" : "Lax";
+            session_cookie.set_http_only(is_https);
+            session_cookie.set_same_site(is_https ? "Strict" : "Lax");
 
             response.add_cookie(session_cookie);
-            session->is_new = false;
+            session->set_new(false);
         }
     }
 
@@ -708,33 +681,35 @@ protected:
         }
         filter_chain_.execute_filters(request, response);
 
-
+        print();
         println(
-            "[", request.method, "]",
-            request.path, " Query:", request.query,
-            " Body size:", request.body.size(),
-            " Session:", (request.session ? request.session->id : "none"));
+            "[", request.get_method(), "]", request.get_path(),
+            " Query:", request.get_query(),
+            " Body size:", request.get_body().size(),
+            " Session:", (request.get_session() ? request.get_session()->get_id() : "none"));
+        print();
 
-        if (request.method == "GET") {
+        const HTTP_METHOD& method = request.get_method();
+        if (method.is_get()) {
             do_get(request, response);
-        } else if (request.method == "POST") {
+        } else if (method.is_post()) {
             do_post(request, response);
-        } else if (request.method == "PUT") {
+        } else if (method.is_put()) {
             do_put(request, response);
-        } else if (request.method == "DELETE") {
+        } else if (method.is_delete()) {
             do_delete(request, response);
-        } else if (request.method == "HEAD") {
+        } else if (method.is_head()) {
             do_head(request, response);
-        } else if (request.method == "OPTIONS") {
+        } else if (method.is_options()) {
             do_options(request, response);
-        } else if (request.method == "TRACE") {
+        } else if (method.is_trace()) {
             do_trace(request, response);
-        } else if (request.method == "CONNECT") {
+        } else if (method.is_connect()) {
             do_connect(request, response);
         } else {
-            response.status_code = 405;
-            response.status_msg = "Method Not Allowed";
-            response.body = "Method Not Allowed";
+            response.set_status(HTTP_STATUS::S4_METHOD_NOT_ALLOWED);
+            response.set_status_msg("Method Not Allowed");
+            response.set_body("Method Not Allowed");
         }
 
         filter_chain_.execute_post_filters(request, response);
@@ -742,42 +717,53 @@ protected:
     }
 
     virtual void do_get(http_request& request, http_response& response) = 0;
+
     virtual void do_post(http_request& request, http_response& response) = 0;
 
     virtual void do_put(http_request& request, http_response& response) {
         do_post(request, response);
     }
+
     virtual void do_delete(http_request& request, http_response& response) {
         do_post(request, response);
     }
+
     virtual void do_head(http_request& request, http_response& response) {
         do_get(request, response);
-        response.body.clear(); // HEAD should not return body
+        response.set_body(""); // HEAD should not return body
     }
+
     virtual void do_options(http_request& request, http_response& response) {
-        response.status_code = 200;
-        response.status_msg = "OK";
-        response.set_header("Allow", "GET, POST, PUT, DELETE, HEAD, OPTIONS");
+        response.set_status(HTTP_STATUS::S2_NO_CONTENT);
+        response.set_status_msg("No Content");
+        response.set_allow_method(
+            HTTP_METHOD::GET & HTTP_METHOD::POST & HTTP_METHOD::PUT
+            & HTTP_METHOD::DELETE & HTTP_METHOD::OPTIONS
+            );
+        response.set_allow_headers("Content-Type, Cookie, Accept, X-Requested-With");
+        response.set_max_age(86400);
     }
+
     virtual void do_trace(http_request& request, http_response& response) {
-        response.status_code = 200;
-        response.status_msg = "OK";
-        response.set_header("Content-Type", "message/http");
+        response.set_ok();
+        response.set_status_msg("OK");
+        response.set_content_type(HTTP_CONTENT::HTML_MSG);
 
         ostringstream ss;
-        ss << request.method << " " << request.path;
-        if (!request.query.empty()) ss << "?" << request.query;
-        ss << " " << request.version << "\r";
+        ss << request.get_method().to_string() << " " << request.get_path();
+        if (!request.get_query().empty()) ss << "?" << request.get_query();
+        ss << " " << request.get_version() << "\r";
         for (const auto& [key, value] : request.headers) {
             ss << key << ": " << value << "\r";
         }
-        ss << "\r" << request.body;
-        response.body = ss.str();
+        ss << "\r" << request.get_body();
+        response.set_body(ss.str());
     }
+
     virtual void do_connect(http_request& request, http_response& response) {
-        response.status_code = 405;
-        response.status_msg = "Method Not Allowed";
-        response.body = "CONNECT method not supported";
+        response.set_status(HTTP_STATUS::S4_METHOD_NOT_ALLOWED);
+        response.set_status_msg("Method Not Allowed");
+        response.set_body("CONNECT method not supported");
     }
 
 public:
@@ -790,7 +776,7 @@ public:
         this->stop();
     }
 
-    bool start(const uint32_t thread_count = std::thread::hardware_concurrency()) {
+    bool start(const uint32_t thread_count = 5) {
         if (running_) return true;
         if (!init()) return false;
 
@@ -827,7 +813,6 @@ public:
 
         running_ = true;
         start_workers(static_cast<int32_t>(thread_count));
-        println("Server started on port", port_, "with", worker_threads_.size(), "workers");
         return true;
     }
 
@@ -845,7 +830,7 @@ public:
         destroy();
     }
 
-    void set_session_cookie_name(const string& name) {
+    void set_session_cookie_name(const char* name) {
         session_cookie_name_ = name;
     }
     const string& get_session_cookie_name() const {
