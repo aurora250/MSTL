@@ -166,7 +166,7 @@ public:
     void set_content_type(const string& value) {
         headers["Content-Type"] = value;
     }
-    void set_content_type(const string_view& value) {
+    void set_content_type(const char* value) {
         headers["Content-Type"] = value;
     }
     void set_content_encode(const string& value) {
@@ -596,8 +596,8 @@ protected:
             response.get_header("Content-Length").empty()) {
             ss << "Content-Length: " << response.get_body().size() << "\r\n";
         }
-        for (const auto& [key, value] : response.headers) {
-            ss << key << ": " << value << "\r\n";
+        for (auto iter = response.headers.begin(); iter != response.headers.end(); ++iter) {
+            ss << iter->first << ": " << iter->second << "\r\n";
         }
         ss << "\r\n";
 
@@ -753,8 +753,8 @@ protected:
         ss << request.get_method().to_string() << " " << request.get_path();
         if (!request.get_query().empty()) ss << "?" << request.get_query();
         ss << " " << request.get_version() << "\r";
-        for (const auto& [key, value] : request.headers) {
-            ss << key << ": " << value << "\r";
+        for (auto iter = request.headers.begin(); iter != request.headers.end(); ++iter) {
+            ss << iter->first << ": " << iter->second << "\r";
         }
         ss << "\r" << request.get_body();
         response.set_body(ss.str());

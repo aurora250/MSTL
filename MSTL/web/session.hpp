@@ -112,7 +112,7 @@ public:
 };
 
 template <>
-struct printer<cookie> {
+struct printer<cookie, void> {
     static void print(cookie const& t) {
         std::cout << t.to_string();
     }
@@ -215,7 +215,7 @@ private:
     std::atomic<bool> cleanup_running_{false};
     std::thread cleanup_thread_;
 
-    friend class servlet;
+    friend class session;
 
     static string generate_session_id() {
         ostringstream ss;
@@ -271,7 +271,7 @@ private:
 
         if (create) {
             string new_id = session_id.empty() ? generate_session_id() : session_id;
-            auto [new_it, inserted] = sessions_.emplace(new_id, session(new_id));
+            const auto new_it = sessions_.emplace(new_id, session(new_id)).first;
             return &new_it->second;
         }
 
@@ -364,19 +364,22 @@ enum class HTTP_STATUS : uint16_t {
 
 
 struct HTTP_CONTENT {
-    static constexpr string_view HTML_TEXT  = "text/html";
-    static constexpr string_view XML_TEXT   = "text/xml";
-    static constexpr string_view CSS_TEXT   = "text/css";
-    static constexpr string_view PLAIN_TEXT = "text/plain";
-    static constexpr string_view JSON_APP   = "application/json";
-    static constexpr string_view FORM_APP   = "application/x-www-form-urlencoded";
-    static constexpr string_view JPEG_IMG   = "image/jpeg";
-    static constexpr string_view PNG_IMG    = "image/png";
-    static constexpr string_view BMP_IMG    = "image/bmp";
-    static constexpr string_view WEBP_IMG   = "image/webp";
-    static constexpr string_view HTML_MSG   = "message/http";
+    static constexpr auto HTML_TEXT  = "text/html";
+    static constexpr auto XML_TEXT   = "text/xml";
+    static constexpr auto CSS_TEXT   = "text/css";
+    static constexpr auto PLAIN_TEXT = "text/plain";
+    static constexpr auto JSON_APP   = "application/json";
+    static constexpr auto FORM_APP   = "application/x-www-form-urlencoded";
+    static constexpr auto JPEG_IMG   = "image/jpeg";
+    static constexpr auto PNG_IMG    = "image/png";
+    static constexpr auto BMP_IMG    = "image/bmp";
+    static constexpr auto WEBP_IMG   = "image/webp";
+    static constexpr auto HTML_MSG   = "message/http";
 };
 
+#ifdef DELETE
+#undef DELETE
+#endif
 
 struct HTTP_METHOD {
 private:

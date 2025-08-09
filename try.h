@@ -142,9 +142,9 @@ public:
                 json << R"("attributes":{)";
 
                 bool first = true;
-                for (const auto& [key, value] : session->get_data()) {
+                for (auto iter = session->get_data().begin(); iter != session->get_data().end(); ++iter) {
                     if (!first) json << ",";
-                    json << R"(")" << key << R"(":")" << value << R"(")";
+                    json << R"(")" << iter->first << R"(":")" << iter->second << R"(")";
                     first = false;
                 }
                 json << "}}";

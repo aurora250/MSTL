@@ -2,49 +2,63 @@
 
 本项目旨在建立一套供C++初学者学习并使用的、阅读性强的、较为健全的除并发库外的STL库，同时提供多种功能性接口。
 本项目尽最大可能减少除并发库外的标准库的使用，尝试实现简化版本。
-欢迎各位issue，star。鄙人才疏学浅，如有不足，还望斧正。
+有劳各位多多issue，使本项目趋于健全。如有不足，还望斧正。
 
 对初学者的建议学习方式：按照下文的文件介绍顺序阅读和使用，在稍有不懂的地方咨询同学或AI。
 
-请保证您本地的字符编码为UTF-8
+请保证您本地的字符编码为UTF-8或使用basiclib内的set_utf8_console进行设置。
+
+使用方式：将MSTL文件夹引入您的项目并使用CMake导入库即可。
 
 ## 通过阅读和使用MSTL，你能学到什么？
 
 现代C++的实用特性，包括：
 
-constexpr与if constexpr；
+使用constexpr与if constexpr减轻运行期负担；
 
-concept与requires；
+使用concept与requires健壮代码；
 
 强化noexcept保证；
 
 使用可变参数模板、递归展开和模板特化等模板元技术实现类型萃取并编写功能性容器；
 
-函数式编程工具的实现；
-
-类型擦除工具类与函数的实现；
+函数式编程设计和类型擦除设计；
 
 通过enable_if实现SFINAF(Substitution Failure Is Not An Error)；
 
 通过compressed_pair实现EBCO(Empty Base Class Optimization)；
 
-使用alignof实现内存对位分配；
-
-使用attribute优化代码；
+使用编译器内置attribute优化代码行为；
 
 区分decltype、auto与template的类型推导退化规则；
 
 内存分配与就地构造的配合使用；
 
+双端队列、红黑树、哈希表等复杂容器的数据操作方式；
+
+不同字符编码类型间的转换规则；
+
+使用Windows与Linux原生接口实现datetime、file等工具类，认识两个OS之间大同小异的数据接口与数据处理方式；
+
 实现绝大部分标准算法(包括并发算法)与所有常用标准容器，并拓展部分教学用的非实用算法；
 
-标准库并发接口的使用(atomic/conditional_variable/thread/mutex/future/package_task等)。
+十余种通用排序函数的实现方式；
+
+标准库并发接口的使用(atomic/conditional_variable/thread/mutex/future/package_task等)；
+
+MySQL数据库C风格接口的现代风格包装与使用；
+
+设计线程轮询的池化运作模式；
+
+socket封装现代风格servlet进行端口监听与web操作。
+
+等......
 
 ## 支持环境
 
 WINDOWS LINUX
 
-X64 X86
+X64
 
 MSVC GCC CLANG
 
@@ -52,33 +66,33 @@ C++ 14 17 20
 
 ## 文件介绍
 
-![文件结构](including_structure.png)
+![文件结构](dependencies_structure.png)
 
 以下按照上述文件结构层级依次介绍。
 
-- [basiclib.hpp](/MSTL/basiclib.h)
+- [basiclib.hpp](/MSTL/basiclib.hpp)
 
-使用操作系统平台、托管平台、总线宽度和C++版本的宏实现多编译环境适配。
+使用操作系统平台、托管平台、总线宽度和C++版本的宏实现多编译环境适配，定义内存操作与C风格字符串操作函数。
 
 - [type_traits.hpp](/MSTL/type_traits.hpp)
 
 使用模板元技术，在编译期推断类型信息，并提供基础数字类型的哈希函数和迭代器萃取器。
 
-- [errorlib.h](/MSTL/errorlib.h)
+- [errorlib.h](/MSTL/errorlib.hpp)
 
-定义错误类型和快速调用宏，本项目的所有错误类型都为本文件内的错误类型。
+定义错误类型和快速调用宏，本项目的所有错误类型都为本文件内的错误类型，您可以使用BUILD_ERROR系列宏快速构建兼容本项目的错误类型。
 
 - [functor.hpp](/MSTL/functor.hpp)
 
-定义仿函数和仿函数配接器(已弃用)。
+定义仿函数和仿函数配接器（C++11后被标准弃用）。
 
 - [concepts.hpp](/MSTL/concepts.hpp)
 
-定义常用的约束。
+定义常用的约束与迭代器类型判断特征常量。
 
 - [mathlib.h](/MSTL/mathlib.hpp)
 
-定义常用的constexpr的数学函数。
+定义常用的constexpr数学函数与常量。
 
 - [numeric.hpp](/MSTL/numeric.hpp)
 
@@ -86,7 +100,11 @@ C++ 14 17 20
 
 - [utility.hpp](/MSTL/utility.hpp)
 
-定义常用的constexpr的工具类型与函数，提供键值对pair及其哈希函数。
+定义压缩对compredded_pair、键值对pair及其哈希函数、类型擦除函数、C风格字符串转数字类型函数。
+
+- [heap.hpp](/MSTL/heap.hpp)
+
+定义普通heap算法。
 
 - [iterator.hpp](/MSTL/iterator.hpp)
 
@@ -94,11 +112,15 @@ C++ 14 17 20
 
 - [tuple.hpp](/MSTL/tuple.hpp)
 
-定义constexpr的元组tuple类和其辅助函数，提供tuple的哈希函数。
+定义元组tuple类及其辅助函数，提供tuple的哈希函数。
 
 - [algobase.hpp](/MSTL/algobase.hpp)
 
 定义比较、复制和移动算法。
+
+- [any.hpp](/MSTL/any.hpp)
+
+定义可存储任意类型的any类，使用any_cast可取出其值。
 
 - [optional.hpp](/MSTL/optional.hpp)
 
@@ -108,13 +130,17 @@ C++ 14 17 20
 
 定义内存操作函数、临时缓存区类、分配器类和智能指针类。
 
+- [array.hpp](/MSTL/array.hpp)
+
+定义数组array类，可以在编译器确定取值并更安全现代地操作数组。
+
 - [variant.hpp](/MSTL/variant.hpp)
 
 定义变体variant类，可在同一块内存同时托管多个类型。
 
 - [string_view.hpp](/MSTL/string_view.hpp)
 
-定义constexpr的字符串萃取类char_traits、辅助萃取函数与constexpr的字符串视图类basic_string_view。
+定义字符串萃取类char_traits、辅助萃取函数与字符串视图类basic_string_view。
 
 - [functional.hpp](/MSTL/functional.hpp)
 
@@ -126,7 +152,7 @@ C++ 14 17 20
 
 - [deque.hpp](/MSTL/deque.hpp)
 
-定义双端队列类deque。
+定义双端队列类deque，它可以维护map与buffer使数据可以向前和向后插入。
 
 - [bitmap.hpp](/MSTL/bitmap.hpp)
 
@@ -134,51 +160,43 @@ C++ 14 17 20
 
 - [vector.hpp](/MSTL/vector.hpp)
 
-定义constexpr的向量类vector。项目将在绝大部分场景用vector代替动态数组。
+定义向量类vector。项目将在绝大部分场景用vector代替动态数组。
 
 - [algo.hpp](/MSTL/algo.hpp)
 
 定义判断、集合、查找、合并、移动、变换、绑定、排列等算法。
 
+- [rb_tree.h](/MSTL/rb_tree.hpp)
+
+定义红黑树类rb_tree作为有序容器的代理类。
+
 - [basic_string.hpp](/MSTL/basic_string.hpp)
 
-定义constexpr的基础字符串类basic_string。
-
-- [heap.hpp](/MSTL/heap.hpp)
-
-定义普通堆算法heap和莱昂纳多堆算法leonardo_heap。
+定义基础字符串类basic_string。
 
 - [queue.hpp](/MSTL/queue.hpp)
 
-定义双端队列deque的配接器 队列类queue，和基于堆算法heap的优先级队列priority_queue。
+定义双端队列deque的配接器 队列queue，和基于普通堆算法heap的优先级队列priority_queue。
 
 - [stack.hpp](/MSTL/stack.hpp)
 
-定义双端队列deque的配接器 栈类stack。
+定义双端队列deque的配接器 栈stack。
 
 - [hashtable.hpp](MSTL/hashtable.hpp)
 
-定义哈希表hashtable作为无序容器的代理类。
+定义哈希表类hashtable作为无序容器的代理类。
 
-- [rb_tree.h](/MSTL/rb_tree.h)
+- [leonardo_heap.hpp](/MSTL/leonardo_heap.hpp)
 
-定义红黑树rb_tree作为有序容器的代理类。
-
-- [string.hpp](/MSTL/string.hpp)
-
-定义多种字符类型的字符串类并提供其哈希函数，提供基本数据类型向字符串类的转换函数。
+定义普通堆算法heap和莱昂纳多堆算法leonardo_heap。
 
 - [sort.hpp](/MSTL/sort.hpp)
 
-定义冒泡、鸡尾酒、选择、希尔、计数、桶、索引、归并、部分、快速、内省、提姆、猴子等多种常见排序算法。
+定义冒泡、鸡尾酒、选择、希尔、计数、桶、索引、归并、部分、快速、内省、提姆、猴子等多种排序算法。
 
-- [unordered_map.hpp](/MSTL/unordered_map.hpp)
+- [algorithm.hpp](/MSTL/algorithm.hpp)
 
-定义无序字典类unordered_map和unordered_multimap。
-
-- [unordered_set.hpp](/MSTL/unordered_set.hpp)
-
-定义无序集合类unordered_set和unordered_multiset。
+引入基础算法和数学算法，定义并发算法，方便使用者引入。
 
 - [map.hpp](/MSTL/map.hpp)
 
@@ -188,35 +206,65 @@ C++ 14 17 20
 
 定义有序集合类set和multiset。
 
+- [string.hpp](/MSTL/string.hpp)
+
+定义多种字符类型的字符串类并提供其哈希函数，提供其它字符类型向UTF-8编码的string类型转换的转换函数、基本数据类型向字符串类转换的转换函数。
+
+- [unordered_map.hpp](/MSTL/unordered_map.hpp)
+
+定义无序字典类unordered_map和unordered_multimap。
+
+- [unordered_set.hpp](/MSTL/unordered_set.hpp)
+
+定义无序集合类unordered_set和unordered_multiset。
+
+- [timer.hpp](/MSTL/timer.hpp)
+
+定义定时器类timer，可以手动轮询实现定时操作。
+
+- [datetime.hpp](/MSTL/datetime.hpp)
+
+定义时间类time、日期类date、时期类datetime和UNIX时间戳类timestamp，提供方便操作的工具函数。
+
 - [stringstream.hpp](/MSTL/stringstream.hpp)
 
-定义流式字符串类basic_stringstream。它并不基于标准IO流，而仅仅是一个行为像流的字符串类。
-
-- [algorithm.hpp](/MSTL/algorithm.hpp)
-
-包装基础算法、排序算法与数学算法，定义并发算法，方便使用者引入。
+定义流式字符串类basic_istringstream、basic_ostringstream和basic_stringstream。它们并不基于标准IO流，而仅仅是一个行为像流的字符串类。
 
 - [trace_memory.hpp](/MSTL/trace_memory.hpp)
 
 定义基于boost的栈追踪分配器trace_allocator。
 
+- [random.hpp](/MSTL/random.hpp)
+
+定义假随机数生成类random_lcd、random_mt和基于硬件噪声的真随机数生成类secret。
+
+- [file.hpp](/MSTL/file.hpp)
+
+定义基于OS原生接口的文件操作类file，使用8KB的buffer以适应大批量小数据的读写。
+
 - [check_type.h](MSTL/check_type.h)
 
 定义类型信息分析类，使类型信息更整洁。
-
-- [detailof.hpp](/MSTL/detailof.hpp)
-
-定义类型信息输出函数，快速获取工整的容器类与工具类的类型信息。
 
 - [thread_pool.h](/MSTL/thread_pool.h)
 
 定义线程池ThreadPool。
 
+- [print.hpp](/MSTL/print.hpp)
+
+定义类型信息输出函数，快速获取工整的类型内容或含有类型信息的内容，使用printer可快速拓展自定义输出。
+
+- [database_pool.hpp](/MSTL/database_pool.hpp)
+
+定义基于MySQL的数据库连接池。
+
+- [servlet.hpp](/MSTL/web/servlet.hpp)
+
+定义仅适用于Linux的servlet类，提供监听端口、配置filter、设置cookie、操作session属性等功能。
+
 ## 开源协议
 
 本项目基于 [MIT 开源协议](LICENSE) 。
-
-
 
 # MSTL
 
