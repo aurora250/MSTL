@@ -2,6 +2,10 @@
 MSTL_BEGIN_NAMESPACE__
 #include "undef_cmacro.hpp"
 
+const string COOKIE_SITE::STRICT{"Strict"};
+const string COOKIE_SITE::LAX{"Lax"};
+const string COOKIE_SITE::NONE{"None"};
+
 const HTTP_METHOD HTTP_METHOD::GET{"GET"};
 const HTTP_METHOD HTTP_METHOD::POST{"POST"};
 const HTTP_METHOD HTTP_METHOD::HEAD{"HEAD"};

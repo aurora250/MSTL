@@ -16,6 +16,7 @@
 #include "file.hpp"
 #include "json.hpp"
 #include "hexadecimal.hpp"
+#include "web/session.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T>
@@ -324,16 +325,16 @@ template <typename IfEmpty, typename T>
 struct printer<compressed_pair<IfEmpty, T, false>> {
     static void print(const compressed_pair<IfEmpty, T, false>& t) {
         std::cout << "{ ";
-        printer<T>::print(t.value);
+        printer<remove_cvref_t<T>>::print(t.value);
         std::cout << ", ";
-        printer<IfEmpty>::print(t.no_compressed);
+        printer<remove_cvref_t<IfEmpty>>::print(t.no_compressed);
         std::cout << " }";
     }
     static void print_feature(const compressed_pair<IfEmpty, T, false>& t) {
         std::cout << "{ ";
-        printer<T>::print_feature(t.value);
+        printer<remove_cvref_t<T>>::print_feature(t.value);
         std::cout << ", ";
-        printer<IfEmpty>::print_feature(t.no_compressed);
+        printer<remove_cvref_t<IfEmpty>>::print_feature(t.no_compressed);
         std::cout << "(no_compressed) }";
     }
 };
@@ -343,16 +344,16 @@ template <typename T1, typename T2>
 struct printer<pair<T1, T2>> {
     static void print(const pair<T1, T2>& t) {
         std::cout << "{ ";
-        printer<T1>::print(t.first);
+        printer<remove_cvref_t<T1>>::print(t.first);
         std::cout << ", ";
-        printer<T2>::print(t.second);
+        printer<remove_cvref_t<T2>>::print(t.second);
         std::cout << " }";
     }
     static void print_feature(const pair<T1, T2>& t) {
         std::cout << "{ ";
-        printer<T1>::print_feature(t.first);
+        printer<remove_cvref_t<T1>>::print_feature(t.first);
         std::cout << ", ";
-        printer<T2>::print_feature(t.second);
+        printer<remove_cvref_t<T2>>::print_feature(t.second);
         std::cout << " }";
     }
 };
@@ -361,14 +362,14 @@ struct printer<pair<T1, T2>> {
 template <typename Tuple, size_t I,
     enable_if_t<I == tuple_size_v<Tuple> - 1, int> = 0>
 void __print_tuple_elements(const Tuple& t) {
-    using type = remove_reference_t<decltype(_MSTL get<I>(t))>;
+    using type = remove_cvref_t<decltype(_MSTL get<I>(t))>;
     printer<type>::print(_MSTL get<I>(t));
 }
 
 template <typename Tuple, size_t I,
     enable_if_t<I < tuple_size_v<Tuple> - 1, int> = 0>
 void __print_tuple_elements(const Tuple& t) {
-    using type = remove_reference_t<decltype(_MSTL get<I>(t))>;
+    using type = remove_cvref_t<decltype(_MSTL get<I>(t))>;
     printer<type>::print(_MSTL get<I>(t));
     std::cout << ", ";
     _MSTL __print_tuple_elements<Tuple, I + 1>(t);
@@ -377,14 +378,14 @@ void __print_tuple_elements(const Tuple& t) {
 template <typename Tuple, size_t I,
     enable_if_t<I == tuple_size_v<Tuple> - 1, int> = 0>
 void __print_tuple_elements_feature(const Tuple& t) {
-    using type = remove_reference_t<decltype(_MSTL get<I>(t))>;
+    using type = remove_cvref_t<decltype(_MSTL get<I>(t))>;
     printer<type>::print_feature(_MSTL get<I>(t));
 }
 
 template <typename Tuple, size_t I,
     enable_if_t<I < tuple_size_v<Tuple> - 1, int> = 0>
 void __print_tuple_elements_feature(const Tuple& t) {
-    using type = remove_reference_t<decltype(_MSTL get<I>(t))>;
+    using type = remove_cvref_t<decltype(_MSTL get<I>(t))>;
     printer<type>::print_feature(_MSTL get<I>(t));
     std::cout << ", ";
     _MSTL __print_tuple_elements_feature<Tuple, I + 1>(t);
@@ -1134,6 +1135,17 @@ struct printer<hexadecimal> {
     }
     static void print_feature(const hexadecimal& t) {
         std::cout << t.to_string();
+    }
+};
+
+template <>
+struct printer<session> {
+    static void print(session const& t) {
+        std::cout << "Session ID: [ " << t.get_id() << " ]" << " Data: ";
+        printer<unordered_map<string, string>>::print(t.get_data());
+    }
+    static void print_feature(session const& t) {
+        printer::print(t);
     }
 };
 

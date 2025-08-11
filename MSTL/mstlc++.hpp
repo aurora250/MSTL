@@ -17,7 +17,7 @@
 
 #include "trace_memory.hpp"
 #include "timer.hpp"
-#include "dns_request.hpp"
+#include "web/dns.hpp"
 #include "thread_pool.hpp"
 #include "database_pool.hpp"
 #include "undef_cmacro.hpp"

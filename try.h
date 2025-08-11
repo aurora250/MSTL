@@ -52,10 +52,9 @@ public:
                     response.set_body(_MSTL move(f.read_binary()));
                 }
                 return;
-            } else {
-                response.set_body("Resource not found: " + path);
-                return;
             }
+            response.set_body("Resource not found: " + path);
+            return;
         }
 
         if (path == "/api/session") {
@@ -135,23 +134,16 @@ public:
         }
         else if (action == "info") {
             if (session) {
-                ostringstream json;
-                json << R"({"sessionId":")" << session->get_id() << R"(",)";
-                json << R"("createTime":")" << session->get_create_time().to_iso_utc() << "\",";
-                json << R"("lastAccess":")" << session->get_last_access().to_iso_utc() << "\",";
-                json << R"("attributes":{)";
-
-                bool first = true;
-                for (auto iter = session->get_data().begin(); iter != session->get_data().end(); ++iter) {
-                    if (!first) json << ",";
-                    json << R"(")" << iter->first << R"(":")" << iter->second << R"(")";
-                    first = false;
-                }
-                json << "}}";
-
+                auto builder = json_builder();
+                builder.start_object()
+                    .key("sessionId").value(session->get_id())
+                    .key("createTime").value(session->get_create_time().to_iso_utc())
+                    .key("lastAccess").value(session->get_last_access().to_iso_utc())
+                    .key("attributes").value(session->get_data())
+                    .end_object();
                 response.set_ok();
                 response.set_content_type(HTTP_CONTENT::JSON_APP);
-                response.set_body(json.str());
+                response.set_body(json_to_string(builder.build()));
             } else {
                 response.set_bad_request();
                 response.set_content_type(HTTP_CONTENT::JSON_APP);
@@ -190,10 +182,15 @@ public:
         session* session = get_session(request, true);
 
         if (!attrName.empty()) {
-            (*session)[attrName] = attrValue;
+            session->operator[](attrName) = attrValue;
             response.set_ok();
             response.set_content_type(HTTP_CONTENT::JSON_APP);
-            response.set_body(R"({"attrName":")" + attrName + R"(", "attrValue":")" + attrValue + R"("})");
+            const auto json = json_builder()
+                .start_object()
+                .key("attrName").value(attrName)
+                .key("attrValue").value(attrValue)
+                .end_object().build();
+            response.set_body(json_to_string(json));
         } else {
             response.set_bad_request();
             response.set_body(R"({"error":"Missing attribute name"})");
@@ -237,7 +234,12 @@ public:
 
                 response.set_ok();
                 response.set_content_type(HTTP_CONTENT::JSON_APP);
-                response.set_body(R"({"name":")" + name + R"(", "value":")" + value + R"("})");
+                auto json = json_builder()
+                    .start_object()
+                    .key("name").value(name)
+                    .key("value").value(value)
+                    .build();
+                response.set_body(json_to_string(json));
             } else {
                 response.set_bad_request();
                 response.set_content_type(HTTP_CONTENT::JSON_APP);

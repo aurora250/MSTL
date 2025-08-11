@@ -1350,7 +1350,7 @@ MSTL_INLINE17 constexpr bool is_base_of_v = is_base_of<Base, Derived>::value;
 template <size_t Len>
 struct __aligned_storage_aux {
     union type {
-        unsigned char data[Len];
+        byte_t data[Len];
         struct MSTL_ALIGNOF_DEFAULT() {} align;
     };
 };
@@ -1358,7 +1358,7 @@ struct __aligned_storage_aux {
 template <size_t Len, size_t Align = alignof(typename __aligned_storage_aux<Len>::type)>
 struct aligned_storage {
     union type {
-        unsigned char data[Len];
+        byte_t data[Len];
         struct MSTL_ALIGNOF(Align) {} align;
     };
 };
@@ -2233,6 +2233,97 @@ MSTL_MACRO_RANGE_FLOAT(INITIALIZE_BASIC_FUNCTION__)
 MSTL_MACRO_RANGE_INT(INITIALIZE_BASIC_FUNCTION__)
 
 #undef INITIALIZE_BASIC_FUNCTION__
+
+
+template <typename T>
+struct __has_valid_begin_end {
+private:
+    template <typename U>
+    static auto __test(int) -> decltype(
+        declval<U>().begin(), declval<U>().end(),
+        is_same<decltype(declval<U>().begin()), decltype(declval<U>().end())>(),
+        true_type{}
+    );
+
+    template <typename U>
+    static false_type __test(...);
+public:
+    static constexpr bool value = decltype(__test<T>(0))::value;
+};
+
+
+template <typename Iterator>
+struct is_incrementable {
+private:
+    template <typename U>
+    static auto __test(int) -> decltype(
+        ++declval<U&>(),
+        true_type{}
+    );
+
+    template <typename U>
+    static false_type __test(...);
+public:
+    static constexpr bool value = decltype(__test<Iterator>(0))::value;
+};
+
+template <typename Iterator>
+MSTL_INLINE17 constexpr bool is_incrementable_v = is_incrementable<Iterator>::value;
+
+
+template <typename Iterator>
+struct is_decrementable {
+private:
+    template <typename U>
+    static auto __test(int) -> decltype(
+        --declval<U&>(),
+        true_type{}
+    );
+
+    template <typename U>
+    static false_type __test(...);
+public:
+    static constexpr bool value = decltype(__test<Iterator>(0))::value;
+};
+
+template <typename Iterator>
+MSTL_INLINE17 constexpr bool is_decrementable_v = is_decrementable<Iterator>::value;
+
+
+template <typename Container>
+struct is_iterable : bool_constant<
+    __has_valid_begin_end<Container>::value &&
+    is_incrementable_v<decltype(declval<Container>().begin())>
+> {};
+
+template <typename T>
+MSTL_INLINE17 constexpr bool is_iterable_v = is_iterable<T>::value;
+
+
+template <typename T>
+struct __has_first_and_second {
+private:
+    template <typename U>
+    static auto __test(int) -> decltype(
+        declval<U>().first, declval<U>().second,
+        true_type{}
+    );
+
+    template <typename U>
+    static false_type __test(...);
+public:
+    static constexpr bool value = decltype(__test<T>(0))::value;
+};
+
+template <typename Map>
+struct is_maplike : bool_constant<
+    is_iterable_v<Map> &&
+    __has_first_and_second<decltype(*declval<decltype(declval<Map>().begin())>())>::value
+> {};
+
+template <typename Map>
+MSTL_INLINE17 constexpr bool is_maplike_v = is_maplike<Map>::value;
+
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_TYPE_TRAITS_HPP__

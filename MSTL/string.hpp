@@ -229,6 +229,56 @@ inline string u32string_to_utf8(const char32_t* str) {
 }
 
 
+inline string escape_string(const string& str) {
+    string result;
+    result.reserve(str.length() + str.length() / 4);
+
+    for (const char c : str) {
+        switch (c) {
+            case '\"':
+                result += "\\\"";
+                break;
+            case '\'':
+                result += "\\\'";
+                break;
+            case '\\':
+                result += "\\\\";
+                break;
+            case '\b':
+                result += "\\b";
+                break;
+            case '\f':
+                result += "\\f";
+                break;
+            case '\n':
+                result += "\\n";
+                break;
+            case '\r':
+                result += "\\r";
+                break;
+            case '\t':
+                result += "\\t";
+                break;
+            case '\v':
+                result += "\\v";
+                break;
+            default:
+                if (static_cast<byte_t>(c) < 0x20) {
+                    result += "\\u";
+                    constexpr char hex[] = "0123456789abcdef";
+                    result += "00";
+                    result += hex[(c >> 4) & 0x0F];
+                    result += hex[c & 0x0F];
+                } else {
+                    result += c;
+                }
+            break;
+        }
+    }
+    return result;
+}
+
+
 #ifndef MSTL_DATA_BUS_WIDTH_64__
 template <typename CharT, typename UT, enable_if_t<(sizeof(UT) > 4), int> = 0>
 void __uint_to_buff_aux(CharT* riter, UT& ux) {

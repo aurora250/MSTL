@@ -232,7 +232,7 @@ public:
 
         uint64_t value = 0;
         for (unsigned long i = 0; i < length; ++i) {
-            value = (value << 8) | static_cast<unsigned char>(data[i]);
+            value = (value << 8) | static_cast<byte_t>(data[i]);
         }
         return value;
     }

@@ -11,7 +11,7 @@ struct base_char_traits {
     static constexpr char_type* copy(char_type* const dest,
         const char_type* const srcs, const size_t count) noexcept {
 #ifdef MSTL_COMPILER_CLANG__
-        __builtin_memcpy(dest, srcs, count * sizeof(char_type));
+        ::__builtin_memcpy(dest, srcs, count * sizeof(char_type));
 #else
 #ifdef MSTL_VERSION_20__
         if (_MSTL is_constant_evaluated()) {
@@ -27,8 +27,8 @@ struct base_char_traits {
 
     static constexpr char_type* move(char_type* const dest,
         const char_type* const srcs, const size_t count) noexcept {
-#ifdef MSTL_COMPILER_CLANG__
-        __builtin_memmove(dest, srcs, count * sizeof(char_type));
+#if defined(MSTL_COMPILER_CLANG__) && __has_builtin(__builtin_memmove)
+        ::__builtin_memmove(dest, srcs, count * sizeof(char_type));
 #else 
 #if MSTL_VERSION_20__
         if (_MSTL is_constant_evaluated()) {
@@ -235,7 +235,7 @@ public:
     MSTL_NODISCARD static constexpr int compare(const char_type* const lh,
         const char_type* const rh, const size_t n) noexcept {
 #ifdef MSTL_VERSION_17__
-        return __builtin_memcmp(lh, rh, n);
+        return ::__builtin_memcmp(lh, rh, n);
 #else
         return _MSTL memory_compare(lh, rh, n);
 #endif
@@ -258,7 +258,7 @@ public:
         else
 #endif // MSTL_VERSION_20__
         {
-            return __builtin_strlen(str);
+            return ::__builtin_strlen(str);
         }
 #else
         return _MSTL string_length(reinterpret_cast<const char*>(str));
@@ -280,7 +280,7 @@ public:
 #endif // MSTL_VERSION_20__
         {
 #ifdef MSTL_COMPILER_MSVC__
-            return __builtin_char_memchr(str, chr, n);
+            return ::__builtin_char_memchr(str, chr, n);
 #else
             return base_type::find(str, n, chr);
 #endif

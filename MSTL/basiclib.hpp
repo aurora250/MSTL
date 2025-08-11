@@ -820,11 +820,11 @@ MSTL_CONSTEXPR14 void* memory_char_copy(void* dest, const void* src, const int c
 	const auto target = static_cast<byte_t>(chr);
 	while (byte--) {
 		const byte_t current = *static_cast<const byte_t*>(src);
-		*static_cast<unsigned char*>(dest) = current;
+		*static_cast<byte_t*>(dest) = current;
 		if (current == target)
-			return static_cast<unsigned char*>(dest) + 1;
-		dest = static_cast<unsigned char*>(dest) + 1;
-		src = static_cast<const unsigned char*>(src) + 1;
+			return static_cast<byte_t*>(dest) + 1;
+		dest = static_cast<byte_t*>(dest) + 1;
+		src = static_cast<const byte_t*>(src) + 1;
 	}
 	return nullptr;
 }

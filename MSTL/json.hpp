@@ -5,7 +5,7 @@
 #include "vector.hpp"
 MSTL_BEGIN_NAMESPACE__
 
-MSTL_ERROR_BUILD_FINAL_CLASS(JsonParseError, ValueError, "Json String Parse Failed")
+MSTL_ERROR_BUILD_FINAL_CLASS(JsonOperateError, ValueError, "Json String Parse Failed")
 
 class json_value;
 class json_null;
@@ -183,7 +183,7 @@ private:
                 result += c;
             }
         }
-        Exception(JsonParseError("Unterminated string"));
+        Exception(JsonOperateError("Unterminated string"));
         return make_unique<json_string>("");
     }
 
@@ -197,7 +197,7 @@ private:
             if (pos < length && json[pos] == '.') {
                 pos++;
                 if (pos >= length || !_MSTL is_digit(json[pos])) {
-                    Exception(JsonParseError("Invalid decimal part"));
+                    Exception(JsonOperateError("Invalid decimal part"));
                 }
                 while (pos < length && _MSTL is_digit(json[pos])) {
                     pos++;
@@ -210,14 +210,14 @@ private:
             if (pos < length && json[pos] == '.') {
                 pos++;
                 if (pos >= length || !isdigit(json[pos])) {
-                    Exception(JsonParseError("Invalid decimal part"));
+                    Exception(JsonOperateError("Invalid decimal part"));
                 }
                 while (pos < length && isdigit(json[pos])) {
                     pos++;
                 }
             }
         } else {
-            Exception(JsonParseError("Invalid number format"));
+            Exception(JsonOperateError("Invalid number format"));
         }
 
         if (pos < length && (json[pos] == 'e' || json[pos] == 'E')) {
@@ -226,7 +226,7 @@ private:
                 pos++;
             }
             if (pos >= length || !isdigit(json[pos])) {
-                Exception(JsonParseError("Invalid exponent part"));
+                Exception(JsonOperateError("Invalid exponent part"));
             }
             while (pos < length && isdigit(json[pos])) {
                 pos++;
@@ -238,7 +238,7 @@ private:
             double value = _MSTL to_float64(numStr.data());
             return make_unique<json_number>(value);
         } catch (...) {
-            Exception(JsonParseError("Invalid number value"));
+            Exception(JsonOperateError("Invalid number value"));
         }
         return make_unique<json_number>(FLOAT64_MAX_POSI_SIZE);
     }
@@ -256,7 +256,7 @@ private:
             return make_unique<json_bool>(false);
         } else if (keyword == "null") {
         } else {
-            Exception(JsonParseError("Invalid keyword"));
+            Exception(JsonOperateError("Invalid keyword"));
         }
         return make_unique<json_null>();
     }
@@ -284,7 +284,7 @@ private:
                 pos++;
                 skip_space();
             } else {
-                Exception(JsonParseError("Expected comma or closing bracket in array"));
+                Exception(JsonOperateError("Expected comma or closing bracket in array"));
             }
         }
         return array;
@@ -303,14 +303,14 @@ private:
         while (true) {
             skip_space();
             if (current() != '"') {
-                Exception(JsonParseError("Expected string key in object"));
+                Exception(JsonOperateError("Expected string key in object"));
             }
             auto key_obj = parse_string();
             string key = key_obj->get_value();
 
             skip_space();
             if (current() != ':') {
-                Exception(JsonParseError("Expected colon after key in object"));
+                Exception(JsonOperateError("Expected colon after key in object"));
             }
             pos++;
             skip_space();
@@ -326,7 +326,7 @@ private:
                 pos++;
                 skip_space();
             } else {
-                Exception(JsonParseError("Expected comma or closing brace in object"));
+                Exception(JsonOperateError("Expected comma or closing brace in object"));
             }
         }
 
@@ -336,7 +336,7 @@ private:
     unique_ptr<json_value> parse_value() {
         skip_space();
         if (eof()) {
-            Exception(JsonParseError("Unexpected end of input"));
+            Exception(JsonOperateError("Unexpected end of input"));
         }
 
         const char c = current();
@@ -354,7 +354,7 @@ private:
             case 't': case 'f': case 'n':
                 return parse_keyword();
             default:
-                Exception(JsonParseError("Unexpected character"));
+                Exception(JsonOperateError("Unexpected character"));
         }
         return parse_object();
     }
@@ -366,11 +366,324 @@ public:
         auto value = parse_value();
         skip_space();
         if (!eof()) {
-            Exception(JsonParseError("Unexpected characters after JSON value"));
+            Exception(JsonOperateError("Unexpected characters after JSON value"));
         }
         return value;
     }
 };
+
+
+class json_builder {
+private:
+    enum types {
+        Object,
+        Array
+    };
+    
+    struct frame {
+        types type = Object;
+        union {
+            json_object* object_ptr = nullptr;
+            json_array* array_ptr;
+        };
+
+        frame() = default;
+        frame(const types t, json_object* obj) : type(t), object_ptr(obj) {}
+        frame(const types t, json_array* arr) : type(t), array_ptr(arr) {}
+
+        frame(const frame&) = default;
+        frame& operator =(const frame&) = default;
+        frame(frame&&) = default;
+        frame& operator =(frame&&) = default;
+        ~frame() = default;
+    };
+    
+    _MSTL stack<frame> contexts;
+    unique_ptr<json_value> root;
+    string current_key;
+
+private:
+    template<typename T>
+    json_builder& value_impl(unique_ptr<T> v) {
+        if (contexts.empty()) {
+            if (root) {
+                Exception(JsonOperateError("Multiple root values not allowed"));
+            }
+            root = _MSTL move(v);
+        } else {
+            const auto& top = contexts.top();
+            if (top.type == Array) {
+                top.array_ptr->add_element(_MSTL move(v));
+            } else if (top.type == Object) {
+                if (current_key.empty()) {
+                    Exception(JsonOperateError("No key set for value in object"));
+                }
+                top.object_ptr->add_member(current_key, _MSTL move(v));
+                current_key.clear();
+            }
+        }
+        return *this;
+    }
+
+    template <typename Iterable, enable_if_t<is_iterable_v<Iterable>, int> = 0>
+    json_builder& value_iterable_dispatch(const Iterable& t) {
+        return this->value_iterable_impl(t);
+    }
+
+    template <typename Map, enable_if_t<is_maplike_v<Map>, int> = 0>
+    json_builder& value_iterable_impl(const Map& map) {
+        start_object();
+        for (const auto& pair : map) {
+            this->key(pair.first).value(pair.second);
+        }
+        end_object();
+        return *this;
+    }
+
+    template <typename Iterable, enable_if_t<!is_maplike_v<Iterable>, int> = 0>
+    json_builder& value_iterable_impl(const Iterable& t) {
+        start_array();
+        for (const auto& element : t) {
+            this->value(element);
+        }
+        end_array();
+        return *this;
+    }
+
+public:
+    json_builder() = default;
+
+    json_builder& start_object() {
+        auto new_object = make_unique<json_object>();
+        json_object* obj_ptr = new_object.get();
+        
+        if (contexts.empty()) {
+            if (root) {
+                Exception(JsonOperateError("Root value already set"));
+            }
+            root = _MSTL move(new_object);
+        } else {
+            auto& current = contexts.top();
+            if (current.type == types::Array) {
+                current.array_ptr->add_element(_MSTL move(new_object));
+            } else if (current.type == types::Object) {
+                if (current_key.empty()) {
+                    Exception(JsonOperateError("No key set for object value"));
+                }
+                current.object_ptr->add_member(current_key, _MSTL move(new_object));
+                current_key.clear();
+            }
+        }
+        
+        contexts.push(frame(types::Object, obj_ptr));
+        return *this;
+    }
+
+    json_builder& start_array() {
+        auto new_array = make_unique<json_array>();
+        json_array* arr_ptr = new_array.get();
+        
+        if (contexts.empty()) {
+            if (root) {
+                Exception(JsonOperateError("Root value already set"));
+            }
+            root = _MSTL move(new_array);
+        } else {
+            auto& current = contexts.top();
+            if (current.type == types::Array) {
+                current.array_ptr->add_element(_MSTL move(new_array));
+            } else if (current.type == types::Object) {
+                if (current_key.empty()) {
+                    Exception(JsonOperateError("No key set for array value"));
+                }
+                current.object_ptr->add_member(current_key, _MSTL move(new_array));
+                current_key.clear();
+            }
+        }
+        
+        contexts.push(frame(types::Array, arr_ptr));
+        return *this;
+    }
+
+    json_builder& end_object() {
+        if (contexts.empty() || contexts.top().type != types::Object) {
+            Exception(JsonOperateError("No object to close or context mismatch"));
+        }
+        if (!current_key.empty()) {
+            Exception(JsonOperateError("Incomplete key-value pair in object"));
+        }
+        contexts.pop();
+        return *this;
+    }
+
+    json_builder& end_array() {
+        if (contexts.empty() || contexts.top().type != types::Array) {
+            Exception(JsonOperateError("No array to close or context mismatch"));
+        }
+        contexts.pop();
+        return *this;
+    }
+
+    json_builder& key(const string& k) {
+        if (contexts.empty() || contexts.top().type != types::Object) {
+            Exception(JsonOperateError("Key can only be set inside an object"));
+        }
+        if (!current_key.empty()) {
+            Exception(JsonOperateError("Key already set without corresponding value"));
+        }
+        current_key = k;
+        return *this;
+    }
+
+    json_builder& value(nullptr_t) {
+        return value_impl(make_unique<json_null>());
+    }
+    json_builder& value(const string& v) {
+        return value_impl(make_unique<json_string>(v));
+    }
+    json_builder& value(const char* v) {
+        return value(string(v));
+    }
+    json_builder& value(const string_view& v) {
+        return value(string(v));
+    }
+    json_builder& value(const double v) {
+        return value_impl(make_unique<json_number>(v));
+    }
+    json_builder& value(const int v) {
+        return value_impl(make_unique<json_number>(static_cast<double>(v)));
+    }
+    json_builder& value(const bool v) {
+        return value_impl(make_unique<json_bool>(v));
+    }
+    json_builder& value(unique_ptr<json_value>&& v) {
+        return value_impl(_MSTL move(v));
+    }
+    template <typename Iterable>
+    json_builder& value(const Iterable& t) {
+        return this->value_iterable_dispatch(t);
+    }
+
+
+    json_builder& value_object(_MSTL function<void(json_builder&)>&& build_func) {
+        json_builder inner_builder;
+        inner_builder.start_object();
+        build_func(inner_builder);
+        inner_builder.end_object();
+        auto obj = inner_builder.build();
+        return value_impl(_MSTL move(obj));
+    }
+
+    json_builder& value_array(_MSTL function<void(json_builder&)>&& build_func) {
+        json_builder inner_builder;
+        inner_builder.start_array();
+        build_func(inner_builder);
+        inner_builder.end_array();
+        auto arr = inner_builder.build();
+        return value_impl(_MSTL move(arr));
+    }
+
+
+    unique_ptr<json_value> build() {
+        if (!contexts.empty()) {
+            Exception(JsonOperateError("Incomplete JSON structure - unclosed objects or arrays"));
+        }
+        if (!current_key.empty()) {
+            Exception(JsonOperateError("Incomplete key-value pair"));
+        }
+        if (!root) {
+            Exception(JsonOperateError("No JSON value built"));
+        }
+        return _MSTL move(root);
+    }
+};
+
+
+static string json_value_to_string(const json_value* value) {
+    if (!value) {
+        return "null";
+    }
+    switch (value->type()) {
+        case json_value::Null: {
+            return "null";
+        }
+        case json_value::Bool: {
+            const json_bool* bool_val = value->as_bool();
+            return bool_val->get_value() ? "true" : "false";
+        }
+        case json_value::Number: {
+            const json_number* num_val = value->as_number();
+            const double val = num_val->get_value();
+
+            if (val == static_cast<double>(static_cast<long long>(val)) &&
+                val >= static_cast<double>(INT64_MIN_SIZE) &&
+                val <= static_cast<double>(INT64_MAX_SIZE)) {
+                return _MSTL to_string(static_cast<long long>(val));
+            }
+            string result = _MSTL to_string(val);
+            if (result.find('.') != string::npos) {
+                while (!result.empty() && result.back() == '0') {
+                    result.pop_back();
+                }
+                if (!result.empty() && result.back() == '.') {
+                    result.pop_back();
+                }
+            }
+            return result;
+        }
+        case json_value::String: {
+            const json_string* str_val = value->as_string();
+            return "\"" + escape_string(str_val->get_value()) + "\"";
+        }
+        case json_value::Array: {
+            const json_array* arr_val = value->as_array();
+            string result = "[";
+
+            const auto& elements = arr_val->get_elements();
+            for (size_t i = 0; i < elements.size(); ++i) {
+                if (i > 0) {
+                    result += ",";
+                }
+                result += json_value_to_string(elements[i].get());
+            }
+
+            result += "]";
+            return result;
+        }
+        case json_value::Object: {
+            const json_object* obj_val = value->as_object();
+            string result = "{";
+
+            const auto& members = obj_val->get_members();
+            bool first = true;
+
+            for (const auto& pair : members) {
+                if (!first) {
+                    result += ",";
+                }
+                first = false;
+
+                result += "\"" + escape_string(pair.first) + "\":";
+                result += json_value_to_string(pair.second.get());
+            }
+
+            result += "}";
+            return result;
+        }
+        default: return "null";
+    }
+}
+
+inline string json_to_string(const unique_ptr<json_value>& value) {
+    return json_value_to_string(value.get());
+}
+inline string json_to_string(unique_ptr<json_value>&& value) {
+    string result = json_value_to_string(value.get());
+    return _MSTL move(result);
+}
+inline string json_to_string(const json_value* value) {
+    return json_value_to_string(value);
+}
 
 MSTL_END_NAMESPACE__
 #endif // MSTL_JSON_HPP__

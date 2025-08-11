@@ -61,10 +61,10 @@ public:
         return it != cookies.end() ? it->second : EMPTY_MARK;
     }
 
-    void set_session(class session* session) {
+    void set_session(struct session* session) {
         this->session = session;
     }
-    class session* get_session() const {
+    struct session* get_session() const {
         return session;
     }
 
@@ -81,6 +81,12 @@ public:
     }
     const string& get_content_type() const {
         return get_header("Content-Type");
+    }
+    const string& get_cookie() const {
+        return get_header("Cookie");
+    }
+    const string& get_forwarded_proto() const {
+        return get_header("X-Forwarded-Proto");
     }
 
     void set_method(const HTTP_METHOD& method) {
@@ -107,11 +113,15 @@ public:
         return query;
     }
 
+    void set_body(string body) {
+        this->body = _MSTL move(body);
+    }
     const string& get_body() const {
         return body;
     }
-    void set_body(string body) {
-        this->body = _MSTL move(body);
+
+    bool is_https() const {
+        return get_forwarded_proto() == "https";
     }
 };
 
@@ -128,6 +138,8 @@ private:
     string forward_path{};
 
     friend class servlet;
+    
+    static const string EMPTY_MARK;
 
 public:
     http_response() {
@@ -158,9 +170,9 @@ public:
     void set_header(const string& name, const string& value) {
         headers[name] = value;
     }
-    string get_header(const string& name) const {
+    const string& get_header(const string& name) const {
         auto it = headers.find(name);
-        return it != headers.end() ? it->second : string{};
+        return it != headers.end() ? it->second : EMPTY_MARK;
     }
 
     void set_content_type(const string& value) {
@@ -172,7 +184,6 @@ public:
     void set_content_encode(const string& value) {
         headers["Content-Type"] += "; charset=" + value;
     }
-
     void set_allow_method(const HTTP_METHOD& method) {
         headers["Access-Control-Allow-Methods"] = method.to_string();
     }
@@ -188,6 +199,10 @@ public:
     }
     void set_allow_headers(string header) {
         headers["Access-Control-Allow-Headers"] = _MSTL move(header);
+    }
+
+    const string& get_content_length() const {
+        return get_header("Content-Length");
     }
 
     void set_status(const HTTP_STATUS status) {
@@ -359,7 +374,7 @@ private:
                 reinterpret_cast<::sockaddr *>(&client_addr), &client_len);
             if (client_socket < 0) {
                 if (running_) {
-                    perror("accept failed");
+                    ::perror("accept failed");
                 }
                 continue;
             }
@@ -367,7 +382,7 @@ private:
             try {
                 handle_client(client_socket);
             } catch (const Error& e) {
-                perror(e.what());
+                ::perror(e.what());
             }
             ::close(client_socket);
         }
@@ -419,7 +434,7 @@ private:
             parse_url_encoded(request.get_query(), request.parameters);
         }
         if (request.get_method().is_post() && !request.get_body().empty()) {
-            string content_type = request.get_header("Content-Type");
+            string content_type = request.get_content_type();
             if (content_type.find(HTTP_CONTENT::FORM_APP) == 0) {
                 parse_url_encoded(request.get_body(), request.parameters);
             }
@@ -560,7 +575,7 @@ protected:
         }
 
         // Parse cookies
-        auto cookie_str = req.get_header("Cookie");
+        auto cookie_str = req.get_cookie();
         if (!cookie_str.empty()) {
             parse_cookies(cookie_str, req);
         }
@@ -593,7 +608,7 @@ protected:
             ss << "Set-Cookie: " << cookie.to_string() << "\r\n";
         }
         if (response.get_redirect().empty() &&
-            response.get_header("Content-Length").empty()) {
+            response.get_content_length().empty()) {
             ss << "Content-Length: " << response.get_body().size() << "\r\n";
         }
         for (auto iter = response.headers.begin(); iter != response.headers.end(); ++iter) {
@@ -601,8 +616,7 @@ protected:
         }
         ss << "\r\n";
 
-        if (!response.get_redirect().empty()) {
-        } else {
+        if (response.get_redirect().empty()) {
             ss << response.get_body();
         }
         return ss.str();
@@ -617,7 +631,7 @@ protected:
         while (sent < total) {
             const ssize_t bytes_sent = ::send(client_socket, data + sent, total - sent, 0);
             if (bytes_sent <= 0) {
-                perror("send failed");
+                ::perror("send failed");
                 break;
             }
             sent += bytes_sent;
@@ -655,10 +669,10 @@ protected:
             session_cookie.set_path("/");
             session_cookie.set_http_only(true);
 
-            auto proto_header = request.get_header("X-Forwarded-Proto");
-            const bool is_https = proto_header == "https";
+            const bool is_https = request.is_https();
             session_cookie.set_http_only(is_https);
-            session_cookie.set_same_site(is_https ? "Strict" : "Lax");
+            if (is_https) session_cookie.set_strict();
+            else session_cookie.set_lax();
 
             response.add_cookie(session_cookie);
             session->set_new(false);
@@ -686,7 +700,7 @@ protected:
             "[", request.get_method(), "]", request.get_path(),
             " Query:", request.get_query(),
             " Body size:", request.get_body().size(),
-            " Session:", (request.get_session() ? request.get_session()->get_id() : "none"));
+            *request.get_session());
         print();
 
         const HTTP_METHOD& method = request.get_method();
@@ -782,13 +796,13 @@ public:
 
         server_socket_ = ::socket(AF_INET, SOCK_STREAM, 0);
         if (server_socket_ < 0) {
-            perror("socket creation failed");
+            ::perror("socket creation failed");
             return false;
         }
 
         constexpr int opt = 1;
         if (::setsockopt(server_socket_, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
-            perror("setsockopt failed");
+            ::perror("setsockopt failed");
             ::close(server_socket_);
             return false;
         }
@@ -800,13 +814,13 @@ public:
         if (::bind(server_socket_,
             reinterpret_cast<sockaddr*>(&server_addr_),
             sizeof(server_addr_))) {
-            perror("bind failed");
+            ::perror("bind failed");
             ::close(server_socket_);
             return false;
         }
 
         if (::listen(server_socket_, backlog_) < 0) {
-            perror("listen failed");
+            ::perror("listen failed");
             ::close(server_socket_);
             return false;
         }

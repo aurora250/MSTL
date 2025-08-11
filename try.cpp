@@ -436,8 +436,7 @@ void test_json() {
     )";
 
     try {
-        json_parser parser(json_str);
-        unique_ptr<json_value> root = parser.parse();
+        unique_ptr<json_value> root = json_parser(json_str).parse();
         println(*root.get());
 
         if (root->is_object()) {
@@ -463,6 +462,35 @@ void test_json() {
                 println();
             }
         }
+
+        auto json2 = json_builder()
+            .start_array()
+            .value(1)
+            .value(2)
+            .start_object()
+            .key("x").value(10)
+            .end_object()
+            .end_array()
+            .build();
+        println(*json2.get());
+        string build = json_to_string(_MSTL move(json2));
+        println(build);
+
+        map<string, vector<int>> nested_data = {
+            {"group1", {10, 20, 30}},
+            {"group2", {40, 50}},
+            {"group3", {60, 70, 80, 90}}
+        };
+        auto json3 = json_builder()
+            .start_object()
+            .key("data").value(nested_data)
+            .key("total").value(8)
+            .end_object()
+            .build();
+        println(*json3.get());
+        string result3 = json_to_string(json3);
+        println(result3);
+
     } catch (const Error& e) {
         println(e);
     }

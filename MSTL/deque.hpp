@@ -679,7 +679,7 @@ private:
 
 public:
     deque() {
-        this->fill_initialize(0, T());
+        this->fill_initialize(0, _MSTL move(T()));
     }
     explicit deque(const size_type n) {
         this->fill_initialize(n, T());

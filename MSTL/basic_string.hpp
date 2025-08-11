@@ -1184,7 +1184,7 @@ MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     const basic_string<CharT, Traits, Alloc>& lh, const basic_string<CharT, Traits, Alloc>& rh) {
     basic_string<CharT, Traits, Alloc> tmp(lh);
     tmp.append(rh);
-    return tmp;
+    return _MSTL move(tmp);
 }
 
 template <typename CharT, typename Traits, typename Alloc>
@@ -1192,14 +1192,14 @@ MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     const CharT* lh, const basic_string<CharT, Traits, Alloc>& rh) {
     basic_string<CharT, Traits, Alloc> tmp(lh);
     tmp.append(rh);
-    return tmp;
+    return _MSTL move(tmp);
 }
 template <typename CharT, typename Traits, typename Alloc>
 MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     const basic_string<CharT, Traits, Alloc>& lh, const CharT* rh) {
     basic_string<CharT, Traits, Alloc> tmp(lh);
     tmp.append(rh);
-    return tmp;
+    return _MSTL move(tmp);
 }
 
 template <typename CharT, typename Traits, typename Alloc>
@@ -1207,14 +1207,14 @@ MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     const string_view& lh, const basic_string<CharT, Traits, Alloc>& rh) {
     basic_string<CharT, Traits, Alloc> tmp(lh);
     tmp.append(rh);
-    return tmp;
+    return _MSTL move(tmp);
 }
 template <typename CharT, typename Traits, typename Alloc>
 MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     const basic_string<CharT, Traits, Alloc>& lh, const string_view& rh) {
     basic_string<CharT, Traits, Alloc> tmp(lh);
     tmp.append(rh);
-    return tmp;
+    return _MSTL move(tmp);
 }
 
 template <typename CharT, typename Traits, typename Alloc>
@@ -1222,14 +1222,14 @@ MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     CharT lh, const basic_string<CharT, Traits, Alloc>& rh) {
     basic_string<CharT, Traits, Alloc> tmp(1, lh);
     tmp.append(rh);
-    return tmp;
+    return _MSTL move(tmp);
 }
 template <typename CharT, typename Traits, typename Alloc>
 MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     const basic_string<CharT, Traits, Alloc>& lh, CharT rh) {
     basic_string<CharT, Traits, Alloc> tmp(lh);
     tmp.append(1, rh);
-    return tmp;
+    return _MSTL move(tmp);
 }
 
 template <typename CharT, typename Traits, typename Alloc>
@@ -1240,7 +1240,9 @@ MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
 template <typename CharT, typename Traits, typename Alloc>
 MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     const basic_string<CharT, Traits, Alloc>& lh, basic_string<CharT, Traits, Alloc>&& rh) {
-    return _MSTL move(rh.append(lh));
+    basic_string<CharT, Traits, Alloc> tmp(lh);
+    tmp.append(_MSTL move(rh));
+    return _MSTL move(tmp);
 }
 
 template <typename CharT, typename Traits, typename Alloc>
@@ -1249,14 +1251,16 @@ MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     MSTL_DEBUG_VERIFY(_MSTL addressof(lh) != _MSTL addressof(rh),
         "cannot concatenate the same moved string to itself.");
     basic_string<CharT, Traits, Alloc> tmp(_MSTL move(lh));
-    tmp.append(rh);
-    return tmp;
+    tmp.append(_MSTL move(rh));
+    return _MSTL move(tmp);
 }
 
 template <typename CharT, typename Traits, typename Alloc>
 MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     const CharT* lh, basic_string<CharT, Traits, Alloc>&& rh) {
-    return _MSTL move(rh.append(lh));
+    basic_string<CharT, Traits, Alloc> tmp(lh);
+    tmp.append(_MSTL move(rh));
+    return _MSTL move(tmp);
 }
 template <typename CharT, typename Traits, typename Alloc>
 MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
@@ -1267,12 +1271,14 @@ MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
 template <typename CharT, typename Traits, typename Alloc>
 MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     CharT lh, basic_string<CharT, Traits, Alloc>&& rh) {
-    return _MSTL move(rh.append(1, lh));
+    basic_string<CharT, Traits, Alloc> tmp(1, lh);
+    tmp.append(_MSTL move(rh));
+    return _MSTL move(tmp);
 }
 template <typename CharT, typename Traits, typename Alloc>
 MSTL_CONSTEXPR20 basic_string<CharT, Traits, Alloc> operator +(
     basic_string<CharT, Traits, Alloc>&& lh, CharT rh) {
-    return _MSTL move(lh.append(1, rh));
+    return _MSTL move(lh.append(rh));
 }
 
 template <typename CharT, typename Traits, typename Alloc>

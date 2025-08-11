@@ -8,6 +8,12 @@
 #include <thread>
 MSTL_BEGIN_NAMESPACE__
 
+struct COOKIE_SITE {
+    static const string STRICT;
+    static const string LAX;
+    static const string NONE;
+};
+
 struct cookie {
 private:
     string name;
@@ -17,7 +23,7 @@ private:
     int max_age = -1;  // -1 means session cookie
     bool secure = false;
     bool http_only = false;
-    string same_site; // "Strict", "Lax", "None"
+    string same_site = COOKIE_SITE::NONE;
     datetime expires;
 
 public:
@@ -76,6 +82,12 @@ public:
 
     void set_same_site(string s) {
         this->same_site = _MSTL move(s);
+    }
+    void set_strict() {
+        set_same_site(COOKIE_SITE::STRICT);
+    }
+    void set_lax() {
+        set_same_site(COOKIE_SITE::LAX);
     }
     const string& get_same_site() const {
         return this->same_site;
@@ -215,7 +227,7 @@ private:
     std::atomic<bool> cleanup_running_{false};
     std::thread cleanup_thread_;
 
-    friend class session;
+    friend class servlet;
 
     static string generate_session_id() {
         ostringstream ss;
