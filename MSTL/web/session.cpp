@@ -1,6 +1,8 @@
 #include "session.hpp"
 MSTL_BEGIN_NAMESPACE__
-#include "undef_cmacro.hpp"
+#ifdef DELETE
+#undef DELETE
+#endif
 
 const HTTP_METHOD HTTP_METHOD::GET{"GET"};
 const HTTP_METHOD HTTP_METHOD::POST{"POST"};

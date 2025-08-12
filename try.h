@@ -8,7 +8,6 @@ void test_datetimes();
 void test_print();
 void test_rnd();
 
-#ifdef MSTL_PLATFORM_LINUX__
 class example_servlet final : public servlet {
 public:
     example_servlet(const int id) : servlet(id) {
@@ -40,22 +39,15 @@ public:
         }
 
         if (path.ends_with(".css") || path.ends_with(".jpg")) {
-            file f("../resource" + path);
-            if (f.exists()) {
-                response.set_ok();
-
-                if (path.ends_with(".css")) {
-                    response.set_content_type(HTTP_CONTENT::CSS_TEXT);
-                    response.set_body(_MSTL move(f.read()));
-                } else if (path.ends_with(".jpg")) {
-                    response.set_content_type(HTTP_CONTENT::JPEG_IMG);
-                    response.set_body(_MSTL move(f.read_binary()));
-                }
-                return;
-            } else {
-                response.set_body("Resource not found: " + path);
-                return;
+            response.set_ok();
+            if (path.ends_with(".css")) {
+                response.set_content_type(HTTP_CONTENT::CSS_TEXT);
+                response.set_body(_MSTL move(file::read("../resource" + path)));
+            } else if (path.ends_with(".jpg")) {
+                response.set_content_type(HTTP_CONTENT::JPEG_IMG);
+                response.set_body(_MSTL move(file::read_binary("../resource" + path)));
             }
+            return;
         }
 
         if (path == "/api/session") {
@@ -163,8 +155,7 @@ private:
         string attrName, attrValue;
         string content_type = request.get_content_type();
         if (content_type.find(HTTP_CONTENT::JSON_APP) == 0) {
-            json_parser parser(request.get_body());
-            unique_ptr<json_value> root = parser.parse();
+            const auto root = json_parser(request.get_body()).parse();
             if (root->is_object()) {
                 const json_object* obj = root->as_object();
                 const json_value* attrNameVal = obj->get_member("attrName");
@@ -206,9 +197,7 @@ private:
             string content_type = request.get_content_type();
 
             if (content_type.find(HTTP_CONTENT::JSON_APP) != string::npos) {
-                json_parser parser(request.get_body());
-                unique_ptr<json_value> root = parser.parse();
-
+                auto root = json_parser(request.get_body()).parse();
                 if (root && root->is_object()) {
                     const json_object* obj = root->as_object();
                     const json_value* nameVal = obj->get_member("name");
@@ -268,7 +257,6 @@ private:
 };
 
 void test_serv();
-#endif
 
 void test_list();
 void test_exce();

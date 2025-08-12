@@ -133,7 +133,7 @@ MSTL_CONSTEXPR17 iter_dif_t<Iterator> distance(Iterator first, Iterator last) {
 template <typename Container>
 class back_insert_iterator {
 public:
-    using iterator_category = std::output_iterator_tag;
+    using iterator_category = output_iterator_tag;
     using value_type        = void;
     using difference_type   = void;
     using pointer           = void;
@@ -165,7 +165,7 @@ MSTL_NODISCARD constexpr back_insert_iterator<Container> back_inserter(Container
 template <typename Container>
 class front_insert_iterator {
 public:
-    using iterator_category = std::output_iterator_tag;
+    using iterator_category = output_iterator_tag;
     using value_type        = void;
     using difference_type   = void;
     using pointer           = void;
@@ -198,7 +198,7 @@ MSTL_NODISCARD constexpr front_insert_iterator<Container> front_inserter(Contain
 template <typename Container>
 class insert_iterator {
 public:
-    using iterator_category = std::output_iterator_tag;
+    using iterator_category = output_iterator_tag;
     using value_type        = void;
     using difference_type   = void;
     using pointer           = void;

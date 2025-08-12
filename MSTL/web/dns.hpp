@@ -91,7 +91,7 @@ private:
 
     vector<uint8_t> buildDnsQuery(const string& domain, DNS_RECORD type, DNS_QUERY qclass);
 
-    static vector<uint8_t> encodeDomainName(const string& domain);
+    vector<uint8_t> encodeDomainName(const string& domain);
 
     string decodeDomainName(const vector<uint8_t>& data, size_t& offset);
 
@@ -100,7 +100,7 @@ private:
 
     DNS_query_result parseDnsResponse(const vector<uint8_t>& response);
 
-    static uint16_t generateQueryId();
+    uint16_t generateQueryId();
 
     optional<DNS_query_result> checkCache(const string& key);
 

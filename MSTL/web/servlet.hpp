@@ -1,14 +1,12 @@
 #ifndef MSTL_SERVLET_HPP__
 #define MSTL_SERVLET_HPP__
-#include "../basiclib.hpp"
-#ifdef MSTL_PLATFORM_LINUX__
-#include <atomic>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include "../print.hpp"
-#include "session.hpp"
 #include "socket.hpp"
+#include "session.hpp"
+#include "../print.hpp"
+#ifdef MSTL_PLATFORM_LINUX__
+#include <netinet/in.h>
+#include <unistd.h>
+#endif
 MSTL_BEGIN_NAMESPACE__
 
 MSTL_ERROR_BUILD_FINAL_CLASS(HttpError, LinkError, "Http Actions Failed");
@@ -293,6 +291,10 @@ public:
 };
 
 
+#ifdef DELETE
+#undef DELETE
+#endif
+
 class cors_filter final : public filter {
 private:
     string allowed_origins_ = "*";
@@ -352,6 +354,9 @@ private:
     uint16_t port_;
     int backlog_;
     std::atomic<bool> running_{false};
+#ifdef MSTL_PLATFORM_WINDOWS__
+    ::WSADATA wsa_data_;
+#endif
     ::sockaddr_in server_addr_{};
     vector<std::thread> worker_threads_;
     __session_manager session_manager_;
@@ -370,9 +375,9 @@ private:
             ::sockaddr_in client_addr{};
             ::socklen_t client_len = sizeof(client_addr);
 
-            const int client_socket = ::accept(server_socket_.get(),
+            const socket::socket_t client_socket = ::accept(server_socket_.get(),
                 reinterpret_cast<::sockaddr *>(&client_addr), &client_len);
-            if (client_socket < 0) {
+            if (client_socket == socket::INVALID_MARK) {
                 if (running_) {
                     perror("accept failed");
                 }
@@ -384,15 +389,19 @@ private:
             } catch (const Error& e) {
                 perror(e.what());
             }
+#ifdef MSTL_PLATFORM_WINDOWS__
+            ::closesocket(client_socket);
+#elif defined(MSTL_PLATFORM_LINUX__)
             ::close(client_socket);
+#endif
         }
     }
 
-    void handle_client(const int client_socket) {
+    void handle_client(const socket::socket_t client_socket) {
         http_request request = parse_request(client_socket);
         int forward_count = 0;
-        constexpr int MAX_FORWARD = 5;
         do {
+            constexpr int MAX_FORWARD = 5;
             http_response response = handle_request(request);
             if (!response.get_forward().empty() && forward_count < MAX_FORWARD) {
                 request.set_path(response.get_forward());
@@ -486,14 +495,18 @@ private:
     }
 
 protected:
-    virtual http_request parse_request(const int client_socket) {
+    virtual http_request parse_request(const socket::socket_t client_socket) {
         http_request req;
         char buffer[4096];
         string request_data;
 
         ssize_t total_read = 0;
         while (true) {
+#ifdef MSTL_PLATFORM_WINDOWS__
+            int bytes_read = ::recv(client_socket, buffer, sizeof(buffer) - 1, 0);
+#elif defined(MSTL_PLATFORM_LINUX__)
             ssize_t bytes_read = ::read(client_socket, buffer, sizeof(buffer) - 1);
+#endif
             if (bytes_read <= 0) break;
 
             buffer[bytes_read] = '\0';
@@ -623,14 +636,18 @@ protected:
         return ss.str();
     }
 
-    void send_response(const int client_socket, const http_response& response) {
+    void send_response(const socket::socket_t client_socket, const http_response& response) {
         string response_str = build_response_str(response);
         const char *data = response_str.data();
         const size_t total = response_str.size();
         size_t sent = 0;
 
         while (sent < total) {
-            const ssize_t bytes_sent = ::send(client_socket, data + sent, total - sent, 0);
+#ifdef MSTL_PLATFORM_WINDOWS__
+            int bytes_sent = ::send(client_socket, data + sent, static_cast<int>(total - sent), 0);
+#elif defined(MSTL_PLATFORM_LINUX__)
+            ssize_t bytes_sent = ::send(client_socket, data + sent, total - sent, 0);
+#endif
             if (bytes_sent <= 0) {
                 perror("send failed");
                 break;
@@ -797,13 +814,27 @@ public:
         if (running_) return true;
         if (!init()) return false;
 
+#ifdef MSTL_PLATFORM_WINDOWS__
+        if (::WSAStartup(MAKEWORD(2, 2), &wsa_data_) != 0) {
+            ::perror("WSAStartup failed");
+            return false;
+        }
+#endif
+
         server_socket_ = _MSTL move(socket(domain, type, protocol));
         if (!server_socket_.is_valid()) {
             perror("socket creation failed");
             return false;
         }
+
         constexpr int opt = 1;
-        if (::setsockopt(server_socket_.get(), SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
+        if (::setsockopt(server_socket_.get(), SOL_SOCKET, SO_REUSEADDR,
+#ifdef MSTL_PLATFORM_WINDOWS__
+            reinterpret_cast<const char*>(&opt)
+#elif defined(MSTL_PLATFORM_LINUX__)
+            &opt
+#endif
+            , sizeof(opt))) {
             perror("setsockopt failed");
             return false;
         }
@@ -833,6 +864,10 @@ public:
         if (!running_) return;
 
         running_ = false;
+        server_socket_.close();
+#ifdef MSTL_PLATFORM_WINDOWS__
+        WSACleanup();
+#endif
 
         for (auto& t : worker_threads_) {
             if (t.joinable()) t.join();
@@ -850,5 +885,4 @@ public:
 };
 
 MSTL_END_NAMESPACE__
-#endif
 #endif // MSTL_SERVLET_HPP__

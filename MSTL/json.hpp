@@ -360,7 +360,7 @@ private:
     }
 
 public:
-    explicit json_parser(string jsonStr) : json(_MSTL move(jsonStr)), pos(0), length(json.size()) {}
+    explicit json_parser(string json_str) : json(_MSTL move(json_str)), pos(0), length(json.size()) {}
 
     unique_ptr<json_value> parse() {
         auto value = parse_value();

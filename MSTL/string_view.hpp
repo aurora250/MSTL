@@ -27,8 +27,12 @@ struct base_char_traits {
 
     static constexpr char_type* move(char_type* const dest,
         const char_type* const srcs, const size_t count) noexcept {
-#if defined(MSTL_COMPILER_CLANG__) && __has_builtin(__builtin_memmove)
+#if defined(MSTL_COMPILER_CLANG__)
+#if __has_builtin(__builtin_memmove)
         ::__builtin_memmove(dest, srcs, count * sizeof(char_type));
+#else
+        _MSTL memory_move(dest, srcs, count * sizeof(char_type));
+#endif
 #else 
 #if MSTL_VERSION_20__
         if (_MSTL is_constant_evaluated()) {
@@ -131,8 +135,8 @@ public:
         const char_type* const rh, const size_t n) noexcept {
 #if MSTL_VERSION_20__
         if (_MSTL is_constant_evaluated()) {
-            MSTL_IF_CONSTEXPR (is_same_v<char_type, wchar_t>) {
-                return __builtin_wmemcmp(lh, rh, n);
+            if constexpr (is_same_v<char_type, wchar_t>) {
+                return ::__builtin_wmemcmp(lh, rh, n);
             }
             else {
                 return base_type::compare(lh, rh, n);
@@ -146,9 +150,9 @@ public:
     MSTL_NODISCARD static constexpr size_t length(const char_type* str) noexcept {
 #if MSTL_VERSION_20__
         if (_MSTL is_constant_evaluated()) {
-            MSTL_IF_CONSTEXPR (is_same_v<char_type, wchar_t>) {
+            if constexpr (is_same_v<char_type, wchar_t>) {
 #if defined(MSTL_COMPILER_MSVC__) || defined(MSTL_COMPILER_CLANG__)
-                return __builtin_wcslen(str);
+                return ::__builtin_wcslen(str);
 #else
                 return _MSTL wstring_length(str);
 #endif
@@ -165,8 +169,8 @@ public:
         const char_type* str, const size_t n, const char_type& chr) noexcept {
 #if MSTL_VERSION_20__
         if (_MSTL is_constant_evaluated()) {
-            MSTL_IF_CONSTEXPR (is_same_v<char_type, wchar_t>) {
-                return __builtin_wmemchr(str, chr, n);
+            if constexpr (is_same_v<char_type, wchar_t>) {
+                return ::__builtin_wmemchr(str, chr, n);
             }
             else {
                 return base_type::find(str, n, chr);
@@ -245,9 +249,9 @@ public:
 #ifdef MSTL_VERSION_17__
 #ifdef MSTL_VERSION_20__
         if constexpr (is_same_v<char_type, char8_t>) {
-#if defined(MSTL_VERSION_20__) && !defined(MSTL_COMPILER_CLANG__) && !defined(MSTL_COMPILE_WITH_EDG__)
+#if defined(MSTL_VERSION_20__) && !defined(MSTL_COMPILER_CLANG__)
 #ifdef MSTL_COMPILER_MSVC__
-            return __builtin_u8strlen(str);
+            return ::__builtin_u8strlen(str);
 #else
             return _MSTL u8string_length(str);
 #endif
@@ -271,7 +275,7 @@ public:
 #ifdef MSTL_VERSION_20__
         if constexpr (is_same_v<char_type, char8_t>) {
 #if defined(MSTL_VERSION_20__) && !defined(MSTL_COMPILER_CLANG__) && !defined(MSTL_COMPILE_WITH_EDG__)
-            return __builtin_u8memchr(str, chr, n);
+            return ::__builtin_u8memchr(str, chr, n);
 #else
             return base_type::find(str, n, chr);
 #endif // MSTL_SUPPORT_U8_INTRINSICS__

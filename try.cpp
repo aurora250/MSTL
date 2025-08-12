@@ -24,7 +24,7 @@ void test_file_basic_operations() {
 
     file f;
     assert(!f.opened());
-    assert(f.open(TEST_FILE, FILE_ACCESS_MODE::READ_WRITE));
+    assert(f.open(TEST_FILE, FILE_ACCESS::READ_WRITE));
     assert(f.opened());
     assert(f.file_path() == TEST_FILE);
 
@@ -36,9 +36,9 @@ void test_file_basic_operations() {
     assert(f.read_line(line));
     assert(line == "Third line");
 
-    assert(f.seek(0, FILE_POINT_ORIGIN::BEGIN));
+    assert(f.seek(0, FILE_POINTER::BEGIN));
     assert(f.tell() == 0);
-    assert(f.seek(5, FILE_POINT_ORIGIN::CURRENT));
+    assert(f.seek(5, FILE_POINTER::CURRENT));
     assert(f.tell() == 5);
 
     assert(f.seek(0));
@@ -71,10 +71,10 @@ void test_file_attributes_and_times() {
     file f(TEST_FILE);
     assert(f.open(TEST_FILE));
 
-    _MSTL FILE_ATTRIBUTE original_attr = f.attributes();
-    bool set_attr_ok = f.set_attributes(_MSTL FILE_ATTRIBUTE::READONLY);
+    _MSTL FILE_ATTRI original_attr = f.attributes();
+    bool set_attr_ok = f.set_attributes(_MSTL FILE_ATTRI::READONLY);
     assert(set_attr_ok);
-    assert(static_cast<bool>(f.attributes() & _MSTL FILE_ATTRIBUTE::READONLY));
+    assert(static_cast<bool>(f.attributes() & _MSTL FILE_ATTRI::READONLY));
     assert(f.set_attributes(original_attr));
     assert(f.attributes() == original_attr);
 
@@ -91,7 +91,7 @@ void test_file_lock_and_other_operations() {
     file f(TEST_FILE);
     assert(f.open(TEST_FILE));
 
-    bool locked = f.lock(0, 10, _MSTL FILE_LOCK_MODE::EXCLUSIVE);
+    bool locked = f.lock(0, 10, _MSTL FILE_LOCK::EXCLUSIVE);
     assert(locked);
     bool unlocked = f.unlock(0, 10);
     assert(unlocked);
@@ -496,7 +496,6 @@ void test_json() {
     }
 }
 
-#ifdef MSTL_PLATFORM_LINUX__
 void test_serv() {
     try {
         example_servlet server(8080);
@@ -507,7 +506,6 @@ void test_serv() {
         println(e);
     }
 }
-#endif
 
 void test_list() {
     list<int> lls{ 1,2,3,4,5,6,7 };

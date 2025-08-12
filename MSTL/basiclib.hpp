@@ -32,6 +32,7 @@
 #endif
 
 #ifdef MSTL_PLATFORM_WINDOWS__
+#include <winsock2.h>
 #include <windows.h>
 #include <fcntl.h>
 #include <io.h>

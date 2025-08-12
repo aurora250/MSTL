@@ -377,6 +377,9 @@ struct HTTP_CONTENT {
     static constexpr auto HTML_MSG   = "message/http";
 };
 
+#ifdef DELETE
+#undef DELETE
+#endif
 
 struct HTTP_METHOD {
 private:

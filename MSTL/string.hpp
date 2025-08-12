@@ -26,13 +26,6 @@ struct hash<basic_string<CharT, Traits, Alloc>> {
     }
 };
 
-template <>
-struct hash<std::string> {
-    MSTL_NODISCARD size_t operator ()(const std::string& s) const noexcept {
-        return string_hash(s.c_str(), _MSTL string_length(s.c_str()), 0);
-    }
-};
-
 
 #ifdef MSTL_VERSION_17__
 inline namespace string_operator {

@@ -69,8 +69,7 @@ file(GLOB_RECURSE SUB_DIR_SRC_LIST
 set(SUB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "MSTL project codes")
 include_directories(${SUB_INCLUDE_DIR})
 
-add_library(MSTL STATIC ${SUB_DIR_SRC_LIST}
-        web/socket.hpp)
+add_library(MSTL STATIC ${SUB_DIR_SRC_LIST})
 
 set_target_properties(MSTL PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(MSTL PROPERTIES
@@ -78,6 +77,10 @@ set_target_properties(MSTL PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
+
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    target_link_libraries(MSTL PRIVATE ws2_32)
+endif()
 
 
 # ------------------- Boost -------------------

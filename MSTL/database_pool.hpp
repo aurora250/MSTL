@@ -71,6 +71,11 @@ struct database_settings final {
 };
 
 
+enum class DB_TYPE {
+    MYSQL, SQLITE3, REDIS
+};
+
+
 struct database_result {
 public:
     using size_type         = size_t;

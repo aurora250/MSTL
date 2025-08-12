@@ -71,7 +71,7 @@ public:
     hexadecimal operator -(const hexadecimal& other) const { return {value - other.value}; }
     hexadecimal operator *(const hexadecimal& other) const { return {value * other.value}; }
     hexadecimal operator /(const hexadecimal& other) const {
-        if (other.value == 0) throw std::domain_error("Division by zero");
+        if (other.value == 0) Exception(MathError("Division by zero"));
         return {value / other.value};
     }
     hexadecimal operator %(const hexadecimal& other) const {
