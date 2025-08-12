@@ -98,13 +98,39 @@ public:
     noexcept(is_nothrow_constructible_v<T, const U&> && is_nothrow_assignable_v<T&, const U&>) {
         if (_MSTL addressof(x) == this) return *this;
         if (x) {
-            if (have_value_)
+            if (have_value_) {
                 value_ = *x;
-            else
+            }
+            else {
                 _MSTL construct(&value_, *x);
+            }
         }
-        else
+        else {
             reset();
+        }
+        return *this;
+    }
+
+    optional(const optional& other) {
+        if (other.have_value_) {
+            _MSTL construct(&value_, other.value_);
+            have_value_ = true;
+        }
+    }
+
+    optional& operator =(const optional& other) {
+        if (this != &other) {
+            if (other.have_value_) {
+                if (have_value_) {
+                    value_ = other.value_;
+                } else {
+                    _MSTL construct(&value_, other.value_);
+                    have_value_ = true;
+                }
+            } else {
+                reset();
+            }
+        }
         return *this;
     }
 
@@ -123,7 +149,7 @@ public:
     template <typename U = T, enable_if_t<!is_same_v<remove_cvref_t<U>, self>
         && is_constructible_v<T, U> && is_assignable_v<T&, U>
         && !convertible_from_optional<U>::value && !assignable_from_optional<U>::value, int> = 0>
-    MSTL_CONSTEXPR20 self& operator =(const optional<U>& x)
+    MSTL_CONSTEXPR20 self& operator =(optional<U>&& x)
     noexcept(is_nothrow_constructible_v<T, U> && is_nothrow_assignable_v<T&, U>) {
         if (_MSTL addressof(x) == this) return *this;
         if (x) {
@@ -134,6 +160,31 @@ public:
         }
         else
             reset();
+        return *this;
+    }
+
+    optional(optional&& other) noexcept {
+        if (other.have_value_) {
+            _MSTL construct(&value_, _MSTL move(other.value_));
+            have_value_ = true;
+            other.reset();
+        }
+    }
+
+    optional& operator =(optional&& other) noexcept {
+        if (this != &other) {
+            if (other.have_value_) {
+                if (have_value_) {
+                    value_ = _MSTL move(other.value_);
+                } else {
+                    _MSTL construct(&value_, _MSTL move(other.value_));
+                    have_value_ = true;
+                }
+                other.reset();
+            } else {
+                reset();
+            }
+        }
         return *this;
     }
 

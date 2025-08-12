@@ -52,9 +52,10 @@ public:
                     response.set_body(_MSTL move(f.read_binary()));
                 }
                 return;
+            } else {
+                response.set_body("Resource not found: " + path);
+                return;
             }
-            response.set_body("Resource not found: " + path);
-            return;
         }
 
         if (path == "/api/session") {
@@ -116,7 +117,7 @@ public:
         response.set_max_age(86400);
     }
 
-    private:
+private:
     void handle_session_api(http_request& request, http_response& response) {
         session* session = get_session(request);
         string action = request.get_parameter("action");
@@ -134,16 +135,17 @@ public:
         }
         else if (action == "info") {
             if (session) {
-                auto builder = json_builder();
-                builder.start_object()
+                const auto json = json_builder()
+                    .begin_object()
                     .key("sessionId").value(session->get_id())
                     .key("createTime").value(session->get_create_time().to_iso_utc())
                     .key("lastAccess").value(session->get_last_access().to_iso_utc())
                     .key("attributes").value(session->get_data())
-                    .end_object();
+                    .end_object().build();
+
                 response.set_ok();
                 response.set_content_type(HTTP_CONTENT::JSON_APP);
-                response.set_body(json_to_string(builder.build()));
+                response.set_body(json_to_string(json));
             } else {
                 response.set_bad_request();
                 response.set_content_type(HTTP_CONTENT::JSON_APP);
@@ -182,14 +184,15 @@ public:
         session* session = get_session(request, true);
 
         if (!attrName.empty()) {
-            session->operator[](attrName) = attrValue;
-            response.set_ok();
-            response.set_content_type(HTTP_CONTENT::JSON_APP);
+            (*session)[attrName] = attrValue;
             const auto json = json_builder()
-                .start_object()
+                .begin_object()
                 .key("attrName").value(attrName)
                 .key("attrValue").value(attrValue)
                 .end_object().build();
+
+            response.set_ok();
+            response.set_content_type(HTTP_CONTENT::JSON_APP);
             response.set_body(json_to_string(json));
         } else {
             response.set_bad_request();
@@ -232,13 +235,14 @@ public:
                 }
                 response.add_cookie(cookie);
 
-                response.set_ok();
-                response.set_content_type(HTTP_CONTENT::JSON_APP);
                 auto json = json_builder()
-                    .start_object()
+                    .begin_object()
                     .key("name").value(name)
                     .key("value").value(value)
-                    .build();
+                    .end_object().build();
+
+                response.set_ok();
+                response.set_content_type(HTTP_CONTENT::JSON_APP);
                 response.set_body(json_to_string(json));
             } else {
                 response.set_bad_request();

@@ -464,10 +464,10 @@ void test_json() {
         }
 
         auto json2 = json_builder()
-            .start_array()
+            .begin_array()
             .value(1)
             .value(2)
-            .start_object()
+            .begin_object()
             .key("x").value(10)
             .end_object()
             .end_array()
@@ -482,7 +482,7 @@ void test_json() {
             {"group3", {60, 70, 80, 90}}
         };
         auto json3 = json_builder()
-            .start_object()
+            .begin_object()
             .key("data").value(nested_data)
             .key("total").value(8)
             .end_object()
@@ -500,7 +500,7 @@ void test_json() {
 void test_serv() {
     try {
         example_servlet server(8080);
-        server.start(4);
+        server.start();
         getchar();
         server.stop();
     } catch (const Error& e) {
@@ -1311,17 +1311,7 @@ void test_dbpool() {
 
 void test_dns() {
 #ifdef MSTL_PLATFORM_LINUX__
-    int n = 10;
-    while (n--) {
-        const clock_t begin = clock();
-        auto &pool = get_instance_thread_pool();
-        pool.start();
-        for (int i = 0; i < size(DOMAINS); i++) {
-            pool.submit_task([domain = DOMAINS[i]] { dns_client_commit(domain); });
-        }
-        const clock_t end = clock();
-        printf("\n\nRunning Time??%lfs\n", static_cast<double>(end - begin) / CLOCKS_PER_SEC);
-    }
+
 #endif
 }
 

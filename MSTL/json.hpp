@@ -432,7 +432,7 @@ private:
 
     template <typename Map, enable_if_t<is_maplike_v<Map>, int> = 0>
     json_builder& value_iterable_impl(const Map& map) {
-        start_object();
+        begin_object();
         for (const auto& pair : map) {
             this->key(pair.first).value(pair.second);
         }
@@ -442,7 +442,7 @@ private:
 
     template <typename Iterable, enable_if_t<!is_maplike_v<Iterable>, int> = 0>
     json_builder& value_iterable_impl(const Iterable& t) {
-        start_array();
+        begin_array();
         for (const auto& element : t) {
             this->value(element);
         }
@@ -453,7 +453,7 @@ private:
 public:
     json_builder() = default;
 
-    json_builder& start_object() {
+    json_builder& begin_object() {
         auto new_object = make_unique<json_object>();
         json_object* obj_ptr = new_object.get();
         
@@ -464,9 +464,9 @@ public:
             root = _MSTL move(new_object);
         } else {
             auto& current = contexts.top();
-            if (current.type == types::Array) {
+            if (current.type == Array) {
                 current.array_ptr->add_element(_MSTL move(new_object));
-            } else if (current.type == types::Object) {
+            } else if (current.type == Object) {
                 if (current_key.empty()) {
                     Exception(JsonOperateError("No key set for object value"));
                 }
@@ -475,11 +475,11 @@ public:
             }
         }
         
-        contexts.push(frame(types::Object, obj_ptr));
+        contexts.push(frame(Object, obj_ptr));
         return *this;
     }
 
-    json_builder& start_array() {
+    json_builder& begin_array() {
         auto new_array = make_unique<json_array>();
         json_array* arr_ptr = new_array.get();
         
@@ -490,9 +490,9 @@ public:
             root = _MSTL move(new_array);
         } else {
             auto& current = contexts.top();
-            if (current.type == types::Array) {
+            if (current.type == Array) {
                 current.array_ptr->add_element(_MSTL move(new_array));
-            } else if (current.type == types::Object) {
+            } else if (current.type == Object) {
                 if (current_key.empty()) {
                     Exception(JsonOperateError("No key set for array value"));
                 }
@@ -501,12 +501,12 @@ public:
             }
         }
         
-        contexts.push(frame(types::Array, arr_ptr));
+        contexts.push(frame(Array, arr_ptr));
         return *this;
     }
 
     json_builder& end_object() {
-        if (contexts.empty() || contexts.top().type != types::Object) {
+        if (contexts.empty() || contexts.top().type != Object) {
             Exception(JsonOperateError("No object to close or context mismatch"));
         }
         if (!current_key.empty()) {
@@ -517,7 +517,7 @@ public:
     }
 
     json_builder& end_array() {
-        if (contexts.empty() || contexts.top().type != types::Array) {
+        if (contexts.empty() || contexts.top().type != Array) {
             Exception(JsonOperateError("No array to close or context mismatch"));
         }
         contexts.pop();
@@ -525,7 +525,7 @@ public:
     }
 
     json_builder& key(const string& k) {
-        if (contexts.empty() || contexts.top().type != types::Object) {
+        if (contexts.empty() || contexts.top().type != Object) {
             Exception(JsonOperateError("Key can only be set inside an object"));
         }
         if (!current_key.empty()) {
@@ -567,7 +567,7 @@ public:
 
     json_builder& value_object(_MSTL function<void(json_builder&)>&& build_func) {
         json_builder inner_builder;
-        inner_builder.start_object();
+        inner_builder.begin_object();
         build_func(inner_builder);
         inner_builder.end_object();
         auto obj = inner_builder.build();
@@ -576,7 +576,7 @@ public:
 
     json_builder& value_array(_MSTL function<void(json_builder&)>&& build_func) {
         json_builder inner_builder;
-        inner_builder.start_array();
+        inner_builder.begin_array();
         build_func(inner_builder);
         inner_builder.end_array();
         auto arr = inner_builder.build();

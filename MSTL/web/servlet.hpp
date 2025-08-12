@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include "../print.hpp"
 #include "session.hpp"
+#include "socket.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 MSTL_ERROR_BUILD_FINAL_CLASS(HttpError, LinkError, "Http Actions Failed");
@@ -61,10 +62,10 @@ public:
         return it != cookies.end() ? it->second : EMPTY_MARK;
     }
 
-    void set_session(struct session* session) {
+    void set_session(class session* session) {
         this->session = session;
     }
-    struct session* get_session() const {
+    class session* get_session() const {
         return session;
     }
 
@@ -84,9 +85,6 @@ public:
     }
     const string& get_cookie() const {
         return get_header("Cookie");
-    }
-    const string& get_forwarded_proto() const {
-        return get_header("X-Forwarded-Proto");
     }
 
     void set_method(const HTTP_METHOD& method) {
@@ -113,15 +111,16 @@ public:
         return query;
     }
 
-    void set_body(string body) {
-        this->body = _MSTL move(body);
-    }
     const string& get_body() const {
         return body;
     }
+    void set_body(string body) {
+        this->body = _MSTL move(body);
+    }
 
     bool is_https() const {
-        return get_forwarded_proto() == "https";
+        auto proto_header = get_header("X-Forwarded-Proto");
+        return proto_header == "https";
     }
 };
 
@@ -137,9 +136,9 @@ private:
     string redirect_url{};
     string forward_path{};
 
-    friend class servlet;
-    
     static const string EMPTY_MARK;
+
+    friend class servlet;
 
 public:
     http_response() {
@@ -175,6 +174,10 @@ public:
         return it != headers.end() ? it->second : EMPTY_MARK;
     }
 
+    const string& get_content_length() const {
+        return get_header("Content-Length");
+    }
+
     void set_content_type(const string& value) {
         headers["Content-Type"] = value;
     }
@@ -184,6 +187,7 @@ public:
     void set_content_encode(const string& value) {
         headers["Content-Type"] += "; charset=" + value;
     }
+
     void set_allow_method(const HTTP_METHOD& method) {
         headers["Access-Control-Allow-Methods"] = method.to_string();
     }
@@ -199,10 +203,6 @@ public:
     }
     void set_allow_headers(string header) {
         headers["Access-Control-Allow-Headers"] = _MSTL move(header);
-    }
-
-    const string& get_content_length() const {
-        return get_header("Content-Length");
     }
 
     void set_status(const HTTP_STATUS status) {
@@ -348,7 +348,7 @@ struct HTTP_COOKIE {
 
 class servlet {
 private:
-    int server_socket_ = -1;
+    socket server_socket_{};
     uint16_t port_;
     int backlog_;
     std::atomic<bool> running_{false};
@@ -370,11 +370,11 @@ private:
             ::sockaddr_in client_addr{};
             ::socklen_t client_len = sizeof(client_addr);
 
-            const int client_socket = ::accept(server_socket_,
+            const int client_socket = ::accept(server_socket_.get(),
                 reinterpret_cast<::sockaddr *>(&client_addr), &client_len);
             if (client_socket < 0) {
                 if (running_) {
-                    ::perror("accept failed");
+                    perror("accept failed");
                 }
                 continue;
             }
@@ -382,7 +382,7 @@ private:
             try {
                 handle_client(client_socket);
             } catch (const Error& e) {
-                ::perror(e.what());
+                perror(e.what());
             }
             ::close(client_socket);
         }
@@ -616,7 +616,8 @@ protected:
         }
         ss << "\r\n";
 
-        if (response.get_redirect().empty()) {
+        if (!response.get_redirect().empty()) {
+        } else {
             ss << response.get_body();
         }
         return ss.str();
@@ -631,7 +632,7 @@ protected:
         while (sent < total) {
             const ssize_t bytes_sent = ::send(client_socket, data + sent, total - sent, 0);
             if (bytes_sent <= 0) {
-                ::perror("send failed");
+                perror("send failed");
                 break;
             }
             sent += bytes_sent;
@@ -671,8 +672,7 @@ protected:
 
             const bool is_https = request.is_https();
             session_cookie.set_http_only(is_https);
-            if (is_https) session_cookie.set_strict();
-            else session_cookie.set_lax();
+            session_cookie.set_same_site(is_https ? "Strict" : "Lax");
 
             response.add_cookie(session_cookie);
             session->set_new(false);
@@ -698,8 +698,8 @@ protected:
         print();
         println(
             "[", request.get_method(), "]", request.get_path(),
-            " Query:", request.get_query(),
-            " Body size:", request.get_body().size(),
+            "Query:", request.get_query(),
+            "Body size:", request.get_body().size(),
             *request.get_session());
         print();
 
@@ -781,7 +781,7 @@ protected:
     }
 
 public:
-    explicit servlet(const uint16_t port, const int backlog = 128)
+    explicit servlet(const uint16_t port = 8080, const int backlog = 128)
         : port_(port), backlog_(backlog) {
         _MSTL memory_set(&server_addr_, 0, sizeof(server_addr_));
     }
@@ -790,20 +790,21 @@ public:
         this->stop();
     }
 
-    bool start(const uint32_t thread_count = 5) {
+    bool start(const SOCKET_DOMAIN domain = SOCKET_DOMAIN::IPV4,
+        const SOCKET_TYPE type = SOCKET_TYPE::STREAM,
+        const SOCKET_PROTOCOL protocol = SOCKET_PROTOCOL::AUTO,
+        const uint32_t thread_count = 5) {
         if (running_) return true;
         if (!init()) return false;
 
-        server_socket_ = ::socket(AF_INET, SOCK_STREAM, 0);
-        if (server_socket_ < 0) {
-            ::perror("socket creation failed");
+        server_socket_ = _MSTL move(socket(domain, type, protocol));
+        if (!server_socket_.is_valid()) {
+            perror("socket creation failed");
             return false;
         }
-
         constexpr int opt = 1;
-        if (::setsockopt(server_socket_, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
-            ::perror("setsockopt failed");
-            ::close(server_socket_);
+        if (::setsockopt(server_socket_.get(), SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
+            perror("setsockopt failed");
             return false;
         }
 
@@ -811,17 +812,15 @@ public:
         server_addr_.sin_addr.s_addr = INADDR_ANY;
         server_addr_.sin_port = htons(port_);
 
-        if (::bind(server_socket_,
+        if (::bind(server_socket_.get(),
             reinterpret_cast<sockaddr*>(&server_addr_),
             sizeof(server_addr_))) {
-            ::perror("bind failed");
-            ::close(server_socket_);
+            perror("bind failed");
             return false;
         }
 
-        if (::listen(server_socket_, backlog_) < 0) {
-            ::perror("listen failed");
-            ::close(server_socket_);
+        if (::listen(server_socket_.get(), backlog_) < 0) {
+            perror("listen failed");
             return false;
         }
 
@@ -834,8 +833,6 @@ public:
         if (!running_) return;
 
         running_ = false;
-        ::close(server_socket_);
-        server_socket_ = -1;
 
         for (auto& t : worker_threads_) {
             if (t.joinable()) t.join();
