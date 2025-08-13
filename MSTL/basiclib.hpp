@@ -324,10 +324,12 @@
 		[[deprecated("C++ 11 and later versions no longer use functor base types and functor adapters.")]]
 	#define MSTL_TRAITS_DEPRECATE \
 		[[deprecated("C++ 11 and later versions no longer use iterator traits functions.")]]
+    #define MSTL_DEPRECATE_FOR(MSG) [[deprecated(MSG)]]
 #else
 	#define MSTL_DEPRECATED
 	#define MSTL_FUNC_ADAPTER_DEPRECATE
 	#define MSTL_TRAITS_DEPRECATE
+    #define MSTL_DEPRECATE_FOR(MSG)
 #endif
 
 

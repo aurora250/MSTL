@@ -3,7 +3,7 @@
 int main() {
     // set_utf8_console();
 
-    test_serv();
+    test_dbpool();
 
     std::cin.get();
 }

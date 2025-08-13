@@ -44,14 +44,18 @@ endif()
 if(NOT DEFINED MSTL_ENABLE_MYSQL)
     set(MSTL_ENABLE_MYSQL ON CACHE BOOL "Enable MySQL database support")
 endif()
+if(NOT DEFINED MSTL_ENABLE_SQLITE3)
+    set(MSTL_ENABLE_SQLITE3 ON CACHE BOOL "Enable SQLite3 database support")
+endif()
 if(NOT DEFINED MSTL_ENABLE_CUDA)
     set(MSTL_ENABLE_CUDA OFF CACHE BOOL "Disable CUDA GPU acceleration")
 endif()
 
 message(STATUS "Project Configuration:")
-message(STATUS "  MSTL_ENABLE_BOOST: ${MSTL_ENABLE_BOOST}")
-message(STATUS "  MSTL_ENABLE_MYSQL: ${MSTL_ENABLE_MYSQL}")
-message(STATUS "  MSTL_ENABLE_CUDA : ${MSTL_ENABLE_CUDA}")
+message(STATUS "  MSTL_ENABLE_BOOST:   ${MSTL_ENABLE_BOOST}")
+message(STATUS "  MSTL_ENABLE_MYSQL:   ${MSTL_ENABLE_MYSQL}")
+message(STATUS "  MSTL_ENABLE_SQLITE3: ${MSTL_ENABLE_SQLITE3}")
+message(STATUS "  MSTL_ENABLE_CUDA:    ${MSTL_ENABLE_CUDA}")
 
 
 # ------------------- File Selection -------------------
@@ -95,7 +99,6 @@ if(MSTL_ENABLE_BOOST AND CMAKE_SIZEOF_VOID_P EQUAL 8)
         target_link_libraries(MSTL PUBLIC Boost::system Boost::filesystem)
         target_compile_definitions(MSTL PUBLIC MSTL_SUPPORT_BOOST__)
     else()
-        message(WARNING "Boost find failed.")
         message(WARNING "Boost link failed.")
         message(WARNING "Your project can not use Boost components.")
     endif()
@@ -130,17 +133,41 @@ else()
 endif()
 
 
+# ------------------- SQLite3 -------------------
+if(MSTL_ENABLE_SQLITE3 AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+    if(WIN32)
+        set(SQLITE3_ROOT_DIR "D:/sqlite3" CACHE PATH "SQLite3 root directory for Windows")
+        find_path(SQLITE3_INCLUDE_DIRS NAMES sqlite3.h HINTS "${SQLITE3_ROOT_DIR}/include" NO_DEFAULT_PATH QUIET)
+        # need to compile lib with cmd: lib.exe /def:sqlite3.def /machine:ix86
+        find_library(SQLITE3_LIBRARIES NAMES sqlite3.lib HINTS "${SQLITE3_ROOT_DIR}/lib" NO_DEFAULT_PATH QUIET)
+    else()
+        find_package(SQLite3 QUIET)
+    endif()
+
+    if(SQLITE3_FOUND OR (SQLITE3_INCLUDE_DIRS AND SQLITE3_LIBRARIES))
+        target_include_directories(MSTL PUBLIC ${SQLITE3_INCLUDE_DIRS})
+        target_link_libraries(MSTL PUBLIC ${SQLITE3_LIBRARIES})
+        target_compile_definitions(MSTL PUBLIC MSTL_SUPPORT_SQLITE3__)
+    else()
+        message(WARNING "SQLite3 link failed.")
+        message(WARNING "your project can not use SQLite3 components.")
+    endif()
+else()
+    message(STATUS "SQLite3 support disabled.")
+endif()
+
+
 # ------------------- CUDA -------------------
 if(MSTL_ENABLE_CUDA AND MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     if(DEFINED CMAKE_CUDA_COMPILER)
-        find_package(CUDAToolkit QUIET REQUIRED)
+        find_package(CUDAToolkit)
 
         if(CUDAToolkit_FOUND)
             set_target_properties(MSTL PROPERTIES
                     CUDA_SEPARABLE_COMPILATION ON
                     CUDA_RESOLVE_DEVICE_SYMBOLS ON
             )
-            target_link_libraries(MSTL PRIVATE CUDA::cudart)
+            target_link_libraries(MSTL PUBLIC CUDA::cudart)
             # This command can make constexpr functions can run in GPU, but those funcs can`t use functions like printf
             # target_compile_options(MSTL PUBLIC $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
             target_compile_definitions(MSTL PUBLIC MSTL_SUPPORT_CUDA__)

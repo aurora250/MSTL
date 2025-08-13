@@ -1258,46 +1258,63 @@ void test_timer(){
 void test_dbpool() {
 #ifdef MSTL_SUPPORT_MYSQL__
     std::clock_t begin = clock();
-    database_settings::dbname("book");
-    database_settings::password("147258hu");
+    connect_config mysql_config = connect_config::for_mysql("book");
+    mysql_config.password = "147258hu";
 
-    database_pool& pool = get_instance_database_pool();
-    for (int i = 0; i < 5000; i++) {
-        bool fin = pool.get_connect()->update("SELECT 1");
-        // print(fin, " ");
-    }
-    println(1.0 * (clock() - begin) / CLOCKS_PER_SEC);
-
-    auto result = pool.get_connect()->query("SELECT * FROM book");
-    while (result.next()) {
-        for (int i = 0; i < result.column_count(); i++) {
-            if (i == 2) {
-                int count = result.at_int16(i);
-                println("collected :", count, ", ");
-            }
-            else if (i == 3) {
-                float count = result.at_float32(i);
-                println("usable :", count, ", ");
-            }
-            else if (i == 5) {
-                _MSTL datetime dt = result.at_datetime(i);
-                println("date: ", dt, ", ");
-            }
-            else
-                println(result.at(i), ", ");
+    {
+        database_pool pool(DB_TYPE::MYSQL, mysql_config);
+        for (int i = 0; i < 5000; i++) {
+            bool fin = pool.get_connect()->update("SELECT 1");
         }
-        println();
+        println(1.0 * (clock() - begin) / CLOCKS_PER_SEC);
+
+        auto result = pool.get_connect()->query("SELECT * FROM book");
+        while (result->next()) {
+            for (int i = 0; i < result->column_count(); i++) {
+                if (i == 2) {
+                    int count = result->at_int16(i);
+                    print("collected :", count, ", ");
+                }
+                else if (i == 3) {
+                    float count = result->at_float32(i);
+                    print("usable :", count, ", ");
+                }
+                else if (i == 5) {
+                    _MSTL datetime dt = result->at_datetime(i);
+                    print("date: ", dt, ", ");
+                }
+                else
+                    print(result->at(i), ", ");
+            }
+            println();
+        }
+        println(result->row_count(), ", ", result->column_count());
     }
-    println(result.row_count(), ", ", result.column_count());
 
     split_line();
+
 
     begin = clock();
     for (int i = 0; i < 5000; i++) {
         char sql[power(2, 10)] = {};
         sprintf(sql, "SELECT 1");
-        auto* conn = new database_connect();
-        if(conn->connect_to()) {
+        auto* conn = new db_mysql_connect();
+        if(conn->connect_to(mysql_config)) {
+            bool fin = conn->update(sql);
+        }
+        delete conn;
+    }
+    println(1.0 * (clock() - begin) / CLOCKS_PER_SEC);
+
+
+    connect_config sqlite_config = connect_config::for_sqlite("test.db");
+
+    begin = clock();
+    for (int i = 0; i < 5000; i++) {
+        char sql[power(2, 10)] = {};
+        sprintf(sql, "SELECT 1");
+        auto* conn = new db_sqlite_connect();
+        if(conn->connect_to(sqlite_config)) {
             bool fin = conn->update(sql);
             // print(fin, " ");
         }

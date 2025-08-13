@@ -68,7 +68,7 @@ inline FILE_SHARED operator &(FILE_SHARED a, FILE_SHARED b) {
 }
 
 
-enum class FILE_CREATE : file_flag_type {
+enum class FILE_CREATION : file_flag_type {
 #ifdef MSTL_PLATFORM_WINDOWS__
     CREATE_FORCE = CREATE_ALWAYS,
     CREATE_NO_EXIST = CREATE_NEW,
@@ -84,11 +84,11 @@ enum class FILE_CREATE : file_flag_type {
 #endif
 };
 
-inline FILE_CREATE operator |(FILE_CREATE a, FILE_CREATE b) {
-    return static_cast<FILE_CREATE>(static_cast<int>(a) | static_cast<int>(b));
+inline FILE_CREATION operator |(FILE_CREATION a, FILE_CREATION b) {
+    return static_cast<FILE_CREATION>(static_cast<int>(a) | static_cast<int>(b));
 }
-inline FILE_CREATE operator &(FILE_CREATE a, FILE_CREATE b) {
-    return static_cast<FILE_CREATE>(static_cast<int>(a) & static_cast<int>(b));
+inline FILE_CREATION operator &(FILE_CREATION a, FILE_CREATION b) {
+    return static_cast<FILE_CREATION>(static_cast<int>(a) & static_cast<int>(b));
 }
 
 
@@ -368,7 +368,7 @@ public:
     explicit file(string path,
         const FILE_ACCESS access = FILE_ACCESS::READ_WRITE,
         const FILE_SHARED share_mode = FILE_SHARED::SHARE_READ,
-        const FILE_CREATE creation = FILE_CREATE::OPEN_EXIST,
+        const FILE_CREATION creation = FILE_CREATION::OPEN_EXIST,
         const FILE_ATTRI attributes = FILE_ATTRI::NORMAL,
         const bool append = false) : path_(_MSTL move(path)) {
         open(access, share_mode, creation, attributes, append);
@@ -411,7 +411,7 @@ public:
     bool open(const string& path,
         FILE_ACCESS access = FILE_ACCESS::READ_WRITE,
         FILE_SHARED share_mode = FILE_SHARED::SHARE_READ,
-        FILE_CREATE creation = FILE_CREATE::OPEN_EXIST,
+        FILE_CREATION creation = FILE_CREATION::OPEN_EXIST,
         FILE_ATTRI attributes = FILE_ATTRI::NORMAL,
         const bool append = false) {
         close();
@@ -452,7 +452,7 @@ public:
 
     bool open(const FILE_ACCESS access = FILE_ACCESS::READ_WRITE,
         const FILE_SHARED share_mode = FILE_SHARED::SHARE_READ,
-        const FILE_CREATE creation = FILE_CREATE::OPEN_EXIST,
+        const FILE_CREATION creation = FILE_CREATION::OPEN_EXIST,
         const FILE_ATTRI attributes = FILE_ATTRI::NORMAL,
         const bool append = false) {
         return open(path_, access, share_mode, creation, attributes, append);
@@ -748,7 +748,7 @@ public:
             return false;
 
 #ifdef MSTL_PLATFORM_WINDOWS__
-        if (!seek(size, FILE_POINT_ORIGIN::BEGIN)) {
+        if (!seek(size, FILE_POINTER::BEGIN)) {
             return false;
         }
         return SetEndOfFile(handle_) != 0;
@@ -816,8 +816,8 @@ public:
 #ifdef MSTL_PLATFORM_WINDOWS__
         BY_HANDLE_FILE_INFORMATION info;
         if (!GetFileInformationByHandle(handle_, &info))
-            return FILE_ATTRIBUTE::OTHERS;
-        return static_cast<FILE_ATTRIBUTE>(info.dwFileAttributes);
+            return FILE_ATTRI::OTHERS;
+        return static_cast<FILE_ATTRI>(info.dwFileAttributes);
 #elif defined(MSTL_PLATFORM_LINUX__)
         struct ::stat st{};
         if (fstat(handle_, &st) == -1)
@@ -1061,9 +1061,9 @@ public:
 #ifdef MSTL_PLATFORM_WINDOWS__
         file file;
         if (!file.open(path,
-            append ? FILE_ACCESS_MODE::APPEND : FILE_ACCESS_MODE::WRITE,
-            FILE_SHARED_MODE::NO_SHARE, FILE_CREATION_MODE::OPEN_FORCE,
-            FILE_ATTRIBUTE::NORMAL, append)) {
+            append ? FILE_ACCESS::APPEND : FILE_ACCESS::WRITE,
+            FILE_SHARED::NO_SHARE, FILE_CREATION::OPEN_FORCE,
+            FILE_ATTRI::NORMAL, append)) {
             return false;
         }
         const size_type bytes_written = file.write(content.c_str(), content.size());
@@ -1112,8 +1112,8 @@ public:
     static bool read(const string& path, string& content) {
 #ifdef MSTL_PLATFORM_WINDOWS__
         file file;
-        if (!file.open(path, FILE_ACCESS_MODE::READ, FILE_SHARED_MODE::SHARE_READ,
-            FILE_CREATION_MODE::OPEN_EXIST, FILE_ATTRIBUTE::NORMAL)) {
+        if (!file.open(path, FILE_ACCESS::READ, FILE_SHARED::SHARE_READ,
+            FILE_CREATION::OPEN_EXIST, FILE_ATTRI::NORMAL)) {
             return false;
         }
         const size_type size = file.size();
@@ -1151,7 +1151,7 @@ public:
         if (!f.open(path,
             FILE_ACCESS::READ,
             FILE_SHARED::SHARE_READ,
-            FILE_CREATE::OPEN_EXIST)) {
+            FILE_CREATION::OPEN_EXIST)) {
             return false;
         }
 
@@ -1209,8 +1209,8 @@ public:
     static size_type file_size(const string& path) {
 #ifdef MSTL_PLATFORM_WINDOWS__
         file f;
-        if (f.open(path, FILE_ACCESS_MODE::READ, FILE_SHARED_MODE::SHARE_READ,
-                   FILE_CREATION_MODE::OPEN_EXIST)) {
+        if (f.open(path, FILE_ACCESS::READ, FILE_SHARED::SHARE_READ,
+                   FILE_CREATION::OPEN_EXIST)) {
             return f.size();
         }
         return 0;
