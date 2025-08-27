@@ -4,7 +4,10 @@
 #include <locale>
 #include <iostream>
 #ifdef MSTL_SUPPORT_BOOST__
-#include "boost/version.hpp"
+#include <boost/version.hpp>
+#endif
+#ifdef MSTL_SUPPORT_QT6__
+#include <QtGlobal>
 #endif
 
 #if defined(WIN32) || defined(_WIN32) || defined(_WIN32_) || defined(_M_X86)
@@ -67,12 +70,23 @@
 #elif defined(__EDG__)
 	// defined when project is compiled with EDG.
 	#define MSTL_COMPILE_WITH_EDG__		1
-#elif defined(Q_SLOT)
+#elif defined(QT_VERSION)
     // defined when project is compiled with QT Framework.
     #define MSTL_COMPILE_WITH_QT__		1
 #else
 	// defined when project is compiled with OS.
 	#define MSTL_COMPILE_WITH_OS__		1
+#endif
+
+
+#ifdef MSTL_COMPILER_MSVC__
+    #ifdef MSTL_EXPORTS
+        #define MSTL_API __declspec(dllexport)
+    #else
+        #define MSTL_API __declspec(dllimport)
+    #endif
+#else
+    #define MSTL_API
 #endif
 
 
@@ -173,7 +187,7 @@
 #if defined(MSTL_COMPILER_MSVC__) || defined(MSTL_COMPILER_CLANG__)
 	#define MSTL_SUPPORT_MAKE_INTEGER_SEQ__	1
 #endif
-#if defined(MSTL_VERSION_20__) && !defined(MSTL_COMPILER_CLANG__) && !defined(MSTL_COMPILE_WITH_EDG__)
+#if defined(MSTL_VERSION_20__) && !defined(MSTL_COMPILER_CLANG__)
 	#define MSTL_SUPPORT_U8_INTRINSICS__	1
 #endif
 
@@ -249,7 +263,7 @@
 
 
 #ifdef MSTL_SUPPORT_ALIGNED__
-	#ifdef MSTL_COMPILER_GNUC__
+    #if defined(MSTL_COMPILER_GNUC__)
 		#define MSTL_ALIGNOF_DEFAULT() __attribute__((__aligned__))
 		#define MSTL_ALIGNOF(ALIGN) __attribute__((__aligned__((ALIGN))))
 	#elif defined(MSTL_COMPILER_MSVC__)

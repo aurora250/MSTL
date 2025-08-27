@@ -91,6 +91,12 @@ inline string wstring_to_utf8(const wchar_t* str) {
     return _MSTL move(utf8_str);
 }
 
+#ifdef MSTL_VERSION_20__
+inline string u8string_to_utf8(const char8_t* str) {
+    return {reinterpret_cast<const char*>(t)};
+}
+#endif
+
 #ifdef MSTL_PLATFORM_WINDOWS__
 inline string u16string_to_utf8(const char16_t* str) {
     return wstring_to_utf8(reinterpret_cast<const wchar_t*>(str));
@@ -289,7 +295,7 @@ void __uint_to_buff_aux(CharT*, UT&) {}
 #endif // MSTL_DATA_BUS_WIDTH_64__
 
 template <typename CharT, typename UT>
-MSTL_NODISCARD CharT* uint_to_buff(CharT* riter, UT ux) {
+MSTL_NODISCARD CharT* __uint_to_buff(CharT* riter, UT ux) {
     static_assert(is_unsigned_v<UT>, "UT must be unsigned types.");
 #ifdef MSTL_DATA_BUS_WIDTH_64__
     auto holder = ux;
@@ -305,50 +311,31 @@ MSTL_NODISCARD CharT* uint_to_buff(CharT* riter, UT ux) {
 }
 
 template <typename CharT, typename T, enable_if_t<is_integral_v<T>, int> = 0>
-MSTL_NODISCARD basic_string<CharT> int_to_string(const T x) {
+MSTL_NODISCARD basic_string<CharT> __int_to_string(const T x) {
     CharT buffer[21];
     CharT* const buffer_end = buffer + 21;
     CharT* rnext = buffer_end;
     const auto unsigned_x = static_cast<make_unsigned_t<T>>(x);
     if (x < 0) {
-        rnext = (uint_to_buff)(rnext, 0 - unsigned_x);
+        rnext = (__uint_to_buff)(rnext, 0 - unsigned_x);
         *--rnext = '-';
     }
     else 
-        rnext = (uint_to_buff)(rnext, unsigned_x);
+        rnext = (__uint_to_buff)(rnext, unsigned_x);
     return basic_string<CharT>(rnext, buffer_end);
 }
 
 template <typename CharT, typename T,
     enable_if_t<is_integral_v<T> && is_unsigned_v<T>, int> = 0>
-MSTL_NODISCARD basic_string<CharT> uint_to_string(const T x) {
+MSTL_NODISCARD basic_string<CharT> __uint_to_string(const T x) {
     CharT buffer[21];
     CharT* const buffer_end = buffer + 21;
-    CharT* const rnext = (uint_to_buff)(buffer_end, x);
+    CharT* const rnext = (__uint_to_buff)(buffer_end, x);
     return basic_string<CharT>(rnext, buffer_end);
 }
 
-
-MSTL_NODISCARD inline string to_string(int x) {
-    return int_to_string<char>(x);
-}
-MSTL_NODISCARD inline string to_string(unsigned int x) {
-    return uint_to_string<char>(x);
-}
-MSTL_NODISCARD inline string to_string(long x) {
-    return int_to_string<char>(x);
-}
-MSTL_NODISCARD inline string to_string(unsigned long x) {
-    return uint_to_string<char>(x);
-}
-MSTL_NODISCARD inline string to_string(long long x) {
-    return int_to_string<char>(x);
-}
-MSTL_NODISCARD inline string to_string(unsigned long long x) {
-    return uint_to_string<char>(x);
-}
-
-MSTL_NODISCARD inline string to_string(double x) {
+template <typename CharT, typename T, enable_if_t<is_floating_point_v<T>, int> = 0>
+MSTL_NODISCARD basic_string<CharT> __float_to_string(const T x) {
 #ifdef MSTL_PLATFORM_LINUX__
     const int len = ::snprintf(nullptr, 0, "%f", x);
     string str(len, '\0');
@@ -361,58 +348,70 @@ MSTL_NODISCARD inline string to_string(double x) {
     return str;
 #endif
 }
-MSTL_NODISCARD inline string to_string(float x) {
-    return to_string(static_cast<double>(x));
+
+
+MSTL_NODISCARD inline string to_string(const bool x) {
+    if (x) return {"true"};
+    return {"false"};
 }
-MSTL_NODISCARD inline string to_string(long double x) {
-    return to_string(static_cast<double>(x));
+template <typename T, enable_if_t<is_standard_integer_v<T> && is_signed_v<T>, int> = 0>
+MSTL_NODISCARD string to_string(const T x) {
+    return _MSTL __int_to_string<char>(x);
+}
+template <typename T, enable_if_t<is_standard_integer_v<T> && is_unsigned_v<T>, int> = 0>
+MSTL_NODISCARD string to_string(const T x) {
+    return _MSTL __uint_to_string<char>(x);
+}
+template <typename T, enable_if_t<is_floating_point_v<T>, int> = 0>
+MSTL_NODISCARD string to_string(const T x) {
+    return _MSTL __float_to_string<char>(x);
 }
 
 
-MSTL_NODISCARD inline wstring to_wstring(int x) {
-    return int_to_string<wchar_t>(x);
+MSTL_NODISCARD inline string __to_string_dispatch(const char* x) {
+    return {x};
 }
-MSTL_NODISCARD inline wstring to_wstring(unsigned int x) {
-    return uint_to_string<wchar_t>(x);
+MSTL_NODISCARD inline string __to_string_dispatch(const wchar_t* x) {
+    return wstring_to_utf8(x);
 }
-MSTL_NODISCARD inline wstring to_wstring(long x) {
-    return int_to_string<wchar_t>(x);
+#ifdef MSTL_VERSION_20__
+MSTL_NODISCARD inline string __to_string_dispatch(const char8_t* x) {
+    return u8string_to_utf8(x);
 }
-MSTL_NODISCARD inline wstring to_wstring(unsigned long x) {
-    return uint_to_string<wchar_t>(x);
-}
-MSTL_NODISCARD inline wstring to_wstring(long long x) {
-    return int_to_string<wchar_t>(x);
-}
-MSTL_NODISCARD inline wstring to_wstring(unsigned long long x) {
-    return uint_to_string<wchar_t>(x);
-}
-MSTL_NODISCARD inline wstring to_wstring(double x) {
-#ifdef MSTL_PLATFORM_LINUX__
-    std::setlocale(LC_ALL, "en_US.UTF-8");
-    const int len = ::swprintf(nullptr, 0, L"%f", x);
-#else
-    const auto len = static_cast<size_t>(::_scwprintf(L"%f", x));
 #endif
-    wstring str(len, L'\0');
-    ::swprintf(&str[0], len + 1, L"%f", x);
-    return str;
+MSTL_NODISCARD inline string __to_string_dispatch(const char16_t* x) {
+    return u16string_to_utf8(x);
 }
-MSTL_NODISCARD inline wstring to_wstring(float x) {
-    return to_wstring(static_cast<double>(x));
+MSTL_NODISCARD inline string __to_string_dispatch(const char32_t* x) {
+    return u32string_to_utf8(x);
 }
-MSTL_NODISCARD inline wstring to_wstring(long double x) {
-    return to_wstring(static_cast<double>(x));
+
+template <typename CharT, enable_if_t<is_character_v<CharT>, int> = 0>
+MSTL_NODISCARD string to_string(const CharT x) {
+    CharT str[2] = { x, static_cast<CharT>(0) };
+    return _MSTL __to_string_dispatch(str);
+}
+template <typename T, enable_if_t<is_ctype_string_v<T>, int> = 0>
+MSTL_NODISCARD string to_string(const T& x) {
+    return _MSTL __to_string_dispatch(x);
+}
+template <typename CharT>
+MSTL_NODISCARD string to_string(const basic_string_view<CharT> x) {
+    return _MSTL __to_string_dispatch(x.data());
+}
+template <>
+MSTL_NODISCARD inline string to_string<char>(const basic_string_view<char> x) {
+    return string{x};
+}
+template <typename CharT>
+MSTL_NODISCARD string to_string(const basic_string<CharT>& x) {
+    return _MSTL __to_string_dispatch(x);
 }
 
 
 template <typename CharT, typename T, enable_if_t<is_same_v<CharT, char>, int> = 0>
 MSTL_NODISCARD basic_string<CharT> __stream_to_string(T x) {
     return _MSTL to_string(x);
-}
-template <typename CharT, typename T, enable_if_t<is_same_v<CharT, wchar_t>, int> = 0>
-MSTL_NODISCARD basic_string<CharT> __stream_to_string(T x) {
-    return _MSTL to_wstring(x);
 }
 
 MSTL_END_NAMESPACE__

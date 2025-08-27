@@ -27,7 +27,7 @@ private:
 
     friend class servlet;
 
-    static const string EMPTY_MARK;
+    static MSTL_API const string EMPTY_MARK;
 
 public:
     http_request() = default;
@@ -134,7 +134,7 @@ private:
     string redirect_url{};
     string forward_path{};
 
-    static const string EMPTY_MARK;
+    static MSTL_API const string EMPTY_MARK;
 
     friend class servlet;
 
@@ -355,7 +355,7 @@ private:
     int backlog_;
     std::atomic<bool> running_{false};
 #ifdef MSTL_PLATFORM_WINDOWS__
-    ::WSADATA wsa_data_;
+    ::WSADATA wsa_data_{};
 #endif
     ::sockaddr_in server_addr_{};
     vector<std::thread> worker_threads_;
@@ -597,7 +597,7 @@ protected:
         parse_parameters(req);
 
         // Handle session
-        string session_id = req.get_cookie(session_cookie_name_);
+        const string session_id = req.get_cookie(session_cookie_name_);
         if (!session_id.empty() && session_manager_.session_exists(session_id)) {
             req.set_session(session_manager_.get_session(session_id, false));
         }

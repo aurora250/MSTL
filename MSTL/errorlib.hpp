@@ -5,6 +5,9 @@
 #ifdef MSTL_SUPPORT_CUDA__
 #include <cuda_runtime.h>
 #endif
+#ifdef MSTL_SUPPORT_STACKTRACE__
+#include <boost/stacktrace/stacktrace.hpp>
+#endif
 MSTL_BEGIN_NAMESPACE__
 
 #define __MSTL_ERROR_CONSTRUCTOR(THIS, BASE, INFO) \
@@ -81,6 +84,9 @@ struct CUDAMemoryError final : MemoryError {
 // throw a new error and print stacktrace of boost is imported.
 inline void Exception(const Error& err){
     std::cerr << "\nException : (" << err.type_ << ") " << err.info_ << "\n";
+#ifdef MSTL_SUPPORT_STACKTRACE__
+    std::cerr << boost::stacktrace::stacktrace() << std::endl;
+#endif
 	throw err;
 }
 
@@ -98,11 +104,16 @@ MSTL_NORETURN inline void Exit(const bool abort = false, void(* func)() = nullpt
 }
 
 
+#ifdef MSTL_STATE_DEBUG__
 #define MSTL_REPORT_ERROR(MESG) \
     { MSTL::Exception(MSTL::AssertionError(MESG)); }
 
 #define MSTL_DEBUG_VERIFY(CON, MESG) \
 	{ if (CON) {} else { MSTL_REPORT_ERROR(MESG); assert(false); } }
+#else
+#define MSTL_REPORT_ERROR(MESG)
+#define MSTL_DEBUG_VERIFY(CON, MESG)
+#endif
 
 #define __MSTL_DEBUG_MESG_OPERATE_NULLPTR(ITER, ACT) "can`t " ACT ": " TO_STRING(ITER) " is pointing to nullptr."
 #define __MSTL_DEBUG_MESG_OUT_OF_RANGE(CLASS, ACT) "can`t " ACT ": " TO_STRING(CLASS) " out of ranges."

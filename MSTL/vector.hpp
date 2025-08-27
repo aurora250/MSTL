@@ -212,7 +212,7 @@ public:
 private:
 	pointer start_ = nullptr;
 	pointer finish_ = nullptr;
-	compressed_pair<allocator_type, pointer> pair_{ default_construct_tag{}, nullptr };
+	compressed_pair<allocator_type, pointer> pair_{ _MSTL_TAG default_construct_tag{}, nullptr };
 
 	template <bool, typename> friend struct vector_iterator;
 
@@ -230,7 +230,7 @@ private:
 	}
 
 	MSTL_CONSTEXPR20 void fill_initialize(size_type n, T&& x) {
-		start_ = allocate_and_fill(n, _MSTL forward<T>(x));
+		start_ = this->allocate_and_fill(n, _MSTL forward<T>(x));
 		finish_ = start_ + n;
 		pair_.value = finish_;
 	}
@@ -335,31 +335,31 @@ private:
 public:
 	MSTL_CONSTEXPR20 vector()
 		noexcept(is_nothrow_default_constructible_v<T>) {
-		fill_initialize(1, _MSTL move(T()));
+		this->fill_initialize(1, _MSTL move(T()));
 		finish_ = start_;
 		pair_.value = finish_;
 	}
 
 	MSTL_CONSTEXPR20 explicit vector(const size_type n) {
-		fill_initialize(n, _MSTL move(T()));
+		this->fill_initialize(n, _MSTL move(T()));
 	}
 	MSTL_CONSTEXPR20 explicit vector(const size_type n, const T& value) {
-		fill_initialize(n, value);
+		this->fill_initialize(n, value);
 	}
 	MSTL_CONSTEXPR20 explicit vector(const int n, const T& value) {
-		fill_initialize(n, value);
+		this->fill_initialize(n, value);
 	}
 	MSTL_CONSTEXPR20 explicit vector(const long n, const T& value) {
-		fill_initialize(n, value);
+		this->fill_initialize(n, value);
 	}
 	MSTL_CONSTEXPR20 explicit vector(const size_type n, T&& value) {
-		fill_initialize(n, _MSTL forward<T>(value));
+		this->fill_initialize(n, _MSTL forward<T>(value));
 	}
 	MSTL_CONSTEXPR20 explicit vector(const int n, T&& value) {
-		fill_initialize(n, _MSTL forward<T>(value));
+		this->fill_initialize(n, _MSTL forward<T>(value));
 	}
 	MSTL_CONSTEXPR20 explicit vector(const long n, T&& value) {
-		fill_initialize(n, _MSTL forward<T>(value));
+		this->fill_initialize(n, _MSTL forward<T>(value));
 	}
 
 	MSTL_CONSTEXPR20 vector(const self& x) {

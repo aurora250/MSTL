@@ -105,12 +105,12 @@ struct compressed_pair final : IfEmpty {
     }
 
     template <typename... Args>
-    constexpr explicit compressed_pair(default_construct_tag, Args&&... args)
+    constexpr explicit compressed_pair(_MSTL_TAG default_construct_tag, Args&&... args)
         noexcept(conjunction_v<is_nothrow_default_constructible<IfEmpty>, is_nothrow_constructible<T, Args...>>)
         : IfEmpty(), value(_MSTL forward<Args>(args)...) {}
 
     template <typename ToEmpty, typename... Args>
-    constexpr explicit compressed_pair(exact_arg_construct_tag, ToEmpty&& first, Args&&... args)
+    constexpr explicit compressed_pair(_MSTL_TAG exact_arg_construct_tag, ToEmpty&& first, Args&&... args)
         noexcept(conjunction_v<is_nothrow_constructible<IfEmpty, ToEmpty>, is_nothrow_constructible<T, Args...>>)
         : IfEmpty(_MSTL forward<ToEmpty>(first)), value(_MSTL forward<Args>(args)...) {}
 
@@ -165,12 +165,12 @@ struct compressed_pair<IfEmpty, T, false> final {
 	}
 
 	template <typename... Args>
-	constexpr explicit compressed_pair(default_construct_tag, Args&&... args)
+	constexpr explicit compressed_pair(_MSTL_TAG default_construct_tag, Args&&... args)
 		noexcept(conjunction_v<is_nothrow_default_constructible<IfEmpty>, is_nothrow_constructible<T, Args...>>)
 		: no_compressed(), value(_MSTL forward<Args>(args)...) {}
 
 	template <typename ToEmpty, typename... Args>
-	constexpr compressed_pair(exact_arg_construct_tag, ToEmpty&& first, Args&&... args)
+	constexpr compressed_pair(_MSTL_TAG exact_arg_construct_tag, ToEmpty&& first, Args&&... args)
 		noexcept(conjunction_v<is_nothrow_constructible<IfEmpty, ToEmpty>, is_nothrow_constructible<T, Args...>>)
 		: no_compressed(_MSTL forward<ToEmpty>(first)), value(_MSTL forward<Args>(args)...) {
 	}
@@ -367,7 +367,7 @@ struct pair {
 
 	// construct from tuple
 	template <typename... Types1, typename... Types2>
-	constexpr pair(unpack_utility_construct_tag, tuple<Types1...> t1, tuple<Types2...> t2)
+	constexpr pair(_MSTL_TAG unpack_utility_construct_tag, tuple<Types1...> t1, tuple<Types2...> t2)
 		: pair(t1, t2, index_sequence_for<Types1...>{}, index_sequence_for<Types2...>{}) {}
 
 

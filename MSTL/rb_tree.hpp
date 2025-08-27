@@ -472,7 +472,7 @@ private:
     Compare key_compare_{};
     KeyOfValue extracter_{};
     // allocator_, size_
-    compressed_pair<allocator_type, size_t> size_pair_{ default_construct_tag{}, 0 };
+    compressed_pair<allocator_type, size_t> size_pair_{ _MSTL_TAG default_construct_tag{}, 0 };
 
     template <bool, typename> friend struct rb_tree_iterator;
 

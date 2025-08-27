@@ -432,8 +432,8 @@ MSTL_ALLOC_OPTIMIZE MSTL_CONSTEXPR20 void* allocate(const size_t bytes) {
 }
 
 
-template <size_t Align>
-inline void __deallocate_aux(void*& ptr, size_t& bytes) noexcept {
+template <size_t>
+void __deallocate_aux(void*& ptr, size_t& bytes) noexcept {
 #ifdef MSTL_COMPILER_MSVC__
     if (bytes >= MEMORY_BIG_ALLOC_THRESHHOLD) {
         bytes += MEMORY_NO_USER_SIZE;
@@ -495,12 +495,11 @@ MSTL_CONSTEXPR20 void deallocate(void* ptr, size_t bytes) noexcept {
 }
 
 template <typename T>
-constexpr size_t __FINAL_ALIGN_SIZE = (_MSTL max)(alignof(T), MEMORY_ALIGN_THRESHHOLD);
+constexpr size_t __FINAL_ALIGN_SIZE = _MSTL max(alignof(T), MEMORY_ALIGN_THRESHHOLD);
 
 MSTL_ERROR_BUILD_FINAL_CLASS(AllocateError, MemoryError, "Memory Allocation Failed.")
 
 
-MSTL_BEGIN_TAG__
 struct allocate_cpu_tag {
     constexpr allocate_cpu_tag() noexcept = default;
     ~allocate_cpu_tag() noexcept = default;
@@ -510,7 +509,6 @@ struct allocate_gpu_tag {
     constexpr allocate_gpu_tag() noexcept = default;
     ~allocate_gpu_tag() noexcept = default;
 };
-MSTL_END_TAG__
 
 
 template <typename T>
@@ -538,18 +536,11 @@ public:
         static_assert(value_size > 0, "value type must be complete before allocation called.");
         const size_t alloc_size = value_size * n;
         MSTL_DEBUG_VERIFY(alloc_size <= UINT64_MAX_SIZE, "allocation will cause memory overflow.");
-        T* ptr = nullptr;
-        try {
-            ptr = static_cast<T*>(_MSTL allocate<__FINAL_ALIGN_SIZE<T>>(alloc_size));
-        }
-        catch (...) {
-            Exception(AllocateError());
-        }
-        return ptr;
+        return static_cast<T*>(_MSTL allocate<__FINAL_ALIGN_SIZE<T>>(alloc_size));
     }
 
     MSTL_ALLOC_NODISCARD static MSTL_CONSTEXPR20 MSTL_ALLOC_OPTIMIZE pointer allocate() {
-        return standard_allocator::allocate(1);
+        return self::allocate(1);
     }
 
     static MSTL_CONSTEXPR20 void deallocate(pointer p, const size_type n) noexcept {
@@ -558,8 +549,8 @@ public:
         _MSTL deallocate<__FINAL_ALIGN_SIZE<T>>(p, n * value_size);
     }
 
-    static MSTL_CONSTEXPR20 void deallocate(pointer p) noexcept {
-        standard_allocator::deallocate(p, 1);
+    static MSTL_CONSTEXPR20 void deallocate(const pointer p) noexcept {
+        self::deallocate(p, 1);
     }
 };
 template <typename T, typename U>

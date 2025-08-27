@@ -9,23 +9,23 @@ constexpr U&& __invoke_forward(remove_reference_t<T>& t) noexcept {
 }
 
 template <typename Res, typename F, typename... Args>
-constexpr Res __invoke_dispatch(invoke_other_tag, F&& f, Args&&... args) {
+constexpr Res __invoke_dispatch(_MSTL_TAG invoke_other_tag, F&& f, Args&&... args) {
     return _MSTL forward<F>(f)(_MSTL forward<Args>(args)...);
 }
 template <typename Res, typename MemFun, typename T, typename... Args>
-constexpr Res __invoke_dispatch(invoke_memfun_ref_tag, MemFun&& f, T&& t, Args&&... args) {
+constexpr Res __invoke_dispatch(_MSTL_TAG invoke_memfun_ref_tag, MemFun&& f, T&& t, Args&&... args) {
     return (__invoke_forward<T>(t).*f)(_MSTL forward<Args>(args)...);
 }
 template <typename Res, typename MemFun, typename T, typename... Args>
-constexpr Res __invoke_dispatch(invoke_memfun_deref_tag, MemFun&& f, T&& t, Args&&... args){
+constexpr Res __invoke_dispatch(_MSTL_TAG invoke_memfun_deref_tag, MemFun&& f, T&& t, Args&&... args){
     return (*_MSTL forward<T>(t).*f)(_MSTL forward<Args>(args)...);
 }
 template <typename Res, typename MemPtr, typename T>
-constexpr Res __invoke_dispatch(invoke_memobj_ref_tag, MemPtr&& f, T&& t) {
+constexpr Res __invoke_dispatch(_MSTL_TAG invoke_memobj_ref_tag, MemPtr&& f, T&& t) {
     return __invoke_forward<T>(t).*f;
 }
 template <typename Res, typename MemPtr, typename T>
-constexpr Res __invoke_dispatch(invoke_memobj_deref_tag, MemPtr&& f, T&& t) {
+constexpr Res __invoke_dispatch(_MSTL_TAG invoke_memobj_deref_tag, MemPtr&& f, T&& t) {
     return *_MSTL forward<T>(t).*f;
 }
 

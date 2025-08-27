@@ -1,9 +1,8 @@
 cmake_minimum_required(VERSION 3.17)
 
-set(MSTL_ENABLE_CUDA OFF CACHE BOOL "Disable CUDA GPU acceleration" FORCE)
+set(MSTL_ENABLE_REDIS OFF CACHE BOOL "Disable Redis database support" FORCE)
 
-
-set(MSTL_CXX_COMPILE_VERSION 14)
+set(MSTL_CXX_COMPILE_VERSION 17)
 
 set(CMAKE_CXX_STANDARD ${MSTL_CXX_COMPILE_VERSION})
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -20,8 +19,11 @@ else()
 endif()
 
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 add_subdirectory(MSTL)
 
 add_executable(${CMAKE_PROJECT_NAME} "main.cpp" "try.cpp" "try.h")
 
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE MSTL)
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE MSTL)

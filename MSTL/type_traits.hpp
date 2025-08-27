@@ -1245,9 +1245,30 @@ MSTL_NODISCARD constexpr bool is_constant_evaluated() noexcept {
 #ifdef MSTL_COMPILER_MSVC__
 template <typename From, typename To>
 struct is_convertible : bool_constant<__is_convertible_to(From, To)> {};
-#else
+#elif defined(MSTL_COMPILER_GNUC__) && !defined(MSTL_COMPILE_WITH_QT__)
 template <typename From, typename To>
 struct is_convertible : bool_constant<__is_convertible(From, To)> {};
+#else
+template <typename From, typename To, bool = disjunction_v<is_void<From>, is_function<To>, is_array<To>>>
+struct __is_convertible_helper {
+    using type = typename is_void<To>::type;
+};
+
+template <typename From, typename To>
+struct __is_convertible_helper<From, To, false> {
+private:
+    template <typename From1, typename To1, typename = decltype(_MSTL declvoid<To1>(_MSTL declval<From1>()))>
+    static true_type __test(int);
+
+    template <typename, typename>
+    static false_type __test(...);
+
+public:
+    using type = decltype(__test<From, To>(0));
+};
+
+template<typename From, typename To>
+struct is_convertible : __is_convertible_helper<From, To>::type {};
 #endif
 
 template <typename From, typename To>
@@ -1700,6 +1721,7 @@ struct invoke_other_tag {
 };
 MSTL_END_TAG__
 
+
 template <typename Sign>
 struct invoke_result;
 
@@ -1855,13 +1877,13 @@ private:
     using Res_t = typename Result::type;
 
     template <typename T, bool Nothrow = noexcept(_MSTL declvoid<T>(_MSTL declval<Res_t>())),
-        typename = decltype(_MSTL declvoid<T>(_MSTL declval<Res_t>())),
+        typename = decltype(_MSTL declvoid<T>(_MSTL declval<Res_t>())), bool Dangle =
 #ifdef MSTL_COMPILER_GCC__
-        bool Dangle = __reference_converts_from_temporary(T, Res_t)
-#elif defined(MSTL_COMPILER_CLANG__)
-        bool Dangle = __reference_converts_from_temporary(_MSTL declval<T>(), _MSTL declval<Res_t>())
+        __reference_converts_from_temporary(T, Res_t)
+#elif defined(MSTL_COMPILER_CLANG__) && !defined(MSTL_COMPILE_WITH_QT__)
+        __reference_converts_from_temporary(_MSTL declval<T>(), _MSTL declval<Res_t>())
 #else
-        bool Dangle = false
+        false
 #endif
     >
     static bool_constant<Nothrow && !Dangle> __test(int);

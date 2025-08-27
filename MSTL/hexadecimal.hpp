@@ -134,5 +134,9 @@ public:
     }
 };
 
+MSTL_NODISCARD inline string to_string(const hexadecimal& x) {
+    return x.to_string();
+}
+
 MSTL_END_NAMESPACE__
 #endif // MSTL_HEXADECIMAL_HPP__

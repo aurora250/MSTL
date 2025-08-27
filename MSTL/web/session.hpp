@@ -264,14 +264,13 @@ private:
             if (it->second.is_valid()) {
                 it->second.set_new(false);
                 return &it->second;
-            } else {
-                sessions_.erase(it);
             }
+            sessions_.erase(it);
         }
 
         if (create) {
             string new_id = session_id.empty() ? generate_session_id() : session_id;
-            auto pir = sessions_.emplace(new_id, session(new_id));
+            const auto pir = sessions_.emplace(new_id, session(new_id));
             return &pir.first->second;
         }
 
@@ -398,14 +397,14 @@ public:
         return HTTP_METHOD(lh.method_ + ", " + rh.method_);
     }
 
-    static const HTTP_METHOD GET;
-    static const HTTP_METHOD POST;
-    static const HTTP_METHOD HEAD;
-    static const HTTP_METHOD PUT;
-    static const HTTP_METHOD DELETE;
-    static const HTTP_METHOD OPTIONS;
-    static const HTTP_METHOD TRACE;
-    static const HTTP_METHOD CONNECT;
+    static MSTL_API const HTTP_METHOD GET;
+    static MSTL_API const HTTP_METHOD POST;
+    static MSTL_API const HTTP_METHOD HEAD;
+    static MSTL_API const HTTP_METHOD PUT;
+    static MSTL_API const HTTP_METHOD DELETE;
+    static MSTL_API const HTTP_METHOD OPTIONS;
+    static MSTL_API const HTTP_METHOD TRACE;
+    static MSTL_API const HTTP_METHOD CONNECT;
 
     bool is_get() const {
         return method_ == GET.method_;

@@ -133,7 +133,7 @@ public:
     }
 
     template <typename T, typename VT = decay_t<T>, typename Manager = manage_t<VT>,
-        enable_if_t<is_copy_constructible_v<VT> && !is_same_v<inplace_construct_tag, VT> && !is_same_v<VT, any>, int> = 0>
+        enable_if_t<is_copy_constructible_v<VT> && !is_same_v<_MSTL_TAG inplace_construct_tag, VT> && !is_same_v<VT, any>, int> = 0>
     any(T&& value) : manage_(&Manager::manage) {
         Manager::create(storage_, _MSTL forward<T>(value));
     }
@@ -147,13 +147,13 @@ public:
 
     template <typename T, typename... Args, typename VT = decay_t<T>, typename Manager = manage_t<VT>,
         enable_if_t<conjunction_v<is_copy_constructible<VT>, is_constructible<VT, Args&&...>>, int> = 0>
-    explicit any(inplace_construct_tag, Args&&... args) : manage_(&Manager::manage) {
+    explicit any(_MSTL_TAG inplace_construct_tag, Args&&... args) : manage_(&Manager::manage) {
         Manager::create(storage_, _MSTL forward<Args>(args)...);
     }
 
     template <typename T, typename U, typename... Args, typename VT = decay_t<T>, typename Manager = manage_t<VT>,
         enable_if_t<conjunction_v<is_copy_constructible<VT>, is_constructible<VT, std::initializer_list<U>&, Args&&...>>, int> = 0>
-    explicit any(inplace_construct_tag, std::initializer_list<U> ilist, Args&&... args) : manage_(&Manager::manage) {
+    explicit any(_MSTL_TAG inplace_construct_tag, std::initializer_list<U> ilist, Args&&... args) : manage_(&Manager::manage) {
 	    Manager::create(storage_, ilist, _MSTL forward<Args>(args)...);
     }
 
@@ -216,15 +216,15 @@ public:
 };
 
 template <typename T, typename... Args,
-	enable_if_t<is_constructible_v<any, inplace_construct_tag, Args...>, int> = 0>
+	enable_if_t<is_constructible_v<any, _MSTL_TAG inplace_construct_tag, Args...>, int> = 0>
 any make_any(Args&&... args) {
-	return any(inplace_construct_tag{}, _MSTL forward<Args>(args)...);
+	return any(_MSTL_TAG inplace_construct_tag{}, _MSTL forward<Args>(args)...);
 }
 
 template <typename T, typename U, typename... Args,
-    enable_if_t<is_constructible_v<any, inplace_construct_tag, std::initializer_list<U>&, Args...>, int> = 0>
+    enable_if_t<is_constructible_v<any, _MSTL_TAG inplace_construct_tag, std::initializer_list<U>&, Args...>, int> = 0>
 any make_any(std::initializer_list<U> ilist, Args&&... args) {
-	return any(inplace_construct_tag{}, ilist, _MSTL forward<Args>(args)...);
+	return any(_MSTL_TAG inplace_construct_tag{}, ilist, _MSTL forward<Args>(args)...);
 }
 
 

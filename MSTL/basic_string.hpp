@@ -214,7 +214,7 @@ private:
     pointer data_ = nullptr;
     size_type size_ = 0;
     // allocator_, allocate_size_
-    compressed_pair<allocator_type, size_type> alloc_pair_{ default_construct_tag{}, 0 };
+    compressed_pair<allocator_type, size_type> alloc_pair_{ _MSTL_TAG default_construct_tag{}, 0 };
 
     template <bool, typename> friend struct basic_string_iterator;
 

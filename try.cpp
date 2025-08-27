@@ -639,6 +639,7 @@ void test_deque() {
             long_deque.push_front(i);
         }
     }
+    println("inserted");
     // println(long_deque);
     for (MSTL::size_t i = 0; i < element_count; ++i) {
         if (i % 2 == 0) {
@@ -647,6 +648,7 @@ void test_deque() {
             long_deque.pop_front();
         }
     }
+    println("deleted");
     // println(long_deque);
 }
 
@@ -1256,9 +1258,10 @@ void test_timer(){
 
 
 void test_dbpool() {
+#ifdef MSTL_SUPPORT_DB__
 #ifdef MSTL_SUPPORT_MYSQL__
     std::clock_t begin = clock();
-    connect_config mysql_config = connect_config::for_mysql("book");
+    db_connect_config mysql_config = db_connect_config::for_mysql("book");
     mysql_config.password = "147258hu";
 
     {
@@ -1293,7 +1296,6 @@ void test_dbpool() {
 
     split_line();
 
-
     begin = clock();
     for (int i = 0; i < 5000; i++) {
         char sql[power(2, 10)] = {};
@@ -1305,9 +1307,10 @@ void test_dbpool() {
         delete conn;
     }
     println(1.0 * (clock() - begin) / CLOCKS_PER_SEC);
+#endif
 
-
-    connect_config sqlite_config = connect_config::for_sqlite("test.db");
+#ifdef MSTL_SUPPORT_SQLITE3__
+    db_connect_config sqlite_config = db_connect_config::for_sqlite("test.db");
 
     begin = clock();
     for (int i = 0; i < 5000; i++) {
@@ -1321,6 +1324,7 @@ void test_dbpool() {
         delete conn;
     }
     println(1.0 * (clock() - begin) / CLOCKS_PER_SEC);
+#endif
 #endif
 }
 

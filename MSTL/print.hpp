@@ -586,11 +586,13 @@ struct __raw_string_printer<wchar_t> {
 template <>
 struct __raw_string_printer<char8_t> {
     static void print(const char8_t* t) {
-        __raw_string_printer<char>::print(reinterpret_cast<const char*>(t));
+        string utf8_str = _MSTL move(_MSTL u8string_to_utf8(t));
+        __raw_string_printer<char>::print(utf8_str.c_str());
     }
     static void print_feature(const char8_t* t) {
+        string utf8_str = _MSTL move(_MSTL u8string_to_utf8(t));
         std::cout << "U8";
-        __raw_string_printer<char>::print_feature(reinterpret_cast<const char*>(t));
+        __raw_string_printer<char>::print_feature(utf8_str.c_str());
     }
 };
 #endif
