@@ -16,3 +16,6 @@ endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/MSTLTargets.cmake")
 check_required_components(MSTL)
+
+set(MSTL_INCLUDE_DIR "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")
+message(STATUS "Found MSTL: ${CMAKE_CURRENT_LIST_DIR} (include: ${MSTL_INCLUDE_DIR})")

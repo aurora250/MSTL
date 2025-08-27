@@ -1,6 +1,6 @@
 #ifndef MSTL_SOCKET_HPP__
 #define MSTL_SOCKET_HPP__
-#include "../errorlib.hpp"
+#include "MSTL/core/basiclib.hpp"
 #ifdef MSTL_PLATFORM_WINDOWS__
 #include <ws2tcpip.h>
 #pragma comment(lib, "ws2_32.lib")

@@ -1,7 +1,6 @@
 #ifndef MSTL_BASICLIB_H__
 #define MSTL_BASICLIB_H__
 #include "undef_cmacro.hpp"
-#include <locale>
 #include <iostream>
 #ifdef MSTL_SUPPORT_BOOST__
 #include <boost/version.hpp>
@@ -572,7 +571,7 @@ MSTL_INLINE17 constexpr size_t MEMORY_BIG_ALLOC_SENTINEL = 0xFAFAFAFAUL;
 #endif // MSTL_COMPILER_MSVC__
 
 
-inline void set_utf8_console() {
+MSTL_ALWAYS_INLINE inline void set_utf8_console() {
 #ifdef MSTL_PLATFORM_WINDOWS__
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
@@ -580,23 +579,6 @@ inline void set_utf8_console() {
     _setmode(_fileno(stderr), _O_BINARY);
     _setmode(_fileno(stdin), _O_BINARY);
 #endif
-    std::setlocale(LC_ALL, "en_US.utf8");
-    std::ios_base::sync_with_stdio(false);
-    try {
-        std::locale::global(std::locale("en_US.utf8"));
-    } catch(...) {
-        try {
-            std::locale::global(std::locale(""));
-        } catch(...) {}
-    }
-    std::cout.imbue(std::locale());
-    std::cerr.imbue(std::locale());
-    std::wcout.imbue(std::locale());
-    std::wcerr.imbue(std::locale());
-    std::cout.flush();
-    std::cerr.flush();
-    std::wcout.flush();
-    std::wcerr.flush();
 }
 
 

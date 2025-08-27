@@ -214,19 +214,19 @@ public:
 
     static bool is_supported() {
 #ifdef MSTL_PLATFORM_WINDOWS__
-        HCRYPTPROV hProv;
-        const bool supported = CryptAcquireContext(
+        ::HCRYPTPROV hProv;
+        const bool supported = ::CryptAcquireContext(
             &hProv, nullptr, nullptr, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
         if (supported) {
-            CryptReleaseContext(hProv, 0);
+            ::CryptReleaseContext(hProv, 0);
         }
         return supported;
 #elif defined(MSTL_PLATFORM_LINUX__)
-        const int fd = open("/dev/urandom", O_RDONLY);
+        const int fd = ::open("/dev/urandom", O_RDONLY);
         if (fd == -1) {
             return false;
         }
-        close(fd);
+        ::close(fd);
         return true;
 #else
         return false;
@@ -239,31 +239,31 @@ private:
 
 #ifdef MSTL_PLATFORM_WINDOWS__
         HCRYPTPROV hProv = 0;
-        if (!CryptAcquireContext(&hProv, nullptr, nullptr,
+        if (!::CryptAcquireContext(&hProv, nullptr, nullptr,
             PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
-            Exception(DeviceOperateError("Failed to acquire crypto context"));
+            Exception(::DeviceOperateError("Failed to acquire crypto context"));
         }
 
-        if (!CryptGenRandom(hProv, static_cast<DWORD>(length), reinterpret_cast<BYTE*>(buffer))) {
-            CryptReleaseContext(hProv, 0);
-            Exception(DeviceOperateError("Failed to generate random bytes"));
+        if (!::CryptGenRandom(hProv, static_cast<DWORD>(length), reinterpret_cast<BYTE*>(buffer))) {
+            ::CryptReleaseContext(hProv, 0);
+            Exception(::DeviceOperateError("Failed to generate random bytes"));
         }
 
-        CryptReleaseContext(hProv, 0);
+        ::CryptReleaseContext(hProv, 0);
 #elif defined(MSTL_PLATFORM_LINUX__)
         const int fd = open("/dev/urandom", O_RDONLY);
         Exception(fd != -1, FileOperateError("Failed to open /dev/urandom"));
 
         ssize_t bytesRead = 0;
         while (bytesRead < static_cast<ssize_t>(length)) {
-            const ssize_t result = read(fd, buffer + bytesRead, length - bytesRead);
+            const ssize_t result = ::read(fd, buffer + bytesRead, length - bytesRead);
             if (result == -1) {
-                close(fd);
+                ::close(fd);
                 Exception(fd != -1, FileOperateError("Failed to open /dev/urandom"));
             }
             bytesRead += result;
         }
-        close(fd);
+        ::close(fd);
 #endif
     }
 };

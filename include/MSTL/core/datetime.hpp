@@ -594,8 +594,8 @@ MSTL_NODISCARD inline datetime datetime::now() noexcept {
     GetLocalTime(&st);
     return datetime(st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 #elif defined(MSTL_PLATFORM_LINUX__)
-    const std::time_t now_time = std::time(nullptr);
-    std::tm local_tm{};
+    const ::time_t now_time = ::time(nullptr);
+    ::tm local_tm{};
     localtime_r(&now_time, &local_tm);
     return datetime(local_tm.tm_year + 1900, local_tm.tm_mon + 1,
         local_tm.tm_mday, local_tm.tm_hour, local_tm.tm_min, local_tm.tm_sec);
@@ -621,7 +621,7 @@ datetime inline datetime::from_utc(const datetime& utc_dt) noexcept {
     }
     return datetime(st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 #elif defined(MSTL_PLATFORM_LINUX__)
-    std::tm utc_tm{};
+    ::tm utc_tm{};
     utc_tm.tm_year = utc_dt.get_year() - 1900;
     utc_tm.tm_mon = utc_dt.get_month() - 1;
     utc_tm.tm_mday = utc_dt.get_day();
@@ -630,11 +630,11 @@ datetime inline datetime::from_utc(const datetime& utc_dt) noexcept {
     utc_tm.tm_sec = utc_dt.get_seconds();
     utc_tm.tm_isdst = -1;
 
-    const std::time_t t = ::timegm(&utc_tm);
+    const ::time_t t = ::timegm(&utc_tm);
     if (t == -1) {
         return datetime::epoch();
     }
-    std::tm local_tm{};
+    ::tm local_tm{};
     if (!localtime_r(&t, &local_tm)) {
         return datetime::epoch();
     }
@@ -662,7 +662,7 @@ datetime inline datetime::to_utc(const datetime& local_dt) noexcept {
     }
     return datetime(st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 #elif defined(MSTL_PLATFORM_LINUX__)
-    std::tm local_tm{};
+    ::tm local_tm{};
     local_tm.tm_year = local_dt.get_year() - 1900;
     local_tm.tm_mon = local_dt.get_month() - 1;
     local_tm.tm_mday = local_dt.get_day();
@@ -671,11 +671,11 @@ datetime inline datetime::to_utc(const datetime& local_dt) noexcept {
     local_tm.tm_sec = local_dt.get_seconds();
     local_tm.tm_isdst = -1;
 
-    const std::time_t t = std::mktime(&local_tm);
+    const ::time_t t = ::mktime(&local_tm);
     if (t == -1) {
         return datetime::epoch();
     }
-    std::tm utc_tm{};
+    ::tm utc_tm{};
     if (!gmtime_r(&t, &utc_tm)) {
         return datetime::epoch();
     }

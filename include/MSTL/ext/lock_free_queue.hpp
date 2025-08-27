@@ -1,7 +1,7 @@
 #ifndef MSTL_LOCK_FREE_QUEUE_HPP__
 #define MSTL_LOCK_FREE_QUEUE_HPP__
 #include <atomic>
-#include "memory.hpp"
+#include "MSTL/core/memory.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename T>
@@ -117,7 +117,7 @@ public:
     }
 
     void push(T new_value) {
-        std::unique_ptr<T> new_data(new T(new_value));
+        _MSTL unique_ptr<T> new_data(new T(new_value));
         counted_node_ptr new_next;
         new_next.ptr = new node;
         new_next.external_count = 1;
@@ -148,23 +148,23 @@ public:
         ++construct_count;
     }
 
-    std::unique_ptr<T> pop() {
+    unique_ptr<T> pop() {
         counted_node_ptr old_head = head.load(std::memory_order_relaxed);
-            for (;;) {
-                lock_free_queue::increase_external_count(head, old_head);
-                node* const ptr = old_head.ptr;
-                if (ptr == tail.load().ptr) {
-                    ptr->release_ref();
-                    return std::unique_ptr<T>();
-                }
-                counted_node_ptr next = ptr->next.load();
-                if (head.compare_exchange_strong(old_head, next)) {
-                    T* const res = ptr->data.exchange(nullptr);
-                    lock_free_queue::free_external_counter(old_head);
-                    return std::unique_ptr<T>(res);
-                }
+        for (;;) {
+            lock_free_queue::increase_external_count(head, old_head);
+            node* const ptr = old_head.ptr;
+            if (ptr == tail.load().ptr) {
                 ptr->release_ref();
+                return _MSTL make_unique<T>();
             }
+            counted_node_ptr next = ptr->next.load();
+            if (head.compare_exchange_strong(old_head, next)) {
+                T* const res = ptr->data.exchange(nullptr);
+                lock_free_queue::free_external_counter(old_head);
+                return _MSTL make_unique<T>(res);
+            }
+            ptr->release_ref();
+        }
     }
 };
 

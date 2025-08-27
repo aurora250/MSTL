@@ -1,9 +1,9 @@
 #ifndef MSTL_WEB_COOKIE_HPP__
 #define MSTL_WEB_COOKIE_HPP__
-#include "../random.hpp"
-#include "../unordered_map.hpp"
-#include "../stringstream.hpp"
-#include "../hexadecimal.hpp"
+#include "MSTL/core/random.hpp"
+#include "MSTL/core/unordered_map.hpp"
+#include "MSTL/core/stringstream.hpp"
+#include "MSTL/core/hexadecimal.hpp"
 #include <mutex>
 #include <thread>
 MSTL_BEGIN_NAMESPACE__

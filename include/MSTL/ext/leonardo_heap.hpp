@@ -1,7 +1,7 @@
 #ifndef MSTL_LEONARDO_HEAP_HPP__
 #define MSTL_LEONARDO_HEAP_HPP__
-#include "mathlib.hpp"
-#include "vector.hpp"
+#include "MSTL/core/mathlib.hpp"
+#include "MSTL/core/vector.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 template <typename Iterator, enable_if_t<is_ranges_rnd_iter_v<Iterator>, int> = 0>

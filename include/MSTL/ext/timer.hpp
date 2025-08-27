@@ -1,7 +1,7 @@
 #ifndef MSTL_TIMER_HPP__
 #define MSTL_TIMER_HPP__
-#include "set.hpp"
-#include "functional.hpp"
+#include "MSTL/core/set.hpp"
+#include "MSTL/core/functional.hpp"
 #include <chrono>
 MSTL_BEGIN_NAMESPACE__
 

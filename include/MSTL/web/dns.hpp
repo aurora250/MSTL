@@ -1,14 +1,14 @@
 #ifndef MSTL_DNS_CLIENT_HPP__
 #define MSTL_DNS_CLIENT_HPP__
-#include "../basiclib.hpp"
+#include "MSTL/core/basiclib.hpp"
 #ifdef MSTL_PLATFORM_LINUX__
 #include <netinet/in.h>
 #include <future>
 #include <chrono>
 #include "socket.hpp"
-#include "../string.hpp"
-#include "../vector.hpp"
-#include "../optional.hpp"
+#include "MSTL/core/string.hpp"
+#include "MSTL/core/vector.hpp"
+#include "MSTL/core/optional.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 enum class DNS_RECORD : uint16_t {

@@ -6,9 +6,9 @@
 #include <condition_variable>
 #include <chrono>
 #include <future>
-#include "queue.hpp"
-#include "functional.hpp"
-#include "unordered_map.hpp"
+#include "MSTL/core/queue.hpp"
+#include "MSTL/core/functional.hpp"
+#include "MSTL/core/unordered_map.hpp"
 MSTL_BEGIN_NAMESPACE__
 
 static constexpr size_t MSTL_TASK_MAX_THRESHHOLD__ = INT32_MAX_SIZE;

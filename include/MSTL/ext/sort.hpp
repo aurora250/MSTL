@@ -1,6 +1,6 @@
 #ifndef MSTL_SORT_HPP__
 #define MSTL_SORT_HPP__
-#include "algo.hpp"
+#include "MSTL/core/algo.hpp"
 #include "leonardo_heap.hpp"
 MSTL_BEGIN_NAMESPACE__
 

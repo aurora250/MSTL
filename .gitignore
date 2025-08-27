@@ -1,8 +1,10 @@
-resource/
+tests/resource/
 .idea/
 .vscode/
 
 build/
+cmake-build-debug/
+cmake-build-release/
 
 cmake-build-debug-gcc-x64/
 cmake-build-release-gcc-x64/
@@ -12,14 +14,5 @@ cmake-build-debug-msvc-x64/
 cmake-build-release-msvc-x64/
 cmake-build-debug-msvc-x86/
 cmake-build-release-msvc-x86/
-
-MSTL/cmake-build-debug-gcc-x64/
-MSTL/cmake-build-release-gcc-x64/
-MSTL/cmake-build-debug-clang-x64/
-MSTL/cmake-build-release-clang-x64/
-MSTL/cmake-build-debug-msvc-x64/
-MSTL/cmake-build-release-msvc-x64/
-MSTL/cmake-build-debug-msvc-x86/
-MSTL/cmake-build-release-msvc-x86/
 
 CMakeLists.txt.user
