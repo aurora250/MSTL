@@ -1,4 +1,7 @@
-# MSTL
+# MSTL V1.3.0
+
+[![Build Status](https://travis-ci.org/aurora250/MSTL.svg?branch=master)](https://travis-ci.org/aurora250/MSTL)
+[![License](https://img.shields.io/badge/License-MIT%20License-blue.svg)](https://opensource.org/licenses/MIT)
 
 本项目旨在建立一套供C++初学者学习并使用的、阅读性强的、较为健全的除并发库外的STL库，同时提供多种功能性接口。
 本项目尽最大可能减少除并发库外的标准库的使用，尝试实现简化版本。
@@ -308,7 +311,7 @@ sudo make install
 
 本项目基于 [MIT 开源协议](LICENSE) 。
 
-# MSTL
+# MSTL V1.3.0
 
 This project aims to establish a comprehensive STL library (excluding concurrency libraries) that is highly readable and suitable for C++ beginners to learn and use, while providing various functional interfaces for educational purposes.
 This project minimizes the use of standard libraries except for concurrency components and attempts to implement simplified versions from scratch.

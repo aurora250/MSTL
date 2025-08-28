@@ -36,8 +36,23 @@ noexcept(is_nothrow_invocable<Callable, Args...>::value) {
     using result = __invoke_result_aux<Callable, Args...>;
     using type = typename result::type;
     using tag = typename result::invoke_type;
-    return _MSTL __invoke_dispatch<type>(tag{},
-        _MSTL forward<Callable>(f), _MSTL forward<Args>(args)...);
+    return _MSTL __invoke_dispatch<type>(tag{}, _MSTL forward<Callable>(f), _MSTL forward<Args>(args)...);
+}
+
+
+template <typename T, typename Tag, typename Res, typename Callable, typename... Args>
+constexpr enable_if_t<is_invocable_r_v<Res, Callable, Args...> && is_void_v<Res>, Res>
+__invoke_r_dispatch(Callable&& f, Args&&... args)
+noexcept(is_nothrow_invocable_v<Callable, Args...>) {
+	_MSTL __invoke_dispatch<T>(Tag{}, _MSTL forward<Callable>(f), _MSTL forward<Args>(args)...);
+	return;
+}
+
+template <typename T, typename Tag, typename Res, typename Callable, typename... Args>
+constexpr enable_if_t<is_invocable_r_v<Res, Callable, Args...> && !is_void_v<Res>, Res>
+__invoke_r_dispatch(Callable&& f, Args&&... args)
+noexcept(is_nothrow_invocable_v<Callable, Args...>) {
+	return _MSTL __invoke_dispatch<T>(Tag{}, _MSTL forward<Callable>(f), _MSTL forward<Args>(args)...);
 }
 
 template <typename Res, typename Callable, typename... Args>
@@ -47,14 +62,9 @@ noexcept(is_nothrow_invocable_v<Callable, Args...>) {
     using result = __invoke_result_aux<Callable, Args...>;
     using type = typename result::type;
     using tag = typename result::invoke_type;
-    MSTL_IF_CONSTEXPR (is_void_v<Res>) {
-        _MSTL __invoke_dispatch<type>(tag{},
-            _MSTL forward<Callable>(f), _MSTL forward<Args>(args)...);
-        return;
-    }
-    else
-        return _MSTL __invoke_dispatch<type>(tag{},
-            _MSTL forward<Callable>(f), _MSTL forward<Args>(args)...);
+    return _MSTL __invoke_r_dispatch<type, tag, Res, Callable, Args...>(
+    	_MSTL forward<Callable>(f), _MSTL forward<Args>(args)...
+		);
 }
 
 
@@ -129,19 +139,34 @@ public:
     template <typename F>
 	class __manager_base {
     protected:
-		static const bool stored_ = is_trivially_copyable_v<F> && sizeof(F) <= max_size_
+		static constexpr bool stored_ = is_trivially_copyable_v<F> && sizeof(F) <= max_size_
 			&& alignof(F) <= max_align_ && max_align_ % alignof(F) == 0;
 
-		using storage_ = bool_constant<stored_>;
+    private:
+    	template <typename U, bool = stored_>
+	    struct __get_pointer_impl;
 
-		static F* get_pointer(const storage_data& src) noexcept {
-			MSTL_IF_CONSTEXPR (stored_) {
-				const F& f = src.access<F>();
-				return const_cast<F*>(_MSTL addressof(f));
-			}
-			else
-				return src.access<F*>();
-		}
+    	template <typename U>
+	    struct __get_pointer_impl<U, true> {
+    		static U* get(const storage_data& src) noexcept {
+    			const U& f = src.access<U>();
+    			return const_cast<U*>(_MSTL addressof(f));
+    		}
+    	};
+
+    	template <typename U>
+	    struct __get_pointer_impl<U, false> {
+    		static U* get(const storage_data& src) noexcept {
+    			return src.access<U*>();
+    		}
+    	};
+
+    protected:
+    	using storage_ = bool_constant<stored_>;
+
+    	static F* get_pointer(const storage_data& src) noexcept {
+    		return __get_pointer_impl<F>::get(src);
+    	}
 
     private:
 		template <typename Fn>

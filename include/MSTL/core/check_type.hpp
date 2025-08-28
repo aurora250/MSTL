@@ -55,12 +55,18 @@ struct bracket<false> {
 
 template <size_t N = 0>
 struct bound {   // [N]
+private:
+    template <size_t NN, enable_if_t<NN == 0, int> = 0>
+    MSTL_CONSTEXPR20 void __bound_dispatch() const { out_("[]"); }
+    template <size_t NN, enable_if_t<NN != 0, int> = 0>
+    MSTL_CONSTEXPR20 void __bound_dispatch() const { out_("[").compact()(NN).compact()("]"); }
+
+public:
     output& out_;
 
     MSTL_CONSTEXPR20 bound(output& out) : out_(out) {}
     MSTL_CONSTEXPR20 ~bound() {
-        MSTL_IF_CONSTEXPR (N == 0) out_("[]");
-        else out_("[").compact()(N).compact()("]");
+        __bound_dispatch<N>();
     }
 };
 
@@ -82,7 +88,7 @@ struct check {
 
     MSTL_CONSTEXPR20 check(const output& out) : out_(out) {
 #ifdef MSTL_COMPILER_GNUC__
-        auto deleter = [](char* p) { if (p) free(p); };
+        auto deleter = [](char* p) { if (p) std::free(p); };
         using FinT = remove_function_qualifiers_t<T>;
         _MSTL unique_ptr<char, decltype(deleter)> real_name {
             ::abi::__cxa_demangle(typeid(FinT).name(), nullptr, nullptr, nullptr), deleter

@@ -393,20 +393,38 @@ void __print_tuple_elements_feature(const Tuple& t) {
 
 template <typename... Args>
 struct printer<_MSTL tuple<Args...>> {
-    static void print(const _MSTL tuple<Args...>& t) {
+private:
+    template <typename... UArgs, enable_if_t<sizeof...(UArgs) == 0, int> = 0>
+    static void __print_tuple_dispatch(const tuple<UArgs...>&) {
+        std::cout << "()";
+    }
+
+    template <typename... UArgs, enable_if_t<sizeof...(UArgs) != 0, int> = 0>
+    static void __print_tuple_dispatch(const tuple<UArgs...>& t) {
         std::cout << "( ";
-        MSTL_IF_CONSTEXPR (sizeof...(Args) > 0) {
-            _MSTL __print_tuple_elements<decltype(t), 0>(t);
-        }
+        _MSTL __print_tuple_elements<decltype(t), 0>(t);
         std::cout << " )";
     }
 
-    static void print_feature(const _MSTL tuple<Args...>& t) {
+    template <typename... UArgs, enable_if_t<sizeof...(UArgs) == 0, int> = 0>
+    static void __print_tuple_feature_dispatch(const tuple<UArgs...>&) {
+        std::cout << "()(" << check_type<tuple<Args...>>() << ")";
+    }
+
+    template <typename... UArgs, enable_if_t<sizeof...(UArgs) != 0, int> = 0>
+    static void __print_tuple_feature_dispatch(const tuple<UArgs...>& t) {
         std::cout << "( ";
-        MSTL_IF_CONSTEXPR (sizeof...(Args) > 0) {
-            _MSTL __print_tuple_elements_feature<decltype(t), 0>(t);
-        }
+        _MSTL __print_tuple_elements_feature<decltype(t), 0>(t);
         std::cout << " )(" << check_type<tuple<Args...>>() << ")";
+    }
+
+public:
+    static void print(const _MSTL tuple<Args...>& t) {
+        printer::__print_tuple_dispatch(t);
+    }
+
+    static void print_feature(const _MSTL tuple<Args...>& t) {
+        printer::__print_tuple_feature_dispatch(t);
     }
 };
 

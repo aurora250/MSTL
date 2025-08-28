@@ -241,12 +241,12 @@ private:
         HCRYPTPROV hProv = 0;
         if (!::CryptAcquireContext(&hProv, nullptr, nullptr,
             PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
-            Exception(::DeviceOperateError("Failed to acquire crypto context"));
+            Exception(DeviceOperateError("Failed to acquire crypto context"));
         }
 
         if (!::CryptGenRandom(hProv, static_cast<DWORD>(length), reinterpret_cast<BYTE*>(buffer))) {
             ::CryptReleaseContext(hProv, 0);
-            Exception(::DeviceOperateError("Failed to generate random bytes"));
+            Exception(DeviceOperateError("Failed to generate random bytes"));
         }
 
         ::CryptReleaseContext(hProv, 0);
