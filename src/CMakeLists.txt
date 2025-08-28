@@ -1,0 +1,369 @@
+# 编译器配置
+function(configure_compiler_options target)
+    if(MSVC)
+        target_compile_options(${target} PRIVATE /utf-8)
+        target_compile_options(${target} PRIVATE
+                $<$<CONFIG:Debug>:/WX /Od /Zi>
+                $<$<CONFIG:Release>:/O2>
+        )
+        message(STATUS "Configured MSVC compiler options for ${target} (${CMAKE_BUILD_TYPE})")
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(${target} PRIVATE
+                -finput-charset=UTF-8 -fexec-charset=UTF-8
+                $<$<CONFIG:Debug>:-Werror -O0 -g>
+                $<$<CONFIG:Release>:-O2>
+        )
+        target_link_options(${target} PRIVATE -Wl,--emit-relocs)
+        message(STATUS "Configured GNU/Clang compiler options for ${target} (${CMAKE_BUILD_TYPE})")
+    else()
+        message(FATAL_ERROR "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}")
+    endif()
+endfunction()
+
+# 库查找
+function(find_and_link_library target lib_name)
+    set(options REQUIRED)
+    set(oneValueArgs CONDITION)
+    set(multiValueArgs COMPONENTS DEFINITIONS)
+    cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if(DEFINED ARGS_CONDITION AND NOT ${ARGS_CONDITION})
+        message(STATUS "${lib_name} support disabled by condition")
+        return()
+    endif()
+
+    find_package(${lib_name} ${ARGS_COMPONENTS} QUIET)
+
+    if(${lib_name}_FOUND)
+        foreach(component IN LISTS ARGS_COMPONENTS)
+            if(component STREQUAL "")
+                target_link_libraries(${target} PUBLIC ${lib_name}::${lib_name})
+            else()
+                target_link_libraries(${target} PUBLIC ${lib_name}::${component})
+            endif()
+        endforeach()
+
+        foreach(definition IN LISTS ARGS_DEFINITIONS)
+            target_compile_definitions(${target} PUBLIC ${definition})
+        endforeach()
+
+        message(STATUS "${lib_name} found and linked successfully")
+    else()
+        if(ARGS_REQUIRED)
+            message(FATAL_ERROR "${lib_name} is required but not found")
+        else()
+            message(WARNING "${lib_name} not found - related functionality will be disabled")
+        endif()
+    endif()
+endfunction()
+
+# 数据库支持检查
+function(enable_database_support target)
+    get_target_property(existing_defs ${target} COMPILE_DEFINITIONS)
+    if(existing_defs)
+        list(FIND existing_defs "MSTL_SUPPORT_DB__" db_support_index)
+        if(db_support_index EQUAL -1)
+            target_compile_definitions(${target} PUBLIC MSTL_SUPPORT_DB__)
+        endif()
+    else()
+        target_compile_definitions(${target} PUBLIC MSTL_SUPPORT_DB__)
+    endif()
+endfunction()
+
+
+# 链接文件
+set(MSTL_SOURCES
+        ${CMAKE_CURRENT_SOURCE_DIR}/web/session.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/web/servlet.cpp
+)
+
+# 编译为动态库
+add_library(MSTL SHARED ${MSTL_SOURCES})
+add_library(MSTL::MSTL ALIAS MSTL)
+
+# 编译设置
+set_target_properties(MSTL PROPERTIES
+        CXX_STANDARD ${CMAKE_CXX_STANDARD}
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+        LINKER_LANGUAGE CXX
+        VERSION 1.3.0
+        SOVERSION 1
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        $<$<PLATFORM_ID:Windows>:WINDOWS_EXPORT_ALL_SYMBOLS ON>
+)
+
+# 链接头文件
+target_include_directories(MSTL
+        PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+# 定义导出宏
+target_compile_definitions(MSTL PRIVATE MSTL_EXPORTS)
+
+configure_compiler_options(MSTL)
+
+# Windows链接ws2_32 wsock32
+if(WIN32)
+    target_link_libraries(MSTL PUBLIC ws2_32 wsock32)
+endif()
+
+
+# Boost
+if(MSTL_ENABLE_BOOST AND MSTL_ARCH STREQUAL "x64")
+    if(POLICY CMP0167)
+        cmake_policy(SET CMP0167 OLD)
+    endif()
+
+    find_package(Boost QUIET COMPONENTS system filesystem)
+    if(Boost_FOUND)
+        target_link_libraries(MSTL PUBLIC Boost::system Boost::filesystem)
+        target_compile_definitions(MSTL PUBLIC MSTL_SUPPORT_BOOST__)
+        message(STATUS "Boost linked successfully")
+    else()
+        message(WARNING "Boost not found - Boost components will be unavailable")
+    endif()
+else()
+    message(STATUS "Boost support disabled")
+endif()
+
+
+# MySQL
+if(MSTL_ENABLE_MYSQL AND MSTL_ARCH STREQUAL "x64")
+    set(MySQL_FOUND FALSE)
+
+    if(WIN32)
+        set(MYSQL_ROOT_DIR "D:/MySQL/MySQL Server 8.0" CACHE PATH "MySQL root directory")
+        find_path(MySQL_INCLUDE_DIR NAMES mysql.h
+                HINTS "${MYSQL_ROOT_DIR}/include"
+                PATHS ENV MYSQL_DIR PATH_SUFFIXES include
+                NO_DEFAULT_PATH)
+        find_library(MySQL_LIBRARY NAMES libmysql mysqlclient
+                HINTS "${MYSQL_ROOT_DIR}/lib"
+                PATHS ENV MYSQL_DIR PATH_SUFFIXES lib
+                NO_DEFAULT_PATH)
+    else()
+        find_path(MySQL_INCLUDE_DIR NAMES mysql.h mysql/mysql.h
+                PATHS /usr/include/mysql /usr/local/include/mysql /opt/mysql/include)
+        find_library(MySQL_LIBRARY NAMES mysqlclient
+                PATHS /usr/lib /usr/local/lib /opt/mysql/lib
+                PATH_SUFFIXES x86_64-linux-gnu)
+    endif()
+
+    if(MySQL_INCLUDE_DIR AND MySQL_LIBRARY)
+        set(MySQL_FOUND TRUE)
+        target_include_directories(MSTL PUBLIC ${MySQL_INCLUDE_DIR})
+        target_link_libraries(MSTL PUBLIC ${MySQL_LIBRARY})
+        target_compile_definitions(MSTL PUBLIC MSTL_SUPPORT_MYSQL__)
+        enable_database_support(MSTL)
+        message(STATUS "MySQL linked successfully")
+    else()
+        message(WARNING "MySQL not found - MySQL components will be unavailable")
+    endif()
+else()
+    message(STATUS "MySQL support disabled")
+endif()
+
+
+# SQLite3
+if(MSTL_ENABLE_SQLITE3 AND MSTL_ARCH STREQUAL "x64")
+    if(WIN32)
+        set(SQLITE3_ROOT_DIR "D:/sqlite3" CACHE PATH "SQLite3 root directory")
+        find_path(SQLITE3_INCLUDE_DIR NAMES sqlite3.h
+                HINTS "${SQLITE3_ROOT_DIR}/include"
+                NO_DEFAULT_PATH)
+        find_library(SQLITE3_LIBRARY NAMES sqlite3
+                HINTS "${SQLITE3_ROOT_DIR}/lib"
+                NO_DEFAULT_PATH)
+
+        if(SQLITE3_INCLUDE_DIR AND SQLITE3_LIBRARY)
+            target_include_directories(MSTL PUBLIC ${SQLITE3_INCLUDE_DIR})
+            target_link_libraries(MSTL PUBLIC ${SQLITE3_LIBRARY})
+            target_compile_definitions(MSTL PUBLIC MSTL_SUPPORT_SQLITE3__)
+            enable_database_support(MSTL)
+            message(STATUS "SQLite3 linked successfully")
+        else()
+            message(WARNING "SQLite3 not found - SQLite3 components will be unavailable")
+        endif()
+    else()
+        find_package(SQLite3 QUIET)
+        if(SQLite3_FOUND)
+            target_link_libraries(MSTL PUBLIC SQLite::SQLite3)
+            target_compile_definitions(MSTL PUBLIC MSTL_SUPPORT_SQLITE3__)
+            enable_database_support(MSTL)
+            message(STATUS "SQLite3 linked successfully")
+        else()
+            message(WARNING "SQLite3 not found - SQLite3 components will be unavailable")
+        endif()
+    endif()
+else()
+    message(STATUS "SQLite3 support disabled")
+endif()
+
+
+# Redis
+if(MSTL_ENABLE_REDIS AND MSTL_ARCH STREQUAL "x64")
+    set(HIREDIS_FOUND FALSE)
+
+    if(WIN32)
+        set(HIREDIS_ROOT_DIR "D:/vcpkg/packages/hiredis_x64-windows" CACHE PATH "Hiredis root directory")
+        find_path(HIREDIS_INCLUDE_DIR NAMES hiredis.h
+                HINTS "${HIREDIS_ROOT_DIR}/include/hiredis"
+                NO_DEFAULT_PATH)
+        find_library(HIREDIS_LIBRARY NAMES hiredis
+                HINTS "${HIREDIS_ROOT_DIR}/lib"
+                NO_DEFAULT_PATH)
+        find_file(HIREDIS_DLL NAMES hiredis.dll
+                HINTS "${HIREDIS_ROOT_DIR}/bin"
+                "$ENV{HIREDIS_ROOT}/bin"
+                NO_DEFAULT_PATH)
+    else()
+        find_path(HIREDIS_INCLUDE_DIR NAMES hiredis.h
+                PATHS /usr/include/hiredis /usr/local/include/hiredis)
+        find_library(HIREDIS_LIBRARY NAMES hiredis
+                PATHS /usr/lib /usr/local/lib
+                PATH_SUFFIXES x86_64-linux-gnu)
+    endif()
+
+    if(HIREDIS_INCLUDE_DIR AND HIREDIS_LIBRARY)
+        target_include_directories(MSTL PUBLIC ${HIREDIS_INCLUDE_DIR})
+        target_link_libraries(MSTL PUBLIC ${HIREDIS_LIBRARY})
+        if(WIN32 AND HIREDIS_DLL AND EXISTS ${HIREDIS_DLL})
+            add_custom_command(TARGET MSTL POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    ${HIREDIS_DLL}
+                    $<TARGET_FILE_DIR:MSTL>
+                    COMMENT "Copying hiredis.dll to output directory"
+            )
+        endif()
+        target_compile_definitions(MSTL PUBLIC MSTL_SUPPORT_REDIS__)
+        enable_database_support(MSTL)
+        message(STATUS "Redis (hiredis) linked successfully")
+    else()
+        message(WARNING "Redis (hiredis) not found - Redis components will be unavailable")
+    endif()
+else()
+    message(STATUS "Redis support disabled")
+endif()
+
+
+# Qt6
+if(MSTL_ENABLE_QT6 AND MSTL_ARCH STREQUAL "x64" AND CMAKE_CXX_STANDARD GREATER_EQUAL 17)
+    set(QT6_SKIP FALSE)
+    if(UNIX AND NOT APPLE)
+        find_package(OpenGL QUIET)
+        if(NOT OpenGL_FOUND)
+            message(WARNING "OpenGL not found. Qt6 requires OpenGL support on Linux")
+            set(QT6_SKIP TRUE)
+        endif()
+    endif()
+
+    if(NOT QT6_SKIP)
+        if(NOT DEFINED QT6_ROOT_DIR)
+            if(MSVC)
+                set(QT6_ROOT_DIR "D:/Qt/6.9.1/msvc2022_64")
+            elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang" AND WIN32)
+                set(QT6_ROOT_DIR "D:/Qt/6.9.1/mingw_64")
+            elseif(UNIX AND NOT APPLE)
+                set(POSSIBLE_QT6_PATHS
+                        "/usr/lib/x86_64-linux-gnu/qt6"
+                        "/usr/lib64/qt6"
+                        "/usr/lib/qt6"
+                        "/opt/qt6"
+                        "/usr/local/qt6")
+                foreach(QT_PATH ${POSSIBLE_QT6_PATHS})
+                    if(EXISTS "${QT_PATH}/lib/cmake/Qt6")
+                        set(QT6_ROOT_DIR "${QT_PATH}")
+                        break()
+                    endif()
+                endforeach()
+            elseif(APPLE)
+                set(QT6_ROOT_DIR "/opt/homebrew/Cellar/qt@6")
+            endif()
+            set(QT6_ROOT_DIR "${QT6_ROOT_DIR}" CACHE PATH "Qt6 root directory")
+        endif()
+
+        if(EXISTS "${QT6_ROOT_DIR}")
+            list(APPEND CMAKE_PREFIX_PATH "${QT6_ROOT_DIR}")
+            if(EXISTS "${QT6_ROOT_DIR}/lib/cmake")
+                list(APPEND CMAKE_PREFIX_PATH "${QT6_ROOT_DIR}/lib/cmake")
+            endif()
+        endif()
+
+        find_package(Qt6 COMPONENTS Core Widgets Gui QUIET)
+        if(Qt6_FOUND)
+            if(MSVC)
+                target_compile_options(MSTL PRIVATE /Zc:__cplusplus)
+            endif()
+
+            set_target_properties(MSTL PROPERTIES
+                    AUTOMOC ON
+                    AUTOUIC ON
+                    AUTORCC ON
+            )
+
+            target_link_libraries(MSTL PUBLIC Qt6::Core)
+            if(OpenGL_FOUND)
+                target_link_libraries(MSTL PUBLIC OpenGL::GL)
+            endif()
+
+            target_compile_definitions(MSTL PUBLIC MSTL_SUPPORT_QT6__)
+            message(STATUS "Qt6 linked successfully")
+        else()
+            message(WARNING "Qt6 not found.")
+        endif()
+    endif()
+else()
+    set(disable_reasons "")
+    if(NOT MSTL_ARCH STREQUAL "x64")
+        list(APPEND disable_reasons "only x64 supported")
+    endif()
+    if(CMAKE_CXX_STANDARD LESS 17)
+        list(APPEND disable_reasons "requires C++17+")
+    endif()
+    if(NOT MSTL_ENABLE_QT6)
+        list(APPEND disable_reasons "disabled by option")
+    endif()
+    string(JOIN ", " reason_str ${disable_reasons})
+    message(STATUS "Qt6 support disabled: ${reason_str}")
+endif()
+
+
+# CUDA
+if(MSTL_ENABLE_CUDA AND MSTL_ARCH STREQUAL "x64")
+    if(MSVC AND DEFINED CMAKE_CUDA_COMPILER)
+        enable_language(CUDA)
+        find_package(CUDAToolkit QUIET)
+
+        if(CUDAToolkit_FOUND)
+            set_target_properties(MSTL PROPERTIES
+                    CUDA_SEPARABLE_COMPILATION ON
+                    CUDA_RESOLVE_DEVICE_SYMBOLS ON
+            )
+            target_link_libraries(MSTL PUBLIC CUDA::cudart)
+            target_compile_definitions(MSTL PUBLIC MSTL_SUPPORT_CUDA__)
+            message(STATUS "CUDA linked successfully")
+        else()
+            message(WARNING "CUDA Toolkit not found - CUDA components will be unavailable")
+        endif()
+    else()
+        message(STATUS "CUDA support disabled: requires MSVC and CUDA compiler")
+    endif()
+else()
+    message(STATUS "CUDA support disabled")
+endif()
+
+# 安装库文件
+install(TARGETS MSTL
+        EXPORT MSTLTargets  # 导出目标
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
