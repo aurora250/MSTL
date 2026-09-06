@@ -1,4 +1,5 @@
 #include <NeForce/network/ssl/ssl_socket.hpp>
+#include <openssl/x509.h>
 NEFORCE_BEGIN_NAMESPACE__
 
 bool ssl_socket::close() noexcept {
@@ -54,25 +55,23 @@ string ssl_socket::peer_certificate_info() const {
     }
 
     const auto cert = ssl_->get_peer_certificate();
-    if (!cert) {
+    if (!cert.is_valid()) {
         return "";
     }
 
     string result;
 
-    char* subj = ::X509_NAME_oneline(::X509_get_subject_name(cert.get()), nullptr, 0);
-    char* issuer = ::X509_NAME_oneline(::X509_get_issuer_name(cert.get()), nullptr, 0);
+    const string subject = cert.subject_name();
+    const string issuer = cert.issuer_name();
 
-    if (subj != nullptr) {
-        result = "Subject: " + string(subj) + "\n";
-        ::OPENSSL_free(subj);
+    if (!subject.empty()) {
+        result = "Subject: " + move(subject) + "\n";
     }
-    if (issuer != nullptr) {
-        result += "Issuer: " + string(issuer);
-        ::OPENSSL_free(issuer);
+    if (!issuer.empty()) {
+        result += "Issuer: " + move(issuer);
     }
 
-    return result;
+    return move(result);
 }
 
 string ssl_socket::get_alpn_negotiated() const {

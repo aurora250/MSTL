@@ -550,7 +550,7 @@ void process::start(const string& executable, const vector<string>& args) {
                                             FILE_ATTRIBUTE_NORMAL, nullptr);
         if (stdout_write_handle == INVALID_HANDLE_VALUE) {
             const auto error = last_error();
-            NEFORCE_THROW_EXCEPTION(process_exception(error.message().data()));
+            NEFORCE_THROW_EXCEPTION(process_exception(error));
         }
     }
 
@@ -566,7 +566,7 @@ void process::start(const string& executable, const vector<string>& args) {
                                             FILE_ATTRIBUTE_NORMAL, nullptr);
         if (stderr_write_handle == INVALID_HANDLE_VALUE) {
             const auto error = last_error();
-            NEFORCE_THROW_EXCEPTION(process_exception(error.message().data()));
+            NEFORCE_THROW_EXCEPTION(process_exception(error));
         }
     } else if (capture_stdout_ && !capture_stderr_) {
         stderr_write_handle = stdout_write_handle;
@@ -616,7 +616,7 @@ void process::start(const string& executable, const vector<string>& args) {
 
     if (success == FALSE) {
         const auto error = last_error();
-        NEFORCE_THROW_EXCEPTION(process_exception(error.message().data()));
+        NEFORCE_THROW_EXCEPTION(process_exception(error));
     }
 
     process_handle_ = pi.hProcess;
@@ -657,7 +657,7 @@ void process::start(const string& executable, const vector<string>& args) {
     int notify_fds[2] = {-1, -1};
     if (::pipe2(notify_fds, O_CLOEXEC) == -1) {
         const auto error = last_error();
-        NEFORCE_THROW_EXCEPTION(process_exception(error.message().data()));
+        NEFORCE_THROW_EXCEPTION(process_exception(error));
     }
 
     const ::pid_t pid = ::fork();
@@ -665,7 +665,7 @@ void process::start(const string& executable, const vector<string>& args) {
         ::close(notify_fds[0]);
         ::close(notify_fds[1]);
         const auto error = last_error();
-        NEFORCE_THROW_EXCEPTION(process_exception(error.message().data()));
+        NEFORCE_THROW_EXCEPTION(process_exception(error));
     }
 
     if (pid == 0) {
@@ -808,7 +808,7 @@ void process::start(const string& executable, const vector<string>& args) {
         int status = 0;
         ::waitpid(pid, &status, 0);
         const error_code error{child_errno, system_category()};
-        NEFORCE_THROW_EXCEPTION(process_exception(error.message().data()));
+        NEFORCE_THROW_EXCEPTION(process_exception(error));
     }
 
     process_id_ = pid;
@@ -857,7 +857,7 @@ void process::start_elevated(const string& executable, const vector<string>& arg
             NEFORCE_THROW_EXCEPTION(process_exception("User cancelled elevation prompt"));
         }
         const auto error = last_error();
-        NEFORCE_THROW_EXCEPTION(process_exception(error.message().data()));
+        NEFORCE_THROW_EXCEPTION(process_exception(error));
     }
 
     process_handle_ = sei.hProcess;
@@ -921,7 +921,7 @@ int process::wait(int timeout_ms) {
     if (timeout_ms < 0) {
         if (::waitpid(process_id_, &status, 0) == -1) {
             const auto error = last_error();
-            NEFORCE_THROW_EXCEPTION(process_exception(error.message().data()));
+            NEFORCE_THROW_EXCEPTION(process_exception(error));
         }
     } else {
         int elapsed = 0;
@@ -940,7 +940,7 @@ int process::wait(int timeout_ms) {
                     }
                     return exit_code_;
                 }
-                NEFORCE_THROW_EXCEPTION(process_exception(error.message().data()));
+                NEFORCE_THROW_EXCEPTION(process_exception(error));
             }
             if (result > 0) {
                 break;
@@ -1049,7 +1049,7 @@ void process::suspend() {
 #else
     if (::kill(process_id_, SIGSTOP) != 0) {
         const auto error = last_error();
-        NEFORCE_THROW_EXCEPTION(process_exception(error.message().data()));
+        NEFORCE_THROW_EXCEPTION(process_exception(error));
     }
 #endif
 }
@@ -1085,7 +1085,7 @@ void process::resume() {
 #else
     if (::kill(process_id_, SIGCONT) != 0) {
         const auto error = last_error();
-        NEFORCE_THROW_EXCEPTION(process_exception(error.message().data()));
+        NEFORCE_THROW_EXCEPTION(process_exception(error));
     }
 #endif
 }

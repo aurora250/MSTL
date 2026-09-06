@@ -45,7 +45,7 @@ pipe::pipe(bool inheritable, bool nonblocking) {
 #else
     if (::pipe(fds_) == -1) {
         const auto error = last_error();
-        NEFORCE_THROW_EXCEPTION(pipe_exception(error.message().data()));
+        NEFORCE_THROW_EXCEPTION(pipe_exception(error));
     }
 
     if (!inheritable) {

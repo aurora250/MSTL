@@ -24,18 +24,7 @@ NEFORCE_BEGIN_NAMESPACE__
  * @struct process_exception
  * @brief 进程操作异常
  */
-struct process_exception final : system_exception {
-    explicit process_exception(const char* info = "Process Operation Failed.",
-                               const error_code code = last_error()) noexcept :
-    system_exception(info, code) {}
-
-    explicit process_exception(const exception& e) :
-    system_exception(e) {}
-
-    ~process_exception() override = default;
-
-    NEFORCE_NODISCARD const char* type() const noexcept override { return "process_exception"; }
-};
+NEFORCE_ERROR_BUILD_SYSTEM_CLASS(process_exception, "Process Operation Failed.")
 
 /** @} */ // Exceptions
 

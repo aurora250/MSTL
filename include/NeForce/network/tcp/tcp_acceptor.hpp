@@ -86,11 +86,11 @@ public:
     /**
      * @brief 打开并开始监听
      * @param endpoint 要绑定的本地端点地址
-     * @param backlog 连接队列大小（默认SOMAXCONN）
+     * @param backlog 连接队列大小
      * @throws socket_exception 绑定或监听失败时抛出
      * @throws value_exception 端点无效时抛出
      */
-    void open(const ip_address& endpoint, int backlog = SOMAXCONN);
+    void open(const ip_address& endpoint, int backlog = max_backlog);
 
     /**
      * @brief 接受客户端连接（阻塞模式）

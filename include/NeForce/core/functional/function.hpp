@@ -404,7 +404,7 @@ public:
      * @param other 要移动的function对象
      * @return 当前对象的引用
      */
-    function& operator=(function&& other) noexcept {
+    function& operator=(function&& other) noexcept(is_nothrow_move_constructible_v<function>) {
         function(_NEFORCE move(other)).swap(*this);
         return *this;
     }

@@ -61,7 +61,7 @@ public:
     /**
      * @brief 构造函数
      */
-    mutex();
+    mutex() noexcept;
 
     /**
      * @brief 析构函数
@@ -90,14 +90,14 @@ public:
      *
      * 阻塞当前线程，直到获得互斥锁的所有权。
      */
-    void lock();
+    void lock() noexcept;
 
     /**
      * @brief 解锁互斥锁
      *
      * 释放互斥锁的所有权。
      */
-    void unlock();
+    void unlock() noexcept;
 
     /**
      * @brief 尝试锁定互斥锁
@@ -133,7 +133,7 @@ public:
     /**
      * @brief 构造函数
      */
-    recursive_mutex();
+    recursive_mutex() noexcept;
 
     /**
      * @brief 析构函数
@@ -161,14 +161,14 @@ public:
      * 阻塞当前线程，直到获得递归互斥锁的所有权。
      * 同一线程可以多次锁定，但需要相同次数的解锁。
      */
-    void lock();
+    void lock() noexcept;
 
     /**
      * @brief 解锁递归互斥锁
      *
      * 减少锁定计数，当计数为零时解锁。
      */
-    void unlock();
+    void unlock() noexcept;
 
     /**
      * @brief 尝试锁定递归互斥锁
@@ -204,7 +204,7 @@ public:
      *
      * 构造时锁定互斥锁。
      */
-    explicit lock(mutex_type& m) :
+    explicit lock(mutex_type& m) noexcept :
     mutex_(m) {
         mutex_.lock();
     }
@@ -276,7 +276,7 @@ public:
      *
      * 创建不管理任何互斥锁的唯一锁。
      */
-    unique_lock() = default;
+    unique_lock() noexcept = default;
 
     /**
      * @brief 从互斥锁构造
@@ -284,7 +284,7 @@ public:
      *
      * 构造时立即锁定互斥锁。
      */
-    explicit unique_lock(mutex_type& m) :
+    explicit unique_lock(mutex_type& m) noexcept :
     mutex_(&m),
     owns_lock_(true) {
         mutex_->lock();
@@ -382,7 +382,7 @@ public:
      *
      * 如果已拥有锁或未管理互斥锁，则不执行任何操作。
      */
-    void lock_quiet() {
+    void lock_quiet() noexcept {
         if (mutex_ == nullptr) {
             return;
         }
@@ -398,7 +398,7 @@ public:
      *
      * 如果未拥有锁或未管理互斥锁，则不执行任何操作。
      */
-    void unlock_quiet() {
+    void unlock_quiet() noexcept {
         if (mutex_ == nullptr) {
             return;
         }

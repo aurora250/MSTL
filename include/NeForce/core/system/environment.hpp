@@ -9,7 +9,7 @@
  * 支持获取、设置、删除环境变量，以及获取常用系统路径。
  */
 
-#include "NeForce/core/container/unordered_map.hpp"
+#include "NeForce/core/container/flat_unordered_map.hpp"
 #include "NeForce/core/string/string.hpp"
 NEFORCE_BEGIN_NAMESPACE__
 
@@ -70,7 +70,7 @@ struct NEFORCE_API environment {
      * @brief 获取所有环境变量
      * @return 环境变量名到值的映射
      */
-    NEFORCE_NODISCARD static unordered_map<string, string> all_envs();
+    NEFORCE_NODISCARD static flat_unordered_map<string, string> all_envs();
 
     /**
      * @brief 获取PATH环境变量的路径列表

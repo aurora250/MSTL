@@ -26,18 +26,7 @@ NEFORCE_BEGIN_NAMESPACE__
  * @struct daemon_exception
  * @brief 守护进程操作异常
  */
-struct daemon_exception final : system_exception {
-    explicit daemon_exception(const char* info = "Daemon Operation Failed.",
-                              const error_code code = last_error()) noexcept :
-    system_exception(info, code) {}
-
-    explicit daemon_exception(const exception& e) :
-    system_exception(e) {}
-
-    ~daemon_exception() override = default;
-
-    NEFORCE_NODISCARD const char* type() const noexcept override { return "daemon_exception"; }
-};
+NEFORCE_ERROR_BUILD_SYSTEM_CLASS(daemon_exception, "Daemon Operation Failed.")
 
 /** @} */ // Exceptions
 

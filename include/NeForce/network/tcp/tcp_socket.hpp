@@ -294,7 +294,7 @@ public:
      */
     template <typename Token, enable_if_t<!is_same_v<decay_t<Token>, function<void(error_code, size_t)>>, int> = 0>
     decltype(auto) async_receive(io_context& ctx, memory_view<char> buffer, Token&& token) {
-        return async_stream::async_read(ctx, buffer, forward<Token>(token));
+        return async_stream::async_read(ctx, buffer, _NEFORCE forward<Token>(token));
     }
 
     /**
@@ -306,7 +306,7 @@ public:
      */
     template <typename Token, enable_if_t<!is_same_v<decay_t<Token>, function<void(error_code, size_t)>>, int> = 0>
     decltype(auto) async_send(io_context& ctx, memory_view<const char> buffer, Token&& token) {
-        return async_stream::async_write(ctx, buffer, forward<Token>(token));
+        return async_stream::async_write(ctx, buffer, _NEFORCE forward<Token>(token));
     }
 
     /**
@@ -320,7 +320,7 @@ public:
      */
     template <typename Token, enable_if_t<!is_same_v<decay_t<Token>, function<void(error_code)>>, int> = 0>
     void async_connect(io_context& ctx, const ip_address& endpoint, Token&& token) {
-        async_connect(ctx, endpoint, function<void(error_code)>(forward<Token>(token)));
+        async_connect(ctx, endpoint, function<void(error_code)>(_NEFORCE forward<Token>(token)));
     }
 
     /**

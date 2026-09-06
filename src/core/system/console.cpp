@@ -24,7 +24,7 @@
 #endif
 NEFORCE_BEGIN_NAMESPACE__
 
-void sys_console::print_string_unsafe(const string_view str) const {
+void sys_console::print_string_unsafe(const string_view str) const noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::DWORD written = 0;
     ::WriteFile(out_, str.data(), static_cast<::DWORD>(str.length()), &written, nullptr);
@@ -43,7 +43,7 @@ void sys_console::print_string_unsafe(const string_view str) const {
 #endif
 }
 
-void sys_console::print_error_unsafe(const string_view str) const {
+void sys_console::print_error_unsafe(const string_view str) const noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::DWORD written = 0;
     ::WriteFile(err_, str.data(), static_cast<::DWORD>(str.length()), &written, nullptr);
@@ -205,7 +205,7 @@ string sys_console::read_unsafe() const {
 #endif
 }
 
-char sys_console::read_char_unsafe() const {
+char sys_console::read_char_unsafe() const noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::DWORD original_mode = 0;
     ::GetConsoleMode(in_, &original_mode);
@@ -269,7 +269,7 @@ sys_console::console_size sys_console::get_console_size_unsafe() const {
 #endif
 }
 
-void sys_console::flush_unsafe() const {
+void sys_console::flush_unsafe() const noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::FlushFileBuffers(out_);
 #elif defined(NEFORCE_PLATFORM_LINUX)
@@ -283,7 +283,7 @@ void sys_console::flush_unsafe() const {
 
 void sys_console::ignore_unsafe() const { (void) readln_unsafe(); }
 
-void sys_console::beep_unsafe() const {
+void sys_console::beep_unsafe() const noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::Beep(800, 200);
 #elif defined(NEFORCE_PLATFORM_LINUX)
@@ -302,7 +302,7 @@ void sys_console::beep_unsafe() const {
 #endif
 }
 
-void sys_console::flash_screen_unsafe() const {
+void sys_console::flash_screen_unsafe() const noexcept {
     if (!is_interactive() || !supports_colors()) {
         return;
     }
@@ -406,7 +406,7 @@ err_(STDERR_FILENO)
 #endif
 }
 
-void sys_console::flush() {
+void sys_console::flush() noexcept {
     lock<mutex> lock(mutex_);
     flush_unsafe();
 }
@@ -416,32 +416,32 @@ void sys_console::ignore() {
     ignore_unsafe();
 }
 
-void sys_console::print_string(const string& str) {
+void sys_console::print_string(const string& str) noexcept {
     lock<mutex> lock(mutex_);
     print_string_unsafe(str.view());
 }
 
-void sys_console::print_string(const string_view& view) {
+void sys_console::print_string(const string_view& view) noexcept {
     lock<mutex> lock(mutex_);
     print_string_unsafe(view);
 }
 
-void sys_console::print_string(const char* str) {
+void sys_console::print_string(const char* str) noexcept {
     lock<mutex> lock(mutex_);
     print_string_unsafe(str);
 }
 
-void sys_console::print_error(const string& str) {
+void sys_console::print_error(const string& str) noexcept {
     lock<mutex> lock(mutex_);
     print_error_unsafe(str.view());
 }
 
-void sys_console::print_error(const string_view& view) {
+void sys_console::print_error(const string_view& view) noexcept {
     lock<mutex> lock(mutex_);
     print_error_unsafe(view);
 }
 
-void sys_console::print_error(const char* str) {
+void sys_console::print_error(const char* str) noexcept {
     lock<mutex> lock(mutex_);
     print_error_unsafe(str);
 }
@@ -461,17 +461,17 @@ char sys_console::read_char() {
     return read_char_unsafe();
 }
 
-void sys_console::println() {
+void sys_console::println() noexcept {
     lock<mutex> lock(mutex_);
     print_string_unsafe("\n");
 }
 
-void sys_console::eprintln() {
+void sys_console::eprintln() noexcept {
     lock<mutex> lock(mutex_);
     print_error_unsafe("\n");
 }
 
-void sys_console::clear() {
+void sys_console::clear() noexcept {
     lock<mutex> lock(mutex_);
 #ifdef NEFORCE_PLATFORM_WINDOWS
     constexpr ::COORD top_left{0, 0};
@@ -488,7 +488,7 @@ void sys_console::clear() {
 #endif
 }
 
-void sys_console::pause(const string_view msg) {
+void sys_console::pause(const string_view msg) noexcept {
     lock<mutex> lock(mutex_);
     flush_unsafe();
     print_string_unsafe(msg);
@@ -724,32 +724,32 @@ void sys_console::set_background_color(const color& color, const bool use_256_co
     }
 }
 
-void sys_console::reset_color() {
+void sys_console::reset_color() noexcept {
     lock<mutex> lock(mutex_);
     print_string_unsafe("\033[39;49m");
 }
 
-void sys_console::set_bold(const bool enable) {
+void sys_console::set_bold(const bool enable) noexcept {
     lock<mutex> lock(mutex_);
     print_string_unsafe(enable ? "\033[1m" : "\033[22m");
 }
 
-void sys_console::set_underline(const bool enable) {
+void sys_console::set_underline(const bool enable) noexcept {
     lock<mutex> lock(mutex_);
     print_string_unsafe(enable ? "\033[4m" : "\033[24m");
 }
 
-void sys_console::set_blink(const bool enable) {
+void sys_console::set_blink(const bool enable) noexcept {
     lock<mutex> lock(mutex_);
     print_string_unsafe(enable ? "\033[5m" : "\033[25m");
 }
 
-void sys_console::set_reverse(const bool enable) {
+void sys_console::set_reverse(const bool enable) noexcept {
     lock<mutex> lock(mutex_);
     print_string_unsafe(enable ? "\033[7m" : "\033[27m");
 }
 
-void sys_console::reset_text_attributes() {
+void sys_console::reset_text_attributes() noexcept {
     lock<mutex> lock(mutex_);
     print_string_unsafe("\033[0m");
 }
@@ -759,7 +759,7 @@ void sys_console::set_window_title(const string_view title) {
     print_string_unsafe("\033]0;"_s + title + "\033\\");
 }
 
-void sys_console::enable_alternate_screen_buffer(const bool enable) {
+void sys_console::enable_alternate_screen_buffer(const bool enable) noexcept {
     lock<mutex> lock(mutex_);
     if (enable == alt_buffer_active_) {
         return;
@@ -769,13 +769,13 @@ void sys_console::enable_alternate_screen_buffer(const bool enable) {
     alt_buffer_active_ = enable;
 }
 
-void sys_console::set_output_utf8() {
+void sys_console::set_output_utf8() noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::SetConsoleOutputCP(CP_UTF8);
 #endif
 }
 
-void sys_console::enable_virtual_terminal_processing(const bool enable) {
+void sys_console::enable_virtual_terminal_processing(const bool enable) noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     lock<mutex> lock(mutex_);
     ::DWORD mode = 0;
@@ -796,12 +796,12 @@ void sys_console::set_scroll_region(const int top, const int bottom) {
     print_string_unsafe("\033["_s + to_string(top) + ";" + to_string(bottom) + "r");
 }
 
-void sys_console::reset_scroll_region() {
+void sys_console::reset_scroll_region() noexcept {
     lock<mutex> lock(mutex_);
     print_string_unsafe("\033[r");
 }
 
-void sys_console::enable_mouse(const bool enable) {
+void sys_console::enable_mouse(const bool enable) noexcept {
     lock<mutex> lock(mutex_);
     if (enable == mouse_enabled_) {
         return;
@@ -811,12 +811,12 @@ void sys_console::enable_mouse(const bool enable) {
     mouse_enabled_ = enable;
 }
 
-bool sys_console::is_mouse_enabled() const {
+bool sys_console::is_mouse_enabled() const noexcept {
     lock<mutex> lock(mutex_);
     return mouse_enabled_;
 }
 
-bool sys_console::kbhit() {
+bool sys_console::kbhit() noexcept {
     lock<mutex> lock(mutex_);
     if (pending_char_ != -1) {
         return true;
@@ -851,7 +851,7 @@ bool sys_console::kbhit() {
     return false;
 }
 
-int sys_console::getch() {
+int sys_console::getch() noexcept {
     lock<mutex> lock(mutex_);
     if (pending_char_ != -1) {
         const int ch = pending_char_;
@@ -935,7 +935,7 @@ void sys_console::set_cursor_position(int row, int column) {
 #endif
 }
 
-void sys_console::save_cursor_position() {
+void sys_console::save_cursor_position() noexcept {
     lock<mutex> lock(mutex_);
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::CONSOLE_SCREEN_BUFFER_INFO csbi{};
@@ -947,7 +947,7 @@ void sys_console::save_cursor_position() {
 #endif
 }
 
-void sys_console::restore_cursor_position() {
+void sys_console::restore_cursor_position() noexcept {
     lock<mutex> lock(mutex_);
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::SetConsoleCursorPosition(out_, ::COORD{static_cast<::SHORT>(saved_cursor_pos_.width),
@@ -957,7 +957,7 @@ void sys_console::restore_cursor_position() {
 #endif
 }
 
-void sys_console::hide_cursor(const bool enable) {
+void sys_console::hide_cursor(const bool enable) noexcept {
     lock<mutex> lock(mutex_);
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::CONSOLE_CURSOR_INFO cursor_info{};
@@ -1029,7 +1029,7 @@ bool sys_console::supports_unicode() const {
 #endif
 }
 
-bool sys_console::is_interactive() const {
+bool sys_console::is_interactive() const noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     return out_ != INVALID_HANDLE_VALUE && ::GetFileType(out_) == FILE_TYPE_CHAR;
 #else
@@ -1057,12 +1057,12 @@ void sys_console::typewriter_println(const string_view text, const milliseconds 
     print_string_unsafe("\n");
 }
 
-void sys_console::beep() {
+void sys_console::beep() noexcept {
     lock<mutex> lock(mutex_);
     beep_unsafe();
 }
 
-void sys_console::flash_screen() {
+void sys_console::flash_screen() noexcept {
     lock<mutex> lock(mutex_);
     flash_screen_unsafe();
 }

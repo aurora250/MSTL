@@ -24,7 +24,7 @@ NEFORCE_BEGIN_NAMESPACE__
 
 NEFORCE_BEGIN_INNER__
 
-void sleep_for_aux(const ssize_t s, const ssize_t ns) {
+void sleep_for_aux(const ssize_t s, const ssize_t ns) noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     (void) s;
 

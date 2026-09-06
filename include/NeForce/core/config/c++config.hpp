@@ -604,7 +604,7 @@
  * @brief 为函数指定目标指令集
  * @param ARCH 指令集名称，如 "sse4.2", "avx2", "avx512f"
  */
-#ifdef NEFORCE_COMPILER_GNUC
+#if defined(NEFORCE_COMPILER_GNUC) || defined(NEFORCE_COMPILER_CLANG)
 #    define NEFORCE_TARGET(ARCH) __attribute__((target(ARCH)))
 #else
 #    define NEFORCE_TARGET(ARCH)

@@ -863,7 +863,7 @@ NEFORCE_END_LITERALS__
 /// @cond
 NEFORCE_BEGIN_INNER__
 
-void NEFORCE_API sleep_for_aux(ssize_t s, ssize_t ns);
+void NEFORCE_API sleep_for_aux(ssize_t s, ssize_t ns) noexcept;
 
 NEFORCE_END_INNER__
 /// @endcond
@@ -883,7 +883,7 @@ NEFORCE_BEGIN_THIS_THREAD__
  * @param time 要睡眠的时间
  */
 template <typename Rep, typename Period>
-void sleep_for(const duration<Rep, Period> time) {
+void sleep_for(const duration<Rep, Period> time) noexcept {
     if (time <= time.zero()) {
         return;
     }

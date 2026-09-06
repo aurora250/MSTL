@@ -39,7 +39,9 @@ public:
 
     ~ftp_server() = default;
 
-    void listen(const ip_address& endpoint, int backlog = SOMAXCONN) { acceptor_.open(endpoint, backlog); }
+    void listen(const ip_address& endpoint, int backlog = socket_base::max_backlog) {
+        acceptor_.open(endpoint, backlog);
+    }
 
     NEFORCE_NODISCARD ftp_session accept() { return ftp_session(acceptor_.accept()); }
 

@@ -52,7 +52,7 @@ public:
     /**
      * @brief 构造函数
      */
-    shared_mutex();
+    shared_mutex() noexcept;
 
     /**
      * @brief 析构函数
@@ -83,14 +83,14 @@ public:
      * 阻塞当前线程，直到获得独占访问权。
      * 在获取写锁期间，其他线程不能获取读锁或写锁。
      */
-    void lock();
+    void lock() noexcept;
 
     /**
      * @brief 释放写锁
      *
      * 释放独占访问权，允许其他线程获取读锁或写锁。
      */
-    void unlock();
+    void unlock() noexcept;
 
     /**
      * @brief 尝试获取写锁
@@ -106,14 +106,14 @@ public:
      * 阻塞当前线程，直到获得共享访问权。多个线程可以同时持有读锁，
      * 但不能与写锁同时存在。
      */
-    void lock_shared();
+    void lock_shared() noexcept;
 
     /**
      * @brief 释放读锁
      *
      * 释放共享访问权。如果所有读锁都已释放，则允许获取写锁。
      */
-    void unlock_shared();
+    void unlock_shared() noexcept;
 
     /**
      * @brief 尝试获取读锁
@@ -149,7 +149,7 @@ public:
      *
      * 创建不管理任何共享互斥锁的共享锁。
      */
-    shared_lock() = default;
+    shared_lock() noexcept = default;
 
     /**
      * @brief 从共享互斥锁构造
@@ -157,7 +157,7 @@ public:
      *
      * 构造时立即获取共享互斥锁的读锁。
      */
-    explicit shared_lock(mutex_type& m) :
+    explicit shared_lock(mutex_type& m) noexcept :
     mutex_(&m),
     owns_lock_(true) {
         mutex_->lock_shared();
@@ -255,7 +255,7 @@ public:
      *
      * 如果已拥有锁或未管理共享互斥锁，则不执行任何操作。
      */
-    void lock() {
+    void lock() noexcept {
         if (mutex_ == nullptr) {
             return;
         }
@@ -271,7 +271,7 @@ public:
      *
      * 如果未拥有锁或未管理共享互斥锁，则不执行任何操作。
      */
-    void unlock() {
+    void unlock() noexcept {
         if (mutex_ == nullptr) {
             return;
         }

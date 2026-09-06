@@ -149,6 +149,7 @@ set(CPP_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/network/ssl/ssl_exception.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/network/ssl/ssl_socket.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/network/ssl/ssl_stream.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/network/ssl/x509_certificate.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/network/tcp/tcp_acceptor.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/network/tcp/tcp_client.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/network/tcp/tcp_server.cpp

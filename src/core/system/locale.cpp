@@ -180,7 +180,7 @@ void locale::load(const string& bcp47) {
     char canonical[ULOC_FULLNAME_CAPACITY] = {};
     ::uloc_canonicalize(input_name, canonical, sizeof(canonical), &status);
     if (::U_FAILURE(status) != 0) {
-        throw locale_exception(string("locale: invalid locale name '"_s + bcp47 + "'").data());
+        NEFORCE_THROW_EXCEPTION(locale_exception("locale: invalid locale name '"_s + bcp47 + "'"));
     }
 
     icu_name_ = canonical;
@@ -196,7 +196,7 @@ void locale::load(const string& bcp47) {
     ::uloc_getLanguage(canonical, buf, sizeof(buf), &status);
     language_code_ = (::U_SUCCESS(status) != 0) ? buf : "";
     if (language_code_.empty()) {
-        throw locale_exception(string("locale: invalid locale name '"_s + _bcp47 + "'").data());
+        NEFORCE_THROW_EXCEPTION(locale_exception("locale: invalid locale name '"_s + _bcp47 + "'"));
     }
 
     status = ::U_ZERO_ERROR;
@@ -520,7 +520,7 @@ string locale::to_multibyte(const u32string& ucs4) const {
     const int32_t out_len =
             ::ucnv_fromUChars(cnv, result.data(), static_cast<int32_t>(result.size()), utf16.data(), u16_len, &status);
     if (U_FAILURE(status) != 0 && status != ::U_BUFFER_OVERFLOW_ERROR) {
-        throw locale_exception("to_multibyte: conversion failed");
+        NEFORCE_THROW_EXCEPTION(locale_exception("to_multibyte: conversion failed"));
     }
     result.resize(static_cast<size_t>(out_len));
     return result;
@@ -575,7 +575,7 @@ u32string locale::to_ucs4(const string& mb) const {
     const int32_t u16_len = ::ucnv_toUChars(cnv, utf16.data(), static_cast<int32_t>(utf16.size()), mb.data(),
                                             static_cast<int32_t>(mb.size()), &status);
     if ((::U_FAILURE(status) != 0) && status != ::U_BUFFER_OVERFLOW_ERROR) {
-        throw locale_exception("to_ucs4: conversion failed");
+        NEFORCE_THROW_EXCEPTION(locale_exception("to_ucs4: conversion failed"));
     }
 
     u32string result(u16_len + 1, U'\0');
@@ -584,7 +584,7 @@ u32string locale::to_ucs4(const string& mb) const {
     ::u_strToUTF32(reinterpret_cast<::UChar32*>(result.data()), static_cast<int32_t>(result.size()), &u32_len,
                    utf16.data(), u16_len, &status);
     if ((::U_FAILURE(status) != 0) && status != ::U_BUFFER_OVERFLOW_ERROR) {
-        throw locale_exception("to_ucs4: conversion failed");
+        NEFORCE_THROW_EXCEPTION(locale_exception("to_ucs4: conversion failed"));
     }
     result.resize(static_cast<size_t>(u32_len));
     return result;

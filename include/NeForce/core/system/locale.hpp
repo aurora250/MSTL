@@ -29,18 +29,7 @@ class timestamp;
  * @struct locale_exception
  * @brief 区域设置操作异常
  */
-struct locale_exception final : system_exception {
-    explicit locale_exception(const char* info = "Locale Operation Failed",
-                              const error_code code = last_error()) noexcept :
-    system_exception(info, code) {}
-
-    explicit locale_exception(const exception& e) :
-    system_exception(e) {}
-
-    ~locale_exception() override = default;
-
-    NEFORCE_NODISCARD const char* type() const noexcept override { return "locale_exception"; }
-};
+NEFORCE_ERROR_BUILD_SYSTEM_CLASS(locale_exception, "Locale Operation Failed.")
 
 /** @} */ // Exceptions
 

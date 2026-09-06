@@ -2,6 +2,7 @@
 #include <NeForce/network/ssl/ssl_exception.hpp>
 #include <NeForce/network/ssl/ssl_stream.hpp>
 #include <openssl/err.h>
+#include <openssl/ssl.h>
 NEFORCE_BEGIN_NAMESPACE__
 
 void ssl_stream::handle_ssl_error(const int ret, const char* operation) {
@@ -10,7 +11,7 @@ void ssl_stream::handle_ssl_error(const int ret, const char* operation) {
         return;
     }
 
-    const int err = ::SSL_get_error(ssl_.get(), ret);
+    const int err = ::SSL_get_error(static_cast<::SSL*>(ssl_), ret);
 
     switch (err) {
         case SSL_ERROR_NONE: {
@@ -55,12 +56,28 @@ void ssl_stream::handle_ssl_error(const int ret, const char* operation) {
     }
 }
 
+ssl_stream::ssl_stream(ssl_stream&& other) noexcept :
+ssl_(other.ssl_),
+last_error_(move(other.last_error_)) {
+    other.ssl_ = nullptr;
+}
+
+ssl_stream& ssl_stream::operator=(ssl_stream&& other) noexcept {
+    if (addressof(other) == this) {
+        return *this;
+    }
+    ssl_ = other.ssl_;
+    other.ssl_ = nullptr;
+    last_error_ = move(other.last_error_);
+    return *this;
+}
+
 void ssl_stream::reset(const ssl_context& ctx) {
     if (!ctx.is_valid()) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("Invalid SSL context"));
     }
 
-    ssl_.reset(::SSL_new(ctx.native_handle()));
+    ssl_ = ::SSL_new(static_cast<::SSL_CTX*>(ctx.native_handle()));
     if (!ssl_) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("SSL_new failed"));
     }
@@ -77,7 +94,7 @@ void ssl_stream::set_fd(const native_handle_type fd) {
         NEFORCE_THROW_EXCEPTION(value_exception("Invalid file descriptor"));
     }
 
-    if (::SSL_set_fd(ssl_.get(), static_cast<int>(fd)) != 1) {
+    if (::SSL_set_fd(static_cast<::SSL*>(ssl_), static_cast<int>(fd)) != 1) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("SSL_set_fd failed"));
     }
 }
@@ -88,11 +105,11 @@ void ssl_stream::accept() {
     }
 
     while (true) {
-        const int ret = ::SSL_accept(ssl_.get());
+        const int ret = ::SSL_accept(static_cast<::SSL*>(ssl_));
         if (ret == 1) {
             return;
         }
-        const int err = ::SSL_get_error(ssl_.get(), ret);
+        const int err = ::SSL_get_error(static_cast<::SSL*>(ssl_), ret);
         if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE) {
             continue;
         }
@@ -105,17 +122,19 @@ void ssl_stream::accept() {
 }
 
 bool ssl_stream::connect() {
-    if (!ssl_) {
+    if (ssl_ == nullptr) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("SSL not initialized"));
     }
-    ::SSL_set_connect_state(ssl_.get());
+
+    auto* ssl = static_cast<::SSL*>(ssl_);
+    ::SSL_set_connect_state(ssl);
 
     while (true) {
-        const int ret = ::SSL_connect(ssl_.get());
+        const int ret = ::SSL_connect(ssl);
         if (ret == 1) {
             return true;
         }
-        const int err = ::SSL_get_error(ssl_.get(), ret);
+        const int err = ::SSL_get_error(ssl, ret);
         if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE) {
             continue;
         }
@@ -128,16 +147,17 @@ bool ssl_stream::connect() {
 }
 
 void ssl_stream::close() noexcept {
-    auto* ssl = ssl_.release();
+    auto* ssl = static_cast<::SSL*>(ssl_);
     if (ssl != nullptr) {
         ::SSL_shutdown(ssl);
         ::SSL_free(ssl);
     }
+    ssl_ = nullptr;
     last_error_.clear();
 }
 
 ssize_t ssl_stream::read(void* buffer, const size_t size) {
-    if (!ssl_) {
+    if (ssl_ == nullptr) {
         last_error_ = "SSL object not initialized";
         return -1;
     }
@@ -154,9 +174,9 @@ ssize_t ssl_stream::read(void* buffer, const size_t size) {
         return -1;
     }
 
-    const int ret = ::SSL_read(ssl_.get(), buffer, static_cast<int>(size));
+    const int ret = ::SSL_read(static_cast<::SSL*>(ssl_), buffer, static_cast<int>(size));
     if (ret <= 0) {
-        const int err = ::SSL_get_error(ssl_.get(), ret);
+        const int err = ::SSL_get_error(static_cast<::SSL*>(ssl_), ret);
         if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE) {
             last_error_ = "SSL_read would block";
             return 0;
@@ -200,9 +220,9 @@ ssize_t ssl_stream::write(const void* buffer, const size_t size) {
         return -1;
     }
 
-    const int ret = ::SSL_write(ssl_.get(), buffer, static_cast<int>(size));
+    const int ret = ::SSL_write(static_cast<::SSL*>(ssl_), buffer, static_cast<int>(size));
     if (ret <= 0) {
-        const int err = ::SSL_get_error(ssl_.get(), ret);
+        const int err = ::SSL_get_error(static_cast<::SSL*>(ssl_), ret);
         if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE) {
             last_error_ = "SSL_write would block";
             return 0;
@@ -297,7 +317,7 @@ int ssl_stream::pending() const {
     if (!ssl_) {
         return 0;
     }
-    return ::SSL_pending(ssl_.get());
+    return ::SSL_pending(static_cast<::SSL*>(ssl_));
 }
 
 void ssl_stream::set_sni_hostname(const string& hostname) {
@@ -309,7 +329,7 @@ void ssl_stream::set_sni_hostname(const string& hostname) {
         NEFORCE_THROW_EXCEPTION(value_exception("Hostname cannot be null"));
     }
 
-    if (::SSL_set_tlsext_host_name(ssl_.get(), hostname.data()) != 1) {
+    if (::SSL_set_tlsext_host_name(static_cast<::SSL*>(ssl_), hostname.data()) != 1) {
         const auto err = ::ERR_get_error();
         string error_msg = "SSL_set_tlsext_host_name failed: ";
         error_msg += ssl_category().message(static_cast<int>(err));
@@ -317,31 +337,31 @@ void ssl_stream::set_sni_hostname(const string& hostname) {
     }
 
 #if OPENSSL_VERSION_NUMBER >= 0x10002000L
-    ::X509_VERIFY_PARAM* param = ::SSL_get0_param(ssl_.get());
+    ::X509_VERIFY_PARAM* param = ::SSL_get0_param(static_cast<::SSL*>(ssl_));
     if (param != nullptr) {
         ::X509_VERIFY_PARAM_set1_host(param, hostname.data(), 0);
     }
 #endif
 }
 
-ssl_stream::x509_ptr ssl_stream::get_peer_certificate() const {
-    if (!ssl_) {
-        return nullptr;
+x509_certificate ssl_stream::get_peer_certificate() const {
+    if (ssl_ == nullptr) {
+        return {};
     }
-    return ::SSL_get_peer_certificate(ssl_.get());
+    return x509_certificate(::SSL_get_peer_certificate(static_cast<::SSL*>(ssl_)));
 }
 
 bool ssl_stream::verify_peer() const {
-    if (!ssl_) {
+    if (ssl_ == nullptr) {
         return false;
     }
 
-    ::X509* cert = ::SSL_get_peer_certificate(ssl_.get());
+    ::X509* cert = ::SSL_get_peer_certificate(static_cast<::SSL*>(ssl_));
     if (cert == nullptr) {
         return false;
     }
 
-    const long verify_result = ::SSL_get_verify_result(ssl_.get());
+    const long verify_result = ::SSL_get_verify_result(static_cast<::SSL*>(ssl_));
     ::X509_free(cert);
 
     return verify_result == X509_V_OK;
@@ -351,14 +371,14 @@ string ssl_stream::get_cipher_name() const {
     if (!ssl_) {
         return "";
     }
-    return ::SSL_get_cipher_name(ssl_.get());
+    return ::SSL_get_cipher_name(static_cast<::SSL*>(ssl_));
 }
 
 string ssl_stream::get_version() const {
     if (!ssl_) {
         return "";
     }
-    return ::SSL_get_version(ssl_.get());
+    return ::SSL_get_version(static_cast<::SSL*>(ssl_));
 }
 
 string ssl_stream::get_alpn_negotiated() const {
@@ -367,11 +387,17 @@ string ssl_stream::get_alpn_negotiated() const {
     }
     const byte_t* data = nullptr;
     uint32_t len = 0;
-    ::SSL_get0_alpn_selected(ssl_.get(), &data, &len);
+    ::SSL_get0_alpn_selected(static_cast<::SSL*>(ssl_), &data, &len);
     if (data == nullptr || len == 0) {
         return "";
     }
     return {reinterpret_cast<const char*>(data), len};
+}
+
+void* ssl_stream::release() noexcept {
+    auto* tmp = ssl_;
+    ssl_ = nullptr;
+    return tmp;
 }
 
 namespace {
@@ -518,7 +544,7 @@ namespace {
 void ssl_stream::async_read(io_context& ctx, memory_view<char> buffer, function<void(error_code, size_t)> handler) {
     auto op = make_shared<ssl_read_op>();
     op->ctx = &ctx;
-    op->ssl = ssl_.get();
+    op->ssl = static_cast<::SSL*>(ssl_);
     op->buffer = buffer;
     op->handler = move(handler);
     op->start();
@@ -528,7 +554,7 @@ void ssl_stream::async_read(io_context& ctx, memory_view<char> buffer, cancellat
                             function<void(error_code, size_t)> handler) {
     auto op = make_shared<ssl_read_op>();
     op->ctx = &ctx;
-    op->ssl = ssl_.get();
+    op->ssl = static_cast<::SSL*>(ssl_);
     op->buffer = buffer;
     op->handler = move(handler);
     op->cancel_slot = &slot;
@@ -599,7 +625,7 @@ void ssl_stream::async_write(io_context& ctx, memory_view<const char> buffer,
                              function<void(error_code, size_t)> handler) {
     auto op = make_shared<ssl_write_op>();
     op->ctx = &ctx;
-    op->ssl = ssl_.get();
+    op->ssl = static_cast<::SSL*>(ssl_);
     op->buffer = buffer;
     op->handler = move(handler);
     op->start();
@@ -609,7 +635,7 @@ void ssl_stream::async_write(io_context& ctx, memory_view<const char> buffer, ca
                              function<void(error_code, size_t)> handler) {
     auto op = make_shared<ssl_write_op>();
     op->ctx = &ctx;
-    op->ssl = ssl_.get();
+    op->ssl = static_cast<::SSL*>(ssl_);
     op->buffer = buffer;
     op->handler = move(handler);
     op->cancel_slot = &slot;

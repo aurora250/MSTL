@@ -23,18 +23,7 @@ NEFORCE_BEGIN_NAMESPACE__
  * @struct console_exception
  * @brief 控制台行为异常
  */
-struct console_exception final : device_exception {
-    explicit console_exception(const char* info = "Pipe Operation Failed.",
-                               const error_code code = last_error()) noexcept :
-    device_exception(info, code) {}
-
-    explicit console_exception(const exception& e) :
-    device_exception(e) {}
-
-    ~console_exception() override = default;
-
-    NEFORCE_NODISCARD const char* type() const noexcept override { return "console_exception"; }
-};
+NEFORCE_ERROR_BUILD_SYSTEM_CLASS(console_exception, "Console Operation Failed.")
 
 /** @} */ // Exceptions
 
@@ -101,27 +90,27 @@ private:
     int pending_char_ = -1;          // kbhit 预读的字符，-1 表示无待处理字符
 
 private:
-    void print_string_unsafe(const string& str) const { print_string_unsafe(str.view()); }
-    void print_string_unsafe(string_view str) const;
-    void print_string_unsafe(const char* str) const { print_string_unsafe(string_view{str}); }
+    void print_string_unsafe(const string& str) const noexcept { print_string_unsafe(str.view()); }
+    void print_string_unsafe(string_view str) const noexcept;
+    void print_string_unsafe(const char* str) const noexcept { print_string_unsafe(string_view{str}); }
 
-    void print_error_unsafe(const string& str) const { print_error_unsafe(str.view()); }
-    void print_error_unsafe(string_view str) const;
-    void print_error_unsafe(const char* str) const { print_error_unsafe(string_view{str}); }
+    void print_error_unsafe(const string& str) const noexcept { print_error_unsafe(str.view()); }
+    void print_error_unsafe(string_view str) const noexcept;
+    void print_error_unsafe(const char* str) const noexcept { print_error_unsafe(string_view{str}); }
 
     void set_color_unsafe(const color& color, bool use_256_color) const;
     void typewriter_print_unsafe(string_view text, milliseconds delay_per_char, bool with_sound) const;
 
     string readln_unsafe() const;
     string read_unsafe() const;
-    char read_char_unsafe() const;
+    char read_char_unsafe() const noexcept;
     console_size get_console_size_unsafe() const;
 
-    void flush_unsafe() const;
+    void flush_unsafe() const noexcept;
     void ignore_unsafe() const;
 
-    void beep_unsafe() const;
-    void flash_screen_unsafe() const;
+    void beep_unsafe() const noexcept;
+    void flash_screen_unsafe() const noexcept;
 
     void fade_effect_unsafe(string_view text, const color& from, const color& to, milliseconds duration,
                             bool is_fade_in) const;
@@ -149,7 +138,7 @@ public:
     /**
      * @brief 刷新输出缓冲区
      */
-    void flush();
+    void flush() noexcept;
 
     /**
      * @brief 抛弃输入缓冲区中的一行
@@ -160,37 +149,37 @@ public:
      * @brief 打印字符串
      * @param str 要打印的字符串
      */
-    void print_string(const string& str);
+    void print_string(const string& str) noexcept;
 
     /**
      * @brief 打印字符串视图
      * @param view 要打印的字符串
      */
-    void print_string(const string_view& view);
+    void print_string(const string_view& view) noexcept;
 
     /**
      * @brief 打印C风格字符串
      * @param str 要打印的字符串
      */
-    void print_string(const char* str);
+    void print_string(const char* str) noexcept;
 
     /**
      * @brief 打印字符串到错误流
      * @param str 要打印的字符串
      */
-    void print_error(const string& str);
+    void print_error(const string& str) noexcept;
 
     /**
      * @brief 打印字符串视图到错误流
      * @param view 要打印的字符串视图
      */
-    void print_error(const string_view& view);
+    void print_error(const string_view& view) noexcept;
 
     /**
      * @brief 打印C风格字符串到错误流
      * @param str 要打印的字符串
      */
-    void print_error(const char* str);
+    void print_error(const char* str) noexcept;
 
     /**
      * @brief 读取输入（直到空白字符）
@@ -264,7 +253,7 @@ public:
     /**
      * @brief 打印换行
      */
-    void println();
+    void println() noexcept;
 
     /**
      * @brief 打印任意类型的值并换行
@@ -346,7 +335,7 @@ public:
     /**
      * @brief 打印换行到错误流
      */
-    void eprintln();
+    void eprintln() noexcept;
 
     /**
      * @brief 打印任意类型的值到错误流并换行
@@ -376,13 +365,13 @@ public:
     /**
      * @brief 清空屏幕
      */
-    void clear();
+    void clear() noexcept;
 
     /**
      * @brief 暂停并等待用户按键
      * @param msg 提示信息
      */
-    void pause(string_view msg = "Press enter to continue...");
+    void pause(string_view msg = "Press enter to continue...") noexcept;
 
     /**
      * @brief 用户确认对话框
@@ -426,36 +415,36 @@ public:
     /**
      * @brief 重置颜色
      */
-    void reset_color();
+    void reset_color() noexcept;
 
     /**
      * @brief 设置粗体
      * @param enable 是否启用粗体
      */
-    void set_bold(bool enable = true);
+    void set_bold(bool enable = true) noexcept;
 
     /**
      * @brief 设置下划线
      * @param enable 是否启用下划线
      */
-    void set_underline(bool enable = true);
+    void set_underline(bool enable = true) noexcept;
 
     /**
      * @brief 设置闪烁
      * @param enable 是否启用闪烁
      */
-    void set_blink(bool enable = true);
+    void set_blink(bool enable = true) noexcept;
 
     /**
-     * @brief 设置反色（交换前景色与背景色）
+     * @brief 设置反色
      * @param enable 是否启用反色
      */
-    void set_reverse(bool enable = true);
+    void set_reverse(bool enable = true) noexcept;
 
     /**
      * @brief 重置所有文本属性
      */
-    void reset_text_attributes();
+    void reset_text_attributes() noexcept;
 
     /**
      * @brief 设置控制台窗口标题
@@ -466,19 +455,19 @@ public:
     /**
      * @brief 设置控制台输出代码页为 UTF-8
      */
-    void set_output_utf8();
+    void set_output_utf8() noexcept;
 
     /**
      * @brief 启用虚拟终端处理
      * @param enable 是否启用
      */
-    void enable_virtual_terminal_processing(bool enable = true);
+    void enable_virtual_terminal_processing(bool enable = true) noexcept;
 
     /**
      * @brief 启用或禁用交替屏幕缓冲区
      * @param enable 是否启用交替屏幕缓冲区
      */
-    void enable_alternate_screen_buffer(bool enable = true);
+    void enable_alternate_screen_buffer(bool enable = true) noexcept;
 
     /**
      * @brief 设置滚动区域
@@ -490,32 +479,32 @@ public:
     /**
      * @brief 重置滚动区域为整个屏幕
      */
-    void reset_scroll_region();
+    void reset_scroll_region() noexcept;
 
     /**
      * @brief 启用或禁用鼠标输入捕获
      * @param enable 是否启用鼠标输入捕获
      * @note 鼠标事件序列以 ESC [< 开头，需通过 read() 或 getch() 自行解析
      */
-    void enable_mouse(bool enable = true);
+    void enable_mouse(bool enable = true) noexcept;
 
     /**
      * @brief 检测当前是否已启用鼠标输入
      * @return 是否已启用鼠标输入
      */
-    NEFORCE_NODISCARD bool is_mouse_enabled() const;
+    NEFORCE_NODISCARD bool is_mouse_enabled() const noexcept;
 
     /**
      * @brief 检查是否有键盘输入可读（非阻塞）
      * @return 是否有键盘输入可读
      */
-    NEFORCE_NODISCARD bool kbhit();
+    NEFORCE_NODISCARD bool kbhit() noexcept;
 
     /**
      * @brief 读取一个字符（无回显，若无按键则阻塞）
      * @return 读取的字符（可能为负值表示出错）
      */
-    int getch();
+    int getch() noexcept;
 
     /**
      * @brief 显示进度条
@@ -538,18 +527,18 @@ public:
     /**
      * @brief 保存光标位置
      */
-    void save_cursor_position();
+    void save_cursor_position() noexcept;
 
     /**
      * @brief 恢复光标位置
      */
-    void restore_cursor_position();
+    void restore_cursor_position() noexcept;
 
     /**
      * @brief 隐藏光标
      * @param enable 是否隐藏光标
      */
-    void hide_cursor(bool enable = true);
+    void hide_cursor(bool enable = true) noexcept;
 
     /**
      * @brief 获取控制台尺寸
@@ -585,7 +574,7 @@ public:
      * @brief 检查是否是交互式终端
      * @return 是否是交互式
      */
-    NEFORCE_NODISCARD bool is_interactive() const;
+    NEFORCE_NODISCARD bool is_interactive() const noexcept;
 
     /**
      * @brief 获取终端类型
@@ -622,12 +611,12 @@ public:
     /**
      * @brief 发出蜂鸣声
      */
-    void beep();
+    void beep() noexcept;
 
     /**
      * @brief 屏幕闪烁
      */
-    void flash_screen();
+    void flash_screen() noexcept;
 
     /**
      * @brief 显示通知

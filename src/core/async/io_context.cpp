@@ -308,7 +308,7 @@ void io_context::remove_fd(native_handle_type fd) {
 #endif
 }
 
-void io_context::wake() {
+void io_context::wake() noexcept {
 #ifdef NEFORCE_PLATFORM_LINUX
     constexpr uint64_t val = 1;
     ::write(wake_fd_, &val, sizeof(val));

@@ -1,6 +1,7 @@
 #include <NeForce/network/ssl/ssl_context.hpp>
 #include <NeForce/network/ssl/ssl_exception.hpp>
 #include <NeForce/core/system/pipe.hpp>
+#include <openssl/ssl.h>
 #ifdef NEFORCE_PLATFORM_WINDOWS
 #    include <wincrypt.h>
 #endif
@@ -163,55 +164,59 @@ namespace {
 
 ssl_context::ssl_context(const ssl_method method) :
 method_(method) {
-    ctx_.reset(::SSL_CTX_new(convert_method(method)));
-    if (!ctx_) {
+    ctx_ = ::SSL_CTX_new(convert_method(method));
+    if (unlikely(ctx_ == nullptr)) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("Failed to create SSL context"));
     }
 
-    ::SSL_CTX_set_options(ctx_.get(), SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
+    auto* ctx = static_cast<::SSL_CTX*>(ctx_);
+    ::SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
 
-    if (::SSL_CTX_set_cipher_list(ctx_.get(), cipher_list) != 1) {
-        ::SSL_CTX_set_cipher_list(ctx_.get(), "DEFAULT:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK");
+    if (::SSL_CTX_set_cipher_list(ctx, cipher_list) != 1) {
+        ::SSL_CTX_set_cipher_list(ctx, "DEFAULT:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK");
     }
 
 #ifdef TLS1_3_VERSION
-    ::SSL_CTX_set_ciphersuites(ctx_.get(), "TLS_AES_128_GCM_SHA256:"
-                                           "TLS_AES_256_GCM_SHA384:"
-                                           "TLS_CHACHA20_POLY1305_SHA256");
+    ::SSL_CTX_set_ciphersuites(ctx, "TLS_AES_128_GCM_SHA256:"
+                                    "TLS_AES_256_GCM_SHA384:"
+                                    "TLS_CHACHA20_POLY1305_SHA256");
 #endif
 
     if (method == ssl_method::TLS_CLIENT || method == ssl_method::TLS_CLIENT_DTLS) {
-        const bool ca_loaded = (::SSL_CTX_set_default_verify_paths(ctx_.get()) == 1);
+        const bool ca_loaded = (::SSL_CTX_set_default_verify_paths(ctx) == 1);
         if (!ca_loaded) {
             static constexpr const char* ca_paths[] = {"/etc/ssl/certs", "/etc/pki/tls/certs", "/usr/local/share/certs",
                                                        "/etc/ssl/cert.pem"};
 
             for (const auto& path: ca_paths) {
-                if (::SSL_CTX_load_verify_locations(ctx_.get(), nullptr, path) == 1) {
+                if (::SSL_CTX_load_verify_locations(ctx, nullptr, path) == 1) {
                     break;
                 }
             }
         }
 
 #ifdef NEFORCE_PLATFORM_WINDOWS
-        load_windows_root_certs(ctx_.get());
+        load_windows_root_certs(ctx);
 #endif
 
-        ::SSL_CTX_set_verify(ctx_.get(), SSL_VERIFY_PEER, nullptr);
+        ::SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, nullptr);
     }
 }
 
+ssl_context::~ssl_context() { reset(); }
+
 ssl_context ssl_context::clone() const {
-    if (!ctx_) {
+    if (unlikely(ctx_ == nullptr)) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("Cannot clone an invalid SSL context"));
     }
 
-    if (::SSL_CTX_up_ref(ctx_.get()) != 1) {
+    auto* ctx = static_cast<::SSL_CTX*>(ctx_);
+    if (::SSL_CTX_up_ref(ctx) != 1) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("Failed to increment SSL_CTX reference count"));
     }
 
     ssl_context cloned(method_, nullptr);
-    cloned.ctx_.reset(ctx_.get());
+    cloned.ctx_ = ctx;
     cloned.cert_loaded_ = cert_loaded_;
     return cloned;
 }
@@ -219,16 +224,17 @@ ssl_context ssl_context::clone() const {
 shared_ptr<ssl_context> ssl_context::clone_shared() const { return make_shared<ssl_context>(clone()); }
 
 bool ssl_context::load_certificate(const string& cert_file, const string& key_file) {
-    if (!ctx_) {
+    if (unlikely(ctx_ == nullptr)) {
         return false;
     }
-    if (::SSL_CTX_use_certificate_file(ctx_.get(), cert_file.data(), SSL_FILETYPE_PEM) <= 0) {
+    auto* ctx = static_cast<::SSL_CTX*>(ctx_);
+    if (::SSL_CTX_use_certificate_file(ctx, cert_file.data(), SSL_FILETYPE_PEM) <= 0) {
         return false;
     }
-    if (::SSL_CTX_use_PrivateKey_file(ctx_.get(), key_file.data(), SSL_FILETYPE_PEM) <= 0) {
+    if (::SSL_CTX_use_PrivateKey_file(ctx, key_file.data(), SSL_FILETYPE_PEM) <= 0) {
         return false;
     }
-    if (::SSL_CTX_check_private_key(ctx_.get()) != 1) {
+    if (::SSL_CTX_check_private_key(ctx) != 1) {
         return false;
     }
     cert_loaded_ = true;
@@ -236,7 +242,7 @@ bool ssl_context::load_certificate(const string& cert_file, const string& key_fi
 }
 
 void ssl_context::load_certificate_from_memory(const string& cert_pem, const string& key_pem) {
-    if (!ctx_) {
+    if (unlikely(ctx_ == nullptr)) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("SSL context is not initialized"));
     }
     if (cert_pem.empty() || key_pem.empty()) {
@@ -257,20 +263,21 @@ void ssl_context::load_certificate_from_memory(const string& cert_pem, const str
         NEFORCE_THROW_EXCEPTION(ssl_exception("Failed to parse PEM data"));
     }
 
-    const int cert_result = ::SSL_CTX_use_certificate(ctx_.get(), cert.get());
-    const int key_result = ::SSL_CTX_use_PrivateKey(ctx_.get(), key.get());
+    auto* ctx = static_cast<::SSL_CTX*>(ctx_);
+    const int cert_result = ::SSL_CTX_use_certificate(ctx, cert.get());
+    const int key_result = ::SSL_CTX_use_PrivateKey(ctx, key.get());
 
     if (cert_result <= 0 || key_result <= 0) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("Failed to set certificate or private key"));
     }
-    if (::SSL_CTX_check_private_key(ctx_.get()) != 1) {
+    if (::SSL_CTX_check_private_key(ctx) != 1) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("Private key does not match certificate"));
     }
     cert_loaded_ = true;
 }
 
 bool ssl_context::load_verify_locations(const string& ca_file, const string& ca_path) {
-    if (!ctx_) {
+    if (unlikely(ctx_ == nullptr)) {
         return false;
     }
 
@@ -281,50 +288,50 @@ bool ssl_context::load_verify_locations(const string& ca_file, const string& ca_
         return false;
     }
 
-    return ::SSL_CTX_load_verify_locations(ctx_.get(), file_ptr, path_ptr) == 1;
+    return ::SSL_CTX_load_verify_locations(static_cast<::SSL_CTX*>(ctx_), file_ptr, path_ptr) == 1;
 }
 
-void ssl_context::set_options(const long options) {
-    if (!ctx_) {
+void ssl_context::set_options(const ssl_option options) {
+    if (unlikely(ctx_ == nullptr)) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("SSL context is not initialized"));
     }
-    ::SSL_CTX_set_options(ctx_.get(), options);
+    ::SSL_CTX_set_options(static_cast<::SSL_CTX*>(ctx_), static_cast<uint64_t>(options));
 }
 
-void ssl_context::set_verify_mode(const int mode) {
-    if (!ctx_) {
+void ssl_context::set_verify_mode(const ssl_verify mode) {
+    if (unlikely(ctx_ == nullptr)) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("SSL context is not initialized"));
     }
-    ::SSL_CTX_set_verify(ctx_.get(), mode, nullptr);
+    ::SSL_CTX_set_verify(static_cast<::SSL_CTX*>(ctx_), static_cast<int>(mode), nullptr);
 }
 
 void ssl_context::require_client_certificate() {
-    if (!ctx_) {
+    if (unlikely(ctx_ == nullptr)) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("SSL context is not initialized"));
     }
-    ::SSL_CTX_set_verify(ctx_.get(), SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, nullptr);
+    ::SSL_CTX_set_verify(static_cast<::SSL_CTX*>(ctx_), SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, nullptr);
 }
 
 void ssl_context::set_cipher_list(const string& ciphers) {
-    if (!ctx_) {
+    if (unlikely(ctx_ == nullptr)) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("SSL context is not initialized"));
     }
-    if (::SSL_CTX_set_cipher_list(ctx_.get(), ciphers.data()) <= 0) {
+    if (::SSL_CTX_set_cipher_list(static_cast<::SSL_CTX*>(ctx_), ciphers.data()) <= 0) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("Failed to set cipher list"));
     }
 }
 
 void ssl_context::set_ciphersuites(const string& ciphersuites) {
-    if (!ctx_) {
+    if (unlikely(ctx_ == nullptr)) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("SSL context is not initialized"));
     }
-    if (::SSL_CTX_set_ciphersuites(ctx_.get(), ciphersuites.data()) <= 0) {
+    if (::SSL_CTX_set_ciphersuites(static_cast<::SSL_CTX*>(ctx_), ciphersuites.data()) <= 0) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("Failed to set ciphersuites"));
     }
 }
 
 void ssl_context::set_default_options() {
-    if (!ctx_) {
+    if (unlikely(ctx_ == nullptr)) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("SSL context is not initialized"));
     }
 
@@ -333,29 +340,30 @@ void ssl_context::set_default_options() {
     options |= SSL_OP_CIPHER_SERVER_PREFERENCE;
     options |= SSL_OP_NO_COMPRESSION;
 
-    ::SSL_CTX_set_options(ctx_.get(), options);
-    ::SSL_CTX_set_min_proto_version(ctx_.get(), TLS1_2_VERSION);
+    auto* ctx = static_cast<::SSL_CTX*>(ctx_);
+    ::SSL_CTX_set_options(ctx, options);
+    ::SSL_CTX_set_min_proto_version(ctx, TLS1_2_VERSION);
 
     set_cipher_list("HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4");
     set_ciphersuites("TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256");
 }
 
 void ssl_context::set_session_cache_size(long size) {
-    if (!ctx_) {
+    if (unlikely(ctx_ == nullptr)) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("SSL context is not initialized"));
     }
-    ::SSL_CTX_sess_set_cache_size(ctx_.get(), size);
+    ::SSL_CTX_sess_set_cache_size(static_cast<::SSL_CTX*>(ctx_), size);
 }
 
 void ssl_context::set_timeout(long seconds) {
-    if (!ctx_) {
+    if (unlikely(ctx_ == nullptr)) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("SSL context is not initialized"));
     }
-    ::SSL_CTX_set_timeout(ctx_.get(), seconds);
+    ::SSL_CTX_set_timeout(static_cast<::SSL_CTX*>(ctx_), seconds);
 }
 
 void ssl_context::set_alpn_protos(const vector<string>& protocols) {
-    if (!ctx_) {
+    if (unlikely(ctx_ == nullptr)) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("SSL context is not initialized"));
     }
     if (protocols.empty()) {
@@ -372,9 +380,17 @@ void ssl_context::set_alpn_protos(const vector<string>& protocols) {
         alpn_data.insert(alpn_data.end(), proto.begin(), proto.end());
     }
 
-    if (::SSL_CTX_set_alpn_protos(ctx_.get(), alpn_data.data(), static_cast<uint32_t>(alpn_data.size())) != 0) {
+    if (::SSL_CTX_set_alpn_protos(static_cast<::SSL_CTX*>(ctx_), alpn_data.data(),
+                                  static_cast<uint32_t>(alpn_data.size())) != 0) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("Failed to set ALPN protocols"));
     }
+}
+
+void ssl_context::reset(void* ctx) noexcept {
+    if (ctx_ != nullptr) {
+        ::SSL_CTX_free(static_cast<::SSL_CTX*>(ctx_));
+    }
+    ctx_ = ctx;
 }
 
 NEFORCE_END_NAMESPACE__

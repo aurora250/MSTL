@@ -310,7 +310,7 @@ public:
      * @param backlog 连接队列大小
      * @return 启动成功返回true
      */
-    bool start(int backlog = SOMAXCONN) { return server_->start(backlog); }
+    bool start(int backlog = socket_base::max_backlog) { return server_->start(backlog); }
 
     /**
      * @brief 停止服务器

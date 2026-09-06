@@ -97,6 +97,11 @@ public:
             -1; ///< 无效句柄
 #endif
 
+    /**
+     * @brief 最大连接队列数常量
+     */
+    static constexpr int max_backlog = SOMAXCONN;
+
     using family = ip_address::family; ///< 网络地址族类型
 
     /**

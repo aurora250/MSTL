@@ -12,7 +12,6 @@
 #include "NeForce/core/string/string.hpp"
 #include "NeForce/core/memory/shared_ptr.hpp"
 #include "NeForce/network/ssl/ssl_exception.hpp"
-#include <openssl/ssl.h>
 NEFORCE_BEGIN_NAMESPACE__
 
 /**
@@ -20,6 +19,41 @@ NEFORCE_BEGIN_NAMESPACE__
  * @brief SSL/TLS相关组件
  * @{
  */
+
+enum class ssl_verify {
+    PEER = 0x00,
+    NONE = 0x01,
+    FAIL_IF_NO_PEER_CERT = 0x02,
+    CLIENT_ONCE = 0x04,
+    POST_HANDSHAKE = 0x08,
+};
+
+NEFORCE_NODISCARD constexpr ssl_verify operator|(ssl_verify lhs, ssl_verify rhs) noexcept {
+    return static_cast<ssl_verify>(static_cast<int>(lhs) | static_cast<int>(rhs));
+}
+
+NEFORCE_NODISCARD constexpr ssl_verify operator&(ssl_verify lhs, ssl_verify rhs) noexcept {
+    return static_cast<ssl_verify>(static_cast<int>(lhs) & static_cast<int>(rhs));
+}
+
+
+enum class ssl_option : uint64_t {
+    NO_SSLv2 = 0x0,
+    NO_SSLv3 = static_cast<uint64_t>(1) << static_cast<uint64_t>(25),
+    NO_TLSv1 = static_cast<uint64_t>(1) << static_cast<uint64_t>(26),
+    NO_TLSv1_1 = static_cast<uint64_t>(1) << static_cast<uint64_t>(28),
+    NO_TLSv1_2 = static_cast<uint64_t>(1) << static_cast<uint64_t>(27),
+    NO_TLSv1_3 = static_cast<uint64_t>(1) << static_cast<uint64_t>(29),
+};
+
+NEFORCE_NODISCARD constexpr ssl_option operator|(ssl_option lhs, ssl_option rhs) noexcept {
+    return static_cast<ssl_option>(static_cast<uint64_t>(lhs) | static_cast<uint64_t>(rhs));
+}
+
+NEFORCE_NODISCARD constexpr ssl_option operator&(ssl_option lhs, ssl_option rhs) noexcept {
+    return static_cast<ssl_option>(static_cast<uint64_t>(lhs) & static_cast<uint64_t>(rhs));
+}
+
 
 /**
  * @enum ssl_method
@@ -53,17 +87,9 @@ enum class ssl_method {
  */
 class NEFORCE_API ssl_context {
 private:
-    struct ctx_deleter {
-        void operator()(::SSL_CTX* ctx) const noexcept {
-            if (ctx != nullptr) {
-                ::SSL_CTX_free(ctx);
-            }
-        }
-    };
-
-    unique_ptr<::SSL_CTX, ctx_deleter> ctx_; ///< OpenSSL SSL_CTX对象
-    ssl_method method_;                      ///< 记录创建时使用的方法
-    bool cert_loaded_{false};                ///< 证书是否已加载
+    void* ctx_{nullptr};      ///< SSL_CTX对象
+    ssl_method method_;       ///< 记录创建时使用的方法
+    bool cert_loaded_{false}; ///< 证书是否已加载
 
     ssl_context(ssl_method method, ssl_context* /*tag*/) :
     method_(method) {}
@@ -81,7 +107,7 @@ public:
      */
     explicit ssl_context(ssl_method method = ssl_method::TLS_SERVER);
 
-    ~ssl_context() = default;
+    ~ssl_context();
 
     ssl_context(const ssl_context&) = delete;
     ssl_context& operator=(const ssl_context&) = delete;
@@ -139,25 +165,21 @@ public:
 
     /**
      * @brief 设置SSL选项
-     * @param options OpenSSL SSL_OP_*标志位组合
+     * @param options OpenSSL标志位组合
      * @throws ssl_exception SSL上下文为空时抛出
      *
      * 设置SSL上下文的选项，如禁用特定协议版本、启用特定特性等。
      */
-    void set_options(long options);
+    void set_options(ssl_option options);
 
     /**
      * @brief 设置验证模式
-     * @param mode OpenSSL SSL_VERIFY_*模式
+     * @param mode OpenSSL模式
      * @throws ssl_exception SSL上下文为空时抛出
      *
      * 设置对等方证书的验证模式。
-     * 常用模式：
-     * - SSL_VERIFY_NONE：不验证客户端证书
-     * - SSL_VERIFY_PEER：验证客户端证书
-     * - SSL_VERIFY_FAIL_IF_NO_PEER_CERT：客户端必须提供证书
      */
-    void set_verify_mode(int mode);
+    void set_verify_mode(ssl_verify mode);
 
     /**
      * @brief 要求客户端提供证书
@@ -234,7 +256,7 @@ public:
      * @brief 获取原生SSL_CTX句柄
      * @return SSL_CTX指针
      */
-    NEFORCE_NODISCARD ::SSL_CTX* native_handle() const noexcept { return ctx_.get(); }
+    NEFORCE_NODISCARD void* native_handle() const noexcept { return ctx_; }
 
     /**
      * @brief 布尔转换运算符
@@ -253,6 +275,8 @@ public:
      * @return 已加载证书返回true
      */
     NEFORCE_NODISCARD bool has_certificate() const noexcept { return cert_loaded_; }
+
+    void reset(void* ctx = nullptr) noexcept;
 };
 
 /** @} */ // SSL/TLS

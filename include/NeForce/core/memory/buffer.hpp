@@ -19,27 +19,22 @@ NEFORCE_BEGIN_NAMESPACE__
  */
 
 /**
- * @brief 可变缓冲区（用于异步读取操作）
- *
- * 对可写内存区域的视图封装，传入 async_read 作为接收目标。
+ * @brief 可变缓冲区
  */
 using mutable_buffer = memory_view<char>;
 
 /**
- * @brief 常量缓冲区（用于异步写入操作）
- *
- * 对只读内存区域的视图封装，传入 async_write 作为发送源。
+ * @brief 常量缓冲区
  */
 using const_buffer = memory_view<const char>;
 
 /**
  * @class mutable_buffers
- * @brief 可变缓冲区序列（scatter-gather 读）
+ * @brief 可变缓冲区序列
  *
  * 包含多个内存区域的视图，用于一次 scatter-gather 读操作。
- * 异步读取时数据依次填入每个缓冲区。
  *
- * @note 缓冲区序列不拥有底层内存，调用者需确保内存在操作期间有效。
+ * @note 调用者需确保内存在操作期间有效。
  */
 class mutable_buffers {
 public:
@@ -85,14 +80,14 @@ public:
      * @param i 索引
      * @return 缓冲区引用
      */
-    NEFORCE_NODISCARD const mutable_buffer& operator[](size_t i) const { return buffers_[i]; }
+    NEFORCE_NODISCARD const mutable_buffer& operator[](size_t i) const noexcept { return buffers_[i]; }
 
     /**
      * @brief 访问指定索引的缓冲区（可修改）
      * @param i 索引
      * @return 缓冲区引用
      */
-    NEFORCE_NODISCARD mutable_buffer& operator[](size_t i) { return buffers_[i]; }
+    NEFORCE_NODISCARD mutable_buffer& operator[](size_t i) noexcept { return buffers_[i]; }
 
     /**
      * @brief 获取起始迭代器
@@ -121,12 +116,11 @@ public:
 
 /**
  * @class const_buffers
- * @brief 常量缓冲区序列（scatter-gather 写）
+ * @brief 常量缓冲区序列
  *
  * 包含多个只读内存区域的视图，用于一次 scatter-gather 写操作。
- * 异步写入时数据依次从每个缓冲区发送。
  *
- * @note 缓冲区序列不拥有底层内存，调用者需确保内存在操作期间有效。
+ * @note 调用者需确保内存在操作期间有效。
  */
 class const_buffers {
 public:
@@ -172,14 +166,14 @@ public:
      * @param i 索引
      * @return 缓冲区常量引用
      */
-    NEFORCE_NODISCARD const const_buffer& operator[](size_t i) const { return buffers_[i]; }
+    NEFORCE_NODISCARD const const_buffer& operator[](size_t i) const noexcept { return buffers_[i]; }
 
     /**
      * @brief 访问指定索引的缓冲区（可修改）
      * @param i 索引
      * @return 缓冲区引用
      */
-    NEFORCE_NODISCARD const_buffer& operator[](size_t i) { return buffers_[i]; }
+    NEFORCE_NODISCARD const_buffer& operator[](size_t i) noexcept { return buffers_[i]; }
 
     /**
      * @brief 获取起始迭代器
@@ -210,10 +204,6 @@ public:
  * @class dynamic_buffer
  * @brief 自适应扩容的动态缓冲区
  *
- * 适用于异步读取场景：prepare() 获取可写区域，commit() 标记已填充，
- * consume() 移除已处理数据。内部自动扩容。
- *
- * 使用示例：
  * @code
  * dynamic_buffer buf;
  * sock.async_read(ctx, buf.prepare(1024), [&](error_code ec, size_t n) {
@@ -222,8 +212,6 @@ public:
  *     buf.consume(processed);
  * });
  * @endcode
- *
- * @note prepare/commit/consume 操作不保证线程安全，调用者负责同步。
  */
 class dynamic_buffer {
 private:
@@ -239,7 +227,7 @@ public:
      * 保证返回的缓冲区至少 n 字节可用。若内部空间不足则自动扩容。
      * 返回的 mutable_buffers 指向内部存储，在下次 prepare 或对象析构前有效。
      *
-     * @note 多次 prepare 不重叠——每次 prepare 返回的缓冲区基于当前 write_pos_。
+     * @note 多次 prepare 不重叠
      */
     mutable_buffers prepare(size_t n) {
         if (data_.size() - write_pos_ < n) {
@@ -251,22 +239,15 @@ public:
     /**
      * @brief 标记已写入的字节数
      * @param n 已写入的字节数
-     *
-     * 将 write_pos_ 前移 n 字节，使已写入数据可通过 data()/size() 访问。
-     * 必须在 prepare() 返回的缓冲区被填充后调用。
-     *
      * @note commit 在 prepare 之后调用，通常由 I/O 完成回调触发。
      */
-    void commit(size_t n) { write_pos_ += n; }
+    void commit(size_t n) noexcept { write_pos_ += n; }
 
     /**
      * @brief 移除已消费的数据
      * @param n 已消费的字节数
-     *
-     * 将剩余未消费的数据移到缓冲区开头，释放已消费的空间供后续写入。
-     * 通常在处理完部分数据后调用。
      */
-    void consume(size_t n) {
+    void consume(size_t n) noexcept {
         if (n >= write_pos_) {
             write_pos_ = 0;
             return;

@@ -14,16 +14,16 @@ NEFORCE_BEGIN_NAMESPACE__
  * @brief 系统访问异常
  */
 struct system_exception : exception {
-    explicit system_exception(const char* info = "System Access Failed.", const error_code code = last_error()) noexcept
+    explicit system_exception(const char* info = "System Access Failed.", const error_code code = error_code()) noexcept
     :
     exception(info),
     code_(code) {}
 
-    explicit system_exception(const string& info, const error_code code = last_error()) noexcept :
+    explicit system_exception(const string& info, const error_code code = error_code()) noexcept :
     system_exception(info.data(), code) {}
 
     explicit system_exception(const error_code code) :
-    code_(code) {}
+    system_exception(code.message(), code) {}
 
     explicit system_exception(const exception& e) :
     exception(e) {}
@@ -34,55 +34,39 @@ struct system_exception : exception {
 
     NEFORCE_NODISCARD virtual const error_code& code() const noexcept { return code_; }
 
+    static error_code last_error() noexcept { return _NEFORCE last_error(); }
+
 protected:
     error_code code_;
 };
+
+
+#define NEFORCE_ERROR_BUILD_SYSTEM_CLASS(THIS, INFO)                                            \
+    struct THIS final : system_exception {                                                      \
+        explicit THIS(const char* info = INFO, const error_code code = last_error()) noexcept : \
+        system_exception(info, code) {}                                                         \
+        explicit THIS(const string& info, const error_code code = last_error()) noexcept :      \
+        system_exception(info, code) {}                                                         \
+        explicit THIS(const error_code err) :                                                   \
+        system_exception(err) {}                                                                \
+        explicit THIS(const exception& e) :                                                     \
+        system_exception(e) {}                                                                  \
+        ~THIS() override = default;                                                             \
+        NEFORCE_NODISCARD const char* type() const noexcept override { return #THIS; }          \
+    };
+
 
 /**
  * @struct device_exception
  * @brief 设备行为异常
  */
-struct device_exception : system_exception {
-    explicit device_exception(const char* info = "Device Operation Failed.",
-                              const error_code code = last_error()) noexcept :
-    system_exception(info, code) {}
-
-    explicit device_exception(const string& info, const error_code code = last_error()) noexcept :
-    system_exception(info, code) {}
-
-    explicit device_exception(const error_code err) :
-    system_exception(err) {}
-
-    explicit device_exception(const exception& e) :
-    system_exception(e) {}
-
-    ~device_exception() override = default;
-
-    NEFORCE_NODISCARD const char* type() const noexcept override { return "device_exception"; }
-};
+NEFORCE_ERROR_BUILD_SYSTEM_CLASS(device_exception, "Device Operation Failed.")
 
 /**
  * @struct file_exception
  * @brief 文件处理异常
  */
-struct file_exception final : system_exception {
-    explicit file_exception(const char* info = "File Operation Failed.", const error_code code = last_error()) noexcept
-    :
-    system_exception(info, code) {}
-
-    explicit file_exception(const string& info, const error_code code = last_error()) noexcept :
-    system_exception(info, code) {}
-
-    explicit file_exception(const error_code err) :
-    system_exception(err) {}
-
-    explicit file_exception(const exception& e) :
-    system_exception(e) {}
-
-    ~file_exception() override = default;
-
-    NEFORCE_NODISCARD const char* type() const noexcept override { return "file_exception"; }
-};
+NEFORCE_ERROR_BUILD_SYSTEM_CLASS(file_exception, "File Operation Failed.")
 
 /** @} */ // Exceptions
 

@@ -286,7 +286,7 @@ private:
     void process_timers(size_t max_count = numeric_traits<size_t>::max());
 
     /// @brief 唤醒 run() 循环
-    void wake();
+    void wake() noexcept;
 
     /// @brief 执行队列中就绪的 handler
     /// @param max_count 最多执行的 handler 数量（默认 256）

@@ -263,7 +263,7 @@ void share_memory::open(const string& name, size_t size, open_mode mode, access_
         flags |= O_CREAT | O_EXCL;
         handle_ = ::shm_open(shm_name.data(), flags, 0666);
         if (handle_ == g_invalid_handle) {
-            NEFORCE_THROW_EXCEPTION(share_memory_exception(last_error().message().data()));
+            NEFORCE_THROW_EXCEPTION(share_memory_exception(last_error()));
         }
 
         mutex_owner_ = true;
@@ -273,14 +273,14 @@ void share_memory::open(const string& name, size_t size, open_mode mode, access_
             ::close(handle_);
             handle_ = g_invalid_handle;
             ::shm_unlink(shm_name.data());
-            NEFORCE_THROW_EXCEPTION(share_memory_exception(error.message().data()));
+            NEFORCE_THROW_EXCEPTION(share_memory_exception(error));
         }
         size_ = size;
     } else if (mode == open_mode::open_only) {
         handle_ = ::shm_open(shm_name.data(), flags, 0666);
         if (handle_ == g_invalid_handle) {
             const auto error = last_error();
-            NEFORCE_THROW_EXCEPTION(share_memory_exception(error.message().data()));
+            NEFORCE_THROW_EXCEPTION(share_memory_exception(error));
         }
 
         struct ::stat stat_buf;
@@ -303,7 +303,7 @@ void share_memory::open(const string& name, size_t size, open_mode mode, access_
             handle_ = ::shm_open(shm_name.data(), flags, 0666);
             if (handle_ == g_invalid_handle) {
                 const auto error = last_error();
-                NEFORCE_THROW_EXCEPTION(share_memory_exception(error.message().data()));
+                NEFORCE_THROW_EXCEPTION(share_memory_exception(error));
             }
 
             struct ::stat stat_buf;
@@ -311,7 +311,7 @@ void share_memory::open(const string& name, size_t size, open_mode mode, access_
                 const auto error = last_error();
                 ::close(handle_);
                 handle_ = g_invalid_handle;
-                NEFORCE_THROW_EXCEPTION(share_memory_exception(error.message().data()));
+                NEFORCE_THROW_EXCEPTION(share_memory_exception(error));
             }
 
             if (stat_buf.st_size <= static_cast<::off_t>(data_offset_)) {
@@ -325,7 +325,7 @@ void share_memory::open(const string& name, size_t size, open_mode mode, access_
             handle_ = ::shm_open(shm_name.data(), flags | O_CREAT, 0666);
             if (handle_ == g_invalid_handle) {
                 const auto error = last_error();
-                NEFORCE_THROW_EXCEPTION(share_memory_exception(error.message().data()));
+                NEFORCE_THROW_EXCEPTION(share_memory_exception(error));
             }
 
             struct ::stat stat_buf;
@@ -333,7 +333,7 @@ void share_memory::open(const string& name, size_t size, open_mode mode, access_
                 const auto error = last_error();
                 ::close(handle_);
                 handle_ = g_invalid_handle;
-                NEFORCE_THROW_EXCEPTION(share_memory_exception(error.message().data()));
+                NEFORCE_THROW_EXCEPTION(share_memory_exception(error));
             }
 
             if (stat_buf.st_size == 0) {
@@ -344,7 +344,7 @@ void share_memory::open(const string& name, size_t size, open_mode mode, access_
                     ::close(handle_);
                     handle_ = g_invalid_handle;
                     ::shm_unlink(shm_name.data());
-                    NEFORCE_THROW_EXCEPTION(share_memory_exception(error.message().data()));
+                    NEFORCE_THROW_EXCEPTION(share_memory_exception(error));
                 }
                 size_ = size;
             } else {
@@ -436,7 +436,7 @@ void share_memory::grow(size_t new_size) {
     const size_t fd_new_size = data_offset_ + new_size;
     if (::ftruncate(handle_, static_cast<::off_t>(fd_new_size)) == -1) {
         const auto error = last_error();
-        NEFORCE_THROW_EXCEPTION(share_memory_exception(error.message().data()));
+        NEFORCE_THROW_EXCEPTION(share_memory_exception(error));
     }
 
     size_ = new_size;
@@ -450,7 +450,7 @@ void share_memory::grow(size_t new_size) {
             original_mapped_addr_ = nullptr;
             mapped_addr_ = nullptr;
             const auto error = last_error();
-            NEFORCE_THROW_EXCEPTION(share_memory_exception(error.message().data()));
+            NEFORCE_THROW_EXCEPTION(share_memory_exception(error));
         }
         mapped_addr_ = static_cast<char*>(original_mapped_addr_) + data_offset_;
         internal_mapped_size_ = fd_new_size;
@@ -525,17 +525,16 @@ void* share_memory::map(size_t offset, const size_t length) {
     }
 
     if (offset > size_) {
-        NEFORCE_THROW_EXCEPTION(share_memory_exception(
-                ("Offset " + to_string(offset) + " exceeds shared memory size " + to_string(size_)).data()));
+        NEFORCE_THROW_EXCEPTION(share_memory_exception("Offset " + to_string(offset) + " exceeds shared memory size " +
+                                                       to_string(size_)));
     }
 
     size_t map_length = (length == 0) ? (size_ - offset) : length;
 
     if (length != 0 && (map_length > size_ || offset > size_ - map_length)) {
-        NEFORCE_THROW_EXCEPTION(share_memory_exception(("Map region [offset=" + to_string(offset) +
-                                                        ", length=" + to_string(map_length) +
-                                                        "] exceeds shared memory size (" + to_string(size_) + ")")
-                                                               .data()));
+        NEFORCE_THROW_EXCEPTION(share_memory_exception("Map region [offset=" + to_string(offset) +
+                                                       ", length=" + to_string(map_length) +
+                                                       "] exceeds shared memory size (" + to_string(size_) + ")"));
     }
 
     const size_t aligned_offset = (offset / granularity) * granularity;
@@ -574,7 +573,7 @@ void* share_memory::map(size_t offset, const size_t length) {
     if (original_mapped_addr_ == MAP_FAILED) {
         original_mapped_addr_ = nullptr;
         const auto error = last_error();
-        NEFORCE_THROW_EXCEPTION(share_memory_exception(error.message().data()));
+        NEFORCE_THROW_EXCEPTION(share_memory_exception(error));
     }
 
     // Initialize the process-shared mutex using CAS to elect a single initializer

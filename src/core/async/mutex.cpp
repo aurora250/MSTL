@@ -2,7 +2,7 @@
 #include <NeForce/core/async/shared_mutex.hpp>
 NEFORCE_BEGIN_NAMESPACE__
 
-mutex::mutex() {
+mutex::mutex() noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::InitializeSRWLock(&mutex_);
 #else
@@ -19,7 +19,7 @@ mutex::~mutex() {
 #endif
 }
 
-void mutex::lock() {
+void mutex::lock() noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::AcquireSRWLockExclusive(&mutex_);
 #else
@@ -27,7 +27,7 @@ void mutex::lock() {
 #endif
 }
 
-void mutex::unlock() {
+void mutex::unlock() noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::ReleaseSRWLockExclusive(&mutex_);
 #else
@@ -44,7 +44,7 @@ bool mutex::try_lock() noexcept {
 }
 
 
-recursive_mutex::recursive_mutex() {
+recursive_mutex::recursive_mutex() noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::InitializeCriticalSection(&recursive_mutex_);
 #else
@@ -64,7 +64,7 @@ recursive_mutex::~recursive_mutex() {
 #endif
 }
 
-void recursive_mutex::lock() {
+void recursive_mutex::lock() noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::EnterCriticalSection(&recursive_mutex_);
 #else
@@ -72,7 +72,7 @@ void recursive_mutex::lock() {
 #endif
 }
 
-void recursive_mutex::unlock() {
+void recursive_mutex::unlock() noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::LeaveCriticalSection(&recursive_mutex_);
 #else
@@ -89,7 +89,7 @@ bool recursive_mutex::try_lock() noexcept {
 }
 
 
-shared_mutex::shared_mutex() {
+shared_mutex::shared_mutex() noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::InitializeSRWLock(&shared_mutex_);
 #else
@@ -103,7 +103,7 @@ shared_mutex::~shared_mutex() {
 #endif
 }
 
-void shared_mutex::lock() {
+void shared_mutex::lock() noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::AcquireSRWLockExclusive(&shared_mutex_);
 #else
@@ -111,7 +111,7 @@ void shared_mutex::lock() {
 #endif
 }
 
-void shared_mutex::unlock() {
+void shared_mutex::unlock() noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::ReleaseSRWLockExclusive(&shared_mutex_);
 #else
@@ -127,7 +127,7 @@ bool shared_mutex::try_lock() noexcept {
 #endif
 }
 
-void shared_mutex::lock_shared() {
+void shared_mutex::lock_shared() noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::AcquireSRWLockShared(&shared_mutex_);
 #else
@@ -135,7 +135,7 @@ void shared_mutex::lock_shared() {
 #endif
 }
 
-void shared_mutex::unlock_shared() {
+void shared_mutex::unlock_shared() noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::ReleaseSRWLockShared(&shared_mutex_);
 #else

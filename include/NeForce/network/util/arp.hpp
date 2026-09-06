@@ -21,6 +21,8 @@ NEFORCE_BEGIN_NAMESPACE__
  * @{
  */
 
+// TODO(aurora250): use pimpl to avoid complex define branch
+
 /**
  * @class arp
  * @brief ARP协议

@@ -66,7 +66,7 @@ NEFORCE_BEGIN_NAMESPACE__
  * @warning 仅在确定代码路径绝对不可达时使用，否则会导致严重的运行时问题。
  */
 NEFORCE_NORETURN NEFORCE_ALWAYS_INLINE_INLINE void unreachable() noexcept {
-#ifdef NEFORCE_COMPILER_GNUC
+#if defined(NEFORCE_COMPILER_GNUC) || defined(NEFORCE_COMPILER_CLANG)
     __builtin_unreachable();
 #else
     __assume(false);
@@ -81,7 +81,7 @@ NEFORCE_NORETURN NEFORCE_ALWAYS_INLINE_INLINE void unreachable() noexcept {
  * @warning 错误使用可能降低性能，仅在确实有概率偏差时使用
  */
 NEFORCE_ALWAYS_INLINE_INLINE bool likely(bool x) {
-#ifdef NEFORCE_COMPILER_GNUC
+#if defined(NEFORCE_COMPILER_GNUC) || defined(NEFORCE_COMPILER_CLANG)
     return static_cast<bool>(__builtin_expect(static_cast<long>(x), 1L));
 #else
     return x;
@@ -95,7 +95,7 @@ NEFORCE_ALWAYS_INLINE_INLINE bool likely(bool x) {
  * @warning 错误使用可能降低性能，仅在确实有概率偏差时使用
  */
 NEFORCE_ALWAYS_INLINE_INLINE bool unlikely(bool x) {
-#ifdef NEFORCE_COMPILER_GNUC
+#if defined(NEFORCE_COMPILER_GNUC) || defined(NEFORCE_COMPILER_CLANG)
     return static_cast<bool>(__builtin_expect(static_cast<long>(x), 0L));
 #else
     return x;

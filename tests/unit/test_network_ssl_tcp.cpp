@@ -5,6 +5,7 @@
 #include <NeForce/network/tcp/tcp_socket.hpp>
 #include <NeForce/network/tcp/tcp_acceptor.hpp>
 #include <NeForce/network/tcp/tcp_client.hpp>
+#include <openssl/ssl.h>
 #include <gtest/gtest.h>
 using namespace neforce;
 
@@ -94,13 +95,13 @@ TEST_F(SslContextTest, SetCipherSuites) {
 
 TEST_F(SslContextTest, SetOptions) {
     ssl_context ctx;
-    EXPECT_NO_THROW(ctx.set_options(SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3));
+    EXPECT_NO_THROW(ctx.set_options(ssl_option::NO_SSLv2 | ssl_option::NO_SSLv3));
 }
 
 TEST_F(SslContextTest, SetVerifyMode) {
     ssl_context ctx;
-    EXPECT_NO_THROW(ctx.set_verify_mode(SSL_VERIFY_PEER));
-    EXPECT_NO_THROW(ctx.set_verify_mode(SSL_VERIFY_NONE));
+    EXPECT_NO_THROW(ctx.set_verify_mode(ssl_verify::PEER));
+    EXPECT_NO_THROW(ctx.set_verify_mode(ssl_verify::NONE));
 }
 
 TEST_F(SslContextTest, RequireClientCertificate) {
@@ -281,7 +282,7 @@ TEST_F(SslStreamTest, SetSniHostnameEmptyThrows) {
 TEST_F(SslStreamTest, GetPeerCertificateWithoutInitReturnsNull) {
     ssl_stream stream;
     auto cert = stream.get_peer_certificate();
-    EXPECT_EQ(cert.get(), nullptr);
+    EXPECT_EQ(cert.native_handle(), nullptr);
 }
 
 TEST_F(SslStreamTest, VerifyPeerWithoutInitReturnsFalse) {
@@ -313,10 +314,10 @@ TEST_F(SslStreamTest, NativeHandleOnValidStreamIsNotNull) {
 TEST_F(SslStreamTest, ReleaseReturnsHandleAndNullifies) {
     ssl_context ctx(ssl_method::TLS_CLIENT);
     ssl_stream stream(ctx);
-    SSL* ssl = stream.release();
+    void* ssl = stream.release();
     EXPECT_NE(ssl, nullptr);
     EXPECT_FALSE(stream.is_valid());
-    SSL_free(ssl);
+    ::SSL_free(static_cast<::SSL*>(ssl));
 }
 
 TEST_F(SslStreamTest, CloseIsSafeOnDefaultConstructed) {

@@ -12,6 +12,7 @@
 #include <NeForce/network/tcp/tcp_server.hpp>
 #include <NeForce/network/udp_socket.hpp>
 #include <gtest/gtest.h>
+#include <openssl/ssl.h>
 using namespace neforce;
 
 namespace {
@@ -127,7 +128,7 @@ TEST_F(SslEchoIntegration, SslEchoRoundtrip) {
     thread server_thread([&]() { run_ssl_echo_server(acceptor, server_ctx); });
 
     ssl_context client_ctx(ssl_method::TLS_CLIENT);
-    client_ctx.set_verify_mode(SSL_VERIFY_NONE);
+    client_ctx.set_verify_mode(ssl_verify::NONE);
 
     ssl_socket client;
     client.open();
@@ -178,7 +179,7 @@ TEST_F(SslEchoIntegration, SslMultipleMessages) {
     });
 
     ssl_context client_ctx(ssl_method::TLS_CLIENT);
-    client_ctx.set_verify_mode(SSL_VERIFY_NONE);
+    client_ctx.set_verify_mode(ssl_verify::NONE);
 
     ssl_socket client;
     client.open();
@@ -216,7 +217,7 @@ TEST_F(SslEchoIntegration, SslPeerCertificateInfo) {
     thread server_thread([&]() { run_ssl_echo_server(acceptor, server_ctx, &ssl_ready); });
 
     ssl_context client_ctx(ssl_method::TLS_CLIENT);
-    client_ctx.set_verify_mode(SSL_VERIFY_NONE);
+    client_ctx.set_verify_mode(ssl_verify::NONE);
 
     ssl_socket client;
     client.open();
@@ -255,7 +256,7 @@ TEST_F(SslEchoIntegration, SslCipherAndProtocol) {
     thread server_thread([&]() { run_ssl_echo_server(acceptor, server_ctx, &ssl_ready); });
 
     ssl_context client_ctx(ssl_method::TLS_CLIENT);
-    client_ctx.set_verify_mode(SSL_VERIFY_NONE);
+    client_ctx.set_verify_mode(ssl_verify::NONE);
 
     ssl_socket client;
     client.open();
@@ -302,7 +303,7 @@ TEST_F(SslAcceptorIntegration, AcceptSslCompletesHandshake) {
 
     thread client_thread([&]() {
         ssl_context client_ctx(ssl_method::TLS_CLIENT);
-        client_ctx.set_verify_mode(SSL_VERIFY_NONE);
+        client_ctx.set_verify_mode(ssl_verify::NONE);
 
         ssl_socket client;
         client.open();
@@ -346,7 +347,7 @@ TEST_F(SslAcceptorIntegration, AcceptSslNonblock) {
 
     thread client_thread([&]() {
         ssl_context client_ctx(ssl_method::TLS_CLIENT);
-        client_ctx.set_verify_mode(SSL_VERIFY_NONE);
+        client_ctx.set_verify_mode(ssl_verify::NONE);
 
         ssl_socket client;
         client.open();

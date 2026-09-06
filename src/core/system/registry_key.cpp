@@ -87,7 +87,7 @@ void registry_key::close() noexcept {
 
 void registry_key::throw_if_invalid() const {
     if (hkey_ == nullptr) {
-        throw registry_key_exception("Invalid registry key handle");
+        NEFORCE_THROW_EXCEPTION(registry_key_exception("Invalid registry key handle"));
     }
 }
 
@@ -99,7 +99,7 @@ void registry_key::create_sub_key(const wstring& name) {
     const ::LONG result = ::RegCreateKeyExW(hkey_, name.data(), 0, nullptr, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
                                             nullptr, &sub_key, &disposition);
     if (result != ERROR_SUCCESS) {
-        throw registry_key_exception("Failed to create registry key");
+        NEFORCE_THROW_EXCEPTION(registry_key_exception("Failed to create registry key"));
     }
     ::RegCloseKey(sub_key);
 }
@@ -108,7 +108,7 @@ void registry_key::open(const ::HKEY root, const wstring& path, const ::REGSAM s
     close();
     const ::LONG result = ::RegOpenKeyExW(root, path.data(), 0, sam_desired, &hkey_);
     if (result != ERROR_SUCCESS) {
-        throw registry_key_exception("Failed to open registry key");
+        NEFORCE_THROW_EXCEPTION(registry_key_exception("Failed to open registry key"));
     }
     owns_handle_ = true;
 }
@@ -118,7 +118,7 @@ registry_key registry_key::open_sub_key(const wstring& name, const ::REGSAM sam_
     ::HKEY sub_key = nullptr;
     const ::LONG result = ::RegOpenKeyExW(hkey_, name.data(), 0, sam_desired, &sub_key);
     if (result != ERROR_SUCCESS) {
-        throw registry_key_exception("Failed to open sub key");
+        NEFORCE_THROW_EXCEPTION(registry_key_exception("Failed to open sub key"));
     }
     return registry_key(sub_key);
 }
@@ -127,7 +127,7 @@ void registry_key::delete_sub_key(const wstring& name) {
     throw_if_invalid();
     const ::LONG result = ::RegDeleteKeyW(hkey_, name.data());
     if (result != ERROR_SUCCESS) {
-        throw registry_key_exception("Failed to delete sub key");
+        NEFORCE_THROW_EXCEPTION(registry_key_exception("Failed to delete sub key"));
     }
 }
 
@@ -135,14 +135,14 @@ void registry_key::delete_value(const wstring& name) {
     throw_if_invalid();
     const ::LONG result = ::RegDeleteValueW(hkey_, name.data());
     if (result != ERROR_SUCCESS) {
-        throw registry_key_exception("Failed to delete value");
+        NEFORCE_THROW_EXCEPTION(registry_key_exception("Failed to delete value"));
     }
 }
 
 void registry_key::delete_key_tree(const ::HKEY root, const wstring& path) {
     const ::LONG result = ::RegDeleteTreeW(root, path.data());
     if (result != ERROR_SUCCESS) {
-        throw registry_key_exception("Failed to delete key tree");
+        NEFORCE_THROW_EXCEPTION(registry_key_exception("Failed to delete key tree"));
     }
 }
 
@@ -199,7 +199,7 @@ vector<registry_key::value_info> registry_key::enum_values() const {
             break;
         }
         if (result != ERROR_SUCCESS) {
-            throw registry_key_exception("Failed to enumerate values");
+            NEFORCE_THROW_EXCEPTION(registry_key_exception("Failed to enumerate values"));
         }
 
         value_info info;
@@ -218,7 +218,7 @@ void registry_key::set_string_value(const wstring& name, const wstring& value) {
     const ::LONG result =
             ::RegSetValueExW(hkey_, name.data(), 0, REG_SZ, reinterpret_cast<const ::BYTE*>(value.data()), size);
     if (result != ERROR_SUCCESS) {
-        throw registry_key_exception("Failed to set string value");
+        NEFORCE_THROW_EXCEPTION(registry_key_exception("Failed to set string value"));
     }
 }
 
@@ -228,7 +228,7 @@ void registry_key::set_expand_string_value(const wstring& name, const wstring& v
     const ::LONG result =
             ::RegSetValueExW(hkey_, name.data(), 0, REG_EXPAND_SZ, reinterpret_cast<const ::BYTE*>(value.data()), size);
     if (result != ERROR_SUCCESS) {
-        throw registry_key_exception("Failed to set expand string value");
+        NEFORCE_THROW_EXCEPTION(registry_key_exception("Failed to set expand string value"));
     }
 }
 
@@ -237,7 +237,7 @@ void registry_key::set_dword_value(const wstring& name, const ::DWORD value) {
     const ::LONG result = ::RegSetValueExW(hkey_, name.data(), 0, REG_DWORD, reinterpret_cast<const ::BYTE*>(&value),
                                            sizeof(::DWORD));
     if (result != ERROR_SUCCESS) {
-        throw registry_key_exception("Failed to set DWORD value");
+        NEFORCE_THROW_EXCEPTION(registry_key_exception("Failed to set DWORD value"));
     }
 }
 
@@ -246,7 +246,7 @@ void registry_key::set_qword_value(const wstring& name, const ::ULONGLONG value)
     const ::LONG result = ::RegSetValueExW(hkey_, name.data(), 0, REG_QWORD, reinterpret_cast<const ::BYTE*>(&value),
                                            sizeof(::ULONGLONG));
     if (result != ERROR_SUCCESS) {
-        throw registry_key_exception("Failed to set QWORD value");
+        NEFORCE_THROW_EXCEPTION(registry_key_exception("Failed to set QWORD value"));
     }
 }
 
@@ -254,7 +254,7 @@ void registry_key::set_binary_value(const wstring& name, const ::BYTE* data, con
     throw_if_invalid();
     const ::LONG result = ::RegSetValueExW(hkey_, name.data(), 0, REG_BINARY, data, size);
     if (result != ERROR_SUCCESS) {
-        throw registry_key_exception("Failed to set binary value");
+        NEFORCE_THROW_EXCEPTION(registry_key_exception("Failed to set binary value"));
     }
 }
 
@@ -277,7 +277,7 @@ void registry_key::set_multi_string_value(const wstring& name, const vector<wstr
     const ::LONG result =
             ::RegSetValueExW(hkey_, name.data(), 0, REG_MULTI_SZ, buffer.data(), static_cast<::DWORD>(total_size));
     if (result != ERROR_SUCCESS) {
-        throw registry_key_exception("Failed to set multi-string value");
+        NEFORCE_THROW_EXCEPTION(registry_key_exception("Failed to set multi-string value"));
     }
 }
 
@@ -288,13 +288,13 @@ registry_key::value_info registry_key::get_value_info(const wstring& name) const
 
     ::LONG result = ::RegQueryValueExW(hkey_, name.data(), nullptr, &type, nullptr, &data_size);
     if (result != ERROR_SUCCESS) {
-        throw registry_key_exception("Failed to query value info");
+        NEFORCE_THROW_EXCEPTION(registry_key_exception("Failed to query value info"));
     }
 
     vector<::BYTE> data(data_size);
     result = ::RegQueryValueExW(hkey_, name.data(), nullptr, nullptr, data.data(), &data_size);
     if (result != ERROR_SUCCESS) {
-        throw registry_key_exception("Failed to read value data");
+        NEFORCE_THROW_EXCEPTION(registry_key_exception("Failed to read value data"));
     }
 
     value_info info;

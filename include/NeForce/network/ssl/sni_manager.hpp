@@ -9,7 +9,7 @@
  * 在 TLS 握手时根据客户端 SNI hostname 自动选择合适的 SSL_CTX。
  */
 
-#include "NeForce/core/container/unordered_map.hpp"
+#include "NeForce/core/container/flat_unordered_map.hpp"
 #include "NeForce/network/ssl/ssl_context.hpp"
 NEFORCE_BEGIN_NAMESPACE__
 
@@ -39,7 +39,7 @@ NEFORCE_BEGIN_NAMESPACE__
 class NEFORCE_API sni_manager {
 private:
     /// @brief hostname → SSL 上下文映射
-    unordered_map<string, ssl_context> hosts_;
+    flat_unordered_map<string, ssl_context> hosts_;
     /// @brief 默认 SSL 上下文（SNI 未匹配时使用）
     ssl_context default_context_;
     /// @brief 是否已设置默认上下文
@@ -90,7 +90,7 @@ public:
     NEFORCE_NODISCARD size_t host_count() const noexcept { return hosts_.size(); }
 
     /**
-     * @brief SNI回调函数（用于SSL_CTX_set_tlsext_servername_callback）
+     * @brief SNI回调函数
      *
      * 此静态函数可作为OpenSSL的SNI回调，自动查询sni_manager实例。
      * 通过SSL_CTX_set_tlsext_servername_arg设置manager指针。

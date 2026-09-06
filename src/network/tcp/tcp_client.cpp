@@ -412,7 +412,7 @@ bool ssl_client::post_connect() {
     if (!ssl_ctx_) {
         return true;
     }
-    ssl_ctx_->set_verify_mode(verify_peer_ ? SSL_VERIFY_PEER : SSL_VERIFY_NONE);
+    ssl_ctx_->set_verify_mode(verify_peer_ ? ssl_verify::PEER : ssl_verify::NONE);
 
     if (!ssl_ctx_->is_valid()) {
         handle_exception(ssl_exception("SSL context is invalid"));
@@ -445,7 +445,8 @@ ssl_client::ssl_client(io_context& ioc, ssl_context ctx) :
 tcp_client_base(ioc),
 ssl_ctx_(move(ctx)) {
     if (ssl_ctx_) {
-        ssl_ctx_->set_options(SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1);
+        ssl_ctx_->set_options(ssl_option::NO_SSLv2 | ssl_option::NO_SSLv3 | ssl_option::NO_TLSv1 |
+                              ssl_option::NO_TLSv1_1);
     }
 }
 
@@ -456,7 +457,7 @@ void ssl_client::set_ssl_context(ssl_context ctx) {
     if (!ctx.is_valid()) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("Invalid SSL context"));
     }
-    ctx.set_options(SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1);
+    ctx.set_options(ssl_option::NO_SSLv2 | ssl_option::NO_SSLv3 | ssl_option::NO_TLSv1 | ssl_option::NO_TLSv1_1);
     ssl_ctx_ = move(ctx);
 }
 
@@ -466,7 +467,7 @@ void ssl_client::set_verify_peer(bool verify) {
     }
     verify_peer_ = verify;
     if (ssl_ctx_ && ssl_ctx_->is_valid()) {
-        ssl_ctx_->set_verify_mode(verify ? SSL_VERIFY_PEER : SSL_VERIFY_NONE);
+        ssl_ctx_->set_verify_mode(verify ? ssl_verify::PEER : ssl_verify::NONE);
     }
 }
 

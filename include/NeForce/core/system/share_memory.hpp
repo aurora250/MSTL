@@ -21,18 +21,7 @@ NEFORCE_BEGIN_NAMESPACE__
  * @struct share_memory_exception
  * @brief 共享内存操作异常
  */
-struct share_memory_exception final : system_exception {
-    explicit share_memory_exception(const char* info = "Share Memory Operation Failed.",
-                                    const error_code code = last_error()) noexcept :
-    system_exception(info, code) {}
-
-    explicit share_memory_exception(const exception& e) :
-    system_exception(e) {}
-
-    ~share_memory_exception() override = default;
-
-    NEFORCE_NODISCARD const char* type() const noexcept override { return "share_memory_exception"; }
-};
+NEFORCE_ERROR_BUILD_SYSTEM_CLASS(share_memory_exception, "Share Memory Operation Failed.")
 
 /** @} */ // Exceptions
 
@@ -83,9 +72,7 @@ private:
     bool is_open_{false};                              ///< 是否已打开
     size_t data_offset_{0};                            ///< 用户数据区相对于映射基址的偏移
     bool mutex_owner_{false};                          ///< 是否为本进程初始化共享互斥锁
-#ifdef NEFORCE_PLATFORM_WINDOWS
-    void* mutex_handle_{nullptr}; ///< 进程间互斥锁句柄
-#endif
+    void* mutex_handle_{nullptr};                      ///< 进程间互斥锁句柄
 
 public:
     /**

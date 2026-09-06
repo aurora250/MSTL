@@ -21,18 +21,7 @@ NEFORCE_BEGIN_NAMESPACE__
  * @struct dynamic_library_exception
  * @brief 动态库操作异常
  */
-struct dynamic_library_exception final : system_exception {
-    explicit dynamic_library_exception(const char* info = "Dynamic Library Operation Failed.",
-                                       const error_code code = last_error()) noexcept :
-    system_exception(info, code) {}
-
-    explicit dynamic_library_exception(const exception& e) :
-    system_exception(e) {}
-
-    ~dynamic_library_exception() override = default;
-
-    NEFORCE_NODISCARD const char* type() const noexcept override { return "dynamic_library_exception"; }
-};
+NEFORCE_ERROR_BUILD_SYSTEM_CLASS(dynamic_library_exception, "Dynamic Library Operation Failed.")
 
 /** @} */ // Exceptions
 

@@ -73,10 +73,10 @@ bool environment::exists(const string& name) {
     return !get_unsafe(name).empty();
 }
 
-unordered_map<string, string> environment::all_envs() {
+flat_unordered_map<string, string> environment::all_envs() {
     shared_lock<shared_mutex> lock(get_mutex());
 
-    unordered_map<string, string> env_map;
+    flat_unordered_map<string, string> env_map;
 
 #ifdef NEFORCE_PLATFORM_WINDOWS
     char* env_block = ::GetEnvironmentStrings();
@@ -87,11 +87,11 @@ unordered_map<string, string> environment::all_envs() {
     const char* current = env_block;
     while (*current != '\0') {
         string env_str(current);
-        size_t eq_pos = env_str.find('=');
+        const size_t eq_pos = env_str.find('=');
         if (eq_pos != string::npos) {
             string name = env_str.head(eq_pos);
             string value = env_str.tail(eq_pos + 1);
-            env_map[name] = value;
+            env_map[name] = move(value);
         }
         current += env_str.length() + 1;
     }

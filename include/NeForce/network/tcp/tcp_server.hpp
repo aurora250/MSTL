@@ -49,10 +49,6 @@ protected:
 
     /**
      * @brief 接受连接的主循环
-     *
-     * 使用 io_context::add_fd + run_one() 驱动事件等待，
-     * 替代 raw poll/WSAEventSelect。专用线程确保 SSL 握手等阻塞操作
-     * 不影响 io_context 池线程。
      */
     void accept_loop();
 
@@ -60,11 +56,10 @@ protected:
      * @brief 处理单个客户端连接
      * @param client 已建立连接的 socket
      *
-     * 调用客户端处理器处理连接。
      * 派生类可重写此方法以自定义处理逻辑。
      */
     virtual void handle_client(unique_ptr<tcp_socket> client) {
-        if (client_handler_) {
+        if (likely(static_cast<bool>(client_handler_))) {
             client_handler_(move(client));
         }
     }
@@ -128,13 +123,13 @@ public:
 
     /**
      * @brief 启动服务器
-     * @param backlog 连接队列大小（默认SOMAXCONN）
+     * @param backlog 连接队列大小
      * @return 启动成功返回true
      *
      * 创建acceptor，开始接受连接。
      * 需要先设置客户端处理器。
      */
-    virtual bool start(int backlog = SOMAXCONN) noexcept;
+    virtual bool start(int backlog = socket_base::max_backlog) noexcept;
 
     /**
      * @brief 停止服务器
@@ -263,7 +258,7 @@ public:
      *
      * 需要先加载证书或设置SSL上下文。
      */
-    bool start(int backlog = SOMAXCONN) noexcept override;
+    bool start(int backlog = socket_base::max_backlog) noexcept override;
 };
 
 /** @} */ // SSL/TLS

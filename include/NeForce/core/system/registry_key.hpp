@@ -26,18 +26,7 @@ NEFORCE_BEGIN_NAMESPACE__
  * @struct registry_key_exception
  * @brief 系统注册表操作异常
  */
-struct registry_key_exception final : system_exception {
-    explicit registry_key_exception(const char* info = "Registry Key Operation Failed.",
-                                    const error_code code = last_error()) noexcept :
-    system_exception(info, code) {}
-
-    explicit registry_key_exception(const exception& e) :
-    system_exception(e) {}
-
-    ~registry_key_exception() override = default;
-
-    NEFORCE_NODISCARD const char* type() const noexcept override { return "registry_key_exception"; }
-};
+NEFORCE_ERROR_BUILD_SYSTEM_CLASS(registry_key_exception, "Registry Key Operation Failed.")
 
 /** @} */ // Exceptions
 

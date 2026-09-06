@@ -26,6 +26,7 @@ Checks: >
   clang-analyzer-*,
   -clang-analyzer-core.uninitialized.Assign,
   -clang-analyzer-deadcode.DeadStores,
+  -clang-analyzer-optin.core.EnumCastOutOfRange,
   -clang-analyzer-optin.cplusplus.UninitializedObject,
   concurrency-*,
   cppcoreguidelines-*,

@@ -14,6 +14,7 @@
 #include "NeForce/core/async/io_context.hpp"
 #include "NeForce/core/async/use_awaitable.hpp"
 #include "NeForce/network/ssl/ssl_context.hpp"
+#include "NeForce/network/ssl/x509_certificate.hpp"
 NEFORCE_BEGIN_NAMESPACE__
 
 /**
@@ -49,25 +50,8 @@ public:
 #endif
 
 private:
-    struct ssl_deleter {
-        void operator()(::SSL* ssl) const noexcept {
-            if (ssl != nullptr) {
-                ::SSL_free(ssl);
-            }
-        }
-    };
-
-    struct x509_deleter {
-        void operator()(::X509* cert) const noexcept {
-            if (cert != nullptr) {
-                ::X509_free(cert);
-            }
-        }
-    };
-    using x509_ptr = unique_ptr<::X509, x509_deleter>;
-
-    unique_ptr<::SSL, ssl_deleter> ssl_; ///< SSL对象
-    string last_error_;                  ///< 最后错误信息
+    void* ssl_;         ///< SSL对象
+    string last_error_; ///< 最后错误信息
 
     void handle_ssl_error(int ret, const char* operation);
 
@@ -89,12 +73,12 @@ public:
     /**
      * @brief 移动构造函数
      */
-    ssl_stream(ssl_stream&& other) noexcept = default;
+    ssl_stream(ssl_stream&& other) noexcept;
 
     /**
      * @brief 移动赋值运算符
      */
-    ssl_stream& operator=(ssl_stream&& other) noexcept = default;
+    ssl_stream& operator=(ssl_stream&& other) noexcept;
 
     /**
      * @brief 重置SSL流
@@ -213,7 +197,7 @@ public:
      *
      * 获取TLS握手时对等方提供的证书。
      */
-    NEFORCE_NODISCARD x509_ptr get_peer_certificate() const;
+    NEFORCE_NODISCARD x509_certificate get_peer_certificate() const;
 
     /**
      * @brief 验证对等方证书
@@ -269,7 +253,7 @@ public:
      * @brief 获取原生SSL对象指针
      * @return SSL指针
      */
-    NEFORCE_NODISCARD ::SSL* native_handle() const noexcept { return ssl_.get(); }
+    NEFORCE_NODISCARD void* native_handle() const noexcept { return ssl_; }
 
     /**
      * @brief 释放SSL对象所有权
@@ -277,7 +261,7 @@ public:
      *
      * 释放SSL对象的所有权，调用方负责释放。
      */
-    NEFORCE_NODISCARD ::SSL* release() noexcept { return ssl_.release(); }
+    NEFORCE_NODISCARD void* release() noexcept;
 
     /**
      * @brief 异步TLS握手

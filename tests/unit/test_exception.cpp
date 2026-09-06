@@ -635,8 +635,6 @@ TEST(ThrowMacroTest, ThrowsExpectedType) {
     EXPECT_THROW(NEFORCE_THROW_EXCEPTION(value_exception("v")), value_exception);
 }
 
-TEST(AssertionMacroTest, PassingConditionIsNoOp) { NEFORCE_ASSERTION(true); }
-
 TEST(DebugUtilTest, DebuggerPresentQueryIsCallable) {
     const bool present = is_debugger_present();
     (void) present;

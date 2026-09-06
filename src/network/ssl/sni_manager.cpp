@@ -26,7 +26,7 @@ void sni_manager::set_default_context(ssl_context ctx) {
     has_default_ = true;
 }
 
-bool sni_manager::has_host(const string& hostname) const { return hosts_.find(hostname.lowercase()) != hosts_.end(); }
+bool sni_manager::has_host(const string& hostname) const { return hosts_.contains(hostname.lowercase()); }
 
 void* sni_manager::select_ssl_ctx(const string& server_name) const {
     if (server_name.empty()) {

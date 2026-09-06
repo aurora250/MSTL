@@ -21,18 +21,7 @@ NEFORCE_BEGIN_NAMESPACE__
  * @struct pipe_exception
  * @brief 管道操作异常
  */
-struct pipe_exception final : system_exception {
-    explicit pipe_exception(const char* info = "Pipe Operation Failed.", const error_code code = last_error()) noexcept
-    :
-    system_exception(info, code) {}
-
-    explicit pipe_exception(const exception& e) :
-    system_exception(e) {}
-
-    ~pipe_exception() override = default;
-
-    NEFORCE_NODISCARD const char* type() const noexcept override { return "pipe_exception"; }
-};
+NEFORCE_ERROR_BUILD_SYSTEM_CLASS(pipe_exception, "Pipe Operation Failed.")
 
 /** @} */ // Exceptions
 
