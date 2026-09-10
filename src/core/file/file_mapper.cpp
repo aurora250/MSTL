@@ -1,4 +1,5 @@
 #include <NeForce/core/file/file_mapper.hpp>
+#include <NeForce/core/async/call_once.hpp>
 #include <NeForce/core/system/sysinfo.hpp>
 #ifdef NEFORCE_PLATFORM_WINDOWS
 #    include <memoryapi.h>
@@ -61,10 +62,24 @@ namespace {
         size = 0;
         offset = 0;
     }
+
+#ifdef NEFORCE_PLATFORM_WINDOWS
+    using PFN = ::BOOL(WINAPI*)(::HANDLE, ::ULONG_PTR, ::PWIN32_MEMORY_RANGE_ENTRY, ::ULONG);
+
+    PFN load_pfn() noexcept {
+        const ::HMODULE hk32 = ::GetModuleHandleW(L"kernel32.dll");
+        if (hk32 != nullptr) {
+            return reinterpret_cast<PFN>(::GetProcAddress(hk32, "PrefetchVirtualMemory"));
+        }
+        return nullptr;
+    }
+
+    const auto pfn = load_pfn();
+#endif
 } // namespace
 
 
-file_mapper::file_mapper(const native_handle_type file_handle) :
+file_mapper::file_mapper(const native_handle_type file_handle) noexcept :
 file_handle_(file_handle)
 #ifdef NEFORCE_PLATFORM_WINDOWS
 ,
@@ -168,14 +183,9 @@ bool file_mapper::map(const size_type offset, size_type size, const file_access 
         }
     }
 
-    const ::HMODULE hk32 = ::GetModuleHandleA("kernel32.dll");
-    if (hk32 != nullptr) {
-        using PFN = ::BOOL(__stdcall*)(::HANDLE, ::ULONG_PTR, ::PWIN32_MEMORY_RANGE_ENTRY, ::ULONG);
-        static auto pfn = reinterpret_cast<PFN>(::GetProcAddress(hk32, "PrefetchVirtualMemory"));
-        if (pfn != nullptr && hint == file_map_hint::SEQUENTIAL) {
-            ::WIN32_MEMORY_RANGE_ENTRY range{ptr_, size};
-            pfn(::GetCurrentProcess(), 1, &range, 0);
-        }
+    if (pfn != nullptr && hint == file_map_hint::SEQUENTIAL) {
+        ::WIN32_MEMORY_RANGE_ENTRY range{ptr_, size};
+        pfn(::GetCurrentProcess(), 1, &range, 0);
     }
 
 #else

@@ -210,6 +210,12 @@ public:
     NEFORCE_NODISCARD bool operator!=(const ip_address& other) const { return !(*this == other); }
 };
 
+
+/**
+ * @brief 网络地址族类型枚举
+ */
+using ip_family = ip_address::family;
+
 /** @} */ // NetworkUtil
 
 NEFORCE_BEGIN_INNER__

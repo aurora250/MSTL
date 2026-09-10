@@ -1,5 +1,6 @@
 #include <NeForce/core/system/dynamic_library.hpp>
 #ifdef NEFORCE_PLATFORM_WINDOWS
+#    include <NeForce/core/string/utf.hpp>
 #    include <NeForce/core/config/windef.hpp>
 #    include <libloaderapi.h>
 #    include <winnt.h>
@@ -28,7 +29,8 @@ void dynamic_library::open() {
         flags |= LOAD_WITH_ALTERED_SEARCH_PATH;
     }
 
-    handle_ = ::LoadLibraryExA(path_.data(), nullptr, flags);
+    const wstring wpath = character::to_wstring(path_.view());
+    handle_ = ::LoadLibraryExW(wpath.data(), nullptr, flags);
     if (handle_ == nullptr) {
         NEFORCE_THROW_EXCEPTION(dynamic_library_exception("dynamic library load failed."));
     }
@@ -147,7 +149,7 @@ bool dynamic_library::has_symbol(const string& name) const noexcept {
 dynamic_library dynamic_library::load_self() {
     dynamic_library lib;
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    lib.handle_ = ::GetModuleHandleA(nullptr);
+    lib.handle_ = ::GetModuleHandleW(nullptr);
     lib.path_ = "";
     lib.load_mode_ = load_mode::default_;
 #else
@@ -299,12 +301,12 @@ vector<string> dynamic_library::list_symbols(const string& name_filter) const {
 
 string dynamic_library::program_location() {
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    char buffer[MAX_PATH];
-    const ::DWORD len = ::GetModuleFileNameA(nullptr, buffer, sizeof(buffer));
+    wchar_t buffer[MAX_PATH];
+    const size_t len = ::GetModuleFileNameW(nullptr, buffer, sizeof(buffer));
     if (len == 0 || len >= sizeof(buffer)) {
         return "";
     }
-    return {buffer, static_cast<size_t>(len)};
+    return wcharacter::to_string({buffer, len});
 #else
     char buffer[PATH_MAX];
     const ssize_t len = ::readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
@@ -322,17 +324,17 @@ string dynamic_library::symbol_location(void* symbol_ptr) {
     }
 #ifdef NEFORCE_PLATFORM_WINDOWS
     ::HMODULE hModule = nullptr;
-    if (::GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                             static_cast<const char*>(symbol_ptr), &hModule) == FALSE ||
+    if (::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                             static_cast<const wchar_t*>(symbol_ptr), &hModule) == FALSE ||
         hModule == nullptr) {
         return "";
     }
-    char buffer[MAX_PATH];
-    const ::DWORD len = ::GetModuleFileNameA(hModule, buffer, sizeof(buffer));
+    wchar_t buffer[MAX_PATH];
+    const size_t len = ::GetModuleFileNameW(hModule, buffer, sizeof(buffer));
     if (len == 0 || len >= sizeof(buffer)) {
         return "";
     }
-    return {buffer, static_cast<size_t>(len)};
+    return wcharacter::to_string({buffer, len});
 #else
     ::Dl_info info;
     if (::dladdr(symbol_ptr, &info) == 0 || info.dli_fname == nullptr) {

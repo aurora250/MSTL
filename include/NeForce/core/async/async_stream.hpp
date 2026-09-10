@@ -72,7 +72,7 @@ public:
                              function<void(error_code, size_t)> handler) = 0;
 
     /**
-     * @brief 异步读取可调用对象
+     * @brief 可调用对象的异步读取
      * @tparam Token 可调用对象类型，需满足 void(error_code, size_t) 签名
      * @param ctx 异步 I/O 执行上下文
      * @param buffer 接收缓冲区
@@ -119,7 +119,7 @@ public:
 #endif
 
     /**
-     * @brief 异步写入可调用对象
+     * @brief 可调用对象的异步写入
      * @tparam Token 可调用对象类型，需满足 void(error_code, size_t) 签名
      * @param ctx 异步 I/O 执行上下文
      * @param buffer 发送缓冲区
@@ -158,7 +158,8 @@ public:
      * @param buffer 发送缓冲区
      * @return 可协程等待的结果
      */
-    awaitable<error_code, size_t> async_write(io_context& ctx, memory_view<const char> buffer, use_awaitable_t /*unused*/) {
+    awaitable<error_code, size_t> async_write(io_context& ctx, memory_view<const char> buffer,
+                                              use_awaitable_t /*unused*/) {
         async_result<use_awaitable_t, void(error_code, size_t)> result(use_awaitable);
         async_write(ctx, buffer, function<void(error_code, size_t)>(result.get_handler()));
         return result.get();

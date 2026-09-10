@@ -27,9 +27,9 @@ NEFORCE_BEGIN_NAMESPACE__
  * @brief 文件异步I/O管理类
  *
  * 提供对文件句柄的异步读写操作，由 io_context 事件循环驱动。
- * handler 在 io_context::run() 线程中执行。
  *
  * @note 不持有文件句柄所有权，句柄生命周期由调用方保证。
+ * @note Windows 上只有以 file_attri::OVERLAPPED 打开的句柄才会真正异步
  */
 class NEFORCE_API file_async {
 public:
@@ -45,13 +45,22 @@ public:
 private:
     native_handle_type handle_;
     io_context* ctx_{nullptr};
-#ifdef NEFORCE_USING_IO_URING
+#ifdef NEFORCE_PLATFORM_WINDOWS
+    struct win_state;
+    unique_ptr<win_state> win_; ///< IOCP 异步状态
+#else
+#    ifdef NEFORCE_USING_IO_URING
     struct uring;
-    unique_ptr<uring> uring_;
+    unique_ptr<uring> uring_; ///< io_uring 环
+#    endif
 #endif
-    function<void(error_code, size_type)> pending_handler_;
 
     void ensure_iocp(io_context& ctx);
+    void release_binding() noexcept;
+
+#ifdef NEFORCE_PLATFORM_WINDOWS
+    bool complete_win_op(win_state& state, ::OVERLAPPED* ov, error_code ec, size_type bytes);
+#endif
 
     void do_async_read(io_context& ctx, string& buffer, size_type size, difference_type offset, cancellation_slot* slot,
                        function<void(error_code, size_type)> handler);

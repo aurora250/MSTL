@@ -205,6 +205,12 @@ public:
     void set_timeout(const milliseconds timeout) noexcept { config_.timeout = timeout; }
 
     /**
+     * @brief 获取单轮查询超时时间
+     * @return 当前单轮查询超时
+     */
+    NEFORCE_NODISCARD milliseconds timeout() const noexcept { return config_.timeout; }
+
+    /**
      * @brief 设置是否使用TCP
      * @param use_tcp 是否使用TCP
      */
@@ -240,6 +246,12 @@ public:
      * @param retries 重试次数上限
      */
     void set_max_udp_retries(const uint8_t retries) noexcept { max_udp_retries_ = retries; }
+
+    /**
+     * @brief 获取UDP最大重试次数
+     * @return 当前重试次数上限
+     */
+    NEFORCE_NODISCARD uint8_t max_udp_retries() const noexcept { return max_udp_retries_; }
 
     /**
      * @brief 设置0x20随机大小写编码开关

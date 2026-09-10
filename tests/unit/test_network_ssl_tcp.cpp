@@ -281,7 +281,7 @@ TEST_F(SslStreamTest, SetSniHostnameEmptyThrows) {
 
 TEST_F(SslStreamTest, GetPeerCertificateWithoutInitReturnsNull) {
     ssl_stream stream;
-    auto cert = stream.get_peer_certificate();
+    auto cert = stream.peer_certificate();
     EXPECT_EQ(cert.native_handle(), nullptr);
 }
 
@@ -292,12 +292,12 @@ TEST_F(SslStreamTest, VerifyPeerWithoutInitReturnsFalse) {
 
 TEST_F(SslStreamTest, GetCipherNameWithoutInitReturnsEmpty) {
     ssl_stream stream;
-    EXPECT_EQ(stream.get_cipher_name(), "");
+    EXPECT_EQ(stream.cipher_name(), "");
 }
 
 TEST_F(SslStreamTest, GetVersionWithoutInitReturnsEmpty) {
     ssl_stream stream;
-    EXPECT_EQ(stream.get_version(), "");
+    EXPECT_EQ(stream.version(), "");
 }
 
 TEST_F(SslStreamTest, LastErrorInitiallyEmpty) {
@@ -393,7 +393,7 @@ TEST_F(SslSocketTest, DefaultConstructorIsNotSsl) {
 
 TEST_F(SslSocketTest, ConstructorFromFd) {
     socket_base base;
-    base.open(ip_address::family::INET4);
+    base.open(ip_family::INET4);
     auto fd = base.release();
     ssl_socket sock(fd);
     EXPECT_TRUE(sock.is_open());
@@ -402,7 +402,7 @@ TEST_F(SslSocketTest, ConstructorFromFd) {
 
 TEST_F(SslSocketTest, ConstructorFromTcpSocket) {
     tcp_socket tcp;
-    tcp.open(ip_address::family::INET4);
+    tcp.open(ip_family::INET4);
     ssl_socket ssl(move(tcp));
     EXPECT_TRUE(ssl.is_open());
     ssl.close();
@@ -438,7 +438,7 @@ TEST_F(SslSocketTest, InitClientSslWithoutOpenThrows) {
 
 TEST_F(SslSocketTest, InitServerSslWithInvalidContextThrows) {
     ssl_socket sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     ssl_context ctx(ssl_method::TLS_SERVER);
     ssl_context moved_from = move(ctx);
     EXPECT_THROW(sock.init_server_ssl(ctx), ssl_exception);
@@ -452,28 +452,28 @@ TEST_F(SslSocketTest, PeerCertificateInfoWithoutSslReturnsEmpty) {
 
 TEST_F(SslSocketTest, SendWithoutSslFallsBackToTcp) {
     ssl_socket sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_EQ(sock.send(memory_view<const char>()), 0);
     sock.close();
 }
 
 TEST_F(SslSocketTest, SendEmptyDataReturnsZeroAfterOpen) {
     ssl_socket sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_EQ(sock.send(memory_view<const char>()), 0);
     sock.close();
 }
 
 TEST_F(SslSocketTest, ReceiveEmptyBufferReturnsZeroAfterOpen) {
     ssl_socket sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_EQ(sock.receive(memory_view<char>()), 0);
     sock.close();
 }
 
 TEST_F(SslSocketTest, ReceiveWithoutSslFallsBackToTcp) {
     ssl_socket sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_EQ(sock.receive(memory_view<char>()), 0);
     sock.close();
 }
@@ -485,7 +485,7 @@ TEST_F(SslSocketTest, CloseReturnsTrueWhenAlreadyClosed) {
 
 TEST_F(SslSocketTest, MoveConstructorPreservesOpenState) {
     ssl_socket sock1;
-    sock1.open(ip_address::family::INET4);
+    sock1.open(ip_family::INET4);
     EXPECT_TRUE(sock1.is_open());
 
     ssl_socket sock2(move(sock1));
@@ -553,7 +553,7 @@ TEST_F(TcpSocketTest, DefaultConstructorIsNotOpen) {
 
 TEST_F(TcpSocketTest, OpenIpv4) {
     tcp_socket sock;
-    EXPECT_NO_THROW(sock.open(ip_address::family::INET4));
+    EXPECT_NO_THROW(sock.open(ip_family::INET4));
     EXPECT_TRUE(sock.is_open());
     EXPECT_TRUE(sock.is_ipv4());
     sock.close();
@@ -561,7 +561,7 @@ TEST_F(TcpSocketTest, OpenIpv4) {
 
 TEST_F(TcpSocketTest, OpenIpv6) {
     tcp_socket sock;
-    EXPECT_NO_THROW(sock.open(ip_address::family::INET6));
+    EXPECT_NO_THROW(sock.open(ip_family::INET6));
     EXPECT_TRUE(sock.is_open());
     EXPECT_TRUE(sock.is_ipv6());
     sock.close();
@@ -576,7 +576,7 @@ TEST_F(TcpSocketTest, OpenDefaultIsIpv4) {
 
 TEST_F(TcpSocketTest, ConnectWithInvalidEndpointThrows) {
     tcp_socket sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     ip_address invalid;
     EXPECT_THROW(sock.connect(invalid, milliseconds(1000)), value_exception);
     sock.close();
@@ -584,7 +584,7 @@ TEST_F(TcpSocketTest, ConnectWithInvalidEndpointThrows) {
 
 TEST_F(TcpSocketTest, ConnectWithoutOpenThrows) {
     tcp_socket sock;
-    auto addr = ip_address::loopback(ports(8080u), ip_address::family::INET4);
+    auto addr = ip_address::loopback(ports(8080u), ip_family::INET4);
     EXPECT_THROW(sock.connect(addr, milliseconds(1000)), value_exception);
 }
 
@@ -601,14 +601,14 @@ TEST_F(TcpSocketTest, ReceiveWithoutOpenThrows) {
 
 TEST_F(TcpSocketTest, SendEmptyDataReturnsZero) {
     tcp_socket sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_EQ(sock.send(memory_view<const char>()), 0);
     sock.close();
 }
 
 TEST_F(TcpSocketTest, ReceiveEmptyBufferReturnsZero) {
     tcp_socket sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_EQ(sock.receive(memory_view<char>()), 0);
     sock.close();
 }
@@ -630,8 +630,8 @@ TEST_F(TcpSocketTest, ReceiveAllWithoutOpenThrows) {
 
 TEST_F(TcpSocketTest, ConnectToRefusedPortFails) {
     tcp_socket sock;
-    sock.open(ip_address::family::INET4);
-    auto addr = ip_address::loopback(ports(12345u), ip_address::family::INET4);
+    sock.open(ip_family::INET4);
+    auto addr = ip_address::loopback(ports(12345u), ip_family::INET4);
     try {
         bool result = sock.connect(addr, milliseconds(500));
         EXPECT_FALSE(result);
@@ -642,16 +642,16 @@ TEST_F(TcpSocketTest, ConnectToRefusedPortFails) {
 
 TEST_F(TcpSocketTest, DoubleOpenReplacesSocket) {
     tcp_socket sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_TRUE(sock.is_open());
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_TRUE(sock.is_open());
     sock.close();
 }
 
 TEST_F(TcpSocketTest, MoveConstructorTransfersState) {
     tcp_socket sock1;
-    sock1.open(ip_address::family::INET4);
+    sock1.open(ip_family::INET4);
     EXPECT_TRUE(sock1.is_open());
 
     tcp_socket sock2(move(sock1));
@@ -679,7 +679,7 @@ TEST_F(TcpAcceptorTest, OpenWithInvalidEndpointThrows) {
 
 TEST_F(TcpAcceptorTest, OpenWithAnyPortSucceeds) {
     tcp_acceptor acceptor;
-    auto addr = ip_address::any(ports(0u), ip_address::family::INET4);
+    auto addr = ip_address::any(ports(0u), ip_family::INET4);
     EXPECT_NO_THROW(acceptor.open(addr, 128));
     EXPECT_TRUE(acceptor.is_open());
     acceptor.close();
@@ -709,7 +709,7 @@ TEST_F(TcpAcceptorTest, AcceptNonblockWithNoPendingConnectionsReturnsNone) {
 
 TEST_F(TcpAcceptorTest, UsingSocketBaseOpenCompiles) {
     tcp_acceptor acceptor;
-    EXPECT_NO_THROW(acceptor.socket_base::open(ip_address::family::INET4));
+    EXPECT_NO_THROW(acceptor.socket_base::open(ip_family::INET4));
     EXPECT_TRUE(acceptor.is_open());
     acceptor.close();
 }
@@ -842,7 +842,13 @@ TEST_F(TcpClientTest, ExceptionHandlerIsCalled) {
 }
 
 TEST_F(TcpClientTest, ConnectInvalidHostReturnsFalse) {
-    tcp_client client(ctx_);
+    dns_client::config cfg;
+    cfg.server = "127.0.0.1";
+    cfg.port = ports(9u);
+    cfg.timeout = milliseconds(200);
+    tcp_client client(cfg, ctx_);
+    client.get_dns_client().set_max_udp_retries(0);
+
     EXPECT_FALSE(client.connect("invalid-host-that-does-not-exist.test", ports(80)));
     EXPECT_FALSE(client.is_connected());
 }
@@ -957,13 +963,13 @@ protected:
 
 TEST_F(SslAlpnNegotiateTest, StreamWithoutSslReturnsEmpty) {
     ssl_stream stream;
-    EXPECT_TRUE(stream.get_alpn_negotiated().empty());
+    EXPECT_TRUE(stream.alpn_negotiated().empty());
 }
 
 TEST_F(SslAlpnNegotiateTest, StreamBeforeHandshakeReturnsEmpty) {
     ssl_context ctx(ssl_method::TLS_SERVER);
     ssl_stream stream(ctx);
-    auto alpn = stream.get_alpn_negotiated();
+    auto alpn = stream.alpn_negotiated();
     EXPECT_TRUE(alpn.empty());
 }
 
@@ -971,7 +977,7 @@ TEST_F(SslAlpnNegotiateTest, StreamWithClientContextNoHandshake) {
     ssl_context ctx(ssl_method::TLS_CLIENT);
     ctx.set_alpn_protos({"h2", "http/1.1"});
     ssl_stream stream(ctx);
-    auto alpn = stream.get_alpn_negotiated();
+    auto alpn = stream.alpn_negotiated();
     EXPECT_TRUE(alpn.empty());
 }
 
@@ -999,4 +1005,202 @@ TEST_F(SslAlpnNegotiateTest, ContextSetAlpnProtosHttp11Only) {
 TEST_F(SslAlpnNegotiateTest, ContextSetAlpnProtosEmpty) {
     ssl_context ctx(ssl_method::TLS_SERVER);
     EXPECT_NO_THROW(ctx.set_alpn_protos({}));
+}
+
+TEST_F(SslSocketTest, PrepareServerSslWithoutOpenThrows) {
+    ssl_socket sock;
+    ssl_context ctx(ssl_method::TLS_SERVER);
+    EXPECT_THROW(sock.prepare_server_ssl(ctx), value_exception);
+}
+
+TEST_F(SslSocketTest, PrepareClientSslWithoutOpenThrows) {
+    ssl_socket sock;
+    ssl_context ctx(ssl_method::TLS_CLIENT);
+    EXPECT_THROW(sock.prepare_client_ssl(ctx), value_exception);
+}
+
+TEST_F(SslSocketTest, PrepareServerSslInvalidContextThrows) {
+    ssl_socket sock;
+    sock.open(ip_family::INET4);
+    ssl_context ctx(ssl_method::TLS_SERVER);
+    ssl_context moved_from = move(ctx);
+    (void) moved_from;
+    EXPECT_THROW(sock.prepare_server_ssl(ctx), ssl_exception);
+    sock.close();
+}
+
+TEST_F(SslSocketTest, PrepareClientSslInvalidContextThrows) {
+    ssl_socket sock;
+    sock.open(ip_family::INET4);
+    ssl_context ctx(ssl_method::TLS_CLIENT);
+    ssl_context moved_from = move(ctx);
+    (void) moved_from;
+    EXPECT_THROW(sock.prepare_client_ssl(ctx), ssl_exception);
+    sock.close();
+}
+
+TEST_F(SslSocketTest, PrepareServerSslMarksSslWithoutHandshake) {
+    ssl_socket sock;
+    sock.open(ip_family::INET4);
+    ssl_context ctx(ssl_method::TLS_SERVER);
+    EXPECT_NO_THROW(sock.prepare_server_ssl(ctx));
+    EXPECT_TRUE(sock.is_ssl());
+    sock.close();
+}
+
+TEST_F(SslSocketTest, PrepareClientSslWithHostnameMarksSsl) {
+    ssl_socket sock;
+    sock.open(ip_family::INET4);
+    ssl_context ctx(ssl_method::TLS_CLIENT);
+    EXPECT_NO_THROW(sock.prepare_client_ssl(ctx, "localhost"));
+    EXPECT_TRUE(sock.is_ssl());
+    sock.close();
+}
+
+TEST_F(SslSocketTest, AsyncHandshakeBeforePrepareDeliversError) {
+    io_context ioc;
+    ssl_socket sock;
+    bool called = false;
+    error_code ec;
+    sock.async_handshake(ioc, [&](error_code e) {
+        called = true;
+        ec = e;
+    });
+    EXPECT_TRUE(called);
+    EXPECT_TRUE(ec);
+}
+
+TEST_F(SslSocketTest, AsyncReadWithoutTlsRoutesToTcpSocket) {
+    io_context ioc;
+    ssl_socket sock;
+    sock.open(ip_family::INET4);
+    char buf[16];
+    bool called = false;
+    error_code ec;
+    sock.async_read(ioc, {buf, sizeof(buf)}, [&](error_code e, size_t) {
+        called = true;
+        ec = e;
+    });
+    EXPECT_TRUE(called);
+    EXPECT_TRUE(ec);
+    sock.close();
+}
+
+TEST_F(SslSocketTest, AsyncWriteWithoutTlsRoutesToTcpSocket) {
+    io_context ioc;
+    ssl_socket sock;
+    sock.open(ip_family::INET4);
+    bool called = false;
+    error_code ec;
+    sock.async_write(ioc, {"x", 1}, [&](error_code e, size_t) {
+        called = true;
+        ec = e;
+    });
+    EXPECT_TRUE(called);
+    EXPECT_TRUE(ec);
+    sock.close();
+}
+
+TEST_F(SslAcceptorTest, AsyncAcceptWithoutOpenDeliversError) {
+    io_context ioc;
+    ssl_acceptor acceptor;
+    bool called = false;
+    error_code ec;
+    acceptor.async_accept(ioc, [&](error_code e, ssl_socket) {
+        called = true;
+        ec = e;
+    });
+    EXPECT_TRUE(called);
+    EXPECT_TRUE(ec);
+}
+
+TEST_F(TcpClientTest, AsyncReadBeforeConnectDeliversError) {
+    tcp_client client(ctx_);
+    char buf[8];
+    bool called = false;
+    error_code ec;
+    client.async_read(ctx_, {buf, sizeof(buf)}, [&](error_code e, size_t) {
+        called = true;
+        ec = e;
+    });
+    EXPECT_TRUE(called);
+    EXPECT_TRUE(ec);
+}
+
+TEST_F(TcpClientTest, AsyncWriteBeforeConnectDeliversError) {
+    tcp_client client(ctx_);
+    bool called = false;
+    error_code ec;
+    client.async_write(ctx_, {"x", 1}, [&](error_code e, size_t) {
+        called = true;
+        ec = e;
+    });
+    EXPECT_TRUE(called);
+    EXPECT_TRUE(ec);
+}
+
+TEST_F(TcpClientTest, AsyncReadUseFutureBeforeConnectThrows) {
+    tcp_client client(ctx_);
+    char buf[8];
+    auto fut = client.async_read(ctx_, {buf, sizeof(buf)}, use_future);
+    EXPECT_THROW(ignore = fut.get(), system_exception);
+}
+
+TEST_F(TcpClientTest, AsyncConnectInvalidEndpointDeliversError) {
+    tcp_client client(ctx_);
+    ip_address invalid;
+    bool called = false;
+    error_code ec;
+    client.async_connect(ctx_, invalid, [&](error_code e) {
+        called = true;
+        ec = e;
+    });
+    EXPECT_TRUE(called);
+    EXPECT_TRUE(ec);
+}
+
+TEST_F(TcpClientTest, AsyncConnectPreCancelledSlotAborts) {
+    tcp_client client(ctx_);
+    auto endpoint = ip_address::loopback(ports(9u), ip_family::INET4);
+
+    stop_source stop_src;
+    cancellation_slot slot(stop_src.get_token());
+    ignore = stop_src.request_stop();
+
+    bool called = false;
+    error_code ec;
+    client.async_connect(ctx_, endpoint, slot, [&](error_code e) {
+        called = true;
+        ec = e;
+    });
+    EXPECT_TRUE(called);
+    EXPECT_TRUE(ec);
+    EXPECT_EQ(ec.value(), static_cast<int>(errc::operation_canceled));
+}
+
+TEST_F(TcpClientTest, AsyncConnectTokenOverloadsCompile) {
+    tcp_client client(ctx_);
+    auto endpoint = ip_address::loopback(ports(9u), ip_family::INET4);
+    auto fut = client.async_connect(ctx_, endpoint, use_future);
+    EXPECT_TRUE(fut.valid());
+    client.async_connect(ctx_, endpoint, detached);
+}
+
+TEST_F(SslContextTest, MoveIntoByValueSinkDoesNotDoubleFree) {
+    auto sink = [](ssl_context ctx) {
+        EXPECT_TRUE(ctx.is_valid());
+        return ctx;
+    };
+    ssl_context result = sink(ssl_context(ssl_method::TLS_CLIENT));
+    EXPECT_TRUE(result.is_valid());
+    EXPECT_TRUE(static_cast<bool>(result));
+}
+
+TEST_F(SslContextTest, MoveAssignmentNullsSourceAndKeepsTarget) {
+    ssl_context a(ssl_method::TLS_CLIENT);
+    ssl_context b(ssl_method::TLS_SERVER);
+    b = move(a);
+    EXPECT_TRUE(b.is_valid());
+    EXPECT_FALSE(a.is_valid());
+    EXPECT_NO_THROW(ignore = b.native_handle());
 }

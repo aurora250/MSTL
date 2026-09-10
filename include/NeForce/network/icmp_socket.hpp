@@ -9,7 +9,11 @@
  * 支持Ping和Traceroute等网络诊断功能。
  */
 
+#include "NeForce/core/async/cancellation_slot.hpp"
+#include "NeForce/core/async/io_context.hpp"
+#include "NeForce/core/async/use_awaitable.hpp"
 #include "NeForce/core/container/vector.hpp"
+#include "NeForce/core/functional/function.hpp"
 #include "NeForce/network/socket_base.hpp"
 NEFORCE_BEGIN_NAMESPACE__
 
@@ -263,11 +267,11 @@ public:
     void open();
 
     /**
-     * @brief 执行Ping操作
+     * @brief 执行 Ping
      * @param dest 目标IPv4地址
      * @param timeout 超时时间
-     * @param sequence 序列号（默认0）
-     * @param data 附加数据（可选）
+     * @param sequence 序列号
+     * @param data 附加数据
      * @param data_len 附加数据长度
      * @return Ping结果
      *
@@ -277,11 +281,11 @@ public:
                      size_t data_len = 0);
 
     /**
-     * @brief 执行Traceroute操作
+     * @brief 执行 Traceroute
      * @param dest 目标IPv4地址
-     * @param max_hops 最大跳数（默认30）
-     * @param probe_timeout 每跳探测超时时间（默认1000ms）
-     * @param probes_per_hop 每跳探测次数（默认3）
+     * @param max_hops 最大跳数
+     * @param probe_timeout 每跳探测超时时间
+     * @param probes_per_hop 每跳探测次数
      * @return 跳点信息列表
      *
      * 通过逐步增加TTL值探测网络路径，
@@ -289,7 +293,135 @@ public:
      */
     vector<traceroute_hop> traceroute(const ip_address& dest, int max_hops = 30,
                                       milliseconds probe_timeout = milliseconds(1000), int probes_per_hop = 3);
+
+    /**
+     * @brief 异步 Ping
+     * @param ctx 异步 I/O 上下文
+     * @param dest 目标IPv4地址
+     * @param timeout 超时时间
+     * @param sequence 序列号
+     * @param data 附加数据
+     * @param data_len 附加数据长度
+     * @param handler 完成回调 void(error_code, ping_result)
+     *
+     * 异步发送 ICMP Echo 请求并等待响应，测量 RTT。
+     */
+    void async_ping(io_context& ctx, const ip_address& dest, milliseconds timeout, uint16_t sequence, const void* data,
+                    size_t data_len, function<void(error_code, ping_result)> handler);
+
+    /**
+     * @brief 带取消槽的异步执行 Ping 操作
+     * @param ctx 异步 I/O 执行上下文
+     * @param dest 目标IPv4地址
+     * @param timeout 超时时间
+     * @param sequence 序列号
+     * @param data 附加数据
+     * @param data_len 附加数据长度
+     * @param slot 取消槽
+     * @param handler 完成回调 void(error_code, ping_result)
+     */
+    void async_ping(io_context& ctx, const ip_address& dest, milliseconds timeout, uint16_t sequence, const void* data,
+                    size_t data_len, cancellation_slot& slot, function<void(error_code, ping_result)> handler);
+
+    /**
+     * @brief 异步 Ping—任意可调用对象
+     * @tparam Token 可调用对象类型，需满足 void(error_code, ping_result) 签名
+     */
+    template <typename Token, enable_if_t<!is_same_v<decay_t<Token>, function<void(error_code, ping_result)>>, int> = 0>
+    void async_ping(io_context& ctx, const ip_address& dest, milliseconds timeout, uint16_t sequence, const void* data,
+                    size_t data_len, Token&& token) {
+        async_ping(ctx, dest, timeout, sequence, data, data_len,
+                   function<void(error_code, ping_result)>(forward<Token>(token)));
+    }
+
+    /**
+     * @brief future 异步 Ping
+     * @param ctx 异步 I/O 执行上下文
+     * @param dest 目标IPv4地址
+     * @param timeout 超时时间
+     * @param sequence 序列号
+     * @param data 附加数据
+     * @param data_len 附加数据长度
+     * @return 异步操作结果
+     */
+    future<ping_result> async_ping(io_context& ctx, const ip_address& dest, milliseconds timeout, uint16_t sequence,
+                                   const void* data, size_t data_len, use_future_t /*unused*/);
+
+    /**
+     * @brief detached 异步 Ping
+     * @param ctx 异步 I/O 执行上下文
+     * @param dest 目标IPv4地址
+     * @param timeout 超时时间
+     * @param sequence 序列号
+     * @param data 附加数据
+     * @param data_len 附加数据长度
+     */
+    void async_ping(io_context& ctx, const ip_address& dest, milliseconds timeout, uint16_t sequence, const void* data,
+                    size_t data_len, detached_t /*unused*/) {
+        async_ping(ctx, dest, timeout, sequence, data, data_len,
+                   function<void(error_code, ping_result)>([](error_code, ping_result) {}));
+    }
+
+#ifdef NEFORCE_STANDARD_20
+    /**
+     * @brief awaitable 异步 Ping
+     * @param ctx 异步 I/O 执行上下文
+     * @param dest 目标IPv4地址
+     * @param timeout 超时时间
+     * @param sequence 序列号
+     * @param data 附加数据
+     * @param data_len 附加数据长度
+     * @return 可协程等待的结果
+     */
+    awaitable<error_code, ping_result> async_ping(io_context& ctx, const ip_address& dest, milliseconds timeout,
+                                                  uint16_t sequence, const void* data, size_t data_len,
+                                                  use_awaitable_t /*unused*/) {
+        async_result<use_awaitable_t, void(error_code, ping_result)> result(use_awaitable);
+        async_ping(ctx, dest, timeout, sequence, data, data_len,
+                   function<void(error_code, ping_result)>(result.get_handler()));
+        return result.get();
+    }
+#endif
 };
+
+NEFORCE_BEGIN_INNER__
+
+template <>
+struct future_handler<error_code, icmp_socket::ping_result> {
+    shared_ptr<promise<icmp_socket::ping_result>> promise_;
+
+    void operator()(error_code ec, icmp_socket::ping_result result) {
+        if (ec) {
+            promise_->set_exception(_NEFORCE make_exception_ptr(system_exception(ec)));
+        } else {
+            promise_->set_value(move(result));
+        }
+    }
+};
+
+NEFORCE_END_INNER__
+
+template <>
+struct async_result<use_future_t, void(error_code, icmp_socket::ping_result)> {
+    using handler_type = inner::future_handler<error_code, icmp_socket::ping_result>;
+    using return_type = future<icmp_socket::ping_result>;
+    handler_type handler_;
+    explicit async_result(use_future_t /*unused*/) {
+        handler_.promise_ = make_shared<promise<icmp_socket::ping_result>>();
+    }
+    handler_type get_handler() { return handler_; }
+    return_type get() { return handler_.promise_->get_future(); }
+};
+
+inline future<icmp_socket::ping_result> icmp_socket::async_ping(io_context& ctx, const ip_address& dest,
+                                                                milliseconds timeout, uint16_t sequence,
+                                                                const void* data, size_t data_len,
+                                                                use_future_t /*unused*/) {
+    async_result<use_future_t, void(error_code, ping_result)> result(use_future);
+    async_ping(ctx, dest, timeout, sequence, data, data_len,
+               function<void(error_code, ping_result)>(result.get_handler()));
+    return result.get();
+}
 
 /** @} */ // ICMP
 

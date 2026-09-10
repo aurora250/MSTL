@@ -15,7 +15,6 @@
 #include "NeForce/core/file/file_locker.hpp"
 #include "NeForce/core/file/file_mapper.hpp"
 #include "NeForce/core/file/path.hpp"
-#include "NeForce/core/memory/unique_ptr.hpp"
 NEFORCE_BEGIN_NAMESPACE__
 
 /**
@@ -28,8 +27,6 @@ NEFORCE_BEGIN_NAMESPACE__
  * @class file
  * @brief 文件操作类
  *
- * 支持移动语义，不支持拷贝，线程安全
- *
  * 主要特性：
  * - 同步/异步IO操作
  * - 内存映射
@@ -37,8 +34,6 @@ NEFORCE_BEGIN_NAMESPACE__
  * - 属性管理
  * - 比较和差异分析
  * - 自动缓冲和预取优化
- *
- * 线程安全，支持移动语义，不支持拷贝。
  */
 class NEFORCE_API file {
 public:
@@ -153,19 +148,11 @@ private:
 
     mutable error_code last_error_code_; ///< 最后错误码
 
-    unique_ptr<file_mapper> map_;    ///< 内存映射对象
-    unique_ptr<file_locker> locker_; ///< 文件锁对象
-    unique_ptr<file_info> info_;     ///< 文件信息对象
-    unique_ptr<file_async> async_;   ///< 异步I/O对象
-
 private:
-    void init_sub_objects() noexcept;
-    void reset_sub_objects() noexcept;
-
     bool flush_write_buffer() const noexcept;
     bool fill_read_buffer() const;
 
-    void set_last_error() const;
+    void set_last_error() const noexcept;
 
     void adjust_buffer_size();
 
@@ -224,13 +211,14 @@ public:
      * @param creation 创建方式
      * @param attributes 文件属性
      * @return 打开成功返回true
+     * @note 在 Windows 上若需要使用 file_async 执行异步，必须在 attributes 中传入 file_attri::OVERLAPPED
      */
     bool open(path pth, bool append = false, file_access access = file_access::READ_WRITE,
               file_shared share_mode = file_shared::SHARE_READ_WRITE,
               file_creation creation = file_creation::OPEN_EXIST, file_attri attributes = file_attri::NORMAL);
 
     /**
-     * @brief 重新打开文件（使用原有路径）
+     * @brief 重新打开文件
      * @param append 是否为追加模式
      * @param access 访问模式
      * @param share_mode 共享模式
@@ -396,8 +384,6 @@ public:
      * @param distance 移动距离（字节）
      * @param method 移动方式
      * @return 移动成功返回true
-     *
-     * 追加模式下只能seek到文件末尾。
      */
     bool seek(difference_type distance, file_pointer method = file_pointer::END) const;
 
@@ -506,29 +492,25 @@ public:
      * @brief 获取内存映射对象
      * @return 内存映射对象引用
      */
-    NEFORCE_NODISCARD file_mapper& mapper() noexcept { return *map_; }
-    NEFORCE_NODISCARD const file_mapper& mapper() const noexcept { return *map_; }
+    NEFORCE_NODISCARD file_mapper mapper() const noexcept { return file_mapper(handle_); }
 
     /**
      * @brief 获取文件锁对象
      * @return 文件锁对象引用
      */
-    NEFORCE_NODISCARD file_locker& locker() noexcept { return *locker_; }
-    NEFORCE_NODISCARD const file_locker& locker() const noexcept { return *locker_; }
+    NEFORCE_NODISCARD file_locker locker() const noexcept { return file_locker(handle_); }
 
     /**
      * @brief 获取文件信息对象
      * @return 文件信息对象引用
      */
-    NEFORCE_NODISCARD file_info& info() noexcept { return *info_; }
-    NEFORCE_NODISCARD const file_info& info() const noexcept { return *info_; }
+    NEFORCE_NODISCARD file_info info() const noexcept { return file_info(handle_); }
 
     /**
      * @brief 获取异步I/O对象
      * @return 异步I/O对象引用
      */
-    NEFORCE_NODISCARD file_async& async() noexcept { return *async_; }
-    NEFORCE_NODISCARD const file_async& async() const noexcept { return *async_; }
+    NEFORCE_NODISCARD file_async async() const noexcept { return file_async(handle_); }
 };
 
 /** @} */ // File

@@ -175,6 +175,7 @@ void share_memory::open(const string& name, size_t size, open_mode mode, access_
         return sz;
     };
 
+    const wstring wname = character::to_wstring(name.view());
     if (mode == open_mode::create_only) {
         if (size == 0) {
             NEFORCE_THROW_EXCEPTION(share_memory_exception("Size must be greater than 0 for create_only mode"));
@@ -186,7 +187,7 @@ void share_memory::open(const string& name, size_t size, open_mode mode, access_
         constexpr ::DWORD size_high = 0;
         const auto size_low = static_cast<::DWORD>(size);
 #    endif
-        handle_ = ::CreateFileMappingA(INVALID_HANDLE_VALUE, nullptr, protect, size_high, size_low, name.data());
+        handle_ = ::CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, protect, size_high, size_low, wname.data());
         if (handle_ == g_invalid_handle) {
             NEFORCE_THROW_EXCEPTION(share_memory_exception("CreateFileMapping failed"));
         }
@@ -197,7 +198,7 @@ void share_memory::open(const string& name, size_t size, open_mode mode, access_
         }
         size_ = size;
     } else if (mode == open_mode::open_only) {
-        handle_ = ::OpenFileMappingA(access_flags, FALSE, name.data());
+        handle_ = ::OpenFileMappingW(access_flags, FALSE, wname.data());
         if (handle_ == g_invalid_handle) {
             NEFORCE_THROW_EXCEPTION(share_memory_exception("OpenFileMapping failed"));
         }
@@ -208,7 +209,7 @@ void share_memory::open(const string& name, size_t size, open_mode mode, access_
             NEFORCE_THROW_EXCEPTION(share_memory_exception("Failed to query shared memory size"));
         }
     } else {
-        handle_ = ::OpenFileMappingA(access_flags, FALSE, name.data());
+        handle_ = ::OpenFileMappingW(access_flags, FALSE, wname.data());
         if (handle_ != g_invalid_handle) {
             size_ = get_real_size();
             if (size_ == 0) {
@@ -228,7 +229,7 @@ void share_memory::open(const string& name, size_t size, open_mode mode, access_
             constexpr ::DWORD size_high = 0;
             const auto size_low = static_cast<::DWORD>(size);
 #    endif
-            handle_ = ::CreateFileMappingA(INVALID_HANDLE_VALUE, nullptr, protect, size_high, size_low, name.data());
+            handle_ = ::CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, protect, size_high, size_low, wname.data());
             if (handle_ == g_invalid_handle) {
                 NEFORCE_THROW_EXCEPTION(share_memory_exception("CreateFileMapping failed"));
             }
@@ -403,7 +404,8 @@ void share_memory::grow(size_t new_size) {
     const auto size_low = static_cast<::DWORD>(new_size);
 #    endif
 
-    handle_ = ::CreateFileMappingA(INVALID_HANDLE_VALUE, nullptr, protect, size_high, size_low, name_.data());
+    const wstring wname = character::to_wstring(name_.view());
+    handle_ = ::CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, protect, size_high, size_low, wname.data());
     if (handle_ == g_invalid_handle) {
         is_open_ = false;
         NEFORCE_THROW_EXCEPTION(share_memory_exception("CreateFileMapping failed during grow"));
@@ -424,12 +426,12 @@ void share_memory::grow(size_t new_size) {
         mapped_size_ = new_size;
 
         if (!saved_data.empty()) {
-            memcpy(mapped_addr_, saved_data.data(), saved_data.size());
+            memory_copy(mapped_addr_, saved_data.data(), saved_data.size());
         }
 
         if (mutex_handle_ == nullptr) {
-            const string mutex_name = "NeForce_shm_mutex_" + name_;
-            mutex_handle_ = ::CreateMutexA(nullptr, FALSE, mutex_name.data());
+            const wstring mutex_name = L"NeForce_shm_mutex_" + wname;
+            mutex_handle_ = ::CreateMutexW(nullptr, FALSE, mutex_name.data());
         }
     }
 #else
@@ -560,8 +562,8 @@ void* share_memory::map(size_t offset, const size_t length) {
     data_offset_ = 0;
 
     if (mutex_handle_ == nullptr) {
-        const string mutex_name = "NeForce_shm_mutex_" + name_;
-        mutex_handle_ = ::CreateMutexA(nullptr, FALSE, mutex_name.data());
+        const wstring mutex_name = L"NeForce_shm_mutex_" + character::to_wstring(name_.view());
+        mutex_handle_ = ::CreateMutexW(nullptr, FALSE, mutex_name.data());
     }
 #else
     int prot = (access_mode_ == access_mode::read_only) ? PROT_READ : (PROT_READ | PROT_WRITE);
@@ -651,10 +653,11 @@ bool share_memory::flush(bool async) {
 
 bool share_memory::remove(const string& name) {
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    native_handle_type h = ::OpenFileMappingA(FILE_MAP_ALL_ACCESS, FALSE, name.data());
+    const wstring wname = character::to_wstring(name.view());
+    native_handle_type h = ::OpenFileMappingW(FILE_MAP_ALL_ACCESS, FALSE, wname.data());
     if (h != nullptr) {
         ::CloseHandle(h);
-        h = ::OpenFileMappingA(FILE_MAP_READ, FALSE, name.data());
+        h = ::OpenFileMappingW(FILE_MAP_READ, FALSE, wname.data());
         if (h != nullptr) {
             ::CloseHandle(h);
             return false;
@@ -670,7 +673,8 @@ bool share_memory::remove(const string& name) {
 
 bool share_memory::exists(const string& name) {
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    const native_handle_type h = ::OpenFileMappingA(FILE_MAP_READ, FALSE, name.data());
+    const wstring wname = character::to_wstring(name.view());
+    const native_handle_type h = ::OpenFileMappingW(FILE_MAP_READ, FALSE, wname.data());
     if (h != g_invalid_handle) {
         ::CloseHandle(h);
         return true;

@@ -213,15 +213,10 @@ char sys_console::read_char_unsafe() const noexcept {
     ::SetConsoleMode(in_, new_mode);
     char ch = '\0';
     ::DWORD read = 0;
-    try {
-        if (::ReadConsoleA(in_, &ch, 1, &read, nullptr) != FALSE && read > 0) {
-            if (ch == '\r') {
-                ch = '\n';
-            }
+    if (::ReadConsoleA(in_, &ch, 1, &read, nullptr) != FALSE && read > 0) {
+        if (ch == '\r') {
+            ch = '\n';
         }
-    } catch (...) {
-        ::SetConsoleMode(in_, original_mode);
-        throw;
     }
     ::SetConsoleMode(in_, original_mode);
     return (read > 0) ? ch : '\0';

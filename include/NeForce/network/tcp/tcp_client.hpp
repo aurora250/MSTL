@@ -80,6 +80,20 @@ protected:
     virtual void pre_disconnect() {}
 
     /**
+     * @brief 异步连接建立后的额外处理
+     * @param sock 已建立 TCP 连接的 socket 指针
+     * @param ctx 异步 I/O 执行上下文
+     * @param handler 完成回调 void(error_code)
+     */
+    virtual void begin_async_post_connect(tcp_socket* sock, io_context& ctx, function<void(error_code)> handler) {
+        (void) sock;
+        (void) ctx;
+        handler(error_code{});
+    }
+
+    struct async_connect_op;
+
+    /**
      * @brief 尝试连接到指定IP
      * @param ip IP地址
      * @param port 端口
@@ -378,6 +392,198 @@ public:
      * @return DNS客户端常量引用
      */
     NEFORCE_NODISCARD const dns_client& get_dns_client() const noexcept { return *dns_; }
+
+    /**
+     * @brief 异步连接
+     * @param ctx 异步 I/O 执行上下文
+     * @param endpoint 远程端点地址
+     * @param handler 完成回调 void(error_code)
+     */
+    virtual void async_connect(io_context& ctx, const ip_address& endpoint, function<void(error_code)> handler);
+
+    /**
+     * @brief 带取消槽的异步连接
+     * @param ctx 异步 I/O 执行上下文
+     * @param endpoint 远程端点地址
+     * @param slot 取消槽
+     * @param handler 完成回调 void(error_code)
+     */
+    void async_connect(io_context& ctx, const ip_address& endpoint, cancellation_slot& slot,
+                       function<void(error_code)> handler);
+
+    /**
+     * @brief 可调用对象的异步连接
+     * @param ctx 异步 I/O 执行上下文
+     * @param endpoint 远程端点地址
+     * @tparam Token 可调用对象类型，需满足 void(error_code) 签名
+     */
+    template <typename Token, enable_if_t<!is_same_v<decay_t<Token>, function<void(error_code)>>, int> = 0>
+    void async_connect(io_context& ctx, const ip_address& endpoint, Token&& token) {
+        async_connect(ctx, endpoint, function<void(error_code)>(forward<Token>(token)));
+    }
+
+    /**
+     * @brief future 异步连接
+     * @param ctx 异步 I/O 执行上下文
+     * @param endpoint 远程端点地址
+     * @return 异步操作结果
+     */
+    future<void> async_connect(io_context& ctx, const ip_address& endpoint, use_future_t /*unused*/) {
+        async_result<use_future_t, void(error_code)> result(use_future);
+        async_connect(ctx, endpoint, function<void(error_code)>(result.get_handler()));
+        return result.get();
+    }
+
+    /**
+     * @brief detached 异步连接
+     * @param ctx 异步 I/O 执行上下文
+     * @param endpoint 远程端点地址
+     */
+    void async_connect(io_context& ctx, const ip_address& endpoint, detached_t /*unused*/) {
+        async_connect(ctx, endpoint, function<void(error_code)>([](error_code) {}));
+    }
+
+#ifdef NEFORCE_STANDARD_20
+    /**
+     * @brief 异步连接—use_awaitable
+     * @param ctx 异步 I/O 执行上下文
+     * @param endpoint 远程端点地址
+     * @return 可协程等待的结果
+     */
+    awaitable<error_code> async_connect(io_context& ctx, const ip_address& endpoint, use_awaitable_t /*unused*/) {
+        async_result<use_awaitable_t, void(error_code)> result(use_awaitable);
+        async_connect(ctx, endpoint, function<void(error_code)>(result.get_handler()));
+        return result.get();
+    }
+#endif
+
+    /**
+     * @brief 异步读取数据
+     * @param ctx 异步 I/O 执行上下文
+     * @param buffer 接收缓冲区
+     * @param handler 完成回调 void(error_code, size_t bytes_transferred)
+     */
+    void async_read(io_context& ctx, memory_view<char> buffer, function<void(error_code, size_t)> handler);
+
+    /**
+     * @brief 带取消槽的异步读取数据
+     * @param ctx 异步 I/O 执行上下文
+     * @param buffer 接收缓冲区
+     * @param slot 取消槽
+     * @param handler 完成回调 void(error_code, size_t bytes_transferred)
+     */
+    void async_read(io_context& ctx, memory_view<char> buffer, cancellation_slot& slot,
+                    function<void(error_code, size_t)> handler);
+
+    /**
+     * @brief 可调用对象的异步读取
+     * @param ctx 异步 I/O 执行上下文
+     * @param buffer 接收缓冲区
+     * @tparam Token 可调用对象类型，需满足 void(error_code, size_t) 签名
+     */
+    template <typename Token, enable_if_t<!is_same_v<decay_t<Token>, function<void(error_code, size_t)>>, int> = 0>
+    void async_read(io_context& ctx, memory_view<char> buffer, Token&& token) {
+        async_read(ctx, buffer, function<void(error_code, size_t)>(forward<Token>(token)));
+    }
+
+    /**
+     * @brief future 异步读取
+     * @param ctx 异步 I/O 执行上下文
+     * @param buffer 接收缓冲区
+     * @return 读取字节数
+     */
+    future<size_t> async_read(io_context& ctx, memory_view<char> buffer, use_future_t /*unused*/) {
+        async_result<use_future_t, void(error_code, size_t)> result(use_future);
+        async_read(ctx, buffer, function<void(error_code, size_t)>(result.get_handler()));
+        return result.get();
+    }
+
+    /**
+     * @brief detached 异步读取
+     * @param ctx 异步 I/O 执行上下文
+     * @param buffer 接收缓冲区
+     */
+    void async_read(io_context& ctx, memory_view<char> buffer, detached_t /*unused*/) {
+        async_read(ctx, buffer, function<void(error_code, size_t)>([](error_code, size_t) {}));
+    }
+
+#ifdef NEFORCE_STANDARD_20
+    /**
+     * @brief awaitable 异步读取
+     * @param ctx 异步 I/O 执行上下文
+     * @param buffer 接收缓冲区
+     * @return 可协程等待的结果
+     */
+    awaitable<error_code, size_t> async_read(io_context& ctx, memory_view<char> buffer, use_awaitable_t /*unused*/) {
+        async_result<use_awaitable_t, void(error_code, size_t)> result(use_awaitable);
+        async_read(ctx, buffer, function<void(error_code, size_t)>(result.get_handler()));
+        return result.get();
+    }
+#endif
+
+    /**
+     * @brief 异步写入数据
+     * @param ctx 异步 I/O 执行上下文
+     * @param buffer 发送缓冲区
+     * @param handler 完成回调 void(error_code, size_t bytes_transferred)
+     */
+    void async_write(io_context& ctx, memory_view<const char> buffer, function<void(error_code, size_t)> handler);
+
+    /**
+     * @brief 带取消槽的异步写入数据
+     * @param ctx 异步 I/O 执行上下文
+     * @param buffer 发送缓冲区
+     * @param handler 完成回调 void(error_code, size_t bytes_transferred)
+     */
+    void async_write(io_context& ctx, memory_view<const char> buffer, cancellation_slot& slot,
+                     function<void(error_code, size_t)> handler);
+
+    /**
+     * @brief 可调用对象的异步写入
+     * @param ctx 异步 I/O 执行上下文
+     * @param buffer 发送缓冲区
+     * @tparam Token 可调用对象类型，需满足 void(error_code, size_t) 签名
+     */
+    template <typename Token, enable_if_t<!is_same_v<decay_t<Token>, function<void(error_code, size_t)>>, int> = 0>
+    void async_write(io_context& ctx, memory_view<const char> buffer, Token&& token) {
+        async_write(ctx, buffer, function<void(error_code, size_t)>(forward<Token>(token)));
+    }
+
+    /**
+     * @brief future 异步写入
+     * @param ctx 异步 I/O 执行上下文
+     * @param buffer 发送缓冲区
+     * @return 写入字节数
+     */
+    future<size_t> async_write(io_context& ctx, memory_view<const char> buffer, use_future_t /*unused*/) {
+        async_result<use_future_t, void(error_code, size_t)> result(use_future);
+        async_write(ctx, buffer, function<void(error_code, size_t)>(result.get_handler()));
+        return result.get();
+    }
+
+    /**
+     * @brief detached 异步写入
+     * @param ctx 异步 I/O 执行上下文
+     * @param buffer 发送缓冲区
+     */
+    void async_write(io_context& ctx, memory_view<const char> buffer, detached_t /*unused*/) {
+        async_write(ctx, buffer, function<void(error_code, size_t)>([](error_code, size_t) {}));
+    }
+
+#ifdef NEFORCE_STANDARD_20
+    /**
+     * @brief awaitable 异步写入
+     * @param ctx 异步 I/O 执行上下文
+     * @param buffer 发送缓冲区
+     * @return 可协程等待的结果
+     */
+    awaitable<error_code, size_t> async_write(io_context& ctx, memory_view<const char> buffer,
+                                              use_awaitable_t /*unused*/) {
+        async_result<use_awaitable_t, void(error_code, size_t)> result(use_awaitable);
+        async_write(ctx, buffer, function<void(error_code, size_t)>(result.get_handler()));
+        return result.get();
+    }
+#endif
 };
 
 /**
@@ -444,6 +650,7 @@ protected:
 
     bool post_connect() override;
     void pre_disconnect() override { ssl_initialized_ = false; }
+    void begin_async_post_connect(tcp_socket* sock, io_context& ctx, function<void(error_code)> handler) override;
 
 public:
     /**

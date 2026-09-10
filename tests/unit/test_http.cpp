@@ -26,6 +26,7 @@
 #include <NeForce/network/http/http2_protocol.hpp>
 #include <NeForce/core/memory/byte_cursor.hpp>
 #include <NeForce/network/http/async_filter.hpp>
+#include <NeForce/network/http/http_client.hpp>
 #include <gtest/gtest.h>
 using namespace neforce;
 using namespace neforce::http;
@@ -321,7 +322,7 @@ TEST_F(HttpSessionTest, TouchUpdatesLastAccess) {
     http_session s;
     s.id = "test";
     auto before = s.last_access;
-    this_thread::sleep_for(seconds{2});
+    this_thread::sleep_for(seconds{1});
     s.touch();
     auto after = s.last_access;
     EXPECT_GT(after, before);
@@ -4296,16 +4297,42 @@ TEST_F(HttpServerAlpnTest, HttpsConstructorSetsAlpnProtocols) {
         GTEST_SKIP() << "Test certificate not found (run 'openssl req -x509 ...' first)";
     }
 
+    ports test_port(0u);
+    {
+        tcp_acceptor tmp;
+        tmp.open(ip_address::loopback());
+        auto bound = tmp.local_endpoint();
+        if (bound.has_value()) {
+            test_port = bound->port();
+        }
+        tmp.close();
+    }
+
     io_context ioc;
-    http_server server(ports(8445), ioc, move(ctx), 1);
-    server.start();
+    http_server server(test_port, ioc, move(ctx), 1);
+    if (!server.start()) {
+        GTEST_SKIP() << "http_server failed to bind local port";
+    }
     EXPECT_TRUE(server.is_running());
     server.stop();
 }
 
 TEST_F(HttpServerAlpnTest, HttpServerWithoutSslDoesNotCrash) {
-    http_server server(ports(8088), ctx_, 1);
-    server.start();
+    ports test_port(0u);
+    {
+        tcp_acceptor tmp;
+        tmp.open(ip_address::loopback());
+        auto bound = tmp.local_endpoint();
+        if (bound.has_value()) {
+            test_port = bound->port();
+        }
+        tmp.close();
+    }
+
+    http_server server(test_port, ctx_, 1);
+    if (!server.start()) {
+        GTEST_SKIP() << "http_server failed to bind local port";
+    }
     EXPECT_TRUE(server.is_running());
     server.stop();
 }
@@ -4320,5 +4347,84 @@ TEST_F(HttpServerAlpnTest, SslStreamGetAlpnNegotiatedWithoutHandshake) {
     ssl_context ctx(ssl_method::TLS_CLIENT);
     ctx.set_alpn_protos({"h2"});
     ssl_stream stream(ctx);
-    EXPECT_TRUE(stream.get_alpn_negotiated().empty());
+    EXPECT_TRUE(stream.alpn_negotiated().empty());
+}
+
+class HttpClientConfigUnit : public ::testing::Test {
+protected:
+    void SetUp() override {}
+    void TearDown() override {}
+    io_context ctx_;
+};
+
+TEST_F(HttpClientConfigUnit, TimeoutSetterUpdatesAllTimeouts) {
+    http_client client(ctx_);
+    client.set_timeout(milliseconds(1234));
+    const auto& cfg = client.get_config();
+    EXPECT_EQ(cfg.connect_timeout, milliseconds(1234));
+    EXPECT_EQ(cfg.send_timeout, milliseconds(1234));
+    EXPECT_EQ(cfg.receive_timeout, milliseconds(1234));
+}
+
+TEST_F(HttpClientConfigUnit, RedirectSettersUpdateConfig) {
+    http_client client(ctx_);
+    client.set_max_redirects(3u);
+    client.set_follow_redirects(false);
+    const auto& cfg = client.get_config();
+    EXPECT_EQ(cfg.max_redirects, 3u);
+    EXPECT_FALSE(cfg.follow_redirects);
+}
+
+TEST_F(HttpClientConfigUnit, ProxySetAndClear) {
+    http_client client(ctx_);
+    client.set_proxy("proxy.local", ports(8080u));
+    EXPECT_EQ(client.get_config().proxy_host, "proxy.local");
+    EXPECT_EQ(client.get_config().proxy_port, ports(8080u));
+
+    client.clear_proxy();
+    EXPECT_TRUE(client.get_config().proxy_host.empty());
+    EXPECT_EQ(client.get_config().proxy_port, ports::UNDEF);
+}
+
+TEST_F(HttpClientConfigUnit, VerifySslSetterUpdatesConfig) {
+    http_client client(ctx_);
+    client.set_verify_ssl(false);
+    EXPECT_FALSE(client.get_config().verify_ssl);
+    client.set_verify_ssl(true);
+    EXPECT_TRUE(client.get_config().verify_ssl);
+}
+
+TEST_F(HttpClientConfigUnit, SetSslContextPropagatesToClient) {
+    http_client client(ctx_);
+    EXPECT_FALSE(client.get_client().has_ssl_context());
+    client.set_ssl_context(ssl_context(ssl_method::TLS_CLIENT));
+    EXPECT_TRUE(client.get_client().has_ssl_context());
+}
+
+TEST_F(HttpClientConfigUnit, ClientTypeIsSslClient) { EXPECT_TRUE((is_same_v<http_client::client_type, ssl_client>) ); }
+
+TEST_F(HttpClientConfigUnit, CookieJarRoundTrip) {
+    http_client client(ctx_);
+    EXPECT_TRUE(client.get_cookies().empty());
+
+    auto cookie = http_cookie::parse("sid=abc123");
+    client.set_cookie(cookie, "example.com");
+
+    auto jar = client.get_cookies();
+    EXPECT_EQ(jar.size(), 1u);
+    EXPECT_EQ(jar.begin()->second.value, "abc123");
+
+    client.clear_cookies();
+    EXPECT_TRUE(client.get_cookies().empty());
+}
+
+TEST_F(HttpClientConfigUnit, SetConfigReplacesWholeConfig) {
+    http_client client(ctx_);
+    http_client::config cfg;
+    cfg.connect_timeout = milliseconds(999);
+    cfg.max_redirects = 9u;
+    client.set_config(cfg);
+    const auto& got = client.get_config();
+    EXPECT_EQ(got.connect_timeout, milliseconds(999));
+    EXPECT_EQ(got.max_redirects, 9u);
 }

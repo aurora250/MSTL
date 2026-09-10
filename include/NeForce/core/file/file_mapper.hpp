@@ -86,7 +86,7 @@ public:
      * 创建内存映射管理器，关联指定的文件句柄。
      * 初始状态为未映射。
      */
-    explicit file_mapper(native_handle_type file_handle);
+    explicit file_mapper(native_handle_type file_handle) noexcept;
 
     /**
      * @brief 析构函数

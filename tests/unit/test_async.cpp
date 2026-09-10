@@ -24,6 +24,7 @@
 #include <NeForce/core/async/use_awaitable.hpp>
 #include <NeForce/core/async/virtual_thread.hpp>
 #include <NeForce/core/iterator/move_iterator.hpp>
+#include <NeForce/core/time/clocks.hpp>
 #include <NeForce/core/utility/tuple.hpp>
 #include <iterator>
 #include <gtest/gtest.h>
@@ -3023,6 +3024,51 @@ TEST(Retry, Exhaustion) {
 TEST(IoContextTest, DefaultConstruct) {
     io_context ctx;
     EXPECT_FALSE(ctx.stopped());
+}
+
+TEST(IoContextTest, RunOneReturnsImmediatelyWhenIdle) {
+    io_context ctx;
+
+    const auto start = steady_clock::now();
+    EXPECT_EQ(ctx.run_one(300), 0u);
+    const auto elapsed = time_cast<milliseconds>(steady_clock::now() - start);
+
+    // Asio semantics: an idle context must not sleep through the whole timeout.
+    EXPECT_LT(elapsed.count(), 100);
+}
+
+TEST(IoContextTest, RunOneBlocksWhileWorkIsOutstanding) {
+    io_context ctx;
+    ctx.work_started();
+
+    const auto start = steady_clock::now();
+    EXPECT_EQ(ctx.run_one(120), 0u);
+    const auto elapsed = time_cast<milliseconds>(steady_clock::now() - start);
+
+    // Outstanding work keeps the call waiting for the timeout instead of returning at once.
+    EXPECT_GE(elapsed.count(), 60);
+    ctx.work_finished();
+}
+
+TEST(IoContextTest, RunOneDrainsWorkPostedWhileWaiting) {
+    io_context ctx;
+    ctx.work_started();
+
+    atomic<bool> ran{false};
+    thread t([&] {
+        this_thread::sleep_for(milliseconds(20));
+        ctx.post([&] { ran = true; });
+        ctx.work_finished();
+    });
+
+    size_t handled = 0;
+    const auto deadline = steady_clock::now() + seconds(2);
+    while (handled == 0 && steady_clock::now() < deadline) {
+        handled += ctx.run_one(100);
+    }
+    EXPECT_EQ(handled, 1u);
+    EXPECT_TRUE(ran.load());
+    t.join();
 }
 
 TEST(IoContextTest, PostAndRun) {

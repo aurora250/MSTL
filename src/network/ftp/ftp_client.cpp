@@ -105,7 +105,7 @@ void ftp_client::do_ctrl_tls_handshake() {
 }
 
 tcp_socket ftp_client::open_data_channel() {
-    const bool use_ipv6 = address_family() == ip_address::family::INET6;
+    const bool use_ipv6 = address_family() == ip_family::INET6;
 
     if (passive_mode_ == passive_mode::passive) {
         if (use_ipv6) {
@@ -146,7 +146,7 @@ tcp_socket ftp_client::open_data_channel() {
             }
 
             tcp_socket data_sock;
-            data_sock.open(use_ipv6 ? ip_address::family::INET6 : ip_address::family::INET4);
+            data_sock.open(use_ipv6 ? ip_family::INET6 : ip_family::INET4);
             static_cast<ip_socket&>(data_sock).connect(*data_addr);
             return data_sock;
         }
@@ -196,8 +196,8 @@ tcp_socket ftp_client::open_data_channel() {
     }
 
     tcp_socket listen_sock;
-    listen_sock.open(use_ipv6 ? ip_address::family::INET6 : ip_address::family::INET4);
-    listen_sock.bind(ip_address::any(ports(0U), use_ipv6 ? ip_address::family::INET6 : ip_address::family::INET4));
+    listen_sock.open(use_ipv6 ? ip_family::INET6 : ip_family::INET4);
+    listen_sock.bind(ip_address::any(ports(0U), use_ipv6 ? ip_family::INET6 : ip_family::INET4));
     listen_sock.listen(1);
 
     const auto bound = listen_sock.local_endpoint();
@@ -533,8 +533,8 @@ ftp_client::tls_info ftp_client::upgrade_tls(ssl_context& ctx, const string& sni
 
     tls_info info;
     info.active = true;
-    info.cipher_name = ctrl_ssl_.get_cipher_name();
-    info.tls_version = ctrl_ssl_.get_version();
+    info.cipher_name = ctrl_ssl_.cipher_name();
+    info.tls_version = ctrl_ssl_.version();
     info.peer_verified = ctrl_ssl_.verify_peer();
     info.data_channel = data_tls_;
     return info;
@@ -725,8 +725,8 @@ ftp_client::tls_info ftp_client::get_tls_info() const noexcept {
     tls_info info;
     info.active = tls_active_;
     if (tls_active_) {
-        info.cipher_name = ctrl_ssl_.get_cipher_name();
-        info.tls_version = ctrl_ssl_.get_version();
+        info.cipher_name = ctrl_ssl_.cipher_name();
+        info.tls_version = ctrl_ssl_.version();
         info.peer_verified = ctrl_ssl_.verify_peer();
         info.data_channel = data_tls_;
     }

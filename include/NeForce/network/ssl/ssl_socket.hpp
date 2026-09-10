@@ -108,74 +108,177 @@ public:
 
     /**
      * @brief 初始化服务器端SSL
-     * @param ctx SSL上下文（需已加载CA证书）
+     * @param ctx 已加载CA证书的SSL上下文
      * @throws ssl_exception SSL握手失败时抛出
      * @throws value_exception socket未打开时抛出
-     *
-     * 作为服务器端执行SSL/TLS握手。需要在连接建立后调用。
      */
     void init_server_ssl(const ssl_context& ctx);
 
     /**
      * @brief 初始化客户端端SSL
-     * @param ctx SSL上下文（需已加载CA证书）
-     * @param hostname 服务器主机名（用于SNI和证书验证）
+     * @param ctx 已加载CA证书的SSL上下文
+     * @param hostname 服务器主机名
      * @throws ssl_exception SSL握手失败时抛出
      * @throws value_exception socket未打开时抛出
-     *
-     * 作为客户端发起SSL/TLS握手。需要在连接建立后调用。
      */
     void init_client_ssl(const ssl_context& ctx, const string& hostname = "");
 
     /**
-     * @brief 获取对等方证书信息
-     * @return 证书信息字符串（主题和颁发者）
+     * @brief 准备服务器端 SSL
+     * @param ctx 已加载CA证书的SSL上下文
+     * @throws ssl_exception SSL对象创建失败时抛出
+     * @throws value_exception socket未打开时抛出
      *
-     * 返回对等方证书的可读信息，用于调试和验证。
+     * 将 SSL 置于接受状态，但不执行握手。
+     */
+    void prepare_server_ssl(const ssl_context& ctx);
+
+    /**
+     * @brief 准备客户端端 SSL
+     * @param ctx 已加载CA证书的SSL上下文
+     * @param hostname 服务器主机名
+     * @throws ssl_exception SSL对象创建失败时抛出
+     * @throws value_exception socket未打开时抛出
+     *
+     * 将 SSL 置于连接状态，但不执行握手。
+     */
+    void prepare_client_ssl(const ssl_context& ctx, const string& hostname = "");
+
+    /**
+     * @brief 异步执行 SSL/TLS 握手
+     * @param ctx 异步 I/O 执行上下文
+     * @param handler 完成回调 void(error_code)
+     * @note 需要先完成 SSL 准备
+     */
+    void async_handshake(io_context& ctx, function<void(error_code)> handler);
+
+    /**
+     * @brief 带取消槽的异步执行 SSL/TLS 握手
+     * @param ctx 异步 I/O 执行上下文
+     * @param slot 取消槽
+     * @param handler 完成回调 void(error_code)
+     * @note 需要先完成 SSL 准备
+     */
+    void async_handshake(io_context& ctx, cancellation_slot& slot, function<void(error_code)> handler);
+
+    /**
+     * @brief 可调用对象的异步握手
+     * @tparam Token 可调用对象类型，需满足 void(error_code) 签名
+     * @param ctx 异步 I/O 执行上下文
+     * @param token 完成令牌
+     */
+    template <typename Token, enable_if_t<!is_same_v<decay_t<Token>, function<void(error_code)>>, int> = 0>
+    void async_handshake(io_context& ctx, Token&& token) {
+        async_handshake(ctx, function<void(error_code)>(forward<Token>(token)));
+    }
+
+    /**
+     * @brief future 异步握手
+     * @param ctx 异步 I/O 执行上下文
+     * @return 异步操作结果
+     */
+    future<void> async_handshake(io_context& ctx, use_future_t /*unused*/) {
+        async_result<use_future_t, void(error_code)> result(use_future);
+        async_handshake(ctx, function<void(error_code)>(result.get_handler()));
+        return result.get();
+    }
+
+    /**
+     * @brief detached 异步握手
+     * @param ctx 异步 I/O 执行上下文
+     */
+    void async_handshake(io_context& ctx, detached_t /*unused*/) {
+        async_handshake(ctx, function<void(error_code)>([](error_code) {}));
+    }
+
+#ifdef NEFORCE_STANDARD_20
+    /**
+     * @brief awaitable 异步握手
+     * @param ctx 异步 I/O 执行上下文
+     * @return 可协程等待的结果
+     */
+    awaitable<error_code> async_handshake(io_context& ctx, use_awaitable_t /*unused*/) {
+        async_result<use_awaitable_t, void(error_code)> result(use_awaitable);
+        async_handshake(ctx, function<void(error_code)>(result.get_handler()));
+        return result.get();
+    }
+#endif
+
+    /**
+     * @brief 获取对等方证书信息
+     * @return 证书信息字符串
      */
     NEFORCE_NODISCARD string peer_certificate_info() const;
 
     /**
      * @brief 获取ALPN协商的协议名称
-     * @return 协议名称字符串（如"h2"、"http/1.1"），未协商返回空字符串
-     *
-     * TLS握手完成后通过ALPN协商确定的应用层协议。
-     * 需要在init_server_ssl()或init_client_ssl()之后调用。
+     * @return 协议名称字符串
      */
     NEFORCE_NODISCARD string get_alpn_negotiated() const;
 
     /**
      * @brief 发送加密数据
      * @param data 要发送的数据
-     * @param flags 发送标志（忽略）
+     * @param flags 发送标志
      * @return 实际发送的字节数
      * @throws ssl_exception 发送失败时抛出
-     *
-     * 如果TLS已激活，通过ssl_stream发送加密数据；否则回退到普通发送。
      */
     ssize_t send(memory_view<const char> data, int flags = 0) override;
 
     /**
      * @brief 接收解密数据
      * @param buffer 接收缓冲区
-     * @param flags 接收标志（忽略）
+     * @param flags 接收标志
      * @return 实际接收的字节数
      * @throws ssl_exception 接收失败时抛出
-     *
-     * 如果TLS已激活，通过ssl_stream接收解密数据；否则回退到普通接收。
      */
     ssize_t receive(memory_view<char> buffer, int flags = 0) override;
 
     /**
+     * @brief 异步读取解密数据
+     * @param ctx 异步 I/O 执行上下文
+     * @param buffer 接收缓冲区
+     * @param handler 完成回调 void(error_code, size_t bytes_transferred)
+     */
+    void async_read(io_context& ctx, memory_view<char> buffer, function<void(error_code, size_t)> handler) override;
+
+    /**
+     * @brief 带取消槽的异步读取解密数据
+     * @param ctx 异步 I/O 执行上下文
+     * @param buffer 接收缓冲区
+     * @param slot 取消槽
+     * @param handler 完成回调 void(error_code, size_t bytes_transferred)
+     */
+    void async_read(io_context& ctx, memory_view<char> buffer, cancellation_slot& slot,
+                    function<void(error_code, size_t)> handler) override;
+
+    /**
+     * @brief 异步写入加密数据
+     * @param ctx 异步 I/O 执行上下文
+     * @param buffer 发送缓冲区
+     * @param handler 完成回调 void(error_code, size_t bytes_transferred)
+     */
+    void async_write(io_context& ctx, memory_view<const char> buffer,
+                     function<void(error_code, size_t)> handler) override;
+
+    /**
+     * @brief 带取消槽的异步写入加密数据
+     * @param ctx 异步 I/O 执行上下文
+     * @param buffer 发送缓冲区
+     * @param slot 取消槽
+     * @param handler 完成回调 void(error_code, size_t bytes_transferred)
+     */
+    void async_write(io_context& ctx, memory_view<const char> buffer, cancellation_slot& slot,
+                     function<void(error_code, size_t)> handler) override;
+
+    /**
      * @brief 关闭SSL连接和底层socket
-     *
-     * 先发送SSL关闭通知，再关闭底层TCP socket。
      */
     bool close() noexcept override;
 
     /**
-     * @brief 检查是否为SSL/TLS socket
-     * @return 始终返回true（SSL/TLS激活时）
+     * @brief 检查是否处于SSL/TLS状态
+     * @return SSL/TLS是否激活
      */
     NEFORCE_NODISCARD bool is_ssl() const noexcept override { return ssl_.has_value(); }
 
@@ -202,6 +305,33 @@ public:
         }
         return *ssl_;
     }
+};
+
+NEFORCE_BEGIN_INNER__
+
+template <>
+struct future_handler<error_code, ssl_socket> {
+    shared_ptr<promise<ssl_socket>> promise_;
+
+    void operator()(error_code ec, ssl_socket sock) {
+        if (ec) {
+            promise_->set_exception(_NEFORCE make_exception_ptr(system_exception(ec)));
+        } else {
+            promise_->set_value(move(sock));
+        }
+    }
+};
+
+NEFORCE_END_INNER__
+
+template <>
+struct async_result<use_future_t, void(error_code, ssl_socket)> {
+    using handler_type = inner::future_handler<error_code, ssl_socket>;
+    using return_type = future<ssl_socket>;
+    handler_type handler_;
+    explicit async_result(use_future_t /*unused*/) { handler_.promise_ = make_shared<promise<ssl_socket>>(); }
+    handler_type get_handler() { return handler_; }
+    return_type get() { return handler_.promise_->get_future(); }
 };
 
 /** @} */ // SSL/TLS

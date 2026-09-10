@@ -70,11 +70,12 @@ void temp_file::cleanup_all_temp_files() {
 }
 
 temp_file::temp_file(const string& prefix, const string& suffix, const file_creation mode, const delete_policy policy) :
-file_(generate_unique_path(prefix, suffix), false, file_access::READ_WRITE, file_shared::SHARE_READ, mode),
 delete_policy_(policy) {
-    constexpr int max_retries = 8;
-
-    for (int i = 0; i < max_retries; ++i) {
+    // Try up to max_attempts random candidates; the FIRST successfully opened one is kept.
+    // (The previous implementation opened an extra candidate first and then moved another
+    // one over it, leaking the initially created file on every construction.)
+    constexpr int max_attempts = 8;
+    for (int attempt = 0; attempt < max_attempts; ++attempt) {
         const path candidate = generate_unique_path(prefix, suffix);
         _NEFORCE file f(candidate, false, file_access::READ_WRITE, file_shared::SHARE_READ, mode);
         if (f.is_opened()) {

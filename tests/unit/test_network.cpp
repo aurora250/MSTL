@@ -1,7 +1,10 @@
+#include <NeForce/core/async/io_context.hpp>
+#include <NeForce/core/time/clocks.hpp>
 #include <NeForce/network/icmp_socket.hpp>
 #include <NeForce/network/ip_socket.hpp>
 #include <NeForce/network/smtp_socket.hpp>
 #include <NeForce/network/socket_base.hpp>
+#include <NeForce/network/tcp/tcp_acceptor.hpp>
 #include <NeForce/network/udp_socket.hpp>
 #include <gtest/gtest.h>
 #ifdef NEFORCE_PLATFORM_LINUX
@@ -253,17 +256,17 @@ TEST_F(SocketBaseTest, ListenUnopenedThrows) {
 
 TEST_F(SocketBaseTest, OpenInvalidFamilyThrows) {
     socket_base sock;
-    EXPECT_THROW(sock.open(ip_address::family::UNDEF), value_exception);
+    EXPECT_THROW(sock.open(ip_family::UNDEF), value_exception);
 }
 
 TEST_F(SocketBaseTest, TryOpenInvalidFamilyReturnsFalse) {
     socket_base sock;
-    EXPECT_FALSE(sock.try_open(ip_address::family::UNDEF));
+    EXPECT_FALSE(sock.try_open(ip_family::UNDEF));
 }
 
 TEST_F(SocketBaseTest, OpenAndClose) {
     socket_base sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_TRUE(sock.is_open());
     EXPECT_TRUE(static_cast<bool>(sock));
     sock.close();
@@ -272,37 +275,37 @@ TEST_F(SocketBaseTest, OpenAndClose) {
 
 TEST_F(SocketBaseTest, OpenReplacesExistingSocket) {
     socket_base sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_TRUE(sock.is_open());
-    sock.open(ip_address::family::INET4, socket_base::type::DGRAM);
+    sock.open(ip_family::INET4, socket_type::DGRAM);
     EXPECT_TRUE(sock.is_open());
     sock.close();
 }
 
 TEST_F(SocketBaseTest, SetReuseAddressOnOpenSocket) {
     socket_base sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_TRUE(sock.set_reuse_address(true));
     sock.close();
 }
 
 TEST_F(SocketBaseTest, SetKeepAliveOnOpenSocket) {
     socket_base sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_TRUE(sock.set_keep_alive(true));
     sock.close();
 }
 
 TEST_F(SocketBaseTest, SetTcpNodelayOnOpenSocket) {
     socket_base sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_TRUE(sock.set_tcp_nodelay(true));
     sock.close();
 }
 
 TEST_F(SocketBaseTest, SetBufferSizesOnOpenSocket) {
     socket_base sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_TRUE(sock.set_receive_buffer_size(65536));
     EXPECT_TRUE(sock.set_send_buffer_size(65536));
     sock.close();
@@ -310,7 +313,7 @@ TEST_F(SocketBaseTest, SetBufferSizesOnOpenSocket) {
 
 TEST_F(SocketBaseTest, SetNonblockingOnOpenSocket) {
     socket_base sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_TRUE(sock.set_nonblocking(true));
     EXPECT_TRUE(sock.set_nonblocking(false));
     sock.close();
@@ -318,7 +321,7 @@ TEST_F(SocketBaseTest, SetNonblockingOnOpenSocket) {
 
 TEST_F(SocketBaseTest, SetTimeoutsOnOpenSocket) {
     socket_base sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_TRUE(sock.set_send_timeout(milliseconds(5000)));
     EXPECT_TRUE(sock.set_receive_timeout(milliseconds(5000)));
     sock.close();
@@ -326,14 +329,14 @@ TEST_F(SocketBaseTest, SetTimeoutsOnOpenSocket) {
 
 TEST_F(SocketBaseTest, ShutdownOnOpenSocket) {
     socket_base sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_NO_THROW(sock.shutdown_both());
     sock.close();
 }
 
 TEST_F(SocketBaseTest, LocalEndpointOnOpenSocket) {
     socket_base sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     sock.set_reuse_address(true);
     auto addr = ip_address::any();
     sock.bind(addr);
@@ -345,7 +348,7 @@ TEST_F(SocketBaseTest, LocalEndpointOnOpenSocket) {
 
 TEST_F(SocketBaseTest, ListenAndLocalEndpoint) {
     socket_base sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     sock.set_reuse_address(true);
     auto addr = ip_address::any();
     sock.bind(addr);
@@ -357,7 +360,7 @@ TEST_F(SocketBaseTest, ListenAndLocalEndpoint) {
 
 TEST_F(SocketBaseTest, BindInvalidEndpointThrows) {
     socket_base sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     ip_address invalid;
     EXPECT_THROW(sock.bind(invalid), value_exception);
     sock.close();
@@ -365,20 +368,20 @@ TEST_F(SocketBaseTest, BindInvalidEndpointThrows) {
 
 TEST_F(SocketBaseTest, CloseIsIdempotent) {
     socket_base sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_TRUE(sock.close());
     EXPECT_TRUE(sock.close());
 }
 
 TEST_F(SocketBaseTest, DestructorClosesSocket) {
     socket_base sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_TRUE(sock.is_open());
 }
 
 TEST_F(SocketBaseTest, TryOpenValidFamily) {
     socket_base sock;
-    EXPECT_TRUE(sock.try_open(ip_address::family::INET4));
+    EXPECT_TRUE(sock.try_open(ip_family::INET4));
     EXPECT_TRUE(sock.is_open());
     sock.close();
 }
@@ -391,7 +394,7 @@ protected:
 
 TEST_F(IpSocketTest, DefaultConstructorFamilyIsUnspec) {
     udp_socket sock;
-    EXPECT_EQ(sock.address_family(), ip_address::family::UNDEF);
+    EXPECT_EQ(sock.address_family(), ip_family::UNDEF);
     EXPECT_FALSE(sock.is_ipv4());
     EXPECT_FALSE(sock.is_ipv6());
 }
@@ -413,17 +416,17 @@ TEST_F(IpSocketTest, ConnectInvalidEndpointThrows) {
 TEST_F(IpSocketTest, CloseResetsFamilyToUnspec) {
     udp_socket sock;
     sock.open();
-    EXPECT_EQ(sock.address_family(), ip_address::family::INET4);
+    EXPECT_EQ(sock.address_family(), ip_family::INET4);
     EXPECT_TRUE(sock.is_ipv4());
     sock.close();
-    EXPECT_EQ(sock.address_family(), ip_address::family::UNDEF);
+    EXPECT_EQ(sock.address_family(), ip_family::UNDEF);
     EXPECT_FALSE(sock.is_ipv4());
 }
 
 TEST_F(IpSocketTest, OpenIpv4SetsFamily) {
     udp_socket sock;
-    sock.open(ip_address::family::INET4);
-    EXPECT_EQ(sock.address_family(), ip_address::family::INET4);
+    sock.open(ip_family::INET4);
+    EXPECT_EQ(sock.address_family(), ip_family::INET4);
     EXPECT_TRUE(sock.is_ipv4());
     EXPECT_FALSE(sock.is_ipv6());
     sock.close();
@@ -431,8 +434,8 @@ TEST_F(IpSocketTest, OpenIpv4SetsFamily) {
 
 TEST_F(IpSocketTest, OpenIpv6SetsFamily) {
     udp_socket sock;
-    sock.open(ip_address::family::INET6);
-    EXPECT_EQ(sock.address_family(), ip_address::family::INET6);
+    sock.open(ip_family::INET6);
+    EXPECT_EQ(sock.address_family(), ip_family::INET6);
     EXPECT_FALSE(sock.is_ipv4());
     EXPECT_TRUE(sock.is_ipv6());
     sock.close();
@@ -440,7 +443,7 @@ TEST_F(IpSocketTest, OpenIpv6SetsFamily) {
 
 TEST_F(IpSocketTest, OpenIpInvalidFamilyThrows) {
     udp_socket sock;
-    EXPECT_THROW(sock.open(ip_address::family::UNDEF), value_exception);
+    EXPECT_THROW(sock.open(ip_family::UNDEF), value_exception);
 }
 
 class UdpSocketTest : public ::testing::Test {
@@ -456,14 +459,14 @@ TEST_F(UdpSocketTest, DefaultConstructor) {
 
 TEST_F(UdpSocketTest, SendToUnopenedThrows) {
     udp_socket sock;
-    auto addr = ip_address::loopback(ports(80u), ip_address::family::INET4);
+    auto addr = ip_address::loopback(ports(80u), ip_family::INET4);
     char data[] = "test";
     EXPECT_THROW(sock.send_to(memory_view<const char>(data, 4), addr), value_exception);
 }
 
 TEST_F(UdpSocketTest, SendToInvalidEndpointThrows) {
     udp_socket sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     ip_address invalid;
     char data[] = "test";
     EXPECT_THROW(sock.send_to(memory_view<const char>(data, 4), invalid), value_exception);
@@ -472,8 +475,8 @@ TEST_F(UdpSocketTest, SendToInvalidEndpointThrows) {
 
 TEST_F(UdpSocketTest, SendToEmptyDataReturnsZero) {
     udp_socket sock;
-    sock.open(ip_address::family::INET4);
-    ip_address addr = ip_address::loopback(ports(12345u), ip_address::family::INET4);
+    sock.open(ip_family::INET4);
+    ip_address addr = ip_address::loopback(ports(12345u), ip_family::INET4);
     EXPECT_EQ(sock.send_to(memory_view<const char>(), addr), 0);
     sock.close();
 }
@@ -492,7 +495,7 @@ TEST_F(UdpSocketTest, ReceiveFromUnopenedThrows) {
 
 TEST_F(UdpSocketTest, ReceiveFromEmptyBufferThrows) {
     udp_socket sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_THROW(sock.receive_from(memory_view<char>()), value_exception);
     sock.close();
 }
@@ -505,28 +508,28 @@ TEST_F(UdpSocketTest, ReceiveUnopenedThrows) {
 
 TEST_F(UdpSocketTest, ReceiveEmptyBufferThrows) {
     udp_socket sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_THROW(sock.receive(memory_view<char>()), value_exception);
     sock.close();
 }
 
 TEST_F(UdpSocketTest, OpenCloseAndReopen) {
     udp_socket sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     EXPECT_TRUE(sock.is_open());
     sock.close();
     EXPECT_FALSE(sock.is_open());
-    sock.open(ip_address::family::INET6);
+    sock.open(ip_family::INET6);
     EXPECT_TRUE(sock.is_open());
     sock.close();
 }
 
 TEST_F(UdpSocketTest, SendAndReceiveOnLoopback) {
     udp_socket sock;
-    sock.open(ip_address::family::INET4);
+    sock.open(ip_family::INET4);
     sock.set_reuse_address(true);
 
-    auto addr = ip_address::loopback(ports(0u), ip_address::family::INET4);
+    auto addr = ip_address::loopback(ports(0u), ip_family::INET4);
     sock.bind(addr);
     auto bound = sock.local_endpoint();
     ASSERT_TRUE(bound.has_value());
@@ -594,10 +597,106 @@ TEST_F(IcmpSocketTest, PingLocalhost) {
     }
     icmp_socket sock;
     sock.open();
-    auto dest = ip_address::loopback(ports::UNDEF, ip_address::family::INET4);
+    auto dest = ip_address::loopback(ports::UNDEF, ip_family::INET4);
     auto result = sock.ping(dest, milliseconds(500));
     EXPECT_TRUE(result.success);
     EXPECT_GE(result.rtt.count(), 0);
+}
+
+TEST_F(IcmpSocketTest, AsyncPingInvalidIpDeliversError) {
+    io_context ioc;
+    icmp_socket sock;
+    ip_address invalid;
+    bool called = false;
+    error_code ec;
+    sock.async_ping(ioc, invalid, milliseconds(100), 0, nullptr, 0, [&](error_code e, icmp_socket::ping_result r) {
+        called = true;
+        ec = e;
+        EXPECT_FALSE(r.success);
+    });
+    EXPECT_TRUE(called);
+    EXPECT_TRUE(ec);
+}
+
+TEST_F(IcmpSocketTest, AsyncPingIpv6DeliversError) {
+    io_context ioc;
+    icmp_socket sock;
+    auto ip = ip_address::parse("::1", ports::UNDEF);
+    ASSERT_TRUE(ip.has_value());
+    bool called = false;
+    error_code ec;
+    sock.async_ping(ioc, *ip, milliseconds(100), 0, nullptr, 0, [&](error_code e, icmp_socket::ping_result r) {
+        called = true;
+        ec = e;
+        EXPECT_FALSE(r.success);
+    });
+    EXPECT_TRUE(called);
+    EXPECT_TRUE(ec);
+}
+
+TEST_F(IcmpSocketTest, AsyncPingUnopenedSocketDeliversError) {
+    io_context ioc;
+    icmp_socket sock;
+    auto dest = ip_address::loopback(ports::UNDEF, ip_family::INET4);
+    bool called = false;
+    error_code ec;
+    sock.async_ping(ioc, dest, milliseconds(100), 0, nullptr, 0, [&](error_code e, icmp_socket::ping_result r) {
+        called = true;
+        ec = e;
+        EXPECT_FALSE(r.success);
+    });
+    EXPECT_TRUE(called);
+    EXPECT_TRUE(ec);
+}
+
+TEST_F(IcmpSocketTest, AsyncPingLoopbackSucceeds) {
+    if (!has_root()) {
+        GTEST_SKIP() << "Root privileges required for raw ICMP socket";
+    }
+    io_context ioc;
+    icmp_socket sock;
+    sock.open();
+    auto dest = ip_address::loopback(ports::UNDEF, ip_family::INET4);
+    bool done = false;
+    error_code ec;
+    icmp_socket::ping_result out;
+    sock.async_ping(ioc, dest, milliseconds(1000), 0, nullptr, 0, [&](error_code e, icmp_socket::ping_result r) {
+        done = true;
+        ec = e;
+        out = r;
+    });
+    auto deadline = steady_clock::now() + seconds(3);
+    while (!done && steady_clock::now() < deadline) {
+        ioc.run_one(100);
+    }
+    EXPECT_TRUE(done);
+    if (done) {
+        EXPECT_TRUE(out.success);
+        EXPECT_GE(out.rtt.count(), 0);
+    }
+}
+
+TEST_F(IcmpSocketTest, AsyncPingTimeoutReportsUnsuccessful) {
+    if (!has_root()) {
+        GTEST_SKIP() << "Root privileges required for raw ICMP socket";
+    }
+    io_context ioc;
+    icmp_socket sock;
+    sock.open();
+    auto dest = ip_address::parse("192.0.2.1", ports::UNDEF);
+    ASSERT_TRUE(dest.has_value());
+    bool done = false;
+    icmp_socket::ping_result out;
+    sock.async_ping(ioc, *dest, milliseconds(200), 0, nullptr, 0, [&](error_code e, icmp_socket::ping_result r) {
+        done = true;
+        out = r;
+    });
+    auto deadline = steady_clock::now() + seconds(3);
+    while (!done && steady_clock::now() < deadline) {
+        ioc.run_one(100);
+    }
+    EXPECT_TRUE(done);
+    EXPECT_FALSE(out.success);
 }
 
 TEST_F(IcmpSocketTest, ChecksumProducesValidResult) {
@@ -606,7 +705,7 @@ TEST_F(IcmpSocketTest, ChecksumProducesValidResult) {
     }
     icmp_socket sock;
     sock.open();
-    auto dest = ip_address::loopback(ports::UNDEF, ip_address::family::INET4);
+    auto dest = ip_address::loopback(ports::UNDEF, ip_family::INET4);
     char payload[] = "checksum-test";
     auto result = sock.ping(dest, milliseconds(500), 0, payload, sizeof(payload));
     EXPECT_TRUE(result.success);
@@ -681,4 +780,75 @@ TEST_F(SmtpSocketTest, TlsInactiveByDefault) {
 TEST_F(SmtpSocketTest, VerifyPeerOnUnconnectedReturnsFalse) {
     smtp_socket smtp;
     EXPECT_FALSE(smtp.verify_peer());
+}
+
+TEST_F(SmtpSocketTest, AsyncConnectInvalidAddressDeliversError) {
+    io_context ioc;
+    smtp_socket smtp;
+    ip_address invalid;
+    bool called = false;
+    error_code ec;
+    smtp.async_connect(ioc, invalid, "localhost", smtp_socket::tls_mode::none, nullptr, "", [&](error_code e) {
+        called = true;
+        ec = e;
+    });
+    EXPECT_TRUE(called);
+    EXPECT_TRUE(ec);
+    EXPECT_FALSE(smtp.is_connected());
+}
+
+TEST_F(SmtpSocketTest, AsyncConnectRefusedPortDeliversError) {
+    ports test_port(0u);
+    {
+        tcp_acceptor tmp;
+        tmp.open(ip_address::loopback());
+        auto bound = tmp.local_endpoint();
+        if (bound.has_value()) {
+            test_port = bound->port();
+        }
+        tmp.close();
+    }
+
+    auto addr = ip_address::loopback(test_port, ip_family::INET4);
+
+    bool probe_refused = false;
+    {
+        tcp_socket probe;
+        probe.open();
+        try {
+            probe_refused = !probe.connect(addr, milliseconds(500));
+        } catch (const socket_exception&) {
+            probe_refused = true;
+        }
+    }
+    if (!probe_refused) {
+        GTEST_SKIP() << "Probe port is accepting connections; cannot test refusal";
+    }
+
+    io_context ioc;
+    smtp_socket smtp;
+    bool called = false;
+    error_code ec;
+    smtp.async_connect(ioc, addr, "localhost", smtp_socket::tls_mode::none, nullptr, "", [&](error_code e) {
+        called = true;
+        ec = e;
+    });
+    auto deadline = steady_clock::now() + seconds(3);
+    while (!called && steady_clock::now() < deadline) {
+        ioc.run_one(100);
+    }
+    EXPECT_TRUE(called);
+    if (!ec) {
+        GTEST_SKIP() << "Port became accepting between probe and async connect";
+    }
+    EXPECT_TRUE(ec);
+    EXPECT_FALSE(smtp.is_connected());
+}
+
+TEST_F(SmtpSocketTest, AsyncConnectUseFutureTokenCompiles) {
+    io_context ioc;
+    smtp_socket smtp;
+    auto addr = ip_address::loopback(ports(9u), ip_family::INET4);
+    auto fut = smtp.async_connect(ioc, addr, "localhost", smtp_socket::tls_mode::none, nullptr, "", use_future);
+    EXPECT_TRUE(fut.valid());
 }

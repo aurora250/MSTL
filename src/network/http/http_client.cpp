@@ -443,7 +443,7 @@ http_client_response http_client::do_request(http_client_request request, int re
 
             http_client_request new_req;
             new_req.host = new_url.host;
-            new_req.port = ports::parse(new_url.scheme.view());
+            new_req.port = new_url.port;
             new_req.path = new_url.path.empty() ? "/" : new_url.path;
             new_req.version = request.version;
             new_req.headers = request.headers;
@@ -580,7 +580,7 @@ http_client_response http_client::get(const string& url, const unordered_map<str
     http_client_request req;
     req.host = parsed_url.host;
     req.scheme = parsed_url.scheme;
-    req.port = ports::parse(parsed_url.scheme.view());
+    req.port = parsed_url.port;
     req.method = http_method::GET();
     req.path = parsed_url.path.empty() ? "/" : parsed_url.path;
 
@@ -600,7 +600,7 @@ http_client_response http_client::post(const string& url, const string& body, co
     http_client_request req;
     req.host = parsed_url.host;
     req.scheme = parsed_url.scheme;
-    req.port = ports::parse(parsed_url.scheme.view());
+    req.port = parsed_url.port;
     req.method = http_method::POST();
     req.path = parsed_url.path.empty() ? "/" : parsed_url.path;
 
@@ -635,7 +635,7 @@ http_client_response http_client::put(const string& url, const string& body, con
     http_client_request req;
     req.host = parsed_url.host;
     req.scheme = parsed_url.scheme;
-    req.port = ports::parse(parsed_url.scheme.view());
+    req.port = parsed_url.port;
     req.method = http_method::PUT();
     req.path = parsed_url.path.empty() ? "/" : parsed_url.path;
 
@@ -656,7 +656,7 @@ http_client_response http_client::del(const string& url, const unordered_map<str
     http_client_request req;
     req.host = parsed_url.host;
     req.scheme = parsed_url.scheme;
-    req.port = ports::parse(parsed_url.scheme.view());
+    req.port = parsed_url.port;
     req.method = http_method::DELETE();
     req.path = parsed_url.path.empty() ? "/" : parsed_url.path;
 
@@ -675,7 +675,7 @@ http_client_response http_client::head(const string& url, const unordered_map<st
     http_client_request req;
     req.host = parsed_url.host;
     req.scheme = parsed_url.scheme;
-    req.port = ports::parse(parsed_url.scheme.view());
+    req.port = parsed_url.port;
     req.method = http_method::HEAD();
     req.path = parsed_url.path.empty() ? "/" : parsed_url.path;
 
@@ -694,7 +694,7 @@ http_client_response http_client::options(const string& url, const unordered_map
     http_client_request req;
     req.host = parsed_url.host;
     req.scheme = parsed_url.scheme;
-    req.port = ports::parse(parsed_url.scheme.view());
+    req.port = parsed_url.port;
     req.method = http_method::OPTIONS();
     req.path = parsed_url.path.empty() ? "/" : parsed_url.path;
 
@@ -715,7 +715,7 @@ http_client_response http_client::patch(const string& url, const string& body, c
     http_client_request req;
     req.host = parsed_url.host;
     req.scheme = parsed_url.scheme;
-    req.port = ports::parse(parsed_url.scheme.view());
+    req.port = parsed_url.port;
     req.method = http_method::PATCH();
     req.path = parsed_url.path.empty() ? "/" : parsed_url.path;
 
@@ -778,6 +778,22 @@ future<http_client_response> http_client::request_async(http_client_request req)
     });
     return result;
 }
+
+#ifdef NEFORCE_STANDARD_20
+awaitable<http_client_response> http_client::request_async(http_client_request req, use_awaitable_t /*unused*/) {
+    async_result<use_awaitable_t, void(http_client_response)> result(use_awaitable);
+    auto handler = result.get_handler();
+    auto state = result.awaitable_;
+    ctx_->post([this, req = move(req), handler = move(handler), state = move(state)]() mutable {
+        try {
+            handler(request(move(req)));
+        } catch (...) {
+            state->set_exception(current_exception());
+        }
+    });
+    return result.get();
+}
+#endif
 
 void http_client::close() { client_.disconnect(); }
 

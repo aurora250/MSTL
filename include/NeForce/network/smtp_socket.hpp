@@ -301,6 +301,8 @@ private:
 
     void open_and_connect(const ip_address& addr);
 
+    struct async_connect_op;
+
 public:
     /**
      * @brief 默认构造函数
@@ -315,18 +317,18 @@ public:
     ip_socket(fd) {}
 
     /**
-     * @brief 连接SMTP服务器（IP）
+     * @brief 连接SMTP服务器
      * @param addr 服务器IP地址
      * @param domain 本机EHLO域名
      * @param mode TLS模式
      * @param ctx SSL上下文（mode != none时必须提供）
-     * @param sni_hostname SNI主机名（为空则不设置）
+     * @param sni_hostname SNI主机名
      */
     void connect(const ip_address& addr, const string& domain = "localhost", tls_mode mode = tls_mode::none,
                  const ssl_context* ctx = nullptr, const string& sni_hostname = "");
 
     /**
-     * @brief 连接SMTP服务器（域名）
+     * @brief 连接SMTP服务器
      * @param hostname 服务器域名
      * @param port 端口号
      * @param domain EHLO域名
@@ -392,13 +394,110 @@ public:
      * @brief 获取当前TLS密码套件名
      * @return 密码套件名称
      */
-    NEFORCE_NODISCARD string cipher_name() const { return ssl_.get_cipher_name(); }
+    NEFORCE_NODISCARD string cipher_name() const { return ssl_.cipher_name(); }
 
     /**
      * @brief 获取当前TLS版本
      * @return TLS版本字符串
      */
-    NEFORCE_NODISCARD string tls_version() const { return ssl_.get_version(); }
+    NEFORCE_NODISCARD string tls_version() const { return ssl_.version(); }
+
+    /**
+     * @brief 异步连接 SMTP 服务器
+     * @param ioc 异步 I/O 执行上下文
+     * @param addr 服务器IP地址
+     * @param domain 本机EHLO域名
+     * @param mode TLS模式
+     * @param ssl_ctx SSL上下文（mode != none时必须提供）
+     * @param sni_hostname SNI主机名
+     * @param handler 完成回调 void(error_code)
+     */
+    void async_connect(io_context& ioc, const ip_address& addr, const string& domain, tls_mode mode,
+                       const ssl_context* ssl_ctx, const string& sni_hostname, function<void(error_code)> handler);
+
+    /**
+     * @brief 带取消槽的异步连接 SMTP 服务器
+     * @param ioc 异步 I/O 执行上下文
+     * @param addr 服务器IP地址
+     * @param domain 本机EHLO域名
+     * @param mode TLS模式
+     * @param ssl_ctx SSL上下文（mode != none时必须提供）
+     * @param sni_hostname SNI主机名
+     * @param slot 取消槽
+     * @param handler 完成回调 void(error_code)
+     */
+    void async_connect(io_context& ioc, const ip_address& addr, const string& domain, tls_mode mode,
+                       const ssl_context* ssl_ctx, const string& sni_hostname, cancellation_slot& slot,
+                       function<void(error_code)> handler);
+
+    /**
+     * @brief 可调用对象的异步连接
+     * @param ioc 异步 I/O 执行上下文
+     * @param addr 服务器IP地址
+     * @param domain 本机EHLO域名
+     * @param mode TLS模式
+     * @param ssl_ctx SSL上下文（mode != none时必须提供）
+     * @param sni_hostname SNI主机名
+     * @param token 可调用对象
+     * @tparam Token 可调用对象类型，需满足 void(error_code) 签名
+     */
+    template <typename Token, enable_if_t<!is_same_v<decay_t<Token>, function<void(error_code)>>, int> = 0>
+    void async_connect(io_context& ioc, const ip_address& addr, const string& domain, tls_mode mode,
+                       const ssl_context* ssl_ctx, const string& sni_hostname, Token&& token) {
+        async_connect(ioc, addr, domain, mode, ssl_ctx, sni_hostname,
+                      function<void(error_code)>(forward<Token>(token)));
+    }
+
+    /**
+     * @brief future 异步连接
+     * @param ioc 异步 I/O 执行上下文
+     * @param addr 服务器IP地址
+     * @param domain 本机EHLO域名
+     * @param mode TLS模式
+     * @param ssl_ctx SSL上下文（mode != none时必须提供）
+     * @param sni_hostname SNI主机名
+     * @return 异步操作结果
+     */
+    future<void> async_connect(io_context& ioc, const ip_address& addr, const string& domain, tls_mode mode,
+                               const ssl_context* ssl_ctx, const string& sni_hostname, use_future_t /*unused*/) {
+        async_result<use_future_t, void(error_code)> result(use_future);
+        async_connect(ioc, addr, domain, mode, ssl_ctx, sni_hostname, function<void(error_code)>(result.get_handler()));
+        return result.get();
+    }
+
+    /**
+     * @brief detached 异步连接
+     * @param ioc 异步 I/O 执行上下文
+     * @param addr 服务器IP地址
+     * @param domain 本机EHLO域名
+     * @param mode TLS模式
+     * @param ssl_ctx SSL上下文（mode != none时必须提供）
+     * @param sni_hostname SNI主机名
+     */
+    void async_connect(io_context& ioc, const ip_address& addr, const string& domain, tls_mode mode,
+                       const ssl_context* ssl_ctx, const string& sni_hostname, detached_t /*unused*/) {
+        async_connect(ioc, addr, domain, mode, ssl_ctx, sni_hostname, function<void(error_code)>([](error_code) {}));
+    }
+
+#ifdef NEFORCE_STANDARD_20
+    /**
+     * @brief awaitable 异步连接
+     * @param ioc 异步 I/O 执行上下文
+     * @param addr 服务器IP地址
+     * @param domain 本机EHLO域名
+     * @param mode TLS模式
+     * @param ssl_ctx SSL上下文（mode != none时必须提供）
+     * @param sni_hostname SNI主机名
+     * @return 可协程等待的结果
+     */
+    awaitable<error_code> async_connect(io_context& ioc, const ip_address& addr, const string& domain, tls_mode mode,
+                                        const ssl_context* ssl_ctx, const string& sni_hostname,
+                                        use_awaitable_t /*unused*/) {
+        async_result<use_awaitable_t, void(error_code)> result(use_awaitable);
+        async_connect(ioc, addr, domain, mode, ssl_ctx, sni_hostname, function<void(error_code)>(result.get_handler()));
+        return result.get();
+    }
+#endif
 };
 
 /** @} */ // SMTP

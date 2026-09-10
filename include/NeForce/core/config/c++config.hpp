@@ -317,32 +317,26 @@
 #    define NEFORCE_SUPPORT_SIMD 1 ///< SIMD 指令集可用
 #endif
 
-/** @} */ // SimdDetection
-
-/**
- * @defgroup AesniDetection AES指令集检测
- * @brief 检测硬件 AES 指令集支持
- * @{
- */
-
 #if defined(NEFORCE_ARCH_X86)
 #    if defined(__AES__) || (defined(_MSC_VER) && defined(NEFORCE_USING_AES_NI)) || defined(NEXUSFORCE_ENABLE_DOXYGEN)
 #        define NEFORCE_SIMD_AES_NI 1 ///< Intel AES-NI指令集可用
 #    endif
 #endif
+
 #if defined(NEFORCE_ARCH_X86)
 #    if defined(__PCLMUL__) || (defined(_MSC_VER) && defined(NEFORCE_USING_PCLMUL)) || \
             defined(NEXUSFORCE_ENABLE_DOXYGEN)
 #        define NEFORCE_SIMD_PCLMUL 1 ///< PCLMULQDQ指令集可用
 #    endif
 #endif
+
 #if defined(NEFORCE_ARCH_ARM)
 #    if defined(__ARM_FEATURE_AES) || defined(NEXUSFORCE_ENABLE_DOXYGEN)
 #        define NEFORCE_SIMD_AES_ARM 1 ///< ARM AES指令集可用
 #    endif
 #endif
 
-/** @} */ // AesniDetection
+/** @} */ // SimdDetection
 
 /**
  * @defgroup DataBusWidth 数据总线宽度

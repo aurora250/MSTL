@@ -6,7 +6,7 @@
 NEFORCE_BEGIN_NAMESPACE__
 
 void ssl_stream::handle_ssl_error(const int ret, const char* operation) {
-    if (!ssl_) {
+    if (ssl_ == nullptr) {
         last_error_ = string(operation) + " failed: SSL object is null";
         return;
     }
@@ -78,7 +78,7 @@ void ssl_stream::reset(const ssl_context& ctx) {
     }
 
     ssl_ = ::SSL_new(static_cast<::SSL_CTX*>(ctx.native_handle()));
-    if (!ssl_) {
+    if (ssl_ == nullptr) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("SSL_new failed"));
     }
 
@@ -86,7 +86,7 @@ void ssl_stream::reset(const ssl_context& ctx) {
 }
 
 void ssl_stream::set_fd(const native_handle_type fd) {
-    if (!ssl_) {
+    if (ssl_ == nullptr) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("SSL object not initialized"));
     }
 
@@ -100,7 +100,7 @@ void ssl_stream::set_fd(const native_handle_type fd) {
 }
 
 void ssl_stream::accept() {
-    if (!ssl_) {
+    if (ssl_ == nullptr) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("SSL object not initialized"));
     }
 
@@ -203,7 +203,7 @@ ssize_t ssl_stream::read(void* buffer, const size_t size) {
 }
 
 ssize_t ssl_stream::write(const void* buffer, const size_t size) {
-    if (!ssl_) {
+    if (ssl_ == nullptr) {
         last_error_ = "SSL object not initialized";
         return -1;
     }
@@ -245,7 +245,7 @@ ssize_t ssl_stream::write(const void* buffer, const size_t size) {
 }
 
 vector<char> ssl_stream::read_all(const size_t max_size) {
-    if (!ssl_) {
+    if (ssl_ == nullptr) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("SSL object not initialized"));
     }
     if (max_size == 0) {
@@ -279,7 +279,7 @@ vector<char> ssl_stream::read_all(const size_t max_size) {
 }
 
 bool ssl_stream::write_all(const void* data, const size_t size) {
-    if (!ssl_) {
+    if (ssl_ == nullptr) {
         last_error_ = "SSL object not initialized";
         return false;
     }
@@ -314,14 +314,14 @@ bool ssl_stream::write_all(const void* data, const size_t size) {
 }
 
 int ssl_stream::pending() const {
-    if (!ssl_) {
+    if (ssl_ == nullptr) {
         return 0;
     }
     return ::SSL_pending(static_cast<::SSL*>(ssl_));
 }
 
 void ssl_stream::set_sni_hostname(const string& hostname) {
-    if (!ssl_) {
+    if (ssl_ == nullptr) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("SSL object not initialized"));
     }
 
@@ -344,7 +344,7 @@ void ssl_stream::set_sni_hostname(const string& hostname) {
 #endif
 }
 
-x509_certificate ssl_stream::get_peer_certificate() const {
+x509_certificate ssl_stream::peer_certificate() const {
     if (ssl_ == nullptr) {
         return {};
     }
@@ -367,22 +367,22 @@ bool ssl_stream::verify_peer() const {
     return verify_result == X509_V_OK;
 }
 
-string ssl_stream::get_cipher_name() const {
-    if (!ssl_) {
+string ssl_stream::cipher_name() const {
+    if (ssl_ == nullptr) {
         return "";
     }
     return ::SSL_get_cipher_name(static_cast<::SSL*>(ssl_));
 }
 
-string ssl_stream::get_version() const {
-    if (!ssl_) {
+string ssl_stream::version() const {
+    if (ssl_ == nullptr) {
         return "";
     }
     return ::SSL_get_version(static_cast<::SSL*>(ssl_));
 }
 
-string ssl_stream::get_alpn_negotiated() const {
-    if (!ssl_) {
+string ssl_stream::alpn_negotiated() const {
+    if (ssl_ == nullptr) {
         return "";
     }
     const byte_t* data = nullptr;

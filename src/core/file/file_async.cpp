@@ -1,5 +1,8 @@
 #include <NeForce/core/file/file_async.hpp>
+#include <NeForce/core/container/flat_unordered_map.hpp>
+#include <NeForce/core/container/vector.hpp>
 #ifdef NEFORCE_PLATFORM_LINUX
+#    include <NeForce/core/async/thread.hpp>
 #    ifdef NEFORCE_USING_IO_URING
 #        include <liburing.h>
 #    else
@@ -16,29 +19,113 @@ namespace {
             -1;
 #endif
 
+    constexpr size_t g_ring_entries = 512; ///< io_uring 环容量
+
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    struct op_state {
+    struct win_io_op {
         ::OVERLAPPED ov{};
-        string write_data;
+        string write_data;                                         ///< 写载荷
+        string* read_buffer = nullptr;                             ///< 调用方读缓冲
+        bool abort_requested = false;                              ///< 已请求取消
+        function<void(error_code, file_async::size_type)> handler; ///< 完成回调
     };
-#else
-#    ifdef NEFORCE_USING_IO_URING
-    struct io_op {
+#endif
+
+#ifdef NEFORCE_PLATFORM_LINUX
+    struct sync_io_op {
+        io_context* ctx = nullptr;
+        file_async::native_handle_type fd = -1;
+        off_t offset = 0;
+        size_t size = 0;
+        string* buffer = nullptr;
+        shared_ptr<string> write_data;
+        function<void(error_code, file_async::size_type)> handler;
+    };
+
+    void run_sync_io_op(const shared_ptr<sync_io_op>& op) {
+        // Count the operation as outstanding work from the moment it is issued until its
+        // completion handler runs, so run()/run_one() wait for the worker instead of
+        // returning as if the context were idle.
+        op->ctx->work_started();
+        try {
+            thread worker([op]() mutable {
+                if (op->buffer != nullptr) {
+                    const auto n = ::pread64(op->fd, op->buffer->data(), op->size, op->offset);
+                    const error_code ec = (n < 0) ? last_error() : error_code{};
+                    op->ctx->post([op, n, ec]() {
+                        if (ec) {
+                            op->buffer->resize(0);
+                            op->handler(ec, 0);
+                        } else {
+                            op->buffer->resize(static_cast<size_t>(n));
+                            op->handler(error_code{}, static_cast<file_async::size_type>(n));
+                        }
+                        op->ctx->work_finished();
+                    });
+                } else {
+                    const auto n = ::pwrite64(op->fd, op->write_data->data(), op->size, op->offset);
+                    const error_code ec = (n < 0) ? last_error() : error_code{};
+                    op->ctx->post([op, n, ec]() {
+                        op->handler(ec, n < 0 ? 0 : static_cast<file_async::size_type>(n));
+                        op->ctx->work_finished();
+                    });
+                }
+            });
+            worker.detach();
+        } catch (...) {
+            op->ctx->post([op]() {
+                if (op->buffer != nullptr) {
+                    op->buffer->resize(0);
+                }
+                op->handler(
+                        error_code(static_cast<int>(errc::resource_unavailable_try_again), error_category::system()),
+                        0);
+                op->ctx->work_finished();
+            });
+        }
+    }
+#endif
+
+#ifdef NEFORCE_USING_IO_URING
+    struct io_uring_op {
         static constexpr uint64_t MAGIC = 0x4E464F504F5F4F50ULL;
         function<void(error_code, file_async::size_type)> handler;
         string* buffer = nullptr;
         shared_ptr<string> write_data;
+        bool cancelled = false;
         uint64_t magic = MAGIC;
     };
-#    endif
+
+    ::io_uring_sqe* get_sqe_or_submit(::io_uring& ring) {
+        for (int attempt = 0; attempt < 2; ++attempt) {
+            if (::io_uring_sqe* const sqe = ::io_uring_get_sqe(&ring)) {
+                return sqe;
+            }
+            if (::io_uring_submit(&ring) < 0) {
+                return nullptr;
+            }
+        }
+        return nullptr;
+    }
 #endif
 } // namespace
 
+
+#ifdef NEFORCE_PLATFORM_WINDOWS
+struct file_async::win_state {
+    mutex ops_mutex;
+    flat_unordered_map<::OVERLAPPED*, shared_ptr<win_io_op>> ops;
+    bool overlapped_capable = false;
+    io_context* ctx = nullptr; ///< 绑定上下文（用于 work_started/work_finished 计数）
+};
+#endif
 
 #ifdef NEFORCE_USING_IO_URING
 struct file_async::uring {
     ::io_uring ring;
     bool initialized = false;
+    mutex ops_mutex;
+    flat_unordered_map<void*, shared_ptr<io_uring_op>> ops;
 
     ~uring() {
         if (initialized) {
@@ -59,269 +146,521 @@ struct file_async::uring {
 #endif
 
 
-file_async::file_async(native_handle_type handle) :
+#ifdef NEFORCE_PLATFORM_WINDOWS
+bool file_async::complete_win_op(win_state& state, ::OVERLAPPED* ov, const error_code ec, size_type bytes) {
+    shared_ptr<win_io_op> op;
+    bool abort = false;
+    {
+        lock<mutex> lk(state.ops_mutex);
+        const auto it = state.ops.find(ov);
+        if (it == state.ops.end()) {
+            return false;
+        }
+        op = it->second;
+        state.ops.erase(it);
+        abort = op->abort_requested;
+    }
+
+    // Balance the work_started() issued when the operation was submitted. Called before
+    // the handler so that a handler observing an idle context is already accurate.
+    if (state.ctx != nullptr) {
+        state.ctx->work_finished();
+    }
+
+    if (abort) {
+        if (op->read_buffer != nullptr) {
+            op->read_buffer->resize(0);
+        }
+        op->handler(make_operation_aborted(), 0);
+    } else {
+        if (op->read_buffer != nullptr) {
+            op->read_buffer->resize(bytes);
+        }
+        op->handler(ec, bytes);
+    }
+    return true;
+}
+#endif
+
+
+file_async::file_async(const native_handle_type handle) :
 handle_(handle) {}
 
-file_async::~file_async() {
+file_async::~file_async() { release_binding(); }
+
+file_async::file_async(file_async&& other) noexcept {
+    other.release_binding();
+
+    handle_ = other.handle_;
+    other.handle_ = invalid_handle;
+    ctx_ = other.ctx_;
+    other.ctx_ = nullptr;
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    if (ctx_ != nullptr) {
-        ctx_->unregister_file_completion(reinterpret_cast<uintptr_t>(this));
-    }
+    win_ = move(other.win_);
 #else
 #    ifdef NEFORCE_USING_IO_URING
-    if (ctx_ != nullptr && uring_) {
+    uring_ = move(other.uring_);
+#    endif
+#endif
+}
+
+file_async& file_async::operator=(file_async&& other) noexcept {
+    if (this == addressof(other)) {
+        return *this;
+    }
+
+    release_binding();
+    other.release_binding();
+
+    handle_ = other.handle_;
+    other.handle_ = invalid_handle;
+    ctx_ = other.ctx_;
+    other.ctx_ = nullptr;
+#ifdef NEFORCE_PLATFORM_WINDOWS
+    win_ = move(other.win_);
+#endif
+#ifdef NEFORCE_USING_IO_URING
+    uring_ = move(other.uring_);
+#endif
+    return *this;
+}
+
+void file_async::release_binding() noexcept {
+    if (ctx_ == nullptr) {
+        return;
+    }
+#ifdef NEFORCE_PLATFORM_WINDOWS
+    ctx_->unregister_file_completion(reinterpret_cast<uintptr_t>(this));
+#else
+#    ifdef NEFORCE_USING_IO_URING
+    if (uring_ != nullptr) {
         ctx_->remove_fd(uring_->ring_fd());
     }
 #    endif
 #endif
-}
-
-file_async::file_async(file_async&& other) noexcept :
-handle_(other.handle_),
-ctx_(other.ctx_)
-#ifdef NEFORCE_USING_IO_URING
-,
-uring_(move(other.uring_))
-#endif
-{
-    other.handle_ = invalid_handle;
-    other.ctx_ = nullptr;
-}
-
-file_async& file_async::operator=(file_async&& other) noexcept {
-    if (this != &other) {
-        handle_ = other.handle_;
-        ctx_ = other.ctx_;
-#ifdef NEFORCE_USING_IO_URING
-        uring_ = move(other.uring_);
-#endif
-        other.handle_ = invalid_handle;
-        other.ctx_ = nullptr;
-    }
-    return *this;
+    ctx_ = nullptr;
 }
 
 void file_async::ensure_iocp(io_context& ctx) {
-#ifdef NEFORCE_PLATFORM_WINDOWS
     if (ctx_ == &ctx) {
         return;
     }
     if (ctx_ != nullptr) {
-        ctx_->unregister_file_completion(reinterpret_cast<uintptr_t>(this));
+        release_binding();
     }
     ctx_ = &ctx;
+
+#ifdef NEFORCE_PLATFORM_WINDOWS
+    win_ = make_unique<win_state>();
 
     const auto key = reinterpret_cast<uintptr_t>(this);
     const ::HANDLE iocp = ctx_->iocp_handle_;
-    ::CreateIoCompletionPort(handle_, iocp, key, 0);
+    const ::HANDLE associated = ::CreateIoCompletionPort(handle_, iocp, key, 0);
+    win_->overlapped_capable = (associated != nullptr && associated == iocp);
+    win_->ctx = ctx_;
 
-    ctx_->register_file_completion(key, [this](error_code ec, size_t bytes, void* /*overlapped*/) {
-        if (pending_handler_) {
-            const auto h = move(pending_handler_);
-            pending_handler_ = nullptr;
-            h(ec, static_cast<size_type>(bytes));
+    ctx_->register_file_completion(key, [this](const error_code ec, const size_t bytes, void* const overlapped) {
+        if (win_ == nullptr || overlapped == nullptr) {
+            return;
         }
+        complete_win_op(*win_, static_cast<::OVERLAPPED*>(overlapped), ec, static_cast<file_async::size_type>(bytes));
     });
 #else
-    if (ctx_ == &ctx) {
-        return;
-    }
-    ctx_ = &ctx;
-
 #    ifdef NEFORCE_USING_IO_URING
-    if (!uring_) {
-        uring_ = make_unique<uring>();
-        if (!uring_->init(256)) {
-            uring_.reset();
-            return;
+    if (uring_ == nullptr) {
+        auto ring_holder = make_unique<uring>();
+        if (ring_holder->init(g_ring_entries)) {
+            uring_ = move(ring_holder);
         }
     }
 
-    const int uring_fd = uring_->ring_fd();
-    ctx_->add_fd(uring_fd, epoll_in, [this](int /*fd*/, uint32_t /*events*/, error_code /*ec*/) {
-        if (!uring_) {
-            return;
-        }
-        ::io_uring_cqe* cqe = nullptr;
-        while (::io_uring_peek_cqe(&uring_->ring, &cqe) == 0) {
-            auto* raw_op = reinterpret_cast<io_op*>(cqe->user_data);
-            if (raw_op == nullptr || raw_op->magic != io_op::MAGIC) {
-                ::io_uring_cqe_seen(&uring_->ring, cqe);
-                continue;
+    if (uring_ != nullptr) {
+        const int uring_fd = uring_->ring_fd();
+        ctx_->add_fd(uring_fd, epoll_in, [this](int /*fd*/, uint32_t /*events*/, error_code /*ec*/) {
+            if (uring_ == nullptr) {
+                return;
             }
-            unique_ptr<io_op> op(raw_op);
-            op->magic = 0;
 
-            const auto ec = error_code(cqe->res < 0 ? -cqe->res : 0, error_category::system());
-            const auto n = static_cast<size_type>(cqe->res > 0 ? cqe->res : 0);
-            if (op->buffer != nullptr) {
-                op->buffer->resize(static_cast<size_t>(n));
+            struct reaped_op {
+                shared_ptr<io_uring_op> op;
+                int res;
+            };
+            vector<reaped_op> done;
+            {
+                lock<mutex> lk(uring_->ops_mutex);
+                ::io_uring_cqe* cqe = nullptr;
+                while (::io_uring_peek_cqe(&uring_->ring, &cqe) == 0) {
+                    auto* const raw_op = reinterpret_cast<io_uring_op*>(cqe->user_data);
+                    if (raw_op == nullptr || raw_op->magic != io_uring_op::MAGIC) {
+                        ::io_uring_cqe_seen(&uring_->ring, cqe);
+                        continue;
+                    }
+                    const auto it = uring_->ops.find(raw_op);
+                    if (it == uring_->ops.end()) {
+                        ::io_uring_cqe_seen(&uring_->ring, cqe);
+                        continue;
+                    }
+                    done.push_back({it->second, cqe->res});
+                    uring_->ops.erase(it);
+                    ::io_uring_cqe_seen(&uring_->ring, cqe);
+                }
             }
-            op->handler(ec, n);
-            ::io_uring_cqe_seen(&uring_->ring, cqe);
-        }
-    });
+
+            for (auto& entry: done) {
+                auto& op = entry.op;
+                op->magic = 0;
+                // Balance the work_started() issued at submission.
+                if (ctx_ != nullptr) {
+                    ctx_->work_finished();
+                }
+                if (op->cancelled || entry.res == -ECANCELED) {
+                    if (op->buffer != nullptr) {
+                        op->buffer->resize(0);
+                    }
+                    op->handler(make_operation_aborted(), 0);
+                } else if (entry.res < 0) {
+                    if (op->buffer != nullptr) {
+                        op->buffer->resize(0);
+                    }
+                    op->handler(error_code(-entry.res, error_category::system()), 0);
+                } else {
+                    const auto n = static_cast<file_async::size_type>(entry.res);
+                    if (op->buffer != nullptr) {
+                        op->buffer->resize(n);
+                    }
+                    op->handler(error_code{}, n);
+                }
+            }
+        });
+    }
 #    endif
 #endif
 }
 
-void file_async::do_async_read(io_context& ctx, string& buffer, size_type size, difference_type offset,
-                               cancellation_slot* /*slot*/, function<void(error_code, size_type)> handler) {
+void file_async::do_async_read(io_context& ctx, string& buffer, const size_type size, const difference_type offset,
+                               cancellation_slot* slot, function<void(error_code, size_type)> handler) {
     ensure_iocp(ctx);
-    buffer.resize(size);
 
-#ifdef NEFORCE_PLATFORM_WINDOWS
-    const auto op = make_shared<op_state>();
-
-    {
-        difference_type actual_offset = offset;
-        if (offset < 0) {
-            ::LARGE_INTEGER current{};
-            ::LARGE_INTEGER zero{};
-            ::SetFilePointerEx(handle_, zero, &current, FILE_CURRENT);
-            actual_offset = current.QuadPart;
-        }
-        ::LARGE_INTEGER li;
-        li.QuadPart = actual_offset;
-        op->ov.Offset = li.LowPart;
-        op->ov.OffsetHigh = li.HighPart;
+    if (slot != nullptr && slot->is_cancelled()) {
+        buffer.resize(0);
+        handler(make_operation_aborted(), 0);
+        return;
+    }
+    if (size == 0) {
+        buffer.resize(0);
+        handler(error_code{}, 0);
+        return;
     }
 
-    pending_handler_ = [handler = move(handler), &buffer](error_code ec, size_type bytes) mutable {
-        buffer.resize(bytes);
-        handler(ec, bytes);
-    };
+#ifdef NEFORCE_PLATFORM_WINDOWS
+    if (win_ == nullptr) {
+        buffer.resize(0);
+        handler(make_error_code(errc::io_error), 0);
+        return;
+    }
+
+    difference_type actual_offset = offset;
+    if (offset < 0) {
+        ::LARGE_INTEGER current{};
+        constexpr ::LARGE_INTEGER zero{};
+        ::SetFilePointerEx(handle_, zero, &current, FILE_CURRENT);
+        actual_offset = current.QuadPart;
+    }
+    ::LARGE_INTEGER li{};
+    li.QuadPart = actual_offset;
+
+    auto op = make_shared<win_io_op>();
+    op->handler = move(handler);
+    op->read_buffer = &buffer;
+    op->ov.Offset = li.LowPart;
+    op->ov.OffsetHigh = li.HighPart;
+
+    buffer.resize(size);
+    {
+        lock<mutex> lk(win_->ops_mutex);
+        win_->ops[&op->ov] = op;
+    }
+
+    // Register the operation as outstanding work so run()/run_one() wait for it
+    // (complete_win_op() balances this call).
+    ctx.work_started();
 
     const ::BOOL ok = ::ReadFile(handle_, buffer.data(), size, nullptr, &op->ov);
-    if ((ok == FALSE) && ::GetLastError() == ERROR_IO_PENDING) {
-        return;
-    }
-
-    const auto h = move(pending_handler_);
-    pending_handler_ = nullptr;
     if (ok == FALSE) {
-        h(error_code(static_cast<int>(::GetLastError()), error_category::system()), 0);
+        const ::DWORD err = ::GetLastError();
+        if (err == ERROR_IO_PENDING) {
+            if (!win_->overlapped_capable) {
+                ::DWORD bytes = 0;
+                error_code ec;
+                if (::GetOverlappedResult(handle_, &op->ov, &bytes, TRUE) == FALSE) {
+                    ec = error_code(static_cast<int>(::GetLastError()), error_category::system());
+                    bytes = 0;
+                }
+                complete_win_op(*win_, &op->ov, ec, static_cast<size_type>(bytes));
+            }
+        } else {
+            complete_win_op(*win_, &op->ov, error_code(static_cast<int>(err), error_category::system()), 0);
+        }
     } else {
         ::DWORD bytes = 0;
-        ::GetOverlappedResult(handle_, &op->ov, &bytes, FALSE);
-        h(error_code{}, static_cast<size_type>(bytes));
+        error_code ec;
+        if (::GetOverlappedResult(handle_, &op->ov, &bytes, FALSE) == FALSE) {
+            ec = error_code(static_cast<int>(::GetLastError()), error_category::system());
+            bytes = 0;
+        }
+        complete_win_op(*win_, &op->ov, ec, static_cast<size_type>(bytes));
+    }
+
+    if (slot != nullptr) {
+        slot->assign([this, op]() {
+            if (win_ == nullptr) {
+                return;
+            }
+            lock<mutex> lk(win_->ops_mutex);
+            const auto it = win_->ops.find(&op->ov);
+            if (it == win_->ops.end()) {
+                return;
+            }
+            it->second->abort_requested = true;
+            ::CancelIoEx(handle_, &op->ov);
+        });
     }
 #else
 #    ifdef NEFORCE_USING_IO_URING
-    if (!uring_) {
-#    endif
-        // fall back to synchronous pread and dispatch the completion handler via the event loop.
-        ctx_->post([this, handler = move(handler), &buffer, size, offset]() mutable {
-            const auto off =
-                    offset >= 0 ? static_cast<off_t>(offset) : static_cast<off_t>(::lseek64(handle_, 0, SEEK_CUR));
-            const auto n = ::pread64(handle_, buffer.data(), static_cast<size_t>(size), off);
-            if (n < 0) {
-                buffer.resize(0);
-                handler(last_error(), 0);
-            } else {
-                buffer.resize(static_cast<size_t>(n));
-                handler(error_code{}, static_cast<size_type>(n));
+    if (uring_ != nullptr) {
+        auto op = make_shared<io_uring_op>();
+        op->handler = move(handler);
+        op->buffer = &buffer;
+        buffer.resize(size);
+        const uint64_t resolved_offset =
+                offset >= 0 ? static_cast<uint64_t>(offset) : static_cast<uint64_t>(::lseek64(handle_, 0, SEEK_CUR));
+
+        {
+            lock<mutex> lk(uring_->ops_mutex);
+            uring_->ops[op.get()] = op;
+        }
+
+        ::io_uring_sqe* sqe = nullptr;
+        {
+            lock<mutex> lk(uring_->ops_mutex);
+            sqe = get_sqe_or_submit(uring_->ring);
+            if (sqe != nullptr) {
+                ::io_uring_prep_read(sqe, handle_, buffer.data(), static_cast<unsigned>(size), resolved_offset);
+                sqe->user_data = reinterpret_cast<uint64_t>(op.get());
+                if (::io_uring_submit(&uring_->ring) < 0) {
+                    sqe = nullptr;
+                }
             }
-        });
-#    ifdef NEFORCE_USING_IO_URING
+        }
+        if (sqe == nullptr) {
+            {
+                lock<mutex> lk(uring_->ops_mutex);
+                uring_->ops.erase(op.get());
+            }
+            buffer.resize(0);
+            op->handler(error_code(static_cast<int>(errc::resource_unavailable_try_again), error_category::system()),
+                        0);
+            return;
+        }
+
+        // Submitted: count as outstanding work; the reaper balances it.
+        ctx.work_started();
+
+        if (slot != nullptr) {
+            slot->assign([this, op]() {
+                if (uring_ == nullptr) {
+                    return;
+                }
+                lock<mutex> lk(uring_->ops_mutex);
+                const auto it = uring_->ops.find(op.get());
+                if (it == uring_->ops.end()) {
+                    return;
+                }
+                it->second->cancelled = true;
+                if (::io_uring_sqe* const cancel_sqe = get_sqe_or_submit(uring_->ring)) {
+                    ::io_uring_prep_cancel(cancel_sqe, op.get(), 0);
+                    cancel_sqe->user_data = 0;
+                    ::io_uring_submit(&uring_->ring);
+                }
+            });
+        }
         return;
     }
-
-    auto* op = new io_op{move(handler), &buffer, nullptr};
-
-    auto* sqe = ::io_uring_get_sqe(&uring_->ring);
-    if (sqe == nullptr) {
-        delete op;
-        return;
-    }
-    ::io_uring_prep_read(sqe, handle_, buffer.data(), static_cast<unsigned>(size),
-                         offset >= 0 ? static_cast<uint64_t>(offset) : numeric_traits<uint64_t>::max());
-    sqe->user_data = reinterpret_cast<uint64_t>(op);
-    ::io_uring_submit(&uring_->ring);
 #    endif
+    // offload the blocking positioned read onto a worker thread.
+    {
+        auto op = make_shared<sync_io_op>();
+        op->ctx = ctx_;
+        op->fd = handle_;
+        op->offset = static_cast<off_t>(offset >= 0 ? offset : ::lseek64(handle_, 0, SEEK_CUR));
+        op->size = static_cast<size_t>(size);
+        op->buffer = &buffer;
+        buffer.resize(size);
+        op->handler = move(handler);
+        run_sync_io_op(op);
+    }
 #endif
 }
 
-void file_async::do_async_write(io_context& ctx, string data, size_type size, difference_type offset,
-                                cancellation_slot* /*slot*/, function<void(error_code, size_type)> handler) {
+void file_async::do_async_write(io_context& ctx, string data, size_type size, const difference_type offset,
+                                cancellation_slot* slot, function<void(error_code, size_type)> handler) {
     ensure_iocp(ctx);
 
-#ifdef NEFORCE_PLATFORM_WINDOWS
-    auto op = make_shared<op_state>();
-    op->write_data = move(data);
-
     if (size == numeric_traits<size_type>::max()) {
-        size = static_cast<size_type>(op->write_data.size());
+        size = static_cast<size_type>(data.size());
     }
+
+    if (slot != nullptr && slot->is_cancelled()) {
+        handler(make_operation_aborted(), 0);
+        return;
+    }
+    if (size == 0) {
+        handler(error_code{}, 0);
+        return;
+    }
+
+#ifdef NEFORCE_PLATFORM_WINDOWS
+    if (win_ == nullptr) {
+        handler(make_error_code(errc::io_error), 0);
+        return;
+    }
+
+    difference_type actual_offset = offset;
+    if (offset < 0) {
+        ::LARGE_INTEGER current{};
+        constexpr ::LARGE_INTEGER zero{};
+        ::SetFilePointerEx(handle_, zero, &current, FILE_CURRENT);
+        actual_offset = current.QuadPart;
+    }
+    ::LARGE_INTEGER li{};
+    li.QuadPart = actual_offset;
+
+    auto op = make_shared<win_io_op>();
+    op->handler = move(handler);
+    op->write_data = move(data);
+    op->ov.Offset = li.LowPart;
+    op->ov.OffsetHigh = li.HighPart;
 
     {
-        difference_type actual_offset = offset;
-        if (offset < 0) {
-            ::LARGE_INTEGER current{};
-            constexpr ::LARGE_INTEGER zero{};
-            ::SetFilePointerEx(handle_, zero, &current, FILE_CURRENT);
-            actual_offset = current.QuadPart;
-        }
-        ::LARGE_INTEGER li;
-        li.QuadPart = actual_offset;
-        op->ov.Offset = li.LowPart;
-        op->ov.OffsetHigh = li.HighPart;
+        lock<mutex> lk(win_->ops_mutex);
+        win_->ops[&op->ov] = op;
     }
 
-    pending_handler_ = [this, handler = move(handler), op](error_code ec, size_type /*bytes*/) mutable {
-        ::DWORD written = 0;
-        ::GetOverlappedResult(handle_, &op->ov, &written, FALSE);
-        handler(ec, written);
-    };
+    // Register the operation as outstanding work so run()/run_one() wait for it
+    // (complete_win_op() balances this call).
+    ctx.work_started();
 
     const ::BOOL ok = ::WriteFile(handle_, op->write_data.data(), size, nullptr, &op->ov);
-    if ((ok == FALSE) && ::GetLastError() == ERROR_IO_PENDING) {
-        return;
-    }
-    const auto h = move(pending_handler_);
-    pending_handler_ = nullptr;
     if (ok == FALSE) {
-        h(error_code(static_cast<int>(::GetLastError()), error_category::system()), 0);
+        const ::DWORD err = ::GetLastError();
+        if (err == ERROR_IO_PENDING) {
+            if (!win_->overlapped_capable) {
+                ::DWORD bytes = 0;
+                error_code ec;
+                if (::GetOverlappedResult(handle_, &op->ov, &bytes, TRUE) == FALSE) {
+                    ec = error_code(static_cast<int>(::GetLastError()), error_category::system());
+                    bytes = 0;
+                }
+                complete_win_op(*win_, &op->ov, ec, static_cast<size_type>(bytes));
+            }
+        } else {
+            complete_win_op(*win_, &op->ov, error_code(static_cast<int>(err), error_category::system()), 0);
+        }
     } else {
-        ::DWORD written = 0;
-        ::GetOverlappedResult(handle_, &op->ov, &written, FALSE);
-        h(error_code{}, written);
+        ::DWORD bytes = 0;
+        error_code ec;
+        if (::GetOverlappedResult(handle_, &op->ov, &bytes, FALSE) == FALSE) {
+            ec = error_code(static_cast<int>(::GetLastError()), error_category::system());
+            bytes = 0;
+        }
+        complete_win_op(*win_, &op->ov, ec, static_cast<size_type>(bytes));
+    }
+
+    if (slot != nullptr) {
+        slot->assign([this, op]() {
+            if (win_ == nullptr) {
+                return;
+            }
+            lock<mutex> lk(win_->ops_mutex);
+            const auto it = win_->ops.find(&op->ov);
+            if (it == win_->ops.end()) {
+                return;
+            }
+            it->second->abort_requested = true;
+            ::CancelIoEx(handle_, &op->ov);
+        });
     }
 #else
-    if (size == numeric_traits<size_type>::max()) {
-        size = data.size();
-    }
-
 #    ifdef NEFORCE_USING_IO_URING
-    if (!uring_) {
-#    endif
-        ctx_->post([this, handler = move(handler), write_data = move(data), size, offset]() mutable {
-            const auto off =
-                    offset >= 0 ? static_cast<off_t>(offset) : static_cast<off_t>(::lseek64(handle_, 0, SEEK_CUR));
-            const auto n = ::pwrite64(handle_, write_data.data(), static_cast<size_t>(size), off);
-            if (n < 0) {
-                handler(last_error(), 0);
-            } else {
-                handler(error_code{}, static_cast<size_type>(n));
+    if (uring_ != nullptr) {
+        const auto write_data = make_shared<string>(move(data));
+        auto op = make_shared<io_uring_op>();
+        op->handler = move(handler);
+        op->write_data = write_data;
+        const uint64_t resolved_offset =
+                offset >= 0 ? static_cast<uint64_t>(offset) : static_cast<uint64_t>(::lseek64(handle_, 0, SEEK_CUR));
+
+        {
+            lock<mutex> lk(uring_->ops_mutex);
+            uring_->ops[op.get()] = op;
+        }
+
+        ::io_uring_sqe* sqe = nullptr;
+        {
+            lock<mutex> lk(uring_->ops_mutex);
+            sqe = get_sqe_or_submit(uring_->ring);
+            if (sqe != nullptr) {
+                ::io_uring_prep_write(sqe, handle_, write_data->data(), static_cast<unsigned>(size), resolved_offset);
+                sqe->user_data = reinterpret_cast<uint64_t>(op.get());
+                if (::io_uring_submit(&uring_->ring) < 0) {
+                    sqe = nullptr;
+                }
             }
-        });
-#    ifdef NEFORCE_USING_IO_URING
+        }
+        if (sqe == nullptr) {
+            {
+                lock<mutex> lk(uring_->ops_mutex);
+                uring_->ops.erase(op.get());
+            }
+            op->handler(error_code(static_cast<int>(errc::resource_unavailable_try_again), error_category::system()),
+                        0);
+            return;
+        }
+
+        // Submitted: count as outstanding work; the reaper balances it.
+        ctx.work_started();
+
+        if (slot != nullptr) {
+            slot->assign([this, op]() {
+                if (uring_ == nullptr) {
+                    return;
+                }
+                lock<mutex> lk(uring_->ops_mutex);
+                const auto it = uring_->ops.find(op.get());
+                if (it == uring_->ops.end()) {
+                    return;
+                }
+                it->second->cancelled = true;
+                if (::io_uring_sqe* const cancel_sqe = get_sqe_or_submit(uring_->ring)) {
+                    ::io_uring_prep_cancel(cancel_sqe, op.get(), 0);
+                    cancel_sqe->user_data = 0;
+                    ::io_uring_submit(&uring_->ring);
+                }
+            });
+        }
         return;
     }
-
-    const auto write_data = make_shared<string>(move(data));
-    auto* op = new io_op{move(handler), nullptr, write_data};
-
-    auto* sqe = ::io_uring_get_sqe(&uring_->ring);
-    if (sqe == nullptr) {
-        delete op;
-        return;
-    }
-    ::io_uring_prep_write(sqe, handle_, write_data->data(), static_cast<unsigned>(size),
-                          offset >= 0 ? static_cast<uint64_t>(offset) : numeric_traits<uint64_t>::max());
-    sqe->user_data = reinterpret_cast<uint64_t>(op);
-    ::io_uring_submit(&uring_->ring);
 #    endif
+    {
+        auto op = make_shared<sync_io_op>();
+        op->ctx = ctx_;
+        op->fd = handle_;
+        op->offset = static_cast<off_t>(offset >= 0 ? offset : ::lseek64(handle_, 0, SEEK_CUR));
+        op->size = static_cast<size_t>(size);
+        op->write_data = make_shared<string>(move(data));
+        op->handler = move(handler);
+        run_sync_io_op(op);
+    }
 #endif
 }
 

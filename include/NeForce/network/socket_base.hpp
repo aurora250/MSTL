@@ -102,8 +102,6 @@ public:
      */
     static constexpr int max_backlog = SOMAXCONN;
 
-    using family = ip_address::family; ///< 网络地址族类型
-
     /**
      * @brief socket 类型枚举
      */
@@ -213,7 +211,7 @@ public:
      * @throws socket_exception 创建失败时抛出
      * @throws value_exception 地址族无效时抛出
      */
-    void open(family f, type t = type::STREAM, protocol p = protocol::AUTO);
+    void open(ip_family f, type t = type::STREAM, protocol p = protocol::AUTO);
 
     /**
      * @brief 关闭socket
@@ -228,7 +226,7 @@ public:
      * @param p 协议
      * @return 打开成功返回true
      */
-    bool try_open(family f, type t = type::STREAM, protocol p = protocol::AUTO) noexcept;
+    bool try_open(ip_family f, type t = type::STREAM, protocol p = protocol::AUTO) noexcept;
 
     /**
      * @brief 查询是否为非阻塞模式
@@ -421,6 +419,17 @@ public:
      */
     NEFORCE_NODISCARD native_handle_type release() noexcept { return exchange(fd_, invalid_handle); }
 };
+
+
+/**
+ * @brief socket 类型枚举
+ */
+using socket_type = socket_base::type;
+
+/**
+ * @brief socket 协议枚举
+ */
+using socket_protocol = socket_base::protocol;
 
 /** @} */ // SocketBase
 

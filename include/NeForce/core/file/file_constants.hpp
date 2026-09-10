@@ -243,11 +243,15 @@ constexpr file_lock operator&(file_lock a, file_lock b) {
  * 定义文件系统监视器可以捕获的事件类型。
  */
 enum class file_watch_event {
-    CREATED = 0x01,                                         ///< 文件创建事件
-    DELETED = 0x02,                                         ///< 文件删除事件
-    MODIFIED = 0x04,                                        ///< 文件修改事件
-    RENAMED = 0x08,                                         ///< 文件重命名事件
-    ACCESSED = 0x10,                                        ///< 文件访问事件
+    CREATED = 0x01,  ///< 文件创建事件
+    DELETED = 0x02,  ///< 文件删除事件
+    MODIFIED = 0x04, ///< 文件修改事件
+    RENAMED = 0x08,  ///< 文件重命名事件
+    /**
+     * @brief 文件访问事件
+     * @warning Windows 上受 NTFS 最后访问时间策略与延迟聚合影响，可能长时间不触发
+     */
+    ACCESSED = 0x10,
     ALL = CREATED | DELETED | MODIFIED | RENAMED | ACCESSED ///< 所有事件
 };
 

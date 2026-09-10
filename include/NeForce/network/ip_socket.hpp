@@ -72,9 +72,9 @@ struct ip_header {
  */
 class NEFORCE_API ip_socket : public socket_base {
 protected:
-    family family_ = family::UNDEF; ///< 地址族
+    ip_family family_ = ip_family::UNDEF; ///< 地址族
 
-    void open_ip(family f, type t, protocol p);
+    void open_ip(ip_family f, type t, protocol p);
 
 public:
     /**
@@ -103,22 +103,22 @@ public:
     /**
      * @brief 获取地址族
      */
-    NEFORCE_NODISCARD family address_family() const noexcept { return family_; }
+    NEFORCE_NODISCARD ip_family address_family() const noexcept { return family_; }
 
     /**
-     * @brief 检查是否为IPv4 socket
+     * @brief 检查是否为 IPv4
      * @return IPv4返回true
      */
-    NEFORCE_NODISCARD bool is_ipv4() const noexcept { return family_ == family::INET4; }
+    NEFORCE_NODISCARD bool is_ipv4() const noexcept { return family_ == ip_family::INET4; }
 
     /**
-     * @brief 检查是否为IPv6 socket
+     * @brief 检查是否为 IPv6
      * @return IPv6返回true
      */
-    NEFORCE_NODISCARD bool is_ipv6() const noexcept { return family_ == family::INET6; }
+    NEFORCE_NODISCARD bool is_ipv6() const noexcept { return family_ == ip_family::INET6; }
 
     /**
-     * @brief 连接到远程端点（TCP客户端）
+     * @brief 连接到远程 TCP 端点
      * @param endpoint 远程IP地址和端口
      * @throws socket_exception 连接失败时抛出
      * @throws value_exception socket未打开或端点无效时抛出
@@ -131,11 +131,9 @@ public:
     /**
      * @brief 关闭socket
      * @return 关闭成功返回true
-     *
-     * 重置地址族为AF_UNSPEC，然后关闭socket。
      */
     bool close() noexcept override {
-        family_ = family::UNDEF;
+        family_ = ip_family::UNDEF;
         return socket_base::close();
     }
 };

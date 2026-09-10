@@ -32,11 +32,10 @@ public:
     filesystem() = delete;
 
     /**
-     * @brief 创建目录（含所有父级目录）
+     * @brief 创建目录
      * @param p 要创建的目录路径
      * @return 创建成功返回true，如果目录已存在也返回true
-     *
-     * 自动创建路径中所有不存在的父级目录。
+     * @note 将自动创建路径中的父级目录
      */
     static bool create_directories(const path& p);
 
@@ -44,20 +43,18 @@ public:
      * @brief 删除文件
      * @param p 要删除的文件路径
      * @return 删除成功返回true，文件不存在或为目录返回false
-     *
-     * 只删除文件，不能用于删除目录。
-     * 如果文件具有只读属性，在Windows上会删除失败。
+     * @note 只删除文件，不能用于删除目录。
+     * @warning 如果文件具有只读属性，在Windows上会删除失败。
      */
-    static bool remove(const path& p) noexcept;
+    static bool remove(const path& p);
 
     /**
      * @brief 删除空目录
      * @param p 要删除的目录路径
      * @return 删除成功返回true，目录不存在或非空返回false
-     *
-     * 只能删除空目录。如需删除非空目录，请使用remove_all()。
+     * @note 只能删除空目录。如需删除非空目录，请使用remove_all()。
      */
-    static bool remove_directory(const path& p) noexcept;
+    static bool remove_directory(const path& p);
 
     /**
      * @brief 删除目录内所有内容
@@ -86,10 +83,9 @@ public:
      * @param to 目标文件路径
      * @param overwrite 是否覆盖已存在的目标文件，默认为true
      * @return 复制成功返回true
-     *
-     * 复制文件内容，保留文件权限和时间戳。
-     * 如果to是目录，文件将被复制到该目录下。
-     * 目标目录不存在时会自动创建。
+     * @note 目标目录不存在时会自动创建。
+     * @note 保留文件权限和时间戳。
+     * @note 如果to是目录，文件将被复制到该目录下。
      */
     static bool copy(const path& from, const path& to, bool overwrite = true);
 
@@ -99,9 +95,7 @@ public:
      * @param dest 目标目录路径
      * @param overwrite 是否覆盖已存在的文件，默认为true
      * @return 复制成功返回true
-     *
-     * 递归复制整个目录树，包括所有子目录和文件。
-     * 目标目录不存在时会自动创建。
+     * @note 目标目录不存在时会自动创建
      */
     static bool copy_directory(const path& src, const path& dest, bool overwrite = true);
 
@@ -111,9 +105,7 @@ public:
      * @param to 目标路径
      * @param overwrite 是否覆盖已存在的目标，默认为true
      * @return 移动成功返回true
-     *
-     * 跨文件系统时，会执行复制后删除原文件。
-     * 支持文件和目录的移动。
+     * @note 跨文件系统时，会执行复制后删除原文件
      */
     static bool move(const path& from, const path& to, bool overwrite = true);
 
@@ -122,8 +114,7 @@ public:
      * @param old_name 原路径
      * @param new_name 新路径
      * @return 重命名成功返回true
-     *
-     * 要求新路径在同一文件系统内。
+     * @note 新路径应在同一文件系统内
      */
     static bool rename(const path& old_name, const path& new_name);
 
@@ -133,9 +124,6 @@ public:
      * @param content 要写入的内容
      * @param append 是否追加到文件末尾，默认为false
      * @return 写入成功返回true
-     *
-     * 自动创建文件所在的目录（如果不存在）。
-     * 如果append为true，在文件末尾追加内容。
      */
     static bool create_and_write(const path& p, const string& content, bool append = false);
 
@@ -147,7 +135,7 @@ public:
      * 对于目录，返回0。
      * 对于大文件可能返回截断值。
      */
-    static byte_size size(const path& p) noexcept;
+    static byte_size size(const path& p);
 };
 
 /** @} */ // File

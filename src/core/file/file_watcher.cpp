@@ -3,9 +3,11 @@
 #include <NeForce/core/string/to_string.hpp>
 #ifdef NEFORCE_PLATFORM_LINUX
 #    include <cerrno>
+#    include <dirent.h>
 #    include <poll.h>
 #    include <sys/eventfd.h>
 #    include <sys/inotify.h>
+#    include <sys/stat.h>
 #    include <unistd.h>
 #endif
 NEFORCE_BEGIN_NAMESPACE__
@@ -17,6 +19,45 @@ namespace {
     constexpr size_t g_watch_buffer_size = 65536;
     // Batch pre-allocation: enough for a single read() worth of events.
     constexpr size_t g_event_batch_capacity = 256;
+
+#ifdef NEFORCE_PLATFORM_LINUX
+    // Register an inotify watch for root and every real (non-symlink) directory below it,
+    // remembering the relative prefix of each watch so events can be reported with the correct full path.
+    // Symbolic links are not followed (cycle safety).
+    void add_subdir_watches(const int inotify_fd, const uint32_t mask, const string& root,
+                            unordered_map<int, string>& watch_map) {
+        vector<string> pending;
+        pending.emplace_back();
+        while (!pending.empty()) {
+            string rel = move(pending.back());
+            pending.pop_back();
+            const string full = rel.empty() ? root : root + "/" + rel;
+
+            const int wd = ::inotify_add_watch(inotify_fd, full.data(), mask);
+            if (wd != -1) {
+                watch_map[wd] = rel;
+            }
+
+            ::DIR* const dir = ::opendir(full.data());
+            if (dir == nullptr) {
+                continue;
+            }
+            const ::dirent* entry = nullptr;
+            while ((entry = ::readdir(dir)) != nullptr) {
+                const string_view name(entry->d_name);
+                if (name == "." || name == "..") {
+                    continue;
+                }
+                const string child = full + "/" + name.data();
+                struct ::stat64 st{};
+                if (::lstat64(child.data(), &st) == 0 && S_ISDIR(st.st_mode) && !S_ISLNK(st.st_mode)) {
+                    pending.push_back(rel.empty() ? string(name) : rel + "/" + string(name));
+                }
+            }
+            ::closedir(dir);
+        }
+    }
+#endif
 } // namespace
 
 
@@ -45,9 +86,10 @@ bool file_watcher::start(callback_t callback, file_watch_event events) {
 
 #ifdef NEFORCE_PLATFORM_WINDOWS
 
-    dir_handle_ = ::CreateFile(watch_path_.data(), FILE_LIST_DIRECTORY,
-                               FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING,
-                               FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, nullptr);
+    const wstring watch_path = character::to_wstring(watch_path_.str().view());
+    dir_handle_ = ::CreateFileW(watch_path.data(), FILE_LIST_DIRECTORY,
+                                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING,
+                                FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, nullptr);
     if (dir_handle_ == INVALID_HANDLE_VALUE) {
         watching_.store(false);
         return false;
@@ -98,6 +140,13 @@ bool file_watcher::start(callback_t callback, file_watch_event events) {
         inotify_fd_ = -1;
         watching_.store(false);
         return false;
+    }
+
+    watch_mask_ = mask;
+    linux_watch_map_.clear();
+    linux_watch_map_[watch_descriptor_] = string{};
+    if (recursive_) {
+        add_subdir_watches(inotify_fd_, mask, watch_path_.str(), linux_watch_map_);
     }
 #endif
 
@@ -153,6 +202,7 @@ void file_watcher::stop() {
         ::close(inotify_fd_);
         inotify_fd_ = -1;
     }
+    linux_watch_map_.clear();
 #endif
 
     {
@@ -168,7 +218,9 @@ void file_watcher::watch_thread_func() {
     if (!path_prefix.empty() && path_prefix.back() != path::preferred_separator) {
         path_prefix += path::preferred_separator;
     }
+#ifdef NEFORCE_PLATFORM_WINDOWS
     const size_t prefix_len = path_prefix.size();
+#endif
 
     struct batched_event {
         string file_name;
@@ -362,8 +414,42 @@ void file_watcher::watch_thread_func() {
                     matched = false;
                 }
 
+                string prefix;
+                if (recursive_) {
+                    const auto it = linux_watch_map_.find(event->wd);
+                    if (it != linux_watch_map_.end()) {
+                        prefix = it->second;
+                    }
+                }
+
+                const bool dir_created =
+                        (event->mask & IN_ISDIR) != 0U && (event->mask & (IN_CREATE | IN_MOVED_TO)) != 0U;
+                const bool self_gone = (event->mask & (IN_DELETE_SELF | IN_MOVE_SELF | IN_IGNORED)) != 0U;
+
+                if (recursive_) {
+                    if (dir_created && event->len > 0) {
+                        string new_dir = path_prefix + prefix;
+                        if (!prefix.empty()) {
+                            new_dir += '/';
+                        }
+                        new_dir += event->name;
+                        const int wd = ::inotify_add_watch(inotify_fd_, new_dir.data(), watch_mask_);
+                        if (wd != -1) {
+                            linux_watch_map_[wd] = prefix.empty() ? string(event->name) : prefix + "/" + event->name;
+                        }
+                    } else if (self_gone) {
+                        linux_watch_map_.erase(event->wd);
+                    }
+                }
+
                 if (matched && event->len > 0) {
-                    event_batch.push_back({string(event->name), evt});
+                    string full = path_prefix;
+                    if (!prefix.empty()) {
+                        full += prefix;
+                        full += '/';
+                    }
+                    full += event->name;
+                    event_batch.push_back({move(full), evt});
                 }
 
                 ptr += sizeof(::inotify_event) + event->len;
@@ -377,9 +463,7 @@ void file_watcher::watch_thread_func() {
                 }
                 if (cb_copy) {
                     for (auto& be: event_batch) {
-                        path_prefix.resize(prefix_len);
-                        path_prefix.append(be.file_name);
-                        cb_copy(path(path_prefix), be.type);
+                        cb_copy(path(be.file_name), be.type);
                     }
                 }
             }

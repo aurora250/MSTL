@@ -87,10 +87,8 @@ NEFORCE_INLINE17 constexpr thread::id invalid_thread_id_max{static_cast<thread::
 template <typename T>
 struct const_numeric_max {
     static_assert(is_integral_v<T>, "const_numeric_max can only be used with integers");
-    static const T value =
-            numeric_traits<T>::is_signed
-                    ? (static_cast<T>(1) << (sizeof(T) * numeric_traits<char>::digits)) - static_cast<T>(1)
-                    : static_cast<T>(-1);
+    static const T value = numeric_traits<T>::is_signed ? static_cast<T>(static_cast<make_unsigned_t<T>>(-1) >> 1)
+                                                        : static_cast<T>(-1);
 };
 
 template <typename T>

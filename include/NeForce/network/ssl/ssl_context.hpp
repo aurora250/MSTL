@@ -20,12 +20,15 @@ NEFORCE_BEGIN_NAMESPACE__
  * @{
  */
 
+/**
+ * @brief SSL/TLS 对等方证书验证标志
+ */
 enum class ssl_verify {
-    PEER = 0x00,
-    NONE = 0x01,
-    FAIL_IF_NO_PEER_CERT = 0x02,
-    CLIENT_ONCE = 0x04,
-    POST_HANDSHAKE = 0x08,
+    NONE = 0x00,                 ///< 不验证对等方证书
+    PEER = 0x01,                 ///< 验证对等方证书
+    FAIL_IF_NO_PEER_CERT = 0x02, ///< 对等方无证书时失败
+    CLIENT_ONCE = 0x04,          ///< 客户端证书仅请求一次
+    POST_HANDSHAKE = 0x08,       ///< 握手后验证
 };
 
 NEFORCE_NODISCARD constexpr ssl_verify operator|(ssl_verify lhs, ssl_verify rhs) noexcept {
@@ -37,13 +40,16 @@ NEFORCE_NODISCARD constexpr ssl_verify operator&(ssl_verify lhs, ssl_verify rhs)
 }
 
 
+/**
+ * @brief SSL/TLS 选项
+ */
 enum class ssl_option : uint64_t {
-    NO_SSLv2 = 0x0,
-    NO_SSLv3 = static_cast<uint64_t>(1) << static_cast<uint64_t>(25),
-    NO_TLSv1 = static_cast<uint64_t>(1) << static_cast<uint64_t>(26),
-    NO_TLSv1_1 = static_cast<uint64_t>(1) << static_cast<uint64_t>(28),
-    NO_TLSv1_2 = static_cast<uint64_t>(1) << static_cast<uint64_t>(27),
-    NO_TLSv1_3 = static_cast<uint64_t>(1) << static_cast<uint64_t>(29),
+    NO_SSLv2 = 0x0,                                                     ///< 禁用SSLv2
+    NO_SSLv3 = static_cast<uint64_t>(1) << static_cast<uint64_t>(25),   ///< 禁用SSLv3
+    NO_TLSv1 = static_cast<uint64_t>(1) << static_cast<uint64_t>(26),   ///< 禁用TLSv1.0
+    NO_TLSv1_1 = static_cast<uint64_t>(1) << static_cast<uint64_t>(28), ///< 禁用TLSv1.1
+    NO_TLSv1_2 = static_cast<uint64_t>(1) << static_cast<uint64_t>(27), ///< 禁用TLSv1.2
+    NO_TLSv1_3 = static_cast<uint64_t>(1) << static_cast<uint64_t>(29)  ///< 禁用TLSv1.3
 };
 
 NEFORCE_NODISCARD constexpr ssl_option operator|(ssl_option lhs, ssl_option rhs) noexcept {
@@ -64,9 +70,10 @@ NEFORCE_NODISCARD constexpr ssl_option operator&(ssl_option lhs, ssl_option rhs)
 enum class ssl_method {
     TLS_SERVER,      ///< TLS服务器端
     TLS_CLIENT,      ///< TLS客户端端
-    TLS_SERVER_DTLS, ///< DTLS服务器端（数据报TLS）
-    TLS_CLIENT_DTLS  ///< DTLS客户端端（数据报TLS）
+    TLS_SERVER_DTLS, ///< DTLS服务器端
+    TLS_CLIENT_DTLS  ///< DTLS客户端端
 };
+
 
 /**
  * @class ssl_context
@@ -91,7 +98,7 @@ private:
     ssl_method method_;       ///< 记录创建时使用的方法
     bool cert_loaded_{false}; ///< 证书是否已加载
 
-    ssl_context(ssl_method method, ssl_context* /*tag*/) :
+    ssl_context(ssl_method method, nullptr_t* /*tag*/) :
     method_(method) {}
 
 public:
@@ -112,8 +119,18 @@ public:
     ssl_context(const ssl_context&) = delete;
     ssl_context& operator=(const ssl_context&) = delete;
 
-    ssl_context(ssl_context&& other) noexcept = default;
-    ssl_context& operator=(ssl_context&& other) noexcept = default;
+    /**
+     * @brief 移动构造函数
+     * @param other 源对象
+     */
+    ssl_context(ssl_context&& other) noexcept;
+
+    /**
+     * @brief 移动赋值运算符
+     * @param other 源对象
+     * @return 自身引用
+     */
+    ssl_context& operator=(ssl_context&& other) noexcept;
 
     /**
      * @brief 克隆当前SSL上下文

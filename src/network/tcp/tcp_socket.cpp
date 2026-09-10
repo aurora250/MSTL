@@ -24,7 +24,7 @@ namespace {
 } // namespace
 
 
-void tcp_socket::open(const family f) { open_ip(f, type::STREAM, protocol::TCP); }
+void tcp_socket::open(const ip_family f) { open_ip(f, type::STREAM, protocol::TCP); }
 
 bool tcp_socket::connect(const ip_address& endpoint, const milliseconds timeout, bool was_blocking) {
     if (!is_open()) {
@@ -450,8 +450,7 @@ namespace {
             } else if (result == 0) {
                 handler(error_code{make_error_code(errc::connection_reset)}, 0);
             } else {
-                handler(error_code{static_cast<int>(network_exception::last_error().value()), error_category::system()},
-                        0);
+                handler(network_exception::last_error(), 0);
             }
         }
     };
@@ -560,8 +559,7 @@ namespace {
             if (result > 0) {
                 handler(error_code{}, static_cast<size_t>(result));
             } else {
-                handler(error_code{static_cast<int>(network_exception::last_error().value()), error_category::system()},
-                        0);
+                handler(network_exception::last_error(), 0);
             }
         }
     };

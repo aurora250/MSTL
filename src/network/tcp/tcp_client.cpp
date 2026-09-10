@@ -1,3 +1,4 @@
+#include <NeForce/core/time/clocks.hpp>
 #include <NeForce/network/tcp/tcp_client.hpp>
 NEFORCE_BEGIN_NAMESPACE__
 
@@ -10,7 +11,7 @@ bool tcp_client_base::try_connect_to_ip(const string& ip, ports port) {
             return false;
         }
 
-        sock->open(is_ipv6_conn ? ip_address::family::INET6 : ip_address::family::INET4);
+        sock->open(is_ipv6_conn ? ip_family::INET6 : ip_family::INET4);
 
         if (!sock->set_send_timeout(send_timeout_) || !sock->set_receive_timeout(recv_timeout_)) {
             sock->close();
@@ -135,18 +136,36 @@ bool tcp_client_base::connect(const string& host, ports port) {
     } else {
         try {
             vector<string> ipv4s, ipv6s;
+
+            const auto saved_timeout = dns_->timeout();
+            const auto saved_retries = dns_->max_udp_retries();
+            const auto parse_deadline = steady_clock::now() + connect_timeout_;
+            const auto budget_for_query = [&parse_deadline]() -> milliseconds {
+                const auto left = time_cast<milliseconds>(parse_deadline - steady_clock::now());
+                if (left <= milliseconds(0)) {
+                    return milliseconds(0);
+                }
+                return left / 4;
+            };
+
+            dns_->set_max_udp_retries(0);
             try {
+                dns_->set_timeout(budget_for_query());
                 ipv4s = dns_->resolve_a(host.view());
                 // NOLINTNEXTLINE(bugprone-empty-catch)
             } catch (...) {
                 // ignore
             }
             try {
+                dns_->set_timeout(budget_for_query());
                 ipv6s = dns_->resolve_aaaa(host.view());
                 // NOLINTNEXTLINE(bugprone-empty-catch)
             } catch (...) {
                 // ignore
             }
+
+            dns_->set_timeout(saved_timeout);
+            dns_->set_max_udp_retries(saved_retries);
 
             if (prefer_ipv6_) {
                 ips.insert(ips.end(), ipv6s.begin(), ipv6s.end());
@@ -505,7 +524,7 @@ NEFORCE_NODISCARD string ssl_client::cipher_name() const {
         return "";
     }
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
-    return static_cast<const ssl_socket*>(socket_.get())->ssl().get_cipher_name();
+    return static_cast<const ssl_socket*>(socket_.get())->ssl().cipher_name();
 }
 
 NEFORCE_NODISCARD string ssl_client::protocol_version() const {
@@ -513,7 +532,7 @@ NEFORCE_NODISCARD string ssl_client::protocol_version() const {
         return "";
     }
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
-    return static_cast<const ssl_socket*>(socket_.get())->ssl().get_version();
+    return static_cast<const ssl_socket*>(socket_.get())->ssl().version();
 }
 
 ssl_socket& ssl_client::ssl_socket_ref() {
@@ -530,6 +549,158 @@ const ssl_socket& ssl_client::ssl_socket_ref() const {
     }
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
     return *static_cast<const ssl_socket*>(socket_.get());
+}
+
+struct tcp_client_base::async_connect_op : enable_shared_from_this<async_connect_op> {
+    tcp_client_base* client{nullptr};
+    io_context* ctx{nullptr};
+    ip_address endpoint;
+    function<void(error_code)> handler;
+    cancellation_slot* cancel_slot{nullptr};
+    unique_ptr<tcp_socket> sock;
+
+    void start() {
+        if (cancel_slot != nullptr && cancel_slot->is_cancelled()) {
+            handler(make_operation_aborted());
+            return;
+        }
+
+        try {
+            sock = client->create_socket();
+            sock->open(endpoint.address_family());
+            if (!sock->set_send_timeout(client->send_timeout_) || !sock->set_receive_timeout(client->recv_timeout_)) {
+                handler(error_code(static_cast<int>(errc::invalid_argument), error_category::system()));
+                return;
+            }
+        } catch (const system_exception& e) {
+            handler(e.code());
+            return;
+        } catch (const exception&) {
+            handler(error_code(static_cast<int>(errc::invalid_argument), error_category::system()));
+            return;
+        }
+
+        auto self = shared_from_this();
+        if (cancel_slot != nullptr) {
+            sock->async_connect(*ctx, endpoint, *cancel_slot,
+                                [self](error_code ec) mutable { self->on_connected(ec); });
+        } else {
+            sock->async_connect(*ctx, endpoint, [self](error_code ec) mutable { self->on_connected(ec); });
+        }
+    }
+
+    void on_connected(error_code ec) {
+        if (ec) {
+            handler(ec);
+            return;
+        }
+
+        auto self = shared_from_this();
+        client->begin_async_post_connect(sock.get(), *ctx,
+                                         [self](error_code e) mutable { self->on_post_connected(e); });
+    }
+
+    void on_post_connected(error_code ec) {
+        if (ec) {
+            handler(ec);
+            return;
+        }
+
+        client->socket_ = move(sock);
+        client->connected_host_.clear();
+        client->connected_port_ = endpoint.port();
+        handler(error_code{});
+    }
+};
+
+void tcp_client_base::async_connect(io_context& ctx, const ip_address& endpoint, function<void(error_code)> handler) {
+    auto op = make_shared<async_connect_op>();
+    op->client = this;
+    op->ctx = &ctx;
+    op->endpoint = endpoint;
+    op->handler = move(handler);
+    op->start();
+}
+
+void tcp_client_base::async_connect(io_context& ctx, const ip_address& endpoint, cancellation_slot& slot,
+                                    function<void(error_code)> handler) {
+    auto op = make_shared<async_connect_op>();
+    op->client = this;
+    op->ctx = &ctx;
+    op->endpoint = endpoint;
+    op->handler = move(handler);
+    op->cancel_slot = &slot;
+    op->start();
+}
+
+void tcp_client_base::async_read(io_context& ctx, memory_view<char> buffer,
+                                 function<void(error_code, size_t)> handler) {
+    if (!socket_) {
+        handler(error_code(static_cast<int>(errc::not_connected), error_category::system()), 0);
+        return;
+    }
+    socket_->async_read(ctx, buffer, move(handler));
+}
+
+void tcp_client_base::async_read(io_context& ctx, memory_view<char> buffer, cancellation_slot& slot,
+                                 function<void(error_code, size_t)> handler) {
+    if (!socket_) {
+        handler(error_code(static_cast<int>(errc::not_connected), error_category::system()), 0);
+        return;
+    }
+    socket_->async_read(ctx, buffer, slot, move(handler));
+}
+
+void tcp_client_base::async_write(io_context& ctx, memory_view<const char> buffer,
+                                  function<void(error_code, size_t)> handler) {
+    if (!socket_) {
+        handler(error_code(static_cast<int>(errc::not_connected), error_category::system()), 0);
+        return;
+    }
+    socket_->async_write(ctx, buffer, move(handler));
+}
+
+void tcp_client_base::async_write(io_context& ctx, memory_view<const char> buffer, cancellation_slot& slot,
+                                  function<void(error_code, size_t)> handler) {
+    if (!socket_) {
+        handler(error_code(static_cast<int>(errc::not_connected), error_category::system()), 0);
+        return;
+    }
+    socket_->async_write(ctx, buffer, slot, move(handler));
+}
+
+void ssl_client::begin_async_post_connect(tcp_socket* sock, io_context& ctx, function<void(error_code)> handler) {
+    if (!ssl_ctx_) {
+        handler(error_code{});
+        return;
+    }
+
+    ssl_ctx_->set_verify_mode(verify_peer_ ? ssl_verify::PEER : ssl_verify::NONE);
+
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
+    auto* ssl_sock = static_cast<ssl_socket*>(sock);
+    try {
+        ssl_sock->prepare_client_ssl(*ssl_ctx_, sni_hostname_);
+    } catch (const system_exception& e) {
+        handler(e.code());
+        return;
+    } catch (const exception&) {
+        handler(error_code(static_cast<int>(errc::invalid_argument), error_category::system()));
+        return;
+    }
+
+    ssl_sock->async_handshake(ctx, [this, ssl_sock, handler = move(handler)](error_code ec) mutable {
+        if (ec) {
+            handler(ec);
+            return;
+        }
+        if (verify_peer_ && !ssl_sock->ssl().verify_peer()) {
+            handler(error_code(static_cast<int>(errc::permission_denied), error_category::system()));
+            return;
+        }
+        ssl_initialized_ = true;
+        handler(error_code{});
+    });
 }
 
 NEFORCE_END_NAMESPACE__

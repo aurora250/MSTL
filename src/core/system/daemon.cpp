@@ -106,7 +106,8 @@ bool daemon::daemonize_impl() noexcept {
 
 bool daemon::write_pid_file(const string& path) {
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    const ::HANDLE hFile = ::CreateFileA(path.data(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
+    const wstring wpath = character::to_wstring(path.view());
+    const ::HANDLE hFile = ::CreateFileW(wpath.data(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
                                          FILE_ATTRIBUTE_NORMAL, nullptr);
     if (hFile == INVALID_HANDLE_VALUE) {
         NEFORCE_THROW_EXCEPTION(daemon_exception("Failed to create PID file"));
@@ -154,7 +155,8 @@ void daemon::remove_pid_file() noexcept {
         pid_handle_ = nullptr;
     }
     if (!pid_path_.empty()) {
-        ::DeleteFileA(pid_path_.data());
+        const wstring wpid_path = character::to_wstring(pid_path_.view());
+        ::DeleteFileW(wpid_path.data());
         pid_path_.clear();
     }
 #else
@@ -170,7 +172,8 @@ void daemon::remove_pid_file() noexcept {
 
 bool daemon::is_pid_file_locked(const string& path) noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    const ::HANDLE hFile = ::CreateFileA(path.data(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+    const wstring wpath = character::to_wstring(path.view());
+    const ::HANDLE hFile = ::CreateFileW(wpath.data(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
                                          FILE_ATTRIBUTE_NORMAL, nullptr);
     if (hFile == INVALID_HANDLE_VALUE) {
         return false;

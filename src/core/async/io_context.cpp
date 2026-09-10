@@ -2,6 +2,7 @@
 #include <NeForce/core/async/thread.hpp>
 #include <NeForce/core/time/clocks.hpp>
 #ifdef NEFORCE_PLATFORM_LINUX
+#    include <cerrno>
 #    include <sys/epoll.h>
 #    include <sys/eventfd.h>
 #    include <unistd.h>
@@ -18,12 +19,12 @@ namespace {
 
 #ifdef NEFORCE_PLATFORM_WINDOWS
     long to_wsa_events(const uint32_t e) {
-        long wsa = 0;
+        long wsa = FD_CLOSE;
         if ((e & epoll_in) != 0U) {
             wsa |= FD_READ | FD_ACCEPT;
         }
         if ((e & epoll_out) != 0U) {
-            wsa |= FD_WRITE;
+            wsa |= FD_WRITE | FD_CONNECT;
         }
         return wsa;
     }
@@ -33,7 +34,7 @@ namespace {
         if ((network_events & (FD_READ | FD_ACCEPT)) != 0) {
             out |= epoll_in;
         }
-        if ((network_events & FD_WRITE) != 0) {
+        if ((network_events & (FD_WRITE | FD_CONNECT | FD_CLOSE)) != 0) {
             out |= epoll_out;
         }
         return out;
@@ -46,6 +47,13 @@ namespace {
 void io_context::monitor_loop() {
     while (monitor_running_) {
         unique_lock<mutex> lk(fd_mutex_);
+
+        // Close handles retired by remove_fd(). They are swapped out under the lock and
+        // closed only after the wait set below has been rebuilt, so a handle is never
+        // closed while WSAWaitForMultipleEvents may still be waiting on it.
+        vector<void*> to_close;
+        to_close.swap(pending_close_);
+
         vector<::HANDLE> handles;
         vector<native_handle_type> fds;
         handles.push_back(wake_event_);
@@ -56,6 +64,10 @@ void io_context::monitor_loop() {
             fds.push_back(pair.first);
         }
         lk.unlock_quiet();
+
+        for (void* h: to_close) {
+            ::CloseHandle(h);
+        }
 
         const ::DWORD count = (handles.size() > WSA_MAXIMUM_WAIT_EVENTS) ? WSA_MAXIMUM_WAIT_EVENTS
                                                                          : static_cast<::DWORD>(handles.size());
@@ -161,6 +173,28 @@ void io_context::dispatch(handler_type handler) {
     }
 }
 
+void io_context::work_started() noexcept { outstanding_work_.fetch_add(1, memory_order_relaxed); }
+
+void io_context::work_finished() noexcept { outstanding_work_.fetch_sub(1, memory_order_relaxed); }
+
+bool io_context::has_outstanding_work() const noexcept {
+    if (outstanding_work_.load(memory_order_acquire) != 0) {
+        return true;
+    }
+    if (external_queue_count_.load(memory_order_acquire) != 0) {
+        return true;
+    }
+    lock<mutex> lk(timer_mutex_);
+    return !timer_heap_.empty();
+}
+
+bool io_context::has_pending_work() const noexcept {
+    if (has_outstanding_work()) {
+        return true;
+    }
+    return registered_fds_.load(memory_order_acquire) != 0;
+}
+
 io_context::io_context() {
 #ifdef NEFORCE_PLATFORM_LINUX
     epoll_fd_ = epoll_create1(EPOLL_CLOEXEC);
@@ -225,6 +259,12 @@ io_context::~io_context() {
             ::CloseHandle(pair.second);
         }
     }
+    // Close any WSAEVENT handles retired by remove_fd() that
+    // the monitor thread had no chance to close before being joined.
+    for (void* h: pending_close_) {
+        ::CloseHandle(h);
+    }
+    pending_close_.clear();
 #endif
 }
 
@@ -239,6 +279,9 @@ void io_context::add_fd(native_handle_type fd, uint32_t events, fd_callback cb, 
     info.fd = fd;
     info.events = events;
     info.callback = move(cb);
+    if (fd_map_.find(fd) == fd_map_.end()) {
+        registered_fds_.fetch_add(1, memory_order_relaxed);
+    }
     fd_map_[fd] = move(info);
 #else
     ::CreateIoCompletionPort(reinterpret_cast<::HANDLE>(fd), iocp_handle_, fd, 0);
@@ -248,13 +291,27 @@ void io_context::add_fd(native_handle_type fd, uint32_t events, fd_callback cb, 
 
     {
         lock<mutex> lk(fd_mutex_);
-        fd_events_[fd] = wevent;
+        // Re-registering the same fd replaces the association;
+        // retire the previous event handle so the monitor thread closes it after rebuilding its wait set
+        // (it may still be waiting on the old handle right now).
+        const auto prev = fd_events_.find(fd);
+        if (prev != fd_events_.end()) {
+            if (prev->second != nullptr && prev->second != wevent) {
+                pending_close_.push_back(prev->second);
+            }
+            prev->second = wevent;
+        } else {
+            fd_events_[fd] = wevent;
+        }
     }
 
     fd_info info{};
     info.fd = fd;
     info.events = events;
     info.callback = move(cb);
+    if (fd_map_.find(fd) == fd_map_.end()) {
+        registered_fds_.fetch_add(1, memory_order_relaxed);
+    }
     fd_map_[fd] = move(info);
 
     ::SetEvent(wake_event_);
@@ -290,17 +347,28 @@ void io_context::mod_fd(native_handle_type fd, uint32_t events, bool edge_trigge
 
 void io_context::remove_fd(native_handle_type fd) {
 #ifdef NEFORCE_PLATFORM_LINUX
-    fd_map_.erase(fd);
+    if (fd_map_.find(fd) != fd_map_.end()) {
+        fd_map_.erase(fd);
+        // The internal wake fd lives in fd_map_ but was never counted.
+        if (fd != wake_fd_) {
+            registered_fds_.fetch_sub(1, memory_order_relaxed);
+        }
+    }
     ::epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, fd, nullptr);
 #else
-    fd_map_.erase(fd);
+    if (fd_map_.find(fd) != fd_map_.end()) {
+        fd_map_.erase(fd);
+        registered_fds_.fetch_sub(1, memory_order_relaxed);
+    }
 
     lock<mutex> lk(fd_mutex_);
     const auto eit = fd_events_.find(fd);
     if (eit != fd_events_.end()) {
         ::WSAEventSelect(fd, nullptr, 0);
         if (eit->second != nullptr) {
-            ::CloseHandle(eit->second);
+            // Do not CloseHandle here, the monitor thread may be waiting on this event.
+            // Hand it over; the monitor closes it after rebuilding its wait set.
+            pending_close_.push_back(eit->second);
         }
         fd_events_.erase(eit);
     }
@@ -337,8 +405,7 @@ size_t io_context::run() {
             }
         }
 
-        if (outstanding_work_.load(memory_order_acquire) == 0 &&
-            external_queue_count_.load(memory_order_acquire) == 0 && timer_heap_.empty()) {
+        if (!has_outstanding_work()) {
             break;
         }
 
@@ -369,8 +436,7 @@ size_t io_context::run() {
             }
         }
 
-        if (outstanding_work_.load(memory_order_acquire) == 0 &&
-            external_queue_count_.load(memory_order_acquire) == 0 && timer_heap_.empty()) {
+        if (!has_outstanding_work()) {
             break;
         }
 
@@ -396,60 +462,8 @@ size_t io_context::run() {
 }
 
 size_t io_context::run_one(int timeout_ms) {
-    {
-        auto handler = external_queue_.try_pop();
-        if (handler) {
-            external_queue_count_.fetch_sub(1, memory_order_relaxed);
-            (*handler)();
-            outstanding_work_.fetch_sub(1, memory_order_relaxed);
-            return 1;
-        }
-    }
-
-    {
-        unique_lock<mutex> lk(timer_mutex_);
-        if (!timer_heap_.empty()) {
-            const uint64_t n_ms = now_ms();
-            const uint64_t front_deadline = timer_heap_.front().deadline_ms;
-            if (front_deadline <= n_ms) {
-                pop_heap(timer_heap_.begin(), timer_heap_.end(), greater<timer_entry>());
-                const auto entry = move(timer_heap_.back());
-                timer_heap_.pop_back();
-                lk.unlock_quiet();
-                if (entry.callback) {
-                    entry.callback();
-                }
-                return 1;
-            }
-        }
-    }
-
-    size_t count = 0;
-
-#ifdef NEFORCE_PLATFORM_LINUX
-    constexpr int max_events = 128;
-    ::epoll_event events[max_events];
-
-    const int n = ::epoll_wait(epoll_fd_, events, max_events, timeout_ms);
-    if (n < 0) {
-        return 0;
-    }
-
-    for (int i = 0; i < n; ++i) {
-        const int fd = events[i].data.fd;
-        if (fd == wake_fd_) {
-            uint64_t dummy = 0;
-            ::read(wake_fd_, &dummy, sizeof(dummy));
-            continue;
-        }
-        auto it = fd_map_.find(fd);
-        if (it != fd_map_.end() && it->second.callback) {
-            it->second.callback(fd, events[i].events, error_code{});
-            ++count;
-        }
-    }
-
-#else
+    // wait up to timeout_ms for ONE ready handler.
+#ifdef NEFORCE_PLATFORM_WINDOWS
     // Ensure monitor thread is running to translate WSA events -> IOCP completions.
     // run() starts the monitor internally, but direct run_one() callers (e.g. dns_client)
     // also need it — start it lazily on first use.
@@ -461,36 +475,124 @@ size_t io_context::run_one(int timeout_ms) {
             monitor_running_.store(false, memory_order_release);
         }
     }
-
-    ::DWORD bytes = 0;
-    ::ULONG_PTR key = 0;
-    ::LPOVERLAPPED overlapped = nullptr;
-    const ::DWORD t = (timeout_ms < 0) ? numeric_traits<::DWORD>::max() : static_cast<::DWORD>(timeout_ms);
-    const ::BOOL ok = ::GetQueuedCompletionStatus(iocp_handle_, &bytes, &key, &overlapped, t);
-
-    if (overlapped != nullptr) {
-        auto fit = file_completions_.find(key);
-        if (fit != file_completions_.end()) {
-            error_code ec;
-            if (ok == FALSE && ::GetLastError() != ERROR_OPERATION_ABORTED) {
-                ec = error_code(static_cast<int>(::GetLastError()), error_category::system());
-            }
-            fit->second(ec, bytes, overlapped);
-            ++count;
-        }
-    } else if (key != 0 && ok == TRUE) {
-        int fd = static_cast<int>(key);
-        auto events = static_cast<uint32_t>(bytes);
-
-        auto it = fd_map_.find(fd);
-        if (it != fd_map_.end() && it->second.callback) {
-            it->second.callback(fd, events, error_code{});
-            ++count;
-        }
-    }
 #endif
 
-    return count;
+    const uint64_t begin_ms = now_ms();
+
+    for (;;) {
+        {
+            auto handler = external_queue_.try_pop();
+            if (handler) {
+                external_queue_count_.fetch_sub(1, memory_order_relaxed);
+                (*handler)();
+                outstanding_work_.fetch_sub(1, memory_order_relaxed);
+                return 1;
+            }
+        }
+
+        {
+            unique_lock<mutex> lk(timer_mutex_);
+            if (!timer_heap_.empty()) {
+                const uint64_t n_ms = now_ms();
+                const uint64_t front_deadline = timer_heap_.front().deadline_ms;
+                if (front_deadline <= n_ms) {
+                    pop_heap(timer_heap_.begin(), timer_heap_.end(), greater<timer_entry>());
+                    const auto entry = move(timer_heap_.back());
+                    timer_heap_.pop_back();
+                    lk.unlock_quiet();
+                    if (entry.callback) {
+                        entry.callback();
+                    }
+                    return 1;
+                }
+            }
+        }
+
+        // return immediately instead of sleeping the timeout.
+        if (!has_pending_work()) {
+            return 0;
+        }
+
+        // Remaining budget of this call (negative = wait forever).
+        int wait_ms = timeout_ms;
+        if (timeout_ms >= 0) {
+            const uint64_t elapsed_ms = now_ms() - begin_ms;
+            if (elapsed_ms >= static_cast<uint64_t>(timeout_ms)) {
+                return 0;
+            }
+            wait_ms = static_cast<int>(static_cast<uint64_t>(timeout_ms) - elapsed_ms);
+        }
+
+        size_t count = 0;
+
+#ifdef NEFORCE_PLATFORM_LINUX
+        constexpr int max_events = 128;
+        ::epoll_event events[max_events];
+
+        const int n = ::epoll_wait(epoll_fd_, events, max_events, wait_ms);
+        if (n < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+            return 0;
+        }
+
+        for (int i = 0; i < n; ++i) {
+            const int fd = events[i].data.fd;
+            if (fd == wake_fd_) {
+                uint64_t dummy = 0;
+                ::read(wake_fd_, &dummy, sizeof(dummy));
+                continue;
+            }
+            auto it = fd_map_.find(fd);
+            if (it != fd_map_.end() && it->second.callback) {
+                // Dispatch on a copy: the callback may call remove_fd() or re-register the same fd from inside the callback,
+                // which erases/replaces the stored callback and would otherwise destroy the object currently executing.
+                const auto cb = it->second.callback;
+                cb(fd, events[i].events, error_code{});
+                ++count;
+            }
+        }
+
+#else
+        ::DWORD bytes = 0;
+        ::ULONG_PTR key = 0;
+        ::LPOVERLAPPED overlapped = nullptr;
+        const ::DWORD t = (wait_ms < 0) ? numeric_traits<::DWORD>::max() : static_cast<::DWORD>(wait_ms);
+        const ::BOOL ok = ::GetQueuedCompletionStatus(iocp_handle_, &bytes, &key, &overlapped, t);
+
+        if (overlapped != nullptr) {
+            const auto fit = file_completions_.find(key);
+            if (fit != file_completions_.end()) {
+                error_code ec;
+                if (ok == FALSE && ::GetLastError() != ERROR_OPERATION_ABORTED) {
+                    ec = error_code(static_cast<int>(::GetLastError()), error_category::system());
+                }
+                // Dispatch on a copy: the completion may unregister itself from inside.
+                const auto cb = fit->second;
+                cb(ec, bytes, overlapped);
+                ++count;
+            }
+        } else if (key != 0 && ok == TRUE) {
+            const int fd = static_cast<int>(key);
+            const auto events = static_cast<uint32_t>(bytes);
+
+            const auto it = fd_map_.find(fd);
+            if (it != fd_map_.end() && it->second.callback) {
+                // Dispatch on a copy
+                const auto cb = it->second.callback;
+                cb(fd, events, error_code{});
+                ++count;
+            }
+        }
+#endif
+
+        if (count > 0) {
+            return count;
+        }
+        // Spurious wakeup (e.g. the wake fd signalled by post() before the handler became visible):
+        // retry until work is dispatched or the deadline expires.
+    }
 }
 
 size_t io_context::poll() {

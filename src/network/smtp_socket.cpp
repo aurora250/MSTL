@@ -3,6 +3,7 @@
 #include <NeForce/core/time/clocks.hpp>
 #include <NeForce/core/utility/packages.hpp>
 #include <NeForce/network/smtp_socket.hpp>
+#include <openssl/ssl.h>
 #include <ctime>
 NEFORCE_BEGIN_NAMESPACE__
 
@@ -170,7 +171,7 @@ void smtp_socket::expect_code(const int expected, const string& cmd) {
     if (resp.code != expected) {
         const string err = "SMTP command failed: " + cmd.head(cmd.find(' ')) + " expected " + to_string(expected) +
                            " got " + to_string(resp.code) + ": " + resp.message;
-        NEFORCE_THROW_EXCEPTION(smtp_exception(err.data()));
+        NEFORCE_THROW_EXCEPTION(smtp_exception(err));
     }
 }
 
@@ -322,7 +323,7 @@ void smtp_socket::connect(const string& hostname, const ports port, const string
 
 void smtp_socket::disconnect() {
     if (is_open()) {
-        const string quit = "QUIT\r\n";
+        constexpr string_view quit = "QUIT\r\n";
         ignore = raw_send(quit.data(), quit.size());
         read_response();
     }
@@ -349,8 +350,8 @@ smtp_socket::starttls_result smtp_socket::starttls(const ssl_context& ctx, const
 
     starttls_result result;
     result.upgraded = true;
-    result.cipher_name = ssl_.get_cipher_name();
-    result.tls_version = ssl_.get_version();
+    result.cipher_name = ssl_.cipher_name();
+    result.tls_version = ssl_.version();
     result.peer_verified = ssl_.verify_peer();
     return result;
 }
@@ -443,5 +444,435 @@ void smtp_socket::send(const smtp_message& msg) {
 }
 
 void smtp_socket::noop() { expect_code(250, "NOOP"); }
+
+struct smtp_socket::async_connect_op : enable_shared_from_this<async_connect_op> {
+    smtp_socket* sock{nullptr};
+    io_context* ctx{nullptr};
+    ip_address endpoint;
+    string domain;
+    smtp_socket::tls_mode mode{smtp_socket::tls_mode::none};
+    const ssl_context* ssl_ctx{nullptr};
+    string sni_hostname;
+    function<void(error_code)> handler;
+    cancellation_slot* cancel_slot{nullptr};
+    bool finished{false};
+
+    char byte_{0};
+    string line_;
+    smtp_socket::response resp_{};
+    string send_buf_;
+    size_t send_off_{0};
+
+    void start() {
+        if (cancel_slot != nullptr && cancel_slot->is_cancelled()) {
+            fail(make_operation_aborted());
+            return;
+        }
+        if (!endpoint.is_valid()) {
+            fail(error_code(static_cast<int>(errc::invalid_argument), error_category::system()));
+            return;
+        }
+
+        try {
+            sock->open_ip(endpoint.address_family(), socket_type::STREAM, socket_protocol::TCP);
+        } catch (const system_exception& e) {
+            fail(e.code());
+            return;
+        } catch (const exception&) {
+            fail(error_code(static_cast<int>(errc::invalid_argument), error_category::system()));
+            return;
+        }
+
+        sock->tls_mode_ = mode;
+        sock->tls_active_ = false;
+        sock->set_nonblocking(true);
+        do_connect();
+    }
+
+    void do_connect() {
+        const int rc = ::connect(sock->native_handle(), endpoint.data(), endpoint.size());
+        if (rc == 0) {
+            on_connected();
+            return;
+        }
+
+        const int err = network_exception::last_error().value();
+#ifdef NEFORCE_PLATFORM_WINDOWS
+        if (err != WSAEWOULDBLOCK && err != WSAEALREADY && err != WSAEINPROGRESS) {
+#else
+        if (err != EINPROGRESS && err != EALREADY) {
+#endif
+            fail(error_code(err, error_category::system()));
+            return;
+        }
+
+        auto self = shared_from_this();
+        if (cancel_slot != nullptr) {
+            cancel_slot->assign([self]() mutable { self->fail(make_operation_aborted()); });
+        }
+        ctx->add_fd(sock->native_handle(), epoll_out,
+                    [self](int, uint32_t, error_code ec) mutable { self->on_connect_ready(ec); });
+    }
+
+    void on_connect_ready(error_code ec) {
+        if (ec) {
+            fail(ec);
+            return;
+        }
+
+        int optval = 0;
+        ::socklen_t optlen = sizeof(optval);
+        if (sock->get_option(SOL_SOCKET, SO_ERROR, &optval, &optlen) && optval == 0) {
+            on_connected();
+        } else {
+            fail(error_code(optval != 0 ? optval : network_exception::last_error().value(), error_category::system()));
+        }
+    }
+
+    void on_connected() {
+        if (mode == smtp_socket::tls_mode::implicit) {
+            do_tls();
+        } else {
+            do_greeting();
+        }
+    }
+
+    void do_tls() {
+        if (ssl_ctx == nullptr) {
+            fail(error_code(static_cast<int>(errc::invalid_argument), error_category::system()));
+            return;
+        }
+
+        try {
+            sock->ssl_.reset(*ssl_ctx);
+            sock->ssl_.set_fd(sock->native_handle());
+            if (!sni_hostname.empty()) {
+                sock->ssl_.set_sni_hostname(sni_hostname);
+            }
+            ::SSL_set_connect_state(static_cast<::SSL*>(sock->ssl_.native_handle()));
+        } catch (const system_exception& e) {
+            fail(e.code());
+            return;
+        } catch (const exception&) {
+            fail(error_code(static_cast<int>(errc::invalid_argument), error_category::system()));
+            return;
+        }
+
+        auto self = shared_from_this();
+        if (cancel_slot != nullptr) {
+            sock->ssl_.async_handshake(*ctx, *cancel_slot, [self](error_code e) mutable { self->on_tls_done(e); });
+        } else {
+            sock->ssl_.async_handshake(*ctx, [self](error_code e) mutable { self->on_tls_done(e); });
+        }
+    }
+
+    void on_tls_done(error_code ec) {
+        if (ec) {
+            fail(ec);
+            return;
+        }
+        sock->tls_active_ = true;
+        do_greeting();
+    }
+
+    void do_greeting() {
+        auto self = shared_from_this();
+        async_read_response([self](error_code ec, const smtp_socket::response& r) mutable {
+            if (ec) {
+                self->fail(ec);
+                return;
+            }
+            if (r.code != 220) {
+                self->fail(error_code(static_cast<int>(errc::protocol_error), error_category::system()));
+                return;
+            }
+            self->do_ehlo();
+        });
+    }
+
+    void do_ehlo() {
+        auto self = shared_from_this();
+        async_send_all("EHLO " + domain + "\r\n", [self](error_code ec) mutable {
+            if (ec) {
+                self->fail(ec);
+                return;
+            }
+            self->async_read_response([self](error_code ec2, const smtp_socket::response& r) mutable {
+                if (ec2) {
+                    self->fail(ec2);
+                    return;
+                }
+                if (r.code == 250) {
+                    self->succeed();
+                } else {
+                    self->do_helo();
+                }
+            });
+        });
+    }
+
+    void do_helo() {
+        auto self = shared_from_this();
+        async_send_all("HELO " + domain + "\r\n", [self](error_code ec) mutable {
+            if (ec) {
+                self->fail(ec);
+                return;
+            }
+            self->async_read_response([self](error_code ec2, const smtp_socket::response& r) mutable {
+                if (ec2) {
+                    self->fail(ec2);
+                    return;
+                }
+                if (r.code == 250) {
+                    self->succeed();
+                } else {
+                    self->fail(error_code(static_cast<int>(errc::protocol_error), error_category::system()));
+                }
+            });
+        });
+    }
+
+    void async_read_response(function<void(error_code, const smtp_socket::response&)> cb) {
+        resp_ = smtp_socket::response{};
+        read_response_line(move(cb));
+    }
+
+    void read_response_line(function<void(error_code, const smtp_socket::response&)> cb) {
+        auto self = shared_from_this();
+        async_read_line([self, cb = move(cb)](error_code ec, const string& line) mutable {
+            if (ec) {
+                cb(ec, smtp_socket::response{});
+                return;
+            }
+            if (line.size() < 3) {
+                cb(error_code(static_cast<int>(errc::protocol_error), error_category::system()),
+                   smtp_socket::response{});
+                return;
+            }
+
+            int code = 0;
+            for (int i = 0; i < 3; ++i) {
+                if (line[i] < '0' || line[i] > '9') {
+                    cb(error_code(static_cast<int>(errc::protocol_error), error_category::system()),
+                       smtp_socket::response{});
+                    return;
+                }
+                code = code * 10 + (line[i] - '0');
+            }
+
+            const bool multi = (line.size() > 3 && line[3] == '-');
+            if (!self->resp_.message.empty()) {
+                self->resp_.message += '\n';
+            }
+            if (line.size() > 4) {
+                self->resp_.message += line.substr(4);
+            }
+            self->resp_.code = code;
+
+            if (!multi) {
+                cb(error_code{}, self->resp_);
+                return;
+            }
+            self->read_response_line(move(cb));
+        });
+    }
+
+    void async_read_line(function<void(error_code, const string&)> cb) {
+        line_.clear();
+        read_line_byte(move(cb));
+    }
+
+    void read_line_byte(function<void(error_code, const string&)> cb) {
+        auto self = shared_from_this();
+        read_one_byte([self, cb = move(cb)](error_code ec, bool ok, char c) mutable {
+            if (ec) {
+                cb(ec, string{});
+                return;
+            }
+            if (!ok) {
+                cb(error_code(static_cast<int>(errc::connection_reset), error_category::system()), string{});
+                return;
+            }
+            if (c == '\n') {
+                cb(error_code{}, self->line_);
+                return;
+            }
+            if (c != '\r') {
+                self->line_ += c;
+            }
+            self->read_line_byte(move(cb));
+        });
+    }
+
+    void read_one_byte(function<void(error_code, bool ok, char c)> cb) {
+        if (sock->tls_active_) {
+            auto self = shared_from_this();
+            sock->ssl_.async_read(
+                    *ctx, memory_view<char>(&byte_, 1),
+                    [self, cb = move(cb)](error_code ec, size_t n) mutable { cb(ec, n == 1, self->byte_); });
+            return;
+        }
+
+        const auto fd = sock->native_handle();
+        const ssize_t n = ::recv(fd, &byte_, 1, 0);
+        if (n == 1) {
+            cb(error_code{}, true, byte_);
+            return;
+        }
+        if (n == 0) {
+            cb(error_code(static_cast<int>(errc::connection_reset), error_category::system()), false, 0);
+            return;
+        }
+
+        const int err = network_exception::last_error().value();
+        if (!socket_exception::is_would_block(err)) {
+            cb(error_code(err, error_category::system()), false, 0);
+            return;
+        }
+
+        auto self = shared_from_this();
+        ctx->add_fd(fd, epoll_in, [self, cb = move(cb)](int, uint32_t, error_code ec) mutable {
+            if (ec) {
+                cb(ec, false, 0);
+                return;
+            }
+            const ssize_t m = ::recv(self->sock->native_handle(), &self->byte_, 1, 0);
+            if (m == 1) {
+                cb(error_code{}, true, self->byte_);
+            } else if (m == 0) {
+                cb(error_code(static_cast<int>(errc::connection_reset), error_category::system()), false, 0);
+            } else {
+                cb(error_code(static_cast<int>(network_exception::last_error().value()), error_category::system()),
+                   false, 0);
+            }
+        });
+    }
+
+    void async_send_all(const string& data, function<void(error_code)> cb) {
+        send_buf_ = data;
+        send_off_ = 0;
+        send_next(move(cb));
+    }
+
+    void send_next(function<void(error_code)> cb) {
+        if (send_off_ >= send_buf_.size()) {
+            cb(error_code{});
+            return;
+        }
+
+#ifdef NEFORCE_PLATFORM_LINUX
+        constexpr int send_flags = MSG_NOSIGNAL;
+#else
+        constexpr int send_flags = 0;
+#endif
+
+        if (sock->tls_active_) {
+            auto self = shared_from_this();
+            sock->ssl_.async_write(
+                    *ctx, memory_view<const char>(send_buf_.data() + send_off_, send_buf_.size() - send_off_),
+                    [self, cb = move(cb)](error_code ec, size_t n) mutable {
+                        if (ec) {
+                            cb(ec);
+                            return;
+                        }
+                        if (n == 0) {
+                            cb(error_code(static_cast<int>(errc::connection_reset), error_category::system()));
+                            return;
+                        }
+                        self->send_off_ += n;
+                        self->send_next(move(cb));
+                    });
+            return;
+        }
+
+        const auto fd = sock->native_handle();
+        const ssize_t n =
+                ::send(fd, send_buf_.data() + send_off_, static_cast<int>(send_buf_.size() - send_off_), send_flags);
+        if (n > 0) {
+            send_off_ += static_cast<size_t>(n);
+            send_next(move(cb));
+            return;
+        }
+        if (n == 0) {
+            cb(error_code(static_cast<int>(errc::connection_reset), error_category::system()));
+            return;
+        }
+
+        const int err = network_exception::last_error().value();
+        if (!socket_exception::is_would_block(err)) {
+            cb(error_code(err, error_category::system()));
+            return;
+        }
+
+        auto self = shared_from_this();
+        ctx->add_fd(fd, epoll_out, [self, cb = move(cb)](int, uint32_t, error_code ec) mutable {
+            if (ec) {
+                cb(ec);
+                return;
+            }
+            const ssize_t m = ::send(self->sock->native_handle(), self->send_buf_.data() + self->send_off_,
+                                     static_cast<int>(self->send_buf_.size() - self->send_off_), send_flags);
+            if (m > 0) {
+                self->send_off_ += static_cast<size_t>(m);
+                self->send_next(move(cb));
+            } else if (m == 0) {
+                cb(error_code(static_cast<int>(errc::connection_reset), error_category::system()));
+            } else {
+                cb(error_code(static_cast<int>(network_exception::last_error().value()), error_category::system()));
+            }
+        });
+    }
+
+    void succeed() {
+        if (finished) {
+            return;
+        }
+        finished = true;
+        sock->server_domain_ = domain;
+        sock->connected_ = true;
+        handler(error_code{});
+    }
+
+    void fail(error_code ec) {
+        if (finished) {
+            return;
+        }
+        finished = true;
+        ctx->remove_fd(sock->native_handle());
+        sock->close();
+        handler(ec);
+    }
+};
+
+void smtp_socket::async_connect(io_context& ioc, const ip_address& addr, const string& domain, const tls_mode mode,
+                                const ssl_context* ssl_ctx, const string& sni_hostname,
+                                function<void(error_code)> handler) {
+    auto op = make_shared<async_connect_op>();
+    op->sock = this;
+    op->ctx = &ioc;
+    op->endpoint = addr;
+    op->domain = domain;
+    op->mode = mode;
+    op->ssl_ctx = ssl_ctx;
+    op->sni_hostname = sni_hostname;
+    op->handler = move(handler);
+    op->start();
+}
+
+void smtp_socket::async_connect(io_context& ioc, const ip_address& addr, const string& domain, const tls_mode mode,
+                                const ssl_context* ssl_ctx, const string& sni_hostname, cancellation_slot& slot,
+                                function<void(error_code)> handler) {
+    auto op = make_shared<async_connect_op>();
+    op->sock = this;
+    op->ctx = &ioc;
+    op->endpoint = addr;
+    op->domain = domain;
+    op->mode = mode;
+    op->ssl_ctx = ssl_ctx;
+    op->sni_hostname = sni_hostname;
+    op->handler = move(handler);
+    op->cancel_slot = &slot;
+    op->start();
+}
 
 NEFORCE_END_NAMESPACE__

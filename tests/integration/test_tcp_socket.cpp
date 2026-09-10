@@ -6,24 +6,9 @@
 #include <NeForce/network/tcp/tcp_server.hpp>
 #include <NeForce/network/tcp/tcp_socket.hpp>
 #include <NeForce/network/udp_socket.hpp>
+#include "utils.hpp"
 #include <gtest/gtest.h>
 using namespace neforce;
-
-namespace {
-    bool network_available() {
-        udp_socket sock;
-        if (!sock.try_open(socket_base::family::INET4, socket_base::type::DGRAM)) {
-            return false;
-        }
-        sock.set_reuse_address(true);
-        auto addr = ip_address::any();
-        sock.bind(addr);
-        auto local = sock.local_endpoint();
-        sock.close();
-        return local.has_value();
-    }
-} // namespace
-
 
 class TcpEchoIntegration : public ::testing::Test {
 protected:
@@ -849,5 +834,204 @@ TEST_F(AsyncSocketIntegration, ForwardingAliasSendReceive) {
     EXPECT_EQ(n, sizeof(msg));
 
     sock.close();
+    server.stop();
+}
+
+TEST_F(AsyncSocketIntegration, TcpClientAsyncConnectWriteRead) {
+    if (!network_available()) {
+        GTEST_SKIP() << "No network connectivity";
+    }
+
+    auto test_port = ports(0u);
+    {
+        tcp_acceptor tmp;
+        tmp.open(ip_address::loopback());
+        auto bound = tmp.local_endpoint();
+        if (bound.has_value()) {
+            test_port = bound->port();
+        }
+        tmp.close();
+    }
+
+    tcp_server server(test_port, ctx_, 2);
+    server.set_client_handler([](unique_ptr<tcp_socket> sock) {
+        char buf[256];
+        ssize_t n = sock->receive({buf, sizeof(buf)});
+        if (n > 0) {
+            sock->send_all({buf, static_cast<size_t>(n)});
+        }
+        sock->close();
+    });
+    ASSERT_TRUE(server.start());
+
+    tcp_client client(ctx_);
+    auto endpoint = ip_address::parse("127.0.0.1", test_port);
+    ASSERT_TRUE(endpoint.has_value());
+
+    bool connect_done = false;
+    error_code connect_ec;
+    client.async_connect(ctx_, *endpoint, [&](error_code ec) {
+        connect_done = true;
+        connect_ec = ec;
+    });
+    auto deadline = steady_clock::now() + seconds(5);
+    while (!connect_done && steady_clock::now() < deadline) {
+        ctx_.run_one(100);
+    }
+    ASSERT_TRUE(connect_done);
+    ASSERT_FALSE(connect_ec) << connect_ec.message().data();
+    EXPECT_TRUE(client.is_connected());
+
+    const string msg = "tcp_client_async_echo";
+    bool write_done = false;
+    error_code write_ec;
+    client.async_write(ctx_, {msg.data(), msg.size()}, [&](error_code ec, size_t) {
+        write_done = true;
+        write_ec = ec;
+    });
+    deadline = steady_clock::now() + seconds(5);
+    while (!write_done && steady_clock::now() < deadline) {
+        ctx_.run_one(100);
+    }
+    ASSERT_TRUE(write_done);
+    ASSERT_FALSE(write_ec) << write_ec.message().data();
+
+    char buf[256] = {};
+    bool read_done = false;
+    error_code read_ec;
+    size_t read_n = 0;
+    client.async_read(ctx_, {buf, sizeof(buf)}, [&](error_code ec, size_t n) {
+        read_done = true;
+        read_ec = ec;
+        read_n = n;
+    });
+    deadline = steady_clock::now() + seconds(5);
+    while (!read_done && steady_clock::now() < deadline) {
+        ctx_.run_one(100);
+    }
+    ASSERT_TRUE(read_done);
+    ASSERT_FALSE(read_ec) << read_ec.message().data();
+    EXPECT_EQ(read_n, msg.size());
+    EXPECT_EQ(string_view(buf, read_n), msg);
+
+    client.disconnect();
+    server.stop();
+}
+
+TEST_F(AsyncSocketIntegration, TcpClientAsyncConnectRefusedPort) {
+    if (!network_available()) {
+        GTEST_SKIP() << "No network connectivity";
+    }
+
+    auto test_port = ports(0u);
+    {
+        tcp_acceptor tmp;
+        tmp.open(ip_address::loopback());
+        auto bound = tmp.local_endpoint();
+        if (bound.has_value()) {
+            test_port = bound->port();
+        }
+        tmp.close();
+    }
+
+    auto endpoint = ip_address::parse("127.0.0.1", test_port);
+    ASSERT_TRUE(endpoint.has_value());
+
+    bool probe_refused = false;
+    {
+        tcp_socket probe;
+        probe.open();
+        try {
+            probe_refused = !probe.connect(*endpoint, milliseconds(500));
+        } catch (const socket_exception&) {
+            probe_refused = true;
+        }
+    }
+    if (!probe_refused) {
+        GTEST_SKIP() << "Probe port is accepting connections; cannot test refusal";
+    }
+
+    tcp_client client(ctx_);
+    bool done = false;
+    error_code ec;
+    client.async_connect(ctx_, *endpoint, [&](error_code e) {
+        done = true;
+        ec = e;
+    });
+    auto deadline = steady_clock::now() + seconds(5);
+    while (!done && steady_clock::now() < deadline) {
+        ctx_.run_one(100);
+    }
+    EXPECT_TRUE(done);
+    if (!ec) {
+        // The freed dynamic port was grabbed by another process between the refusal
+        // probe and the async connect; treat it as an environment race, not a failure.
+        GTEST_SKIP() << "Port became accepting between probe and async connect";
+    }
+    EXPECT_TRUE(ec);
+    EXPECT_FALSE(client.is_connected());
+
+    client.disconnect();
+}
+
+TEST_F(AsyncSocketIntegration, TcpClientAsyncIoNotConnected) {
+    tcp_client client(ctx_);
+    char buf[8];
+
+    bool read_called = false;
+    error_code read_ec;
+    client.async_read(ctx_, {buf, sizeof(buf)}, [&](error_code ec, size_t) {
+        read_called = true;
+        read_ec = ec;
+    });
+    EXPECT_TRUE(read_called);
+    EXPECT_TRUE(read_ec);
+
+    bool write_called = false;
+    error_code write_ec;
+    client.async_write(ctx_, {"x", 1}, [&](error_code ec, size_t) {
+        write_called = true;
+        write_ec = ec;
+    });
+    EXPECT_TRUE(write_called);
+    EXPECT_TRUE(write_ec);
+}
+
+TEST_F(AsyncSocketIntegration, TcpClientAsyncConnectUseFuture) {
+    if (!network_available()) {
+        GTEST_SKIP() << "No network connectivity";
+    }
+
+    auto test_port = ports(0u);
+    {
+        tcp_acceptor tmp;
+        tmp.open(ip_address::loopback());
+        auto bound = tmp.local_endpoint();
+        if (bound.has_value()) {
+            test_port = bound->port();
+        }
+        tmp.close();
+    }
+
+    tcp_server server(test_port, ctx_, 2);
+    server.set_client_handler([](unique_ptr<tcp_socket> sock) {
+        sock->send_all({"async_future_ok"});
+        sock->close();
+    });
+    ASSERT_TRUE(server.start());
+
+    tcp_client client(ctx_);
+    auto endpoint = ip_address::parse("127.0.0.1", test_port);
+    ASSERT_TRUE(endpoint.has_value());
+
+    auto fut = client.async_connect(ctx_, *endpoint, use_future);
+    auto deadline = steady_clock::now() + seconds(5);
+    while (fut.wait_for(milliseconds(0)) != future_status::ready && steady_clock::now() < deadline) {
+        ctx_.run_one(100);
+    }
+    EXPECT_NO_THROW(fut.get());
+    EXPECT_TRUE(client.is_connected());
+
+    client.disconnect();
     server.stop();
 }

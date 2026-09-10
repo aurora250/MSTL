@@ -114,6 +114,18 @@ public:
     void dispatch(handler_type handler);
 
     /**
+     * @brief 登记一项未完成的异步操作
+     * @note 必须与 work_finished() 严格配对，且每次配对只对应一项操作。
+     */
+    void work_started() noexcept;
+
+    /**
+     * @brief 标记一项异步操作已完成
+     * @note 必须与 work_started() 严格配对，且每次配对只对应一项操作。
+     */
+    void work_finished() noexcept;
+
+    /**
      * @brief 单线程阻塞驱动事件循环
      * @return 执行的 handler 数量
      *
@@ -134,6 +146,7 @@ public:
      * @brief 等待并执行一个就绪的 handler
      * @param timeout_ms 最大等待时间（ms），-1 表示无限等待
      * @return 执行的 handler 数量（0 或 1）
+     * @note 依赖外部事件而尚未登记工作的场景，应使用 io_context::work 守卫或先调用 work_started()
      */
     size_t run_one(int timeout_ms = -1);
 
@@ -228,8 +241,10 @@ private:
     atomic<int> running_{0};
     /// @brief 停止标志
     atomic<bool> stopped_{false};
-    /// @brief 待处理工作计数（work 对象 + 未完成操作）
+    /// @brief 待处理工作计数
     atomic<size_t> outstanding_work_{0};
+    /// @brief 通过 add_fd() 注册的 fd 数量
+    atomic<size_t> registered_fds_{0};
     /// @brief 定时器 ID 计数器
     size_t next_timer_id_{1};
 
@@ -254,6 +269,8 @@ private:
     flat_unordered_map<native_handle_type, void*> fd_events_;
     /// @brief 保护 fd_events_ 的互斥锁
     mutex fd_mutex_;
+    /// @brief 待 monitor 线程安全关闭的 WSAEVENT 句柄
+    vector<void*> pending_close_;
     /// @brief 后台 WSA 监控线程
     thread monitor_thread_;
     /// @brief 监控线程运行标志
@@ -277,6 +294,12 @@ private:
     vector<thread> pool_threads_;
     /// @brief 保护线程管理的互斥锁
     mutex pool_mutex_;
+
+    /// @brief 是否存在未完成的用户工作
+    NEFORCE_NODISCARD bool has_outstanding_work() const noexcept;
+
+    /// @brief 是否存在任何需要等待的工作
+    NEFORCE_NODISCARD bool has_pending_work() const noexcept;
 
     /// @brief 获取最早到期的定时器截止时间（无锁时返回 max）
     uint64_t next_timer_deadline() const;

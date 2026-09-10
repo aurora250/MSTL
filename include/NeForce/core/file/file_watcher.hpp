@@ -11,8 +11,8 @@
 #include "NeForce/core/async/atomic.hpp"
 #include "NeForce/core/async/mutex.hpp"
 #include "NeForce/core/async/thread.hpp"
+#include "NeForce/core/container/flat_unordered_map.hpp"
 #include "NeForce/core/container/vector.hpp"
-#include "NeForce/core/exception/system_exception.hpp"
 #include "NeForce/core/file/file_constants.hpp"
 #include "NeForce/core/file/path.hpp"
 #include "NeForce/core/functional/function.hpp"
@@ -49,9 +49,11 @@ private:
     native_handle_type completion_port_ = INVALID_HANDLE_VALUE; ///< I/O完成端口
     ::OVERLAPPED overlapped_{};                                 ///< 重叠I/O结构
 #else
-    native_handle_type inotify_fd_ = -1;       ///< inotify文件描述符
-    native_handle_type watch_descriptor_ = -1; ///< 监视描述符
-    native_handle_type event_fd_ = -1;         ///< 事件通知文件描述符
+    native_handle_type inotify_fd_ = -1;              ///< inotify文件描述符
+    native_handle_type watch_descriptor_ = -1;        ///< 监视描述符
+    native_handle_type event_fd_ = -1;                ///< 事件通知文件描述符
+    uint32_t watch_mask_ = 0;                         ///< inotify 事件掩码
+    flat_unordered_map<int, string> linux_watch_map_; ///< watch 描述符 -> 相对 watch_path 的目录
 #endif
 
     thread watch_thread_; ///< 监视线程
@@ -90,6 +92,8 @@ public:
      *
      * 启动一个后台线程开始监视文件系统事件。
      * 当指定的事件发生时，回调函数会被调用，参数为文件路径和事件类型。
+     *
+     * @note 重启 start() 存在短暂的事件窗口，重启期间发生的事件不会被补发。
      */
     bool start(callback_t callback, file_watch_event events = file_watch_event::ALL);
 

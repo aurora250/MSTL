@@ -102,7 +102,8 @@ void async_stream::async_write(io_context& ctx, const_buffers& bufs, function<vo
     state->start();
 }
 
-void async_stream::async_read(io_context& ctx, dynamic_buffer& buf, size_t n, function<void(error_code, size_t)> handler) {
+void async_stream::async_read(io_context& ctx, dynamic_buffer& buf, size_t n,
+                              function<void(error_code, size_t)> handler) {
     auto region = buf.prepare(n);
     async_read(ctx, region, [&buf, h = move(handler)](error_code ec, size_t bytes) mutable {
         if (!ec) {

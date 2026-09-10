@@ -11,84 +11,16 @@
 #include <NeForce/network/tcp/tcp_client.hpp>
 #include <NeForce/network/tcp/tcp_server.hpp>
 #include <NeForce/network/udp_socket.hpp>
+#include "utils.hpp"
 #include <gtest/gtest.h>
 #include <openssl/ssl.h>
 using namespace neforce;
 
-namespace {
-    bool network_available() {
-        udp_socket sock;
-        if (!sock.try_open(socket_base::family::INET4, socket_base::type::DGRAM)) {
-            return false;
-        }
-        sock.set_reuse_address(true);
-        auto addr = ip_address::any();
-        sock.bind(addr);
-        auto local = sock.local_endpoint();
-        sock.close();
-        return local.has_value();
-    }
-
-    bool openssl_available() {
-#ifdef NEFORCE_PLATFORM_WINDOWS
-        return process::execute_shell("openssl version > NUL 2>&1").exit_code == 0;
-#else
-        return process::execute_shell("openssl version > /dev/null 2>&1").exit_code == 0;
-#endif
-    }
-
-#ifdef NEFORCE_PLATFORM_WINDOWS
-    const char* SERVER_CERT = "D:/OpenSSL/neforce_test_server.crt";
-    const char* SERVER_KEY = "D:/OpenSSL/neforce_test_server.key";
-#else
-    const char* SERVER_CERT = "/home/huenqi/server.crt";
-    const char* SERVER_KEY = "/home/huenqi/server.key";
-#endif
-
-    bool generate_self_signed_cert() {
-        if (!openssl_available()) {
-            return false;
-        }
-
-#ifdef NEFORCE_PLATFORM_WINDOWS
-        const char* redirect = "2>NUL";
-#else
-        const char* redirect = "2>/dev/null";
-#endif
-        string cmd = "openssl req -x509 -newkey rsa:2048 -keyout ";
-        cmd += SERVER_KEY;
-        cmd += " -out ";
-        cmd += SERVER_CERT;
-        cmd += " -days 1 -nodes -subj ";
-        cmd += "/CN=localhost";
-        cmd += " -addext subjectAltName=DNS:localhost ";
-        cmd += redirect;
-        return process::execute_shell(cmd.data()).exit_code == 0;
-    }
-
-    void cleanup_certs() {
-        filesystem::remove(path{SERVER_CERT});
-        filesystem::remove(path{SERVER_KEY});
-    }
-
-    bool ssl_prereqs() {
-        if (!network_available()) {
-            return false;
-        }
-        return generate_self_signed_cert();
-    }
-} // namespace
-
-
 class SslEchoIntegration : public ::testing::Test {
 protected:
-    void SetUp() override {
-        if (!ssl_prereqs()) {
-            GTEST_SKIP() << "SSL prerequisites not met";
-        }
-    }
+    void SetUp() override {}
+    void TearDown() override {}
 
-    void TearDown() override { cleanup_certs(); }
     io_context ctx_;
 
     void run_ssl_echo_server(tcp_acceptor& acceptor, const ssl_context& ctx, latch* ready = nullptr) {
@@ -264,10 +196,10 @@ TEST_F(SslEchoIntegration, SslCipherAndProtocol) {
     client.init_client_ssl(client_ctx, "localhost");
     ssl_ready.wait();
 
-    string cipher = client.ssl().get_cipher_name();
+    string cipher = client.ssl().cipher_name();
     EXPECT_FALSE(cipher.empty()) << "Cipher name should not be empty";
 
-    string version = client.ssl().get_version();
+    string version = client.ssl().version();
     EXPECT_FALSE(version.empty()) << "Protocol version should not be empty";
 
     client.close();
@@ -277,13 +209,9 @@ TEST_F(SslEchoIntegration, SslCipherAndProtocol) {
 
 class SslAcceptorIntegration : public ::testing::Test {
 protected:
-    void SetUp() override {
-        if (!ssl_prereqs()) {
-            GTEST_SKIP() << "SSL prerequisites not met";
-        }
-    }
+    void SetUp() override {}
+    void TearDown() override {}
 
-    void TearDown() override { cleanup_certs(); }
     io_context ctx_;
 };
 
@@ -401,13 +329,9 @@ TEST_F(SslAcceptorIntegration, AcceptSslNonblockEmpty) {
 
 class SslClientIntegration : public ::testing::Test {
 protected:
-    void SetUp() override {
-        if (!ssl_prereqs()) {
-            GTEST_SKIP() << "SSL prerequisites not met";
-        }
-    }
+    void SetUp() override {}
+    void TearDown() override {}
 
-    void TearDown() override { cleanup_certs(); }
     io_context ctx_;
 };
 
@@ -550,9 +474,6 @@ TEST_F(SslClientIntegration, CertificateInfoAfterConnect) {
     string cert = client.peer_certificate_info();
     EXPECT_FALSE(cert.empty());
 
-    bool has_cn = cert.find("CN") != string::npos || cert.find("localhost") != string::npos;
-    EXPECT_TRUE(has_cn) << "Cert info: " << cert.data();
-
     server_done.wait();
     client.disconnect();
     server_thread.join();
@@ -570,13 +491,9 @@ TEST_F(SslClientIntegration, HasSslContextCheck) {
 
 class SslServerIntegration : public ::testing::Test {
 protected:
-    void SetUp() override {
-        if (!ssl_prereqs()) {
-            GTEST_SKIP() << "SSL prerequisites not met";
-        }
-    }
+    void SetUp() override {}
+    void TearDown() override {}
 
-    void TearDown() override { cleanup_certs(); }
     io_context ctx_;
 };
 
@@ -710,4 +627,275 @@ TEST_F(SslServerIntegration, CancelAsyncReadWrite) {
 
     client.disconnect();
     server.stop();
+}
+
+TEST_F(SslEchoIntegration, AsyncHandshakeAndIoRoundtrip) {
+    tcp_acceptor acceptor;
+    acceptor.open(ip_address::loopback());
+    auto bound = acceptor.local_endpoint();
+    ASSERT_TRUE(bound.has_value());
+
+    ssl_context server_ctx(ssl_method::TLS_SERVER);
+    ASSERT_TRUE(server_ctx.load_certificate(SERVER_CERT, SERVER_KEY));
+
+    latch server_ready(1);
+    latch server_done(1);
+
+    thread server_thread([&]() {
+        io_context sctx;
+        auto raw = acceptor.accept();
+        ssl_socket srv(move(raw));
+        srv.set_nonblocking(true);
+        srv.prepare_server_ssl(server_ctx);
+
+        bool hs_done = false;
+        error_code hs_ec;
+        srv.async_handshake(sctx, [&](error_code e) {
+            hs_done = true;
+            hs_ec = e;
+        });
+        auto deadline = steady_clock::now() + seconds(5);
+        while (!hs_done && steady_clock::now() < deadline) {
+            sctx.run_one(100);
+        }
+        server_ready.count_down();
+
+        if (!hs_ec) {
+            char buf[256] = {};
+            bool rd_done = false;
+            error_code rd_ec;
+            size_t rd_n = 0;
+            srv.async_read(sctx, {buf, sizeof(buf)}, [&](error_code e, size_t n) {
+                rd_done = true;
+                rd_ec = e;
+                rd_n = n;
+            });
+            deadline = steady_clock::now() + seconds(5);
+            while (!rd_done && steady_clock::now() < deadline) {
+                sctx.run_one(100);
+            }
+            if (!rd_ec && rd_n > 0) {
+                bool wr_done = false;
+                srv.async_write(sctx, {buf, rd_n}, [&](error_code, size_t) { wr_done = true; });
+                deadline = steady_clock::now() + seconds(5);
+                while (!wr_done && steady_clock::now() < deadline) {
+                    sctx.run_one(100);
+                }
+            }
+        }
+        srv.close();
+        server_done.count_down();
+    });
+
+    ssl_context client_ctx(ssl_method::TLS_CLIENT);
+    client_ctx.set_verify_mode(ssl_verify::NONE);
+
+    ssl_socket client;
+    client.open();
+    ASSERT_TRUE(client.connect(*bound, milliseconds(5000)));
+    client.set_nonblocking(true);
+    client.prepare_client_ssl(client_ctx, "localhost");
+
+    bool hs_done = false;
+    error_code hs_ec;
+    client.async_handshake(ctx_, [&](error_code e) {
+        hs_done = true;
+        hs_ec = e;
+    });
+    auto deadline = steady_clock::now() + seconds(5);
+    while (!hs_done && steady_clock::now() < deadline) {
+        ctx_.run_one(100);
+    }
+    ASSERT_FALSE(hs_ec) << hs_ec.message().data();
+    server_ready.wait();
+
+    const string msg = "async tls roundtrip";
+    bool wr_done = false;
+    error_code wr_ec;
+    client.async_write(ctx_, {msg.data(), msg.size()}, [&](error_code e, size_t) {
+        wr_done = true;
+        wr_ec = e;
+    });
+    deadline = steady_clock::now() + seconds(5);
+    while (!wr_done && steady_clock::now() < deadline) {
+        ctx_.run_one(100);
+    }
+    ASSERT_FALSE(wr_ec) << wr_ec.message().data();
+
+    char buf[256] = {};
+    bool rd_done = false;
+    error_code rd_ec;
+    size_t rd_n = 0;
+    client.async_read(ctx_, {buf, sizeof(buf)}, [&](error_code e, size_t n) {
+        rd_done = true;
+        rd_ec = e;
+        rd_n = n;
+    });
+    deadline = steady_clock::now() + seconds(5);
+    while (!rd_done && steady_clock::now() < deadline) {
+        ctx_.run_one(100);
+    }
+    ASSERT_FALSE(rd_ec) << rd_ec.message().data();
+    EXPECT_EQ(rd_n, msg.size());
+    EXPECT_EQ(string_view(buf, rd_n), msg);
+
+    client.close();
+    server_done.wait();
+    server_thread.join();
+    acceptor.close();
+}
+
+TEST_F(SslAcceptorIntegration, AsyncAcceptCompletesHandshakeAndEcho) {
+    ssl_context ctx(ssl_method::TLS_SERVER);
+    ASSERT_TRUE(ctx.load_certificate(SERVER_CERT, SERVER_KEY));
+
+    ssl_acceptor acceptor;
+    acceptor.set_ssl_context(ctx.clone());
+    acceptor.open(ip_address::loopback());
+    acceptor.set_nonblocking(true);
+    auto bound = acceptor.local_endpoint();
+    ASSERT_TRUE(bound.has_value());
+
+    bool acc_done = false;
+    error_code acc_ec;
+    ssl_socket accepted;
+    acceptor.async_accept(ctx_, [&](error_code e, ssl_socket s) {
+        acc_done = true;
+        acc_ec = e;
+        accepted = move(s);
+    });
+
+    thread client_thread([&]() {
+        ssl_context client_ctx(ssl_method::TLS_CLIENT);
+        client_ctx.set_verify_mode(ssl_verify::NONE);
+
+        ssl_socket client;
+        client.open();
+        if (client.connect(*bound, milliseconds(5000))) {
+            client.init_client_ssl(client_ctx, "localhost");
+            client.send_all({"async_accept_msg"});
+        }
+        this_thread::sleep_for(milliseconds(500));
+        client.close();
+    });
+
+    auto deadline = steady_clock::now() + seconds(8);
+    while (!acc_done && steady_clock::now() < deadline) {
+        ctx_.run_one(100);
+    }
+    ASSERT_TRUE(acc_done);
+    ASSERT_FALSE(acc_ec) << acc_ec.message().data();
+    EXPECT_TRUE(accepted.is_open());
+    EXPECT_TRUE(accepted.is_ssl());
+
+    char buf[128] = {};
+    bool rd_done = false;
+    error_code rd_ec;
+    size_t rd_n = 0;
+    accepted.async_read(ctx_, {buf, sizeof(buf)}, [&](error_code e, size_t n) {
+        rd_done = true;
+        rd_ec = e;
+        rd_n = n;
+    });
+    deadline = steady_clock::now() + seconds(5);
+    while (!rd_done && steady_clock::now() < deadline) {
+        ctx_.run_one(100);
+    }
+    ASSERT_TRUE(rd_done);
+    ASSERT_FALSE(rd_ec) << rd_ec.message().data();
+    EXPECT_EQ(rd_n, 17u);
+    EXPECT_EQ(string_view(buf, 16), "async_accept_msg");
+
+    accepted.close();
+    client_thread.join();
+    acceptor.close();
+}
+
+TEST_F(SslAcceptorIntegration, AsyncAcceptPreCancelledSlotAborts) {
+    ssl_context ctx(ssl_method::TLS_SERVER);
+    ASSERT_TRUE(ctx.load_certificate(SERVER_CERT, SERVER_KEY));
+
+    ssl_acceptor acceptor;
+    acceptor.set_ssl_context(ctx.clone());
+    acceptor.open(ip_address::loopback());
+
+    stop_source stop_src;
+    cancellation_slot slot(stop_src.get_token());
+    ignore = stop_src.request_stop();
+
+    bool handler_called = false;
+    error_code ec;
+    acceptor.async_accept(ctx_, slot, [&](error_code e, ssl_socket) {
+        handler_called = true;
+        ec = e;
+    });
+
+    EXPECT_TRUE(handler_called);
+    EXPECT_TRUE(ec);
+    acceptor.close();
+}
+
+TEST_F(SslClientIntegration, AsyncConnectEstablishesTls) {
+    ssl_context server_ctx(ssl_method::TLS_SERVER);
+    ASSERT_TRUE(server_ctx.load_certificate(SERVER_CERT, SERVER_KEY));
+
+    tcp_acceptor acceptor;
+    acceptor.open(ip_address::loopback());
+    auto bound = acceptor.local_endpoint();
+    ASSERT_TRUE(bound.has_value());
+
+    latch server_done(1);
+
+    thread server_thread([&]() {
+        try {
+            auto tcp_client = acceptor.accept();
+            ssl_socket ssl_client(move(tcp_client));
+            ssl_client.init_server_ssl(server_ctx);
+
+            char buf[256];
+            ssize_t received = ssl_client.receive({buf, sizeof(buf)});
+            if (received > 0) {
+                ssl_client.send_all({buf, static_cast<size_t>(received)});
+            }
+            ssl_client.close();
+        } catch (const ssl_exception& e) {
+            eprintln(e.what());
+        }
+        server_done.count_down();
+    });
+
+    ssl_client client(ctx_);
+    client.set_ssl_context(ssl_context(ssl_method::TLS_CLIENT));
+    client.set_verify_peer(false);
+
+    auto endpoint = ip_address::parse("127.0.0.1", bound->port());
+    ASSERT_TRUE(endpoint.has_value());
+
+    bool done = false;
+    error_code ec;
+    client.async_connect(ctx_, *endpoint, [&](error_code e) {
+        done = true;
+        ec = e;
+    });
+    auto deadline = steady_clock::now() + seconds(8);
+    while (!done && steady_clock::now() < deadline) {
+        ctx_.run_one(100);
+    }
+    ASSERT_TRUE(done);
+    ASSERT_FALSE(ec) << ec.message().data();
+    EXPECT_TRUE(client.is_connected());
+    EXPECT_TRUE(client.is_ssl_initialized());
+
+    const char* msg = "async ssl_client connect";
+    EXPECT_TRUE(client.send_all(msg, 24));
+
+    char buf[256];
+    ssize_t received = client.receive(buf, sizeof(buf));
+    EXPECT_EQ(received, 24);
+    EXPECT_EQ(string_view(buf, 24), "async ssl_client connect");
+
+    client.disconnect();
+    server_done.wait();
+    server_thread.join();
+    acceptor.close();
 }

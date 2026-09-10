@@ -1,8 +1,9 @@
 #include <NeForce/core/system/process.hpp>
 #include <NeForce/core/system/environment.hpp>
 #ifdef NEFORCE_PLATFORM_WINDOWS
-#    include <NeForce/core/exception/error_code.hpp>
 #    include <NeForce/core/config/windef.hpp>
+#    include <NeForce/core/exception/error_code.hpp>
+#    include <NeForce/core/string/utf.hpp>
 #    include <windef.h>
 #    include <WinBase.h>
 #    include <WinUser.h>
@@ -56,22 +57,6 @@ namespace {
             }
         }
         return cmd_line;
-    }
-
-    string escape_for_cmd(const string& cmd) {
-        string escaped;
-        escaped.reserve(cmd.size() + 2);
-        escaped.push_back('"');
-        for (const char ch: cmd) {
-            if (ch == '"') {
-                escaped.push_back('\\');
-                escaped.push_back('"');
-            } else {
-                escaped.push_back(ch);
-            }
-        }
-        escaped.push_back('"');
-        return escaped;
     }
 
     string escape_arg_runas(const string& arg) {
@@ -562,7 +547,8 @@ void process::start(const string& executable, const vector<string>& args) {
         stderr_write_handle = stderr_pipe_.native_write_handle();
     } else if (!stderr_file_.empty()) {
         ::SECURITY_ATTRIBUTES sa{sizeof(::SECURITY_ATTRIBUTES), nullptr, TRUE};
-        stderr_write_handle = ::CreateFileA(stderr_file_.data(), GENERIC_WRITE, FILE_SHARE_READ, &sa, CREATE_ALWAYS,
+        const wstring stderr_file = character::to_wstring(stderr_file_.view());
+        stderr_write_handle = ::CreateFileW(stderr_file.data(), GENERIC_WRITE, FILE_SHARE_READ, &sa, CREATE_ALWAYS,
                                             FILE_ATTRIBUTE_NORMAL, nullptr);
         if (stderr_write_handle == INVALID_HANDLE_VALUE) {
             const auto error = last_error();
@@ -580,8 +566,8 @@ void process::start(const string& executable, const vector<string>& args) {
         stdin_read_handle = stdin_pipe_.native_read_handle();
     }
 
-    ::STARTUPINFOA si{};
-    si.cb = sizeof(::STARTUPINFOA);
+    ::STARTUPINFOW si{};
+    si.cb = sizeof(::STARTUPINFOW);
     const bool has_custom_io = capture_stdout_ || capture_stderr_ || !stdin_data_.empty() || use_stdout_ext ||
                                use_stderr_ext || use_stdin_ext || !stdout_file_.empty() || !stderr_file_.empty();
 
@@ -610,9 +596,11 @@ void process::start(const string& executable, const vector<string>& args) {
     }
 
     ::PROCESS_INFORMATION pi;
-    const ::BOOL success = ::CreateProcessA(nullptr, const_cast<char*>(cmd_line.data()), nullptr, nullptr,
-                                            has_custom_io ? TRUE : FALSE, CREATE_NO_WINDOW, env_block,
-                                            work_dir_.empty() ? nullptr : work_dir_.data(), &si, &pi);
+    wstring wcmd_line = character::to_wstring(cmd_line.view());
+    wstring wwork_dir = character::to_wstring(work_dir_.view());
+    const ::BOOL success =
+            ::CreateProcessW(nullptr, wcmd_line.data(), nullptr, nullptr, has_custom_io ? TRUE : FALSE,
+                             CREATE_NO_WINDOW, env_block, wwork_dir.empty() ? nullptr : wwork_dir.data(), &si, &pi);
 
     if (success == FALSE) {
         const auto error = last_error();
@@ -841,17 +829,20 @@ void process::start_elevated(const string& executable, const vector<string>& arg
 
 #ifdef NEFORCE_PLATFORM_WINDOWS
     const string params = build_params_string(args);
+    wstring wexecutable = character::to_wstring(executable.view());
+    wstring wparams = character::to_wstring(params.view());
+    wstring wwork_dir = character::to_wstring(work_dir_.view());
 
-    ::SHELLEXECUTEINFOA sei{};
+    ::SHELLEXECUTEINFOW sei{};
     sei.cbSize = sizeof(sei);
     sei.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI;
-    sei.lpVerb = "runas";
-    sei.lpFile = executable.data();
-    sei.lpParameters = params.empty() ? nullptr : params.data();
-    sei.lpDirectory = work_dir_.empty() ? nullptr : work_dir_.data();
+    sei.lpVerb = L"runas";
+    sei.lpFile = wexecutable.data();
+    sei.lpParameters = wparams.empty() ? nullptr : wparams.data();
+    sei.lpDirectory = wwork_dir.empty() ? nullptr : wwork_dir.data();
     sei.nShow = SW_HIDE;
 
-    if (::ShellExecuteExA(&sei) == FALSE) {
+    if (::ShellExecuteExW(&sei) == FALSE) {
         const ::DWORD err = ::GetLastError();
         if (err == ERROR_CANCELLED) {
             NEFORCE_THROW_EXCEPTION(process_exception("User cancelled elevation prompt"));
@@ -1702,7 +1693,8 @@ string process::search_path(const string& executable) {
     for (const auto& dir: paths) {
         for (const char* ext: extensions) {
             const string full_path = dir + "\\" + executable + ext;
-            const ::DWORD attrs = ::GetFileAttributesA(full_path.data());
+            wstring wfull_path = character::to_wstring(full_path.view());
+            const ::DWORD attrs = ::GetFileAttributesW(wfull_path.data());
             if (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_DIRECTORY) == 0) {
                 return full_path;
             }

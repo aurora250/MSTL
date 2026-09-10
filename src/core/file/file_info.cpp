@@ -55,15 +55,15 @@ file_attri file_info::attributes() const noexcept {
 
 bool file_info::set_attributes(const file_attri attr) noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    char path_buf[MAX_PATH]{};
-    if (::GetFinalPathNameByHandleA(handle_, path_buf, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS) == 0) {
+    wchar_t path_buf[MAX_PATH]{};
+    if (::GetFinalPathNameByHandleW(handle_, path_buf, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS) == 0) {
         return false;
     }
-    const char* p = path_buf;
-    if (string_compare(p, R"(\\?\)", 4) == 0) {
+    const wchar_t* p = path_buf;
+    if (string_compare(p, LR"(\\?\)", 4) == 0) {
         p += 4;
     }
-    return ::SetFileAttributesA(p, static_cast<::DWORD>(attr)) != 0;
+    return ::SetFileAttributesW(p, static_cast<::DWORD>(attr)) != 0;
 #else
     struct ::stat64 st{};
     if (::fstat64(handle_, &st) == -1) {

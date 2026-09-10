@@ -2,6 +2,7 @@
 #include <NeForce/core/exception/system_exception.hpp>
 #include <NeForce/core/system/environment.hpp>
 #ifdef NEFORCE_PLATFORM_WINDOWS
+#    include <NeForce/core/string/utf.hpp>
 #    include <processenv.h>
 #    include <shlobj.h>
 #    include <urlmon.h>
@@ -79,23 +80,23 @@ flat_unordered_map<string, string> environment::all_envs() {
     flat_unordered_map<string, string> env_map;
 
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    char* env_block = ::GetEnvironmentStrings();
+    wchar_t* env_block = ::GetEnvironmentStringsW();
     if (env_block == nullptr) {
         return env_map;
     }
 
-    const char* current = env_block;
-    while (*current != '\0') {
-        string env_str(current);
-        const size_t eq_pos = env_str.find('=');
+    const wchar_t* current = env_block;
+    while (*current != L'\0') {
+        wstring env_str(current);
+        const size_t eq_pos = env_str.find(L'=');
         if (eq_pos != string::npos) {
-            string name = env_str.head(eq_pos);
-            string value = env_str.tail(eq_pos + 1);
-            env_map[name] = move(value);
+            const wstring name = env_str.head(eq_pos);
+            const wstring value = env_str.tail(eq_pos + 1);
+            env_map[wcharacter::to_string(name.view())] = move(wcharacter::to_string(value.view()));
         }
         current += env_str.length() + 1;
     }
-    ::FreeEnvironmentStringsA(env_block);
+    ::FreeEnvironmentStringsW(env_block);
 #else
     for (char** env = ::environ; *env != nullptr; env++) {
         const string_view env_str(*env);
@@ -166,12 +167,12 @@ bool environment::add_to_path(const string& path, const int position) {
 string environment::current_directory() {
     shared_lock<shared_mutex> lock(get_mutex());
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    char buffer[MAX_PATH];
-    const ::DWORD length = ::GetCurrentDirectoryA(MAX_PATH, buffer);
+    wchar_t buffer[MAX_PATH];
+    const ::DWORD length = ::GetCurrentDirectoryW(MAX_PATH, buffer);
     if (length == 0) {
         NEFORCE_THROW_EXCEPTION(system_exception("Failed to get current directory"));
     }
-    return {buffer};
+    return wcharacter::to_string(buffer);
 #else
     // NOLINTNEXTLINE(clang-analyzer-unix.StdCLibraryFunctions)
     char* buffer = ::getcwd(nullptr, 0);
@@ -187,10 +188,10 @@ string environment::current_directory() {
 string environment::current_user() {
     shared_lock<shared_mutex> lock(get_mutex());
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    char username[256];
+    wchar_t username[256];
     ::DWORD size = sizeof(username);
-    if (::GetUserNameA(username, &size) == TRUE) {
-        return {username};
+    if (::GetUserNameW(username, &size) == TRUE) {
+        return wcharacter::to_string(username);
     }
     return "";
 #else
@@ -207,12 +208,12 @@ string environment::current_user() {
 string environment::temp_directory() {
     shared_lock<shared_mutex> lock(get_mutex());
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    char buffer[MAX_PATH];
-    const ::DWORD length = ::GetTempPathA(MAX_PATH, buffer);
+    wchar_t buffer[MAX_PATH];
+    const ::DWORD length = ::GetTempPathW(MAX_PATH, buffer);
     if (length == 0) {
         return "C:\\Temp";
     }
-    return {buffer};
+    return wcharacter::to_string(buffer);
 #else
     // NOLINTNEXTLINE(concurrency-mt-unsafe)
     const char* tmpdir = ::getenv("TMPDIR");
@@ -281,9 +282,9 @@ string environment::home_directory() {
 string environment::app_data_directory() {
     shared_lock<shared_mutex> lock(get_mutex());
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    char buffer[MAX_PATH];
-    if (::SHGetFolderPathA(nullptr, CSIDL_LOCAL_APPDATA, nullptr, 0, buffer) == S_OK) {
-        return {buffer};
+    wchar_t buffer[MAX_PATH];
+    if (::SHGetFolderPathW(nullptr, CSIDL_LOCAL_APPDATA, nullptr, 0, buffer) == S_OK) {
+        return wcharacter::to_string(buffer);
     }
     string appdata = get_unsafe("LOCALAPPDATA");
     if (!appdata.empty()) {
@@ -307,9 +308,9 @@ string environment::app_data_directory() {
 string environment::config_directory() {
     shared_lock<shared_mutex> lock(get_mutex());
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    char buffer[MAX_PATH];
-    if (::SHGetFolderPathA(nullptr, CSIDL_APPDATA, nullptr, 0, buffer) == S_OK) {
-        return {buffer};
+    wchar_t buffer[MAX_PATH];
+    if (::SHGetFolderPathW(nullptr, CSIDL_APPDATA, nullptr, 0, buffer) == S_OK) {
+        return wcharacter::to_string(buffer);
     }
     string appdata = get_unsafe("APPDATA");
     if (!appdata.empty()) {

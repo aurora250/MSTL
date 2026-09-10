@@ -1,5 +1,6 @@
 #include <NeForce/core/container/queue.hpp>
 #include <NeForce/core/file/path_tree.hpp>
+#include <NeForce/core/string/utf.hpp>
 #ifdef NEFORCE_PLATFORM_WINDOWS
 #    include <NeForce/core/config/windef.hpp>
 #    include <windef.h>
@@ -17,6 +18,38 @@
 #    include <sys/stat.h>
 #endif
 NEFORCE_BEGIN_NAMESPACE__
+
+namespace {
+    bool resolved_dir_id(const path& p, pair<uint64_t, uint64_t>& out) {
+#ifdef NEFORCE_PLATFORM_WINDOWS
+        const wstring wp = character::to_wstring(p.view());
+        const ::HANDLE h =
+                ::CreateFileW(wp.data(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                              nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+        if (h == INVALID_HANDLE_VALUE) {
+            return false;
+        }
+        ::BY_HANDLE_FILE_INFORMATION info{};
+        const bool ok = ::GetFileInformationByHandle(h, &info) != FALSE;
+        ::CloseHandle(h);
+        if (!ok) {
+            return false;
+        }
+        out.first = (static_cast<uint64_t>(info.dwVolumeSerialNumber) << 32) | info.nFileIndexHigh;
+        out.second = info.nFileIndexLow;
+        return true;
+#else
+        struct ::stat64 st{};
+        if (::stat64(p.data(), &st) == -1) {
+            return false;
+        }
+        out.first = static_cast<uint64_t>(st.st_dev);
+        out.second = static_cast<uint64_t>(st.st_ino);
+        return true;
+#endif
+    }
+} // namespace
+
 
 path_tree::node::ptr path_tree::node::find_child(const string_view name) const noexcept {
     for (const auto& child: children_) {
@@ -54,13 +87,21 @@ path_tree path_tree::scan(const path& root, const scan_options& options) {
     tree.root_ = make_shared<node>(root.absolute(), root_type, 0);
 
     if (root_type == node_type::directory) {
-        scan_impl(tree.root_, options, 1);
+        vector<pair<uint64_t, uint64_t>> chain;
+        if (options.follow_symlinks) {
+            pair<uint64_t, uint64_t> root_id;
+            if (resolved_dir_id(tree.root_->get_path(), root_id)) {
+                chain.push_back({root_id.first, root_id.second});
+            }
+        }
+        scan_impl(tree.root_, options, 1, &chain);
     }
 
     return tree;
 }
 
-void path_tree::scan_impl(const node::ptr& parent, const scan_options& options, const size_t current_depth) {
+void path_tree::scan_impl(const node::ptr& parent, const scan_options& options, const size_t current_depth,
+                          vector<pair<uint64_t, uint64_t>>* const chain) {
     if (options.max_depth > 0 && current_depth > options.max_depth) {
         return;
     }
@@ -69,15 +110,16 @@ void path_tree::scan_impl(const node::ptr& parent, const scan_options& options, 
 
 #ifdef NEFORCE_PLATFORM_WINDOWS
 
-    ::WIN32_FIND_DATAA fdata;
+    ::WIN32_FIND_DATAW fdata;
     const path search_path = dir / "*";
-    const ::HANDLE hFind = ::FindFirstFileA(search_path.data(), &fdata);
+    const wstring wsearch_path = character::to_wstring(search_path.view());
+    const ::HANDLE hFind = ::FindFirstFileW(wsearch_path.data(), &fdata);
     if (hFind == INVALID_HANDLE_VALUE) {
         return;
     }
 
     do {
-        const string_view name(fdata.cFileName);
+        const string name = wcharacter::to_string(fdata.cFileName);
         if (name == "." || name == "..") {
             continue;
         }
@@ -86,10 +128,14 @@ void path_tree::scan_impl(const node::ptr& parent, const scan_options& options, 
             continue;
         }
 
-        const path child_path = dir / name;
-        const bool is_dir = (fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+        const path child_path = dir / name.view();
+        const bool attr_dir = (fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U;
+        const bool attr_reparse = (fdata.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U;
 
-        node_type type = is_dir ? node_type::directory : node_type::file;
+        // Junction / symbolic-link directories are represented as symlink nodes
+        // and are only followed (with cycle detection) when follow_symlinks is requested.
+        const bool is_dir = attr_dir && (!attr_reparse || options.follow_symlinks);
+        const node_type type = is_dir ? node_type::directory : (attr_reparse ? node_type::symlink : node_type::file);
 
         bool type_ok = true;
         if (options.files_only && options.dirs_only) {
@@ -123,10 +169,32 @@ void path_tree::scan_impl(const node::ptr& parent, const scan_options& options, 
 
         if (is_dir) {
             node::ptr& recurse_node = (type_ok && ext_ok && custom_ok) ? parent->children_.back() : child_node;
-            scan_impl(recurse_node, options, current_depth + 1);
+            if (options.follow_symlinks && chain != nullptr) {
+                pair<uint64_t, uint64_t> id_pair;
+                if (resolved_dir_id(child_path, id_pair)) {
+                    const pair<uint64_t, uint64_t> id{id_pair.first, id_pair.second};
+                    bool seen = false;
+                    for (const auto& ancestor: *chain) {
+                        if (ancestor == id) {
+                            seen = true;
+                            break;
+                        }
+                    }
+                    if (seen) {
+                        continue; // symlink loop: do not descend again
+                    }
+                    chain->push_back(id);
+                    scan_impl(recurse_node, options, current_depth + 1, chain);
+                    chain->pop_back();
+                } else {
+                    scan_impl(recurse_node, options, current_depth + 1, chain);
+                }
+            } else {
+                scan_impl(recurse_node, options, current_depth + 1, chain);
+            }
         }
 
-    } while (::FindNextFileA(hFind, &fdata) == TRUE);
+    } while (::FindNextFileW(hFind, &fdata) == TRUE);
 
     ::FindClose(hFind);
 
@@ -227,7 +295,28 @@ void path_tree::scan_impl(const node::ptr& parent, const scan_options& options, 
 
         if (is_dir) {
             node::ptr& recurse_node = (type_ok && ext_ok && custom_ok) ? parent->children_.back() : child_node;
-            scan_impl(recurse_node, options, current_depth + 1);
+            if (options.follow_symlinks && chain != nullptr) {
+                pair<uint64_t, uint64_t> id_pair;
+                if (resolved_dir_id(child_path, id_pair)) {
+                    const pair<uint64_t, uint64_t> id{id_pair.first, id_pair.second};
+                    bool seen = false;
+                    for (const auto& ancestor: *chain) {
+                        if (ancestor == id) {
+                            seen = true;
+                            break;
+                        }
+                    }
+                    if (!seen) {
+                        chain->push_back(id);
+                        scan_impl(recurse_node, options, current_depth + 1, chain);
+                        chain->pop_back();
+                    }
+                } else {
+                    scan_impl(recurse_node, options, current_depth + 1, chain);
+                }
+            } else {
+                scan_impl(recurse_node, options, current_depth + 1, chain);
+            }
         }
     }
 

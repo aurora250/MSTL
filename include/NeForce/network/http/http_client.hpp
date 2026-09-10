@@ -442,6 +442,15 @@ public:
      */
     future<http_client_response> request_async(http_client_request req);
 
+#ifdef NEFORCE_STANDARD_20
+    /**
+     * @brief awaitable 异步HTTP请求
+     * @param req 请求对象
+     * @return 可协程等待的结果
+     */
+    awaitable<http_client_response> request_async(http_client_request req, use_awaitable_t /*unused*/);
+#endif
+
     /**
      * @brief 关闭连接
      */

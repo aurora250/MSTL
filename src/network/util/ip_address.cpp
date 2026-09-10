@@ -213,7 +213,6 @@ bool ip_address::operator==(const ip_address& other) const {
     if (!is_valid() || !other.is_valid()) {
         return false;
     }
-
     if (address_family() != other.address_family()) {
         return false;
     }

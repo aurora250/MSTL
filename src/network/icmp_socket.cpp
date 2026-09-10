@@ -3,7 +3,6 @@
 #include <NeForce/core/time/clocks.hpp>
 #include <NeForce/network/icmp_socket.hpp>
 #include <NeForce/network/ip_socket.hpp>
-#include <cerrno>
 NEFORCE_BEGIN_NAMESPACE__
 
 namespace {
@@ -310,6 +309,231 @@ vector<icmp_socket::traceroute_hop> icmp_socket::traceroute(const ip_address& de
     }
 
     return hops;
+}
+
+namespace {
+    struct ping_op : enable_shared_from_this<ping_op> {
+        io_context* ctx;
+        icmp_socket* sock;
+        ip_address dest;
+        milliseconds timeout;
+        uint16_t expected_id;
+        uint16_t expected_seq;
+        function<void(error_code, icmp_socket::ping_result)> handler;
+        cancellation_slot* cancel_slot{nullptr};
+        steady_clock::time_point start_time;
+        size_t timer_id{0};
+        bool timer_armed{false};
+        bool finished{false};
+
+        void start() {
+            if (cancel_slot != nullptr && cancel_slot->is_cancelled()) {
+                deliver(make_operation_aborted(), false, 0, 0, milliseconds(0));
+                return;
+            }
+
+            start_time = steady_clock::now();
+            sock->set_nonblocking(true);
+
+            auto self = shared_from_this();
+            if (cancel_slot != nullptr) {
+                cancel_slot->assign([self]() mutable { self->on_cancel(); });
+            }
+            poll_step();
+        }
+
+        void stop_timer() {
+            if (timer_armed) {
+                ctx->cancel_timer(timer_id);
+                timer_armed = false;
+            }
+        }
+
+        void deliver(error_code ec, bool success, size_t reply_size, uint8_t reply_ttl, milliseconds rtt) {
+            if (finished) {
+                return;
+            }
+            finished = true;
+            stop_timer();
+
+            icmp_socket::ping_result r{};
+            r.destination = dest;
+            r.success = success;
+            r.reply_size = reply_size;
+            r.reply_ttl = reply_ttl;
+            r.rtt = rtt;
+            handler(ec, r);
+        }
+
+        void on_cancel() { deliver(make_operation_aborted(), false, 0, 0, milliseconds(0)); }
+
+        void on_timeout() {
+            timer_armed = false;
+            if (finished) {
+                return;
+            }
+            finished = true;
+
+            const auto end = steady_clock::now();
+            icmp_socket::ping_result r{};
+            r.destination = dest;
+            r.success = false;
+            r.rtt = time_cast<milliseconds>(end - start_time);
+            handler(error_code{}, r);
+        }
+
+        // Polls the socket on a short re-armed timer instead of registering an fd watch.
+        // Raw ICMP sockets do not reliably support WSAEventSelect-style readiness
+        // notifications on Windows, and repeated add_fd/remove_fd races the io_context
+        // monitor thread. A bounded timer poll keeps completion deterministic on both
+        // platforms and reuses the io_context timer path exercised by dns_client.
+        void poll_step() {
+            if (finished) {
+                return;
+            }
+            const auto elapsed = time_cast<milliseconds>(steady_clock::now() - start_time);
+            if (elapsed >= timeout) {
+                on_timeout();
+                return;
+            }
+
+            char recv_buffer[65536];
+            while (true) {
+                ::sockaddr_storage peer_addr{};
+                ::socklen_t peer_len = sizeof(peer_addr);
+                const ssize_t recv_len = ::recvfrom(sock->native_handle(), recv_buffer, sizeof(recv_buffer), 0,
+                                                    reinterpret_cast<::sockaddr*>(&peer_addr), &peer_len);
+                if (recv_len < 0) {
+                    const int err = network_exception::last_error().value();
+                    if (socket_exception::is_would_block(err)) {
+                        break;
+                    }
+                    deliver(error_code(err, error_category::system()), false, 0, 0, milliseconds(0));
+                    return;
+                }
+
+                if (peer_addr.ss_family != AF_INET) {
+                    continue;
+                }
+                if (static_cast<size_t>(recv_len) < sizeof(ip_header)) {
+                    continue;
+                }
+
+                const auto* ip = reinterpret_cast<const ip_header*>(recv_buffer);
+                if (ip->version() != 4) {
+                    continue;
+                }
+                const auto ip_header_len = static_cast<size_t>(ip->ihl() * 4);
+                if (ip_header_len < 20 || ip_header_len > static_cast<size_t>(recv_len)) {
+                    continue;
+                }
+
+                const auto* icmp_start = reinterpret_cast<const uint8_t*>(recv_buffer) + ip_header_len;
+                const size_t icmp_len = static_cast<size_t>(recv_len) - ip_header_len;
+                if (icmp_len < sizeof(icmp_header)) {
+                    continue;
+                }
+
+                icmp_header hdr{};
+                memory_copy(&hdr, icmp_start, sizeof(icmp_header));
+                hdr.id = endian::network_to_host<uint16_t>(hdr.id);
+                hdr.sequence = endian::network_to_host<uint16_t>(hdr.sequence);
+
+                if (hdr.type == icmp_socket::ICMP_ECHO_REPLY && hdr.id == expected_id && hdr.sequence == expected_seq) {
+                    const auto end = steady_clock::now();
+                    const auto rtt = time_cast<milliseconds>(end - start_time);
+                    deliver(error_code{}, true, icmp_len - sizeof(icmp_header), ip->ttl, rtt);
+                    return;
+                }
+            }
+
+            auto self = shared_from_this();
+            const auto remain = timeout - elapsed;
+            int64_t delay_ms = remain.count() / 2;
+            if (delay_ms <= 0) {
+                delay_ms = 1;
+            }
+            delay_ms = min<int64_t>(delay_ms, 20);
+            timer_armed = true;
+            timer_id = ctx->schedule_timer(static_cast<uint64_t>(delay_ms), [self]() mutable {
+                self->timer_armed = false;
+                self->poll_step();
+            });
+        }
+    };
+} // namespace
+
+void icmp_socket::async_ping(io_context& ctx, const ip_address& dest, const milliseconds timeout,
+                             const uint16_t sequence, const void* data, const size_t data_len,
+                             function<void(error_code, ping_result)> handler) {
+    if (!dest.is_valid() || !dest.is_ipv4()) {
+        ping_result r{};
+        r.destination = dest;
+        handler(error_code(static_cast<int>(errc::invalid_argument), error_category::system()), r);
+        return;
+    }
+
+    const uint16_t id = static_cast<uint16_t>(process::current_id());
+    try {
+        send_echo_request(dest, id, sequence, 64, data, data_len);
+    } catch (const system_exception& e) {
+        ping_result r{};
+        r.destination = dest;
+        handler(e.code(), r);
+        return;
+    } catch (const exception&) {
+        ping_result r{};
+        r.destination = dest;
+        handler(error_code(static_cast<int>(errc::invalid_argument), error_category::system()), r);
+        return;
+    }
+
+    auto op = make_shared<ping_op>();
+    op->ctx = &ctx;
+    op->sock = this;
+    op->dest = dest;
+    op->timeout = timeout;
+    op->expected_id = id;
+    op->expected_seq = sequence;
+    op->handler = move(handler);
+    op->start();
+}
+
+void icmp_socket::async_ping(io_context& ctx, const ip_address& dest, const milliseconds timeout,
+                             const uint16_t sequence, const void* data, const size_t data_len, cancellation_slot& slot,
+                             function<void(error_code, ping_result)> handler) {
+    if (!dest.is_valid() || !dest.is_ipv4()) {
+        ping_result r{};
+        r.destination = dest;
+        handler(error_code(static_cast<int>(errc::invalid_argument), error_category::system()), r);
+        return;
+    }
+
+    const uint16_t id = static_cast<uint16_t>(process::current_id());
+    try {
+        send_echo_request(dest, id, sequence, 64, data, data_len);
+    } catch (const system_exception& e) {
+        ping_result r{};
+        r.destination = dest;
+        handler(e.code(), r);
+        return;
+    } catch (const exception&) {
+        ping_result r{};
+        r.destination = dest;
+        handler(error_code(static_cast<int>(errc::invalid_argument), error_category::system()), r);
+        return;
+    }
+
+    auto op = make_shared<ping_op>();
+    op->ctx = &ctx;
+    op->sock = this;
+    op->dest = dest;
+    op->timeout = timeout;
+    op->expected_id = id;
+    op->expected_seq = sequence;
+    op->handler = move(handler);
+    op->cancel_slot = &slot;
+    op->start();
 }
 
 NEFORCE_END_NAMESPACE__

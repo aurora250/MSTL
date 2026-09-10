@@ -1,13 +1,21 @@
+#include <NeForce/core/async/atomic.hpp>
+#include <NeForce/core/async/cancellation_slot.hpp>
 #include <NeForce/core/async/condition_variable.hpp>
 #include <NeForce/core/async/io_context.hpp>
 #include <NeForce/core/async/latch.hpp>
+#include <NeForce/core/async/thread.hpp>
+#include <NeForce/core/container/vector.hpp>
 #include <NeForce/core/file/file.hpp>
 #include <NeForce/core/file/file_watcher.hpp>
 #include <NeForce/core/file/filesystem.hpp>
 #include <NeForce/core/file/path_tree.hpp>
 #include <NeForce/core/file/temp_file.hpp>
+#include <NeForce/core/time/clocks.hpp>
 #include <NeForce/core/time/duration.hpp>
 #include <gtest/gtest.h>
+#ifndef NEFORCE_PLATFORM_WINDOWS
+#    include <unistd.h>
+#endif
 using namespace neforce;
 
 namespace {
@@ -655,13 +663,41 @@ TEST_F(FileTest, SeekCurrent) {
     EXPECT_EQ(out, "789");
 }
 
-TEST_F(FileTest, SeekAppendModeRestriction) {
+TEST_F(FileTest, SeekAppendModeAllowsReadPositioning) {
     auto p = get_test_path("seek_append.txt");
     filesystem::create_and_write(p, "data");
 
     file f(p, true);
-    EXPECT_FALSE(f.seek(0, file_pointer::BEGIN));
+    EXPECT_TRUE(f.seek(0, file_pointer::BEGIN));
+    string out;
+    f.read(out, 4);
+    EXPECT_EQ(out, "data");
     EXPECT_TRUE(f.seek(0, file_pointer::END));
+    EXPECT_EQ(f.write("-more", 5), 5u);
+    EXPECT_TRUE(f.flush());
+    EXPECT_EQ(f.size64(), 9u);
+    f.close();
+
+    file check(p, false, file_access::READ, file_shared::SHARE_READ);
+    EXPECT_TRUE(check.is_opened());
+    EXPECT_EQ(check.read(), "data-more");
+}
+
+TEST_F(FileTest, WholeFileReadOnAppendHandle) {
+    auto p = get_test_path("append_whole_read.txt");
+    filesystem::create_and_write(p, "hello world");
+
+    file f(p, true, file_access::READ_WRITE, file_shared::SHARE_READ_WRITE, file_creation::OPEN_EXIST);
+    ASSERT_TRUE(f.is_opened());
+    EXPECT_EQ(f.read(), "hello world");
+    EXPECT_EQ(f.write("!", 1), 1u);
+    EXPECT_TRUE(f.flush());
+    EXPECT_EQ(f.size64(), 12u);
+    f.close();
+
+    file check(p, false, file_access::READ, file_shared::SHARE_READ);
+    EXPECT_TRUE(check.is_opened());
+    EXPECT_EQ(check.read(), "hello world!");
 }
 
 TEST_F(FileTest, SeekNotOpened) {
@@ -924,6 +960,147 @@ TEST_F(FileTest, LineIteratorDefaultConstructor) {
     file::line_iterator it;
     EXPECT_EQ(it, file::line_iterator{});
 }
+
+TEST_F(FileTest, FlushAfterReadDoesNotTruncateFile) {
+    const auto p = get_test_path("flush_after_read.bin");
+    const string content(10000, 'a');
+    filesystem::create_and_write(p, content);
+    {
+        file f(p, false, file_access::READ_WRITE, file_shared::SHARE_READ_WRITE, file_creation::OPEN_EXIST);
+        ASSERT_TRUE(f.is_opened());
+        EXPECT_EQ(f.read(1000).size(), 1000u);
+        EXPECT_TRUE(f.flush());
+        EXPECT_EQ(f.size64(), 10000u);
+    }
+    file check(p, false, file_access::READ, file_shared::SHARE_READ);
+    EXPECT_EQ(check.size64(), 10000u);
+    EXPECT_EQ(check.read(1000).size(), 1000u);
+}
+
+TEST_F(FileTest, FlushAfterMidFileWriteDoesNotTruncate) {
+    const auto p = get_test_path("flush_mid_write.bin");
+    const string content(10000, 'a');
+    filesystem::create_and_write(p, content);
+    {
+        file f(p, false, file_access::READ_WRITE, file_shared::SHARE_READ_WRITE, file_creation::OPEN_EXIST);
+        ASSERT_TRUE(f.is_opened());
+        EXPECT_TRUE(f.seek(4000, file_pointer::BEGIN));
+        EXPECT_EQ(f.write("XXXX", 4), 4u);
+        EXPECT_TRUE(f.flush());
+        EXPECT_EQ(f.size64(), 10000u);
+    }
+    file check(p, false, file_access::READ, file_shared::SHARE_READ);
+    const string all = check.read();
+    EXPECT_EQ(all.size(), 10000u);
+    EXPECT_EQ(all.substr(4000, 4), "XXXX");
+}
+
+TEST_F(FileTest, ReadThenWriteWithoutSeekWritesAtLogicalPosition) {
+    const auto p = get_test_path("interleave_rw.bin");
+    filesystem::create_and_write(p, "0123456789");
+    {
+        file f(p, false, file_access::READ_WRITE, file_shared::SHARE_READ_WRITE, file_creation::OPEN_EXIST);
+        EXPECT_EQ(f.read(4), "0123");
+        EXPECT_EQ(f.write("XY", 2), 2u);
+        EXPECT_TRUE(f.flush());
+        EXPECT_EQ(f.size64(), 10u);
+    }
+    file check(p);
+    EXPECT_EQ(check.read(), "0123XY6789");
+}
+
+TEST_F(FileTest, WriteThenReadWithoutSeekFlushesFirst) {
+    const auto p = get_test_path("interleave_wr.bin");
+    {
+        file f(p, false, file_access::READ_WRITE, file_shared::SHARE_READ_WRITE, file_creation::CREATE_FORCE);
+        ASSERT_TRUE(f.is_opened());
+        EXPECT_EQ(f.write("hello", 5), 5u);
+        EXPECT_EQ(f.tell(), 5);
+        EXPECT_EQ(f.read(5), "");
+        EXPECT_TRUE(f.seek(0, file_pointer::BEGIN));
+        EXPECT_EQ(f.read(5), "hello");
+    }
+}
+
+TEST_F(FileTest, ReadLineCRLFSplitAcrossBufferBoundary) {
+    const auto p = get_test_path("crlf_boundary.bin");
+    const string content = string(8191, 'x') + "\r\nrest-of-line\nend";
+    filesystem::create_and_write(p, content);
+
+    file f(p);
+    vector<string> lines;
+    string line;
+    while (f.read_line(line)) {
+        lines.push_back(line);
+    }
+    ASSERT_EQ(lines.size(), 3u);
+    EXPECT_EQ(lines[0], string(8191, 'x'));
+    EXPECT_EQ(lines[1], "rest-of-line");
+    EXPECT_EQ(lines[2], "end");
+}
+
+TEST_F(FileTest, SparseFileBeyond4GiB) {
+    const auto p = get_test_path("sparse_4g.bin");
+    constexpr uint64_t big = (uint64_t{1} << 32) + 4096;
+    {
+        file f(p, false, file_access::READ_WRITE, file_shared::SHARE_READ_WRITE, file_creation::CREATE_FORCE);
+        ASSERT_TRUE(f.is_opened());
+        EXPECT_EQ(f.write("HEAD", 4), 4u);
+        EXPECT_TRUE(f.flush());
+        EXPECT_TRUE(f.truncate(static_cast<file::difference_type>(big)));
+        EXPECT_EQ(f.size64(), big);
+    }
+    file f(p, false, file_access::READ, file_shared::SHARE_READ);
+    string head;
+    EXPECT_EQ(f.read_binary(head, 4), 4u);
+    EXPECT_EQ(head, "HEAD");
+    string tail;
+    EXPECT_TRUE(f.seek(static_cast<file::difference_type>(big - 4), file_pointer::BEGIN));
+    EXPECT_EQ(f.read_binary(tail, 4), 4u);
+}
+
+TEST_F(FileTest, WholeReadLargeFileDirectPath) {
+    const auto p = get_test_path("direct_read.bin");
+    const string content(1u << 20, 'd');
+    filesystem::create_and_write(p, content);
+
+    file f(p);
+    const string all = f.read();
+    EXPECT_EQ(all.size(), content.size());
+    EXPECT_EQ(all, content);
+}
+
+#ifdef NEFORCE_PLATFORM_WINDOWS
+TEST_F(FileTest, SizeBeyond4GiBReportsZero) {
+    const auto p = get_test_path("size_4g.bin");
+    constexpr uint64_t big = (uint64_t{1} << 32) + 4096;
+    {
+        file f(p, false, file_access::READ_WRITE, file_shared::SHARE_READ_WRITE, file_creation::CREATE_FORCE);
+        ASSERT_TRUE(f.is_opened());
+        EXPECT_TRUE(f.truncate(static_cast<file::difference_type>(big)));
+        EXPECT_EQ(f.size64(), big);
+        EXPECT_EQ(f.size(), 0u);
+        file::size_type out = 0;
+        EXPECT_FALSE(f.size(out));
+    }
+}
+#else
+TEST_F(FileTest, ScanFollowsSymlinkCycleWithoutInfiniteRecursion) {
+    const auto a = get_test_path("cycle_a");
+    const auto b = get_test_path("cycle_b");
+    filesystem::create_directories(a);
+    filesystem::create_directories(b);
+    filesystem::create_and_write(a / path("f.txt"), "x");
+    EXPECT_EQ(::symlink("../cycle_b", (a / path("to_b")).data()), 0);
+    EXPECT_EQ(::symlink("../cycle_a", (b / path("to_a")).data()), 0);
+
+    path_tree::scan_options opts;
+    opts.follow_symlinks = true;
+    const path_tree tree = path_tree::scan(test_dir_, opts);
+    EXPECT_GT(tree.size(), 0u);
+    EXPECT_LT(tree.size(), 100u);
+}
+#endif
 
 class FilesystemTest : public ::testing::Test {
 protected:
@@ -1207,6 +1384,90 @@ TEST_F(FilesystemTest, SizeDirectory) {
     filesystem::create_directories(p);
     auto sz = filesystem::size(p);
     EXPECT_EQ(sz, byte_size(0));
+}
+
+TEST_F(FilesystemTest, MoveWithoutOverwriteKeepsExistingTarget) {
+    const auto src = get_test_path("mv_src.txt");
+    const auto dst = get_test_path("mv_dst.txt");
+    filesystem::create_and_write(src, "src-data");
+    filesystem::create_and_write(dst, "dst-data");
+
+    EXPECT_FALSE(filesystem::move(src, dst, false));
+    EXPECT_TRUE(src.exists());
+    EXPECT_TRUE(dst.exists());
+    file r(dst);
+    EXPECT_EQ(r.read(), "dst-data");
+}
+
+TEST_F(FilesystemTest, MoveOverwriteReplacesFile) {
+    const auto src = get_test_path("mv_src2.txt");
+    const auto dst = get_test_path("mv_dst2.txt");
+    filesystem::create_and_write(src, "src-data");
+    filesystem::create_and_write(dst, "dst-data");
+
+    EXPECT_TRUE(filesystem::move(src, dst, true));
+    EXPECT_FALSE(src.exists());
+    file r(dst);
+    EXPECT_EQ(r.read(), "src-data");
+}
+
+TEST_F(FilesystemTest, MoveDirectoryOntoNonEmptyDirectoryWithOverwrite) {
+    const auto src_dir = get_test_path("mv_srcdir");
+    const auto dst_dir = get_test_path("mv_dstdir");
+    filesystem::create_directories(src_dir / path("inner"));
+    filesystem::create_and_write(src_dir / path("inner") / path("a.txt"), "A");
+    filesystem::create_directories(dst_dir);
+    filesystem::create_and_write(dst_dir / path("old.txt"), "OLD");
+
+    EXPECT_TRUE(filesystem::move(src_dir, dst_dir, true));
+    EXPECT_FALSE(src_dir.exists());
+    EXPECT_TRUE(dst_dir.exists());
+    EXPECT_FALSE((dst_dir / path("old.txt")).exists());
+    file r(dst_dir / path("inner") / path("a.txt"));
+    EXPECT_EQ(r.read(), "A");
+}
+
+TEST_F(FilesystemTest, MoveDirectoryWithoutOverwriteFailsWhenTargetExists) {
+    const auto src_dir = get_test_path("mv_srcdir2");
+    const auto dst_dir = get_test_path("mv_dstdir2");
+    filesystem::create_directories(src_dir);
+    filesystem::create_and_write(src_dir / path("a.txt"), "A");
+    filesystem::create_directories(dst_dir);
+    filesystem::create_and_write(dst_dir / path("old.txt"), "OLD");
+
+    EXPECT_FALSE(filesystem::move(src_dir, dst_dir, false));
+    EXPECT_TRUE(src_dir.exists());
+    EXPECT_TRUE((src_dir / path("a.txt")).exists());
+    EXPECT_TRUE(dst_dir.exists());
+    file r(dst_dir / path("old.txt"));
+    EXPECT_EQ(r.read(), "OLD");
+}
+
+TEST_F(FilesystemTest, CopyFileOntoItselfIsNoop) {
+    const auto src = get_test_path("self_copy.txt");
+    filesystem::create_and_write(src, "self-data");
+
+    EXPECT_FALSE(filesystem::copy(src, src, false));
+    EXPECT_TRUE(filesystem::copy(src, src, true));
+    file r(src);
+    EXPECT_EQ(r.read(), "self-data");
+}
+
+TEST_F(FilesystemTest, CopyDirectoryIntoOwnSubtreeRejected) {
+    const auto src = get_test_path("cd_self");
+    const auto child = src / path("a.txt");
+    filesystem::create_directories(src);
+    filesystem::create_and_write(child, "A");
+
+    EXPECT_FALSE(filesystem::copy_directory(src, src, true));
+    const auto inside = src / path("nested_dest");
+    EXPECT_FALSE(filesystem::copy_directory(src, inside, true));
+    EXPECT_FALSE(inside.exists());
+
+    const auto out = get_test_path("cd_out");
+    EXPECT_TRUE(filesystem::copy_directory(src, out, false));
+    file r(out / path("a.txt"));
+    EXPECT_EQ(r.read(), "A");
 }
 
 class PathTest : public ::testing::Test {
@@ -3227,6 +3488,34 @@ TEST_F(TempFileTest, TempFileInSubdirectory) {
     EXPECT_FALSE(existing.exists());
 }
 
+TEST_F(TempFileTest, NoOrphanedTempFilesLeftInTempDirectory) {
+    const string_view prefix = "nf_leak_probe_";
+    const path temp_dir = path::temp_directory_path();
+    for (const auto& f: temp_dir.child_files()) {
+        if (f.filename().find(prefix) != string_view::npos) {
+            filesystem::remove(f);
+        }
+    }
+
+    path last;
+    for (int i = 0; i < 3; ++i) {
+        {
+            temp_file tf(prefix, ".tmp");
+            last = tf.file().file_path();
+            EXPECT_TRUE(last.exists());
+        }
+        EXPECT_FALSE(last.exists());
+    }
+
+    size_t leftovers = 0;
+    for (const auto& f: temp_dir.child_files()) {
+        if (f.filename().find(prefix) != string_view::npos) {
+            ++leftovers;
+        }
+    }
+    EXPECT_EQ(leftovers, 0u);
+}
+
 class FileDiffTest : public ::testing::Test {
 protected:
     void SetUp() override {
@@ -5226,6 +5515,163 @@ TEST_F(FileAsyncTest, ReadBufferPreallocation) {
     EXPECT_EQ(buffer.substr(0, 21), "preallocation test da");
 }
 
+TEST_F(FileAsyncTest, PreCancelledSlotReadReportsAborted) {
+    const auto p = get_path("precancel.bin");
+    filesystem::create_and_write(p, string(256, 'P'));
+
+    stop_source ss;
+    ss.request_stop();
+    cancellation_slot slot(ss.get_token());
+
+    file f(p, false, file_access::READ, file_shared::SHARE_READ);
+    file_async async(f.native_handle());
+
+    string buffer(256, '\0');
+    error_code ec;
+    size_t bytes = 999;
+    bool called = false;
+    async.async_read(ctx_, buffer, 256, slot, [&](error_code e, size_t n) {
+        ec = e;
+        bytes = n;
+        called = true;
+    });
+    EXPECT_TRUE(called);
+    EXPECT_EQ(ec.value(), static_cast<int>(errc::operation_canceled));
+    EXPECT_EQ(bytes, 0u);
+    EXPECT_EQ(buffer.size(), 0u);
+}
+
+TEST_F(FileAsyncTest, CancelInFlightOverlappedReadCompletesExactlyOnce) {
+    const auto p = get_path("cancel_inflight.bin");
+    constexpr file_async::size_type read_size = 1u << 22;
+    filesystem::create_and_write(p, string(static_cast<size_t>(read_size), 'C'));
+
+    file f(p, false, file_access::READ, file_shared::SHARE_READ, file_creation::OPEN_EXIST, file_attri::OVERLAPPED);
+    file_async async(f.native_handle());
+
+    string buffer;
+    stop_source ss;
+    cancellation_slot slot(ss.get_token());
+    atomic<int> calls{0};
+    error_code ec;
+    async.async_read(ctx_, buffer, read_size, slot, [&](error_code e, size_t n) {
+        ec = e;
+        calls.fetch_add(1);
+    });
+    ss.request_stop();
+    for (int i = 0; i < 60 && calls.load() == 0; ++i) {
+        ctx_.run_one(200);
+    }
+    EXPECT_EQ(calls.load(), 1);
+    if (ec.value() == static_cast<int>(errc::operation_canceled)) {
+        EXPECT_EQ(buffer.size(), 0u);
+    } else {
+        EXPECT_FALSE(ec);
+        EXPECT_EQ(buffer.size(), static_cast<size_t>(read_size));
+    }
+}
+
+TEST_F(FileAsyncTest, ConcurrentMixedReadsAndWritesOnSameHandle) {
+    const auto p = get_path("conc_mixed.bin");
+    const string content(2048, 'M');
+    filesystem::create_and_write(p, content);
+
+    file f(p, false, file_access::READ_WRITE, file_shared::SHARE_READ_WRITE, file_creation::OPEN_EXIST);
+    file_async async(f.native_handle());
+
+    constexpr int kOps = 8;
+    atomic<int> pending{kOps};
+    error_code ecs[kOps];
+    string bufs[4];
+    for (int i = 0; i < 4; ++i) {
+        const auto off = static_cast<file_async::difference_type>(i * 256);
+        async.async_read(ctx_, bufs[i], 256, off, [&, i](error_code e, size_t) {
+            ecs[i] = e;
+            pending.fetch_sub(1);
+        });
+    }
+    for (int i = 0; i < 4; ++i) {
+        const auto off = static_cast<file_async::difference_type>(1024 + i * 64);
+        async.async_write(ctx_, string(64, static_cast<char>('A' + i)), 64, off, [&, i](error_code e, size_t) {
+            ecs[4 + i] = e;
+            pending.fetch_sub(1);
+        });
+    }
+    for (int i = 0; i < 60 && pending.load() > 0; ++i) {
+        ctx_.run_one(200);
+    }
+    EXPECT_EQ(pending.load(), 0);
+    for (int i = 0; i < kOps; ++i) {
+        EXPECT_FALSE(ecs[i]);
+    }
+    for (int i = 0; i < 4; ++i) {
+        EXPECT_EQ(bufs[i], content.substr(static_cast<size_t>(i * 256), 256));
+    }
+    f.close();
+
+    file check(p, false, file_access::READ, file_shared::SHARE_READ);
+    const string after = check.read();
+    for (int i = 0; i < 4; ++i) {
+        EXPECT_EQ(after.substr(1024 + i * 64, 64), string(64, static_cast<char>('A' + i)));
+    }
+}
+
+TEST_F(FileAsyncTest, OverlappedHandleWriteThenReadBack) {
+    const auto p = get_path("overlapped_rw.bin");
+    filesystem::create_and_write(p, "");
+
+    file f(p, false, file_access::READ_WRITE, file_shared::SHARE_READ_WRITE, file_creation::OPEN_FORCE,
+           file_attri::OVERLAPPED);
+    ASSERT_TRUE(f.is_opened());
+    file_async async(f.native_handle());
+
+    atomic<int> wcalls{0};
+    error_code wec;
+    async.async_write(ctx_, string("overlapped-write"), 16, 0, [&](error_code e, size_t) {
+        wec = e;
+        wcalls.fetch_add(1);
+    });
+    for (int i = 0; i < 60 && wcalls.load() == 0; ++i) {
+        ctx_.run_one(200);
+    }
+    EXPECT_EQ(wcalls.load(), 1);
+    EXPECT_FALSE(wec);
+
+    atomic<int> rcalls{0};
+    error_code rec;
+    string buf;
+    async.async_read(ctx_, buf, 16, 0, [&](error_code e, size_t) {
+        rec = e;
+        rcalls.fetch_add(1);
+    });
+    for (int i = 0; i < 60 && rcalls.load() == 0; ++i) {
+        ctx_.run_one(200);
+    }
+    EXPECT_EQ(rcalls.load(), 1);
+    EXPECT_FALSE(rec);
+    EXPECT_EQ(buf, "overlapped-write");
+}
+
+TEST_F(FileAsyncTest, RunOneDoesNotIdleAfterCompletion) {
+    const auto p = get_path("runone_idle.bin");
+    filesystem::create_and_write(p, "inline completion");
+
+    file f(p, false, file_access::READ, file_shared::SHARE_READ);
+    file_async async(f.native_handle());
+
+    string buffer;
+    latch done(1);
+    async.async_read(ctx_, buffer, 5, [&](error_code, size_t) { done.count_down(); });
+
+    const auto start = steady_clock::now();
+    ctx_.run_one(1000);
+    const auto elapsed = time_cast<milliseconds>(steady_clock::now() - start);
+    done.wait();
+
+    EXPECT_EQ(buffer, "inlin");
+    EXPECT_LT(elapsed.count(), 500);
+}
+
 class FileWatcherTest : public ::testing::Test {
 protected:
     void SetUp() override {
@@ -5403,6 +5849,7 @@ TEST_F(FileWatcherTest, FileModifiedEvent) {
     }
 }
 
+#ifdef NEFORCE_PLATFORM_LINUX
 TEST_F(FileWatcherTest, FileAccessedEvent) {
     auto access_file = get_path("to_access.txt");
     filesystem::create_and_write(access_file, "access me");
@@ -5441,6 +5888,7 @@ TEST_F(FileWatcherTest, FileAccessedEvent) {
 
     watcher.stop();
 }
+#endif
 
 TEST_F(FileWatcherTest, AllEvents) {
     file_watcher watcher(test_dir_, false);

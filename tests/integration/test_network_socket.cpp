@@ -1,33 +1,24 @@
+#include <NeForce/core/async/io_context.hpp>
+#include <NeForce/core/time/clocks.hpp>
 #include <NeForce/core/utility/packages.hpp>
 #include <NeForce/network/icmp_socket.hpp>
 #include <NeForce/network/smtp_socket.hpp>
+#include <NeForce/network/tcp/tcp_acceptor.hpp>
 #include <NeForce/network/udp_socket.hpp>
+#include "utils.hpp"
 #include <gtest/gtest.h>
 #ifdef NEFORCE_PLATFORM_LINUX
-#    include <unistd.h>
+#    include <NeForce/core/system/process.hpp>
 #endif
 using namespace neforce;
 
 namespace {
     bool has_root() {
 #ifdef NEFORCE_PLATFORM_LINUX
-        return ::geteuid() == 0;
+        return process::current_privilege_level() == privilege_level::privileged;
 #else
         return true;
 #endif
-    }
-
-    bool network_available() {
-        udp_socket sock;
-        if (!sock.try_open(socket_base::family::INET4, socket_base::type::DGRAM)) {
-            return false;
-        }
-        sock.set_reuse_address(true);
-        auto addr = ip_address::any();
-        sock.bind(addr);
-        auto local = sock.local_endpoint();
-        sock.close();
-        return local.has_value();
     }
 } // namespace
 
@@ -146,15 +137,15 @@ TEST_F(UdpSocketIntegration, Ipv6LoopbackSendReceive) {
     }
 
     udp_socket server;
-    server.open(socket_base::family::INET6);
+    server.open(ip_family::INET6);
     server.set_reuse_address(true);
-    auto addr = ip_address::loopback(ports(0u), socket_base::family::INET6);
+    auto addr = ip_address::loopback(ports(0u), ip_family::INET6);
     server.bind(addr);
     auto bound = server.local_endpoint();
     ASSERT_TRUE(bound.has_value());
 
     udp_socket client;
-    client.open(socket_base::family::INET6);
+    client.open(ip_family::INET6);
 
     const char* msg = "ipv6 udp test";
     ssize_t sent = client.send_to(memory_view<const char>(msg, 14), *bound);
@@ -304,7 +295,7 @@ TEST_F(SocketBaseIntegration, OpenTcpAndBindToAnyPort) {
     }
 
     socket_base sock;
-    sock.open(socket_base::family::INET4);
+    sock.open(ip_family::INET4);
     sock.set_reuse_address(true);
 
     auto addr = ip_address::any();
@@ -323,7 +314,7 @@ TEST_F(SocketBaseIntegration, GetOptionOnOpenSocket) {
     }
 
     socket_base sock;
-    sock.open(socket_base::family::INET4);
+    sock.open(ip_family::INET4);
     sock.set_reuse_address(true);
 
     int val = 0;
@@ -338,7 +329,7 @@ TEST_F(SocketBaseIntegration, NonblockingModeToggle) {
     }
 
     socket_base sock;
-    sock.open(socket_base::family::INET4);
+    sock.open(ip_family::INET4);
 
     EXPECT_TRUE(sock.set_nonblocking(true));
     EXPECT_TRUE(sock.set_nonblocking(false));
@@ -351,7 +342,7 @@ TEST_F(SocketBaseIntegration, SoReusePort) {
     }
 
     socket_base sock;
-    sock.open(socket_base::family::INET4);
+    sock.open(ip_family::INET4);
     sock.set_reuse_port(true);
     sock.close();
 }
@@ -368,7 +359,7 @@ TEST_F(IpSocketIntegration, ConnectToLoopbackWithTcp) {
     }
 
     socket_base server;
-    server.open(socket_base::family::INET4);
+    server.open(ip_family::INET4);
     server.set_reuse_address(true);
     auto addr = ip_address::loopback();
     server.bind(addr);
@@ -383,4 +374,187 @@ TEST_F(IpSocketIntegration, ConnectToLoopbackWithTcp) {
 
     server.close();
     client.close();
+}
+
+class AsyncIcmpIntegration : public ::testing::Test {
+protected:
+    void SetUp() override {}
+    void TearDown() override {}
+};
+
+TEST_F(AsyncIcmpIntegration, AsyncPingLoopbackSucceeds) {
+    if (!has_root()) {
+        GTEST_SKIP() << "Root privileges required for raw ICMP socket";
+    }
+
+    io_context ioc;
+    icmp_socket sock;
+    ASSERT_NO_THROW(sock.open());
+
+    auto dest = ip_address::loopback();
+    bool done = false;
+    error_code ec;
+    icmp_socket::ping_result out;
+    sock.async_ping(ioc, dest, milliseconds(1000), 0, nullptr, 0, [&](error_code e, icmp_socket::ping_result r) {
+        done = true;
+        ec = e;
+        out = r;
+    });
+    auto deadline = steady_clock::now() + seconds(3);
+    while (!done && steady_clock::now() < deadline) {
+        ioc.run_one(100);
+    }
+    EXPECT_TRUE(done);
+    ASSERT_FALSE(ec);
+    EXPECT_TRUE(out.success);
+    EXPECT_GE(out.rtt.count(), 0);
+}
+
+TEST_F(AsyncIcmpIntegration, AsyncPingTimeout) {
+    if (!has_root()) {
+        GTEST_SKIP() << "Root privileges required for raw ICMP socket";
+    }
+
+    io_context ioc;
+    icmp_socket sock;
+    ASSERT_NO_THROW(sock.open());
+
+    auto dest = ip_address::parse("192.0.2.1", ports::UNDEF);
+    ASSERT_TRUE(dest.has_value());
+    bool done = false;
+    icmp_socket::ping_result out;
+    sock.async_ping(ioc, *dest, milliseconds(200), 0, nullptr, 0, [&](error_code e, icmp_socket::ping_result r) {
+        done = true;
+        out = r;
+    });
+    auto deadline = steady_clock::now() + seconds(3);
+    while (!done && steady_clock::now() < deadline) {
+        ioc.run_one(100);
+    }
+    EXPECT_TRUE(done);
+    EXPECT_FALSE(out.success);
+}
+
+class SmtpAsyncConnectIntegration : public ::testing::Test {
+protected:
+    void SetUp() override {}
+    void TearDown() override {}
+};
+
+namespace {
+    string smtp_read_line(tcp_socket& sock) {
+        string line;
+        char ch = 0;
+        while (true) {
+            const ssize_t n = sock.receive({&ch, 1});
+            if (n <= 0) {
+                break;
+            }
+            if (ch == '\n') {
+                break;
+            }
+            if (ch != '\r') {
+                line += ch;
+            }
+        }
+        return line;
+    }
+
+    void smtp_send(tcp_socket& sock, const string& data) {
+        sock.send_all(memory_view<const char>(data.data(), data.size()));
+    }
+
+    // Minimal SMTP responder: 220 greeting, EHLO/HELO/QUIT support.
+    void run_fake_smtp_server(tcp_acceptor& acceptor) {
+        auto client = acceptor.accept();
+        smtp_send(client, "220 fake.local ESMTP ready\r\n");
+        while (true) {
+            const string line = smtp_read_line(client);
+            if (line.empty()) {
+                break;
+            }
+            if (line.starts_with("EHLO")) {
+                smtp_send(client, "250-fake.local\r\n250 8BITMIME\r\n");
+            } else if (line.starts_with("HELO")) {
+                smtp_send(client, "250 fake.local\r\n");
+            } else if (line.starts_with("QUIT")) {
+                smtp_send(client, "221 Bye\r\n");
+                break;
+            }
+        }
+        client.close();
+    }
+} // namespace
+
+TEST_F(SmtpAsyncConnectIntegration, AsyncConnectCompletesFullHandshake) {
+    if (!network_available()) {
+        GTEST_SKIP() << "No network connectivity";
+    }
+
+    tcp_acceptor acceptor;
+    acceptor.open(ip_address::loopback());
+    auto bound = acceptor.local_endpoint();
+    ASSERT_TRUE(bound.has_value());
+
+    thread server_thread([&]() { run_fake_smtp_server(acceptor); });
+
+    io_context ioc;
+    smtp_socket smtp;
+    bool done = false;
+    error_code ec;
+    smtp.async_connect(ioc, *bound, "local.test", smtp_socket::tls_mode::none, nullptr, "", [&](error_code e) {
+        done = true;
+        ec = e;
+    });
+    auto deadline = steady_clock::now() + seconds(5);
+    while (!done && steady_clock::now() < deadline) {
+        ioc.run_one(100);
+    }
+    EXPECT_TRUE(done);
+    ASSERT_FALSE(ec) << ec.message().data();
+    EXPECT_TRUE(smtp.is_connected());
+    EXPECT_FALSE(smtp.is_tls_active());
+
+    smtp.set_nonblocking(false);
+    try {
+        smtp.disconnect();
+    } catch (const exception&) {
+        // The fake server may have closed the connection right after the async
+        // handshake finished; the QUIT exchange is best-effort here.
+    }
+    smtp.close();
+    EXPECT_FALSE(smtp.is_connected());
+
+    server_thread.join();
+    acceptor.close();
+}
+
+TEST_F(SmtpAsyncConnectIntegration, AsyncConnectStarttlsModeRequiresContext) {
+    if (!network_available()) {
+        GTEST_SKIP() << "No network connectivity";
+    }
+
+    tcp_acceptor acceptor;
+    acceptor.open(ip_address::loopback());
+    auto bound = acceptor.local_endpoint();
+    ASSERT_TRUE(bound.has_value());
+
+    io_context ioc;
+    smtp_socket smtp;
+    bool done = false;
+    error_code ec;
+    // ssl_ctx is nullptr for tls_mode::implicit: op must fail fast before any network I/O.
+    smtp.async_connect(ioc, *bound, "local.test", smtp_socket::tls_mode::implicit, nullptr, "", [&](error_code e) {
+        done = true;
+        ec = e;
+    });
+    auto deadline = steady_clock::now() + seconds(3);
+    while (!done && steady_clock::now() < deadline) {
+        ioc.run_one(100);
+    }
+    EXPECT_TRUE(done);
+    EXPECT_TRUE(ec);
+    EXPECT_FALSE(smtp.is_connected());
+
+    acceptor.close();
 }

@@ -50,8 +50,8 @@ public:
 #endif
 
 private:
-    void* ssl_;         ///< SSL对象
-    string last_error_; ///< 最后错误信息
+    void* ssl_{nullptr}; ///< SSL对象
+    string last_error_;  ///< 最后错误信息
 
     void handle_ssl_error(int ret, const char* operation);
 
@@ -197,7 +197,7 @@ public:
      *
      * 获取TLS握手时对等方提供的证书。
      */
-    NEFORCE_NODISCARD x509_certificate get_peer_certificate() const;
+    NEFORCE_NODISCARD x509_certificate peer_certificate() const;
 
     /**
      * @brief 验证对等方证书
@@ -214,13 +214,13 @@ public:
      *
      * 返回当前TLS连接使用的密码套件名称。
      */
-    NEFORCE_NODISCARD string get_cipher_name() const;
+    NEFORCE_NODISCARD string cipher_name() const;
 
     /**
      * @brief 获取TLS协议版本
      * @return 协议版本字符串（如"TLSv1.2"）
      */
-    NEFORCE_NODISCARD string get_version() const;
+    NEFORCE_NODISCARD string version() const;
 
     /**
      * @brief 获取ALPN协商的协议名称
@@ -229,7 +229,7 @@ public:
      * 返回TLS握手期间通过ALPN（Application-Layer Protocol Negotiation）
      * 协商确定的应用层协议。需要在TLS握手（accept/connect）完成后调用。
      */
-    NEFORCE_NODISCARD string get_alpn_negotiated() const;
+    NEFORCE_NODISCARD string alpn_negotiated() const;
 
     /**
      * @brief 获取最后错误信息

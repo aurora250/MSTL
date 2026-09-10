@@ -104,7 +104,7 @@ public:
     NEFORCE_NODISCARD tcp_socket accept();
 
     /**
-     * @brief 接受客户端连接（非阻塞模式）
+     * @brief 非阻塞接受客户端连接
      * @return 有新连接返回socket对象，无连接返回none
      * @throws socket_exception 发生错误时抛出
      *
@@ -125,7 +125,7 @@ public:
     void async_accept(io_context& ctx, function<void(error_code, tcp_socket)> handler);
 
     /**
-     * @brief 异步接受连接（带取消槽）
+     * @brief 带取消槽的异步接受连接
      * @param ctx 异步 I/O 执行上下文
      * @param slot 取消槽
      * @param handler 完成回调 void(error_code, tcp_socket)
@@ -133,7 +133,7 @@ public:
     void async_accept(io_context& ctx, cancellation_slot& slot, function<void(error_code, tcp_socket)> handler);
 
     /**
-     * @brief 异步接受—任意可调用对象
+     * @brief 异步接受任意可调用对象
      * @tparam Token 可调用对象类型，需满足 void(error_code, tcp_socket) 签名
      * @param ctx 异步 I/O 执行上下文
      * @param token 完成令牌
@@ -144,7 +144,7 @@ public:
     }
 
     /**
-     * @brief 异步接受—use_future
+     * @brief future 异步接受
      * @param ctx 异步 I/O 执行上下文
      * @return 已连接的 socket
      */
@@ -155,16 +155,16 @@ public:
     }
 
     /**
-     * @brief 异步接受—detached（即发即忘）
+     * @brief detached 异步接受
      * @param ctx 异步 I/O 执行上下文
      */
-    void async_accept(io_context& ctx, detached_t /*unused*/) {
+    virtual void async_accept(io_context& ctx, detached_t /*unused*/) {
         async_accept(ctx, function<void(error_code, tcp_socket)>([](error_code, tcp_socket) {}));
     }
 
 #ifdef NEFORCE_STANDARD_20
     /**
-     * @brief 异步接受—use_awaitable
+     * @brief awaitable 异步接受
      * @param ctx 异步 I/O 执行上下文
      * @return 协程等待结果
      */

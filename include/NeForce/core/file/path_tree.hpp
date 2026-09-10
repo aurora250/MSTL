@@ -192,7 +192,8 @@ public:
 private:
     node::ptr root_; ///< 根节点
 
-    static void scan_impl(const node::ptr& parent, const scan_options& options, size_t current_depth);
+    static void scan_impl(const node::ptr& parent, const scan_options& options, size_t current_depth,
+                          vector<pair<uint64_t, uint64_t>>* chain = nullptr);
     static void traverse_dfs_impl(const node::ptr& current, const visitor& v, bool& stopped);
     static void collect_impl(const node::ptr& current, const filter& f, vector<node::ptr>& result);
     static node::ptr clone_node(const node::ptr& src, const node::ptr& new_parent, size_t depth);

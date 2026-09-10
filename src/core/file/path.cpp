@@ -1,6 +1,7 @@
 #include <NeForce/core/container/vector.hpp>
 #include <NeForce/core/file/path.hpp>
 #include <NeForce/core/file/path_tree.hpp>
+#include <NeForce/core/string/utf.hpp>
 #include <NeForce/core/system/environment.hpp>
 #ifdef NEFORCE_PLATFORM_WINDOWS
 #    include <NeForce/core/config/windef.hpp>
@@ -215,11 +216,13 @@ path path::absolute(const path& base) const {
     }
 
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    char buffer[MAX_PATH];
-    if (::GetFullPathNameA(path_.data(), MAX_PATH, buffer, nullptr) == 0) {
+    wchar_t buffer[MAX_PATH];
+    const wstring wpath = character::to_wstring(path_.view());
+    const size_t len = ::GetFullPathNameW(wpath.data(), MAX_PATH, buffer, nullptr);
+    if (len == 0) {
         return *this;
     }
-    return path(string(buffer));
+    return path(wcharacter::to_string({buffer, len}));
 
 #else
     char buf[PATH_MAX];
@@ -292,8 +295,8 @@ path path::temp_directory_path() {
 
 path path::current_executable_path() {
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    char buf[MAX_PATH];
-    ::DWORD len = ::GetModuleFileNameA(nullptr, buf, MAX_PATH);
+    wchar_t buf[MAX_PATH];
+    size_t len = ::GetModuleFileNameW(nullptr, buf, MAX_PATH);
     if (len == 0) {
         return {};
     }
@@ -305,7 +308,7 @@ path path::current_executable_path() {
     }
     buf[len] = '\0';
 #endif
-    return path{string(buf, len)};
+    return path{wcharacter::to_string({buf, len})};
 }
 
 path& path::operator/=(const path& other) {
@@ -426,7 +429,8 @@ bool path::exists() const noexcept { return path::exists(path_); }
 
 bool path::exists(const string& path) noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    return ::GetFileAttributesA(path.data()) != INVALID_FILE_ATTRIBUTES;
+    const wstring wpath = character::to_wstring(path.view());
+    return ::GetFileAttributesW(wpath.data()) != INVALID_FILE_ATTRIBUTES;
 #else
     struct ::stat64 st{};
     return ::stat64(path.data(), &st) != -1;
@@ -437,7 +441,8 @@ bool path::is_directory() const noexcept { return path::is_directory(path_); }
 
 bool path::is_directory(const string& path) noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    const ::DWORD attrib = ::GetFileAttributesA(path.data());
+    const wstring wpath = character::to_wstring(path.view());
+    const ::DWORD attrib = ::GetFileAttributesW(wpath.data());
     return attrib != INVALID_FILE_ATTRIBUTES && (attrib & FILE_ATTRIBUTE_DIRECTORY) != 0U;
 #else
     struct ::stat64 st{};
@@ -452,7 +457,8 @@ bool path::is_file() const noexcept { return path::is_file(path_); }
 
 bool path::is_file(const string& path) noexcept {
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    const ::DWORD attrib = ::GetFileAttributesA(path.data());
+    const wstring wpath = character::to_wstring(path.view());
+    const ::DWORD attrib = ::GetFileAttributesW(wpath.data());
     return attrib != INVALID_FILE_ATTRIBUTES && (attrib & FILE_ATTRIBUTE_DIRECTORY) == 0U;
 #else
     struct ::stat64 st{};

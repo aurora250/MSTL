@@ -54,8 +54,8 @@ socket_base& socket_base::operator=(socket_base&& other) noexcept {
     return *this;
 }
 
-void socket_base::open(const family f, const type t, const protocol p) {
-    if (f != family::INET4 && f != family::INET6) {
+void socket_base::open(const ip_family f, const type t, const protocol p) {
+    if (f != ip_family::INET4 && f != ip_family::INET6) {
         NEFORCE_THROW_EXCEPTION(value_exception("Invalid address family for socket"));
     }
 
@@ -84,8 +84,8 @@ bool socket_base::close() noexcept {
     return success;
 }
 
-bool socket_base::try_open(const family f, const type t, const protocol p) noexcept {
-    if (f != family::INET4 && f != family::INET6) {
+bool socket_base::try_open(const ip_family f, const type t, const protocol p) noexcept {
+    if (f != ip_family::INET4 && f != ip_family::INET6) {
         return false;
     }
 

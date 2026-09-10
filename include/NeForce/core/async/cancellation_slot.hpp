@@ -65,20 +65,18 @@ public:
      * @brief 注册取消回调
      * @tparam Handler 回调类型
      * @param handler 取消时执行的回调
-     * @return 是否注册成功（已取消则返回 false 且不注册）
-     *
-     * @note 若注册时已取消，handler 会被立即调用
+     * @return 是否注册成功
      */
     template <typename Handler>
     bool assign(Handler&& handler) {
         if (is_cancelled()) {
-            forward<Handler>(handler)();
+            _NEFORCE forward<Handler>(handler)();
             return false;
         }
         if (!token_.stop_possible()) {
             return false;
         }
-        callback_ = make_shared<stop_callback<Handler>>(token_, forward<Handler>(handler));
+        callback_ = _NEFORCE make_shared<stop_callback<Handler>>(token_, _NEFORCE forward<Handler>(handler));
         return true;
     }
 

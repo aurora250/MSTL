@@ -1,16 +1,20 @@
 # CHANGELOG
 
-## [1.0.1] - 2026-09-03
+## [1.0.1] - 2026-09-10
 
 ### 🚀 New Features
 
-- 添加 launder 编译器优化阻止屏障函数
+- 添加 `launder` 编译器优化阻止屏障函数
+- 添加 `likely` / `unlikely`
+- 添加 CMake 多架构 SIMD 检测配置
 - 添加 PCLMULQDQ 指令集检测宏 `NEFORCE_SIMD_PCLMUL`
 
 ### 🔧 Improvements
 
-- basic_string 单字符追加内联化，绕过 traits 层 SIMD 调度，性能提升 2-4 倍
-- basic_string 拷贝构造直连 `memory_copy` 与内联终止符写入
+- `tcp_client::connect()` 的域名解析改为受 `connect_timeout_` 总预算约束（A/AAAA 查询共享剩余时间切片并禁用 UDP 重试），避免解析失败时按 dns 客户端完整超时预算阻塞数十秒
+- `dns_client` 新增 `timeout()` / `max_udp_retries()` 读取接口，便于调用方保存与恢复查询预算配置
+- `basic_string` 单字符追加内联化，绕过 traits 层 SIMD 调度，性能提升 2-4 倍
+- `basic_string` 拷贝构造直连 `memory_copy` 与内联终止符写入
 - `memory_find` / `memory_set` 添加 AVX2 256-bit 宽寄存器路径，单字符查找与填充构造性能大幅提升
 - `memory_copy` / `memory_set` 对小于 16 字节的数据直接内联标量操作，跳过 SIMD 层级判断
 - AES-256 GCM 模式 GHASH 采用 PCLMULQDQ 无进位乘法替代逐位乘法
@@ -24,17 +28,40 @@
 - TOML 解析器空白/注释跳过、四种字符串扫描 SIMD 化
 - YAML 解析器空白/缩进/注释跳过、双引号/单引号字符串、纯量/键名/块标量行扫描 SIMD 化
 - `uuid::to_string()` 以单次预分配与十六进制表查找替代 format 引擎调用
-- dns_client 添加 UDP 超时自动重试：换新随机查询 ID 重发，可通过 set_max_udp_retries() 配置重试次数，总超时预算为单轮超时 ×（重试次数 + 1）
-- dns_client 添加 0x20 随机大小写编码与响应校验（set_randomize_case()，防 DNS 欺骗加固）
-- dns_client 添加共享 UDP socket 源端口定期轮换（缩小 DNS 欺骗攻击窗口）
-- dns_client 缓存遵循记录自身 TTL（effective_cache_ttl()，上限可配，否定缓存遵循 RFC 2308）
-- dns_client TCP 截断回退与强制 TCP 模式改为异步状态机（基于 tcp_socket::async_connect / async_read / async_write），不再阻塞事件循环线程
-- dns_client 缓存命中回调改为经 io_context 异步投递，与 Asio 完成令牌惯例一致
-- dns_client::build_query / parse_response 添加可选 0x20 大小写模式参数（源码兼容）
+- `dns_client` 添加 UDP 超时自动重试：换新随机查询 ID 重发，可通过 set_max_udp_retries() 配置重试次数，总超时预算为单轮超时 ×（重试次数 + 1）
+- `dns_client` 添加 0x20 随机大小写编码与响应校验
+- `dns_client` 添加共享 UDP socket 源端口定期轮换，缩小 DNS 欺骗攻击窗口
+- `dns_client` 缓存遵循记录自身 TTL
+- `dns_client` TCP 截断回退与强制 TCP 模式改为异步状态机，不再阻塞事件循环线程
+- `dns_client` 缓存命中回调改为经 io_context 异步投递，与 Asio 完成令牌惯例一致
+- `dns_client` 内 `build_query` / `parse_response` 添加可选 0x20 大小写模式参数
 - `lock_free_queue` 新增显式生产者/消费者令牌、批量入队/出队、无分配接口、内存统计 get_mem_stats，BSD/Boost 许可证署名
+- `ssl_socket` 新增 `prepare_server_ssl()` / `prepare_client_ssl()` / `async_handshake()`，
+- `ssl_socket` 的 `init_server_ssl()` / `init_client_ssl()` 重构为基于 prepare + 阻塞握手
+- `ssl_acceptor` 新增 `async_accept()` 异步接受 TCP 连接并完成 TLS 握手后交付 `ssl_socket`
+- `tcp_client` / `ssl_client` 新增 `async_connect()` / `async_read()` / `async_write()`
+- `ssl_client` 异步连接建立后自动执行异步 TLS 握手
+- `smtp_socket` 新增 `async_connect()` 异步完成 TCP 连接、可选 TLS 握手、220 问候读取与 EHLO 协商
+- `icmp_socket` 新增 `async_ping()`，基于定时器轮询驱动，不依赖平台 fd 事件注册
+- `http_client::request_async()` 新增 use_awaitable 重载
+- `io_context::run_one(timeout)` 无待处理工作时立即返回 0 而不再空等整个超时，有工作则等待到超时或某个 handler 就绪，被唤醒但暂无可执行 handler 时按剩余预算重试
+- `file` 读写缓冲改为按需分配，`open()` 不再预分配两块缓冲，并修正缓冲下限，小文件不再把缓冲压缩到文件大小、空文件不再降到 2KB，追加型文件后续增长也能获得 32KB/64KB 档位
+- `file::read()` 增加大请求直通，读缓冲已耗尽且请求大于 4 倍缓冲时直接系统调用读取，跳过逐块缓冲拷贝，与写侧直通策略对称
+- `file` 的 `mapper()` / `locker()` / `info()` / `async()` 改为按值返回绑定当前句柄的子对象，移除内部子对象与其生命周期管理
+- `filesystem::copy()` Linux 侧改用 `copy_file_range(2)` 内核态复制，不支持时回退 256KB 缓冲读写循环，大文件复制的系统调用次数大幅下降
+- Windows 目录遍历改为全程宽字符：`remove_all_in_directory()` / `copy_directory()` 改为宽字符内部递归实现，`path_tree::scan_impl()` 递归保持宽路径
+- Linux 目录遍历优先使用 `d_type`，仅 `DT_UNKNOWN` 回退 `lstat`，大目录遍历每条目减少一次 stat 系统调用
+- `filesystem::copy()` Windows 侧补充最后访问/修改时间保留，与 Linux 侧 `fchmod` / `futimens` 行为对齐
+- `file_async` 在无 io_uring 的 Linux 上阻塞 `pread` / `pwrite` 下沉到工作线程并以 io_context 投递完成，不再占用事件循环线程
+- `file_async` io_uring 路径显式解析不再依赖内核对 `UINT64_MAX` 偏移的处理
 
 ### 🐛 Bug Fixes
 
+- 修复 `ssl_socket` 异步读写绕过 TLS 层的缺陷，现按 TLS 激活状态路由至 `ssl_stream`
+- 修复 Windows `io_context` 事件注册缺失 FD_CONNECT / FD_CLOSE 使非阻塞 connect 的完成或失败通知不被注册/映射
+- 修复 Windows `io_context` WSAEVENT 句柄生命周期竞态：`remove_fd()` 在监视线程 `WSAWaitForMultipleEvents` 等待期间直接 `CloseHandle`
+- 修复 `io_context` fd/文件完成回调的 use-after-free：回调执行中调用 `remove_fd()` 或重复注册会销毁正在执行的回调存储
+- 修复 `http_client` 忽略 URL 显式端口导致请求连到错误端口的问题，改用 URL 解析端口
 - 修复 NFRS 被安装后索引 Release 动态库的方案
 - 修复 Clang 下推断 websocket-deflate 整形符号溢出与 GCC 不同的警告
 - 修复 SIMD `string_length` / `string_find` 跨 16 字节块偏移未累加导致的字符串比较错误
@@ -44,9 +71,25 @@
 - 修复 ARM64 等非 x64 架构错误接收 x86 SIMD 编译标志的问题
 - 修复 JSON 解析器字符串扫描控制字符检测使用有符号比较，将 UTF-8 多字节字符误判为控制字符导致 SIMD 快路径失效的问题
 - 修复 `retry` 使用引用函数作为参数时在 clang -O2 优化下编译器空悬引用对象导致 ABORT 的问题
-- 修复 use_awaitable 完成令牌在协程恢复时丢失 continuation 导致协程永不恢复的缺陷，awaitable 改为共享状态实现，支持作为协程返回类型
-- 修复 dns_client UDP 发送失败时 pending 查询条目悬挂的问题
+- 修复 `use_awaitable` 完成令牌在协程恢复时丢失 continuation 导致协程永不恢复的缺陷，awaitable 改为共享状态实现，支持作为协程返回类型
+- 修复 `lock_free_queue` 隐式生产者在线程退出回调中访问已析构队列导致崩溃（0xc0000005）的缺陷：隐式生产者析构时无条件注销线程退出监听器
+- 修复 `dns_client` UDP 发送失败时 pending 查询条目悬挂的问题
 - 修复 `uninitialized_*` 系列与 `temporary_buffer` 的平凡路径分派条件
+- 修复 Windows 上 `file::flush()` 无条件调用 `SetEndOfFile` 按当前文件指针截断文件，改为刷写用户缓冲与操作系统缓存
+- 修复 `file::read_line()` 在 `\r\n` 恰好横跨读缓冲边界时多产生一个空行的缺陷
+- 修复整文件读取在 Windows 上因 32 位 `size()` 截断而对超过 4GiB 的文件返回空内容，`read()` / `read_binary()` 全部改为 64 位分块读取
+- 修复 `file::size()` 在 Windows 上对超过 4GiB 的文件返回低位截断值
+- 修复 `file` 读写交替时写入落在预读超前位置导致的内容错位，写前自动把系统偏移回退到逻辑位置，读前先刷写待写缓冲
+- 修复 `file_async` 仅有一个待处理槽导致同一句柄并发操作互相覆盖完成回调的问题，改为按操作独立登记并保证每个 handler 调用一次
+- 修复 `file_async` 取消槽参数被忽略，改为取消请求提交失败时按标志在完成时设置 `operation_aborted`
+- 修复 `file_async` io_uring 环满/提交失败时静默丢弃操作导致调用方永久等待的问题，改为设置 `resource_unavailable_try_again`
+- 修复 `filesystem::move()` 在 Linux 上先删除目标再 rename 的破坏性窗口，改为使用 rename 原子替换，仅非空目录覆盖时回退删除后重试
+- 修复 `filesystem::copy()` 在源与目标为同一文件时先截断源文件导致数据丢失，改为路径相等直接返回成功，Linux 侧另以 dev/ino 判定别名，并拒绝 FIFO/设备等特殊文件
+- 修复 `filesystem::copy_directory()` 在目标位于源子树内时无限递归，新增路径包含关系防护
+- 修复 `remove_all_in_directory()` / `copy_directory()` 跟随目录符号链接可能删除或复制链接目标内容的问题，改为 Linux 侧符号链接仅 unlink 不再下降，Windows 侧跳过 reparse point 目录
+- 修复 `path_tree::scan()` 在 `follow_symlinks=true` 且不限制深度时目录符号链接成环可无限递归/栈溢出，新增基于 卷/设备号 + 文件节点号 的链环路检测，reparse 目录不再被无条件递归
+- 修复 `temp_file` 构造时先创建文件再换用另一候选，导致每次构造泄漏一个临时文件的问题
+- 修复 Windows 文件模块使用 ANSI API 导致非 ASCII 路径失败的问题，改用 Unicode API
 
 ## [1.0.0] - 2026-08-03
 

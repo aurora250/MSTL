@@ -205,6 +205,26 @@ method_(method) {
 
 ssl_context::~ssl_context() { reset(); }
 
+ssl_context::ssl_context(ssl_context&& other) noexcept :
+ctx_(other.ctx_),
+method_(other.method_),
+cert_loaded_(other.cert_loaded_) {
+    other.ctx_ = nullptr;
+    other.cert_loaded_ = false;
+}
+
+ssl_context& ssl_context::operator=(ssl_context&& other) noexcept {
+    if (this != &other) {
+        reset();
+        ctx_ = other.ctx_;
+        method_ = other.method_;
+        cert_loaded_ = other.cert_loaded_;
+        other.ctx_ = nullptr;
+        other.cert_loaded_ = false;
+    }
+    return *this;
+}
+
 ssl_context ssl_context::clone() const {
     if (unlikely(ctx_ == nullptr)) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("Cannot clone an invalid SSL context"));

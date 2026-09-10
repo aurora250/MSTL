@@ -1,5 +1,6 @@
 #include <NeForce/core/system/pipe.hpp>
 #ifdef NEFORCE_PLATFORM_WINDOWS
+#    include <NeForce/core/string/utf.hpp>
 #    include <NeForce/core/config/windef.hpp>
 #    include <windef.h>
 #    include <WinBase.h>
@@ -390,13 +391,13 @@ bool named_pipe::create(const string& name, bool nonblocking) {
     nonblocking_ = nonblocking;
 
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    const string full_name = R"(\\.\pipe\)" + name;
+    const wstring full_name = LR"(\\.\pipe\)" + character::to_wstring(name.view());
     ::DWORD open_mode = PIPE_ACCESS_DUPLEX;
     if (nonblocking) {
         open_mode |= PIPE_NOWAIT;
     }
 
-    pipe_handle_ = ::CreateNamedPipeA(full_name.data(), open_mode, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+    pipe_handle_ = ::CreateNamedPipeW(full_name.data(), open_mode, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
                                       PIPE_UNLIMITED_INSTANCES, 4096, 4096, 0, nullptr);
     if (pipe_handle_ == INVALID_HANDLE_VALUE) {
         NEFORCE_THROW_EXCEPTION(pipe_exception("CreateNamedPipe failed"));
@@ -431,14 +432,14 @@ bool named_pipe::connect(const string& name, const int timeout_ms) {
     name_ = name;
 
 #ifdef NEFORCE_PLATFORM_WINDOWS
-    const string full_name = R"(\\.\pipe\)" + name;
+    const wstring full_name = LR"(\\.\pipe\)" + character::to_wstring(name.view());
     const ::DWORD dw_timeout = (timeout_ms < 0) ? NMPWAIT_WAIT_FOREVER : static_cast<::DWORD>(timeout_ms);
 
-    if (::WaitNamedPipeA(full_name.data(), dw_timeout) == FALSE) {
+    if (::WaitNamedPipeW(full_name.data(), dw_timeout) == FALSE) {
         NEFORCE_THROW_EXCEPTION(pipe_exception("WaitNamedPipe failed"));
     }
 
-    pipe_handle_ = ::CreateFileA(full_name.data(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING,
+    pipe_handle_ = ::CreateFileW(full_name.data(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING,
                                  FILE_ATTRIBUTE_NORMAL, nullptr);
     if (pipe_handle_ == INVALID_HANDLE_VALUE) {
         NEFORCE_THROW_EXCEPTION(pipe_exception("Connect to named pipe failed"));

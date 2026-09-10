@@ -1,9 +1,9 @@
 #include <NeForce/network/ip_socket.hpp>
 NEFORCE_BEGIN_NAMESPACE__
 
-void ip_socket::open_ip(const family f, const type t, const protocol p) {
-    if (f != family::INET4 && f != family::INET6) {
-        NEFORCE_THROW_EXCEPTION(value_exception("Invalid address family: only AF_INET / AF_INET6 are supported"));
+void ip_socket::open_ip(const ip_family f, const type t, const protocol p) {
+    if (f != ip_family::INET4 && f != ip_family::INET6) {
+        NEFORCE_THROW_EXCEPTION(value_exception("Invalid address family: only INET4 / INET6 are supported"));
     }
 
     close();
