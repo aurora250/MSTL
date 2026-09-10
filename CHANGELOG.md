@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## [1.0.1] - 2026-09-10
+## [1.0.1] - 2026-09-11
 
 ### 🚀 New Features
 
@@ -8,6 +8,8 @@
 - 添加 `likely` / `unlikely`
 - 添加 CMake 多架构 SIMD 检测配置
 - 添加 PCLMULQDQ 指令集检测宏 `NEFORCE_SIMD_PCLMUL`
+- 添加 Sanitizer 构建配置项 `NEXUSFORCE_ENABLE_ASAN` / `NEXUSFORCE_ENABLE_UBSAN` / `NEXUSFORCE_ENABLE_TSAN`
+- 添加 Sanitizer CI 工作流 `.github/workflows/sanitizer.yml`
 
 ### 🔧 Improvements
 
@@ -90,6 +92,46 @@
 - 修复 `path_tree::scan()` 在 `follow_symlinks=true` 且不限制深度时目录符号链接成环可无限递归/栈溢出，新增基于 卷/设备号 + 文件节点号 的链环路检测，reparse 目录不再被无条件递归
 - 修复 `temp_file` 构造时先创建文件再换用另一候选，导致每次构造泄漏一个临时文件的问题
 - 修复 Windows 文件模块使用 ANSI API 导致非 ASCII 路径失败的问题，改用 Unicode API
+- 修复 valgrind CI 门禁失效问题，`valgrind ... | tee` 的管道退出码取 `tee` 的 0，导致 `--error-exitcode=1` 永远无法让 CI 失败
+- 修复 `unique_ptr` 同类型移动赋值丢失删除器问题，`__unique_ptr_impl::operator=` 只搬运指针而保留目标自身的删除器
+- 修复 `pointer_traits` 对智能指针的 `to_address()` 返回悬垂引用，指针特化用 `decltype(auto)` 推导出 `const Ptr&`
+- 修复 `plugin_manager::load_plugins()` 完全不可用问题，现改用 `path_tree::scan()` 扫描目录并按裸扩展名过滤
+- 修复 `window` 的 Ctrl+Shift+方向键缩放不可达问题，先匹配的 Ctrl 分支未排除 Shift，导致缩放分支恒被移动分支吞掉
+- 修复 `hoverable` 与 `collapsible` 首次 `render()` 即空指针解引用崩溃问题，`component_base::add_child()` 现在会在 `active_child()` 为空时认领首个子组件并忽略空子组件
+- 修复 `normal_iterator::operator[]` 对容器迭代器不可用问题，`vector_iterator::operator[]` 缺少 `const`
+- 修复 `reverse_iterator::operator[]` 无法实例化问题，其 `noexcept` 说明中的 `decltype` 表达式无法成立， 改为按实际返回表达式推导
+- 修复 `graph()` 纵轴缩放错误问题，`static_cast<int>(ratio) * (height - 1)` 先截断再相乘使所有小于 1.0 的比例都落到第 0 行、图形被压平，改为先缩放后取整
+- 修复滚动指示器滑块尺寸与位置错误问题，`static_cast<int>(ratio) * height` 先截断再相乘，使滑块恒为 1 格，改为先缩放后取整
+- 修复 `string_length` / `string_find` 的块扫描未向下对齐导致的跨页 SIGSEGV问题，非对齐的 16 字节读取在地址落在页尾 15 字节内且后继页未映射时会越界访问。新增 `SimdGuardPageTest` 以 `mmap` + `mprotect(PROT_NONE)` 复现该场景
+- 修复 `linear_gradient::add_stop()` 追加位置靠后的色标导致中间色标不可达问题，改为位置升序插入，并统一 `sample()` 的位置语义
+- 修复 Sanitizer 构建无法启动问，`string_length` / `string_find` / `string_compare` 的 16 字节块扫描会读取终止符之后的填充字节，ASan 逐条插桩内存访问导致初始化中止，改为 `NEFORCE_SANITIZED_SCAN` 在这些函数中改走标量路径
+- 修复 `timer_scheduler::stop()` 的丢唤醒：唤醒可能恰好落在调度线程"谓词读到 false、但尚未挂入等待队列，现将状态改动与唤醒一并放入 `mutex_`
+- 修复 `virtual_thread_task` 完成通知的丢唤醒：`final_suspend` 原先在 `task_shared_state::mtx_` 之外改写 `completed_`，落在窗口内的通知会送达零个等待者。现将完成标记、唤醒与 continuation 交接一并放入同一把锁
+- 修复 `virtual_thread_task::await_suspend()` 的双原子 TOCTOU：`completed_` 与 `continuation_` 原先是
+  两个独立原子，写入顺序之间无法建立 release/acquire 链。存在 "调用者先登记 continuation、随后读到未完成，而被等待任务此刻已完成并已取走 continuation" 的交错，
+  双方都以为对方负责恢复，调用者永久挂起。现改为在 `mtx_` 内一次完成"读完成标记 + 登记 continuation"，与 `final_suspend` 的"读 continuation + 置完成标记"互斥，二者恰好有一方接手
+- 修复 `co_await` 的等待方在挂起期间被销毁导致的 use-after-free：`scheduled_` 原先只在
+  `yield` / `sleep` 等待器中置位，`co_await task` 的登记路径漏置，于是被等待任务仍持有该帧句柄时，
+  等待方任务的析构就可能释放它，随后对方恢复一个已释放的帧。现将该标记更名为语义准确的 `detached_`，
+  并在 `await_suspend()` 登记 continuation 时置位，析构与移动赋值的判据仍为"未完成且未交付"才回收帧
+- 修复 `virtual_thread::start()` 的闭包生命周期陷阱，现在以 `static_assert` 拒绝 "右值 + 非空闭包" 的协程可调用对象
+- 修复 `wyhash` 短输入分支的越界读取：`len <= 16` 分支本应做 32 位读，写成 64 位读后长度在 [4, 16] 的输入最多越界 4 字节（16 字节键的第二次读从 `p + 12` 起就越界），且多出的高位来自越界内存，导致哈希不可复现
+- 修复 `base64_encode_12bytes` 的越界读取：调用方只保证 12 字节可读，函数却直接读取 16 字节；改为 `_mm_loadl_epi64` + 4 字节尾读拼装
+- 修复 `dns_client` 的未对齐读取：6 处把字节指针直接重解释为 `uint16_t*`，偏移为奇数时即为未对齐加载，改为逐字节拼装大端字段
+- 修复 HPACK 整数解码的移位未定义行为：续字节在 32 位整型上移位，`m` 超过 31 后 UB，改为 64 位累加并在超出 `uint32_t` 范围时饱和返回
+- 修复 `io_context::add_fd()` 在 Linux 上固定使用 `EPOLL_CTL_ADD` 并忽略 `epoll_ctl` 返回值的问题，现按描述符是否已在 `fd_map_` 中选择 `EPOLL_CTL_MOD` / `EPOLL_CTL_ADD`，并在失败时 `terminate()` 中止而非静默继续
+- 修复服务端 ALPN 协商从未生效：`set_alpn_protos()` 只调用 `SSL_CTX_set_alpn_protos()`，现设置列表时一并安装选择回调
+- 修复 `io_context` 中 `fd_map_` 的数据竞争
+- 修复 `ssl_stream` 缺少析构函数导致的资源泄漏
+- 修复 `regex` 的两处 pcre2 泄漏
+- 修复 `zlib_compressor::stream_compressor` / `stream_decompressor` 的 zlib 状态泄漏
+- 修复 MySQL 客户端线程局部状态泄漏：libmysqlclient 在某个线程首次调用 C API 时分配线程局部数据，现于 `mysql_connect` 的各入口注册一个函数内 `thread_local` 守护对象，在线程结束时调用
+- 修复 `tui::state<T>` 在 `strand` 注入前构造导致的空指针解引用，现移除该参数与成员
+- 修复 `hexadecimal` 解析 `-0x8000000000000000` 时转成 `int64_t` 再取负，属未定义行为；现在直接返回 `numeric_traits<int64_t>::min()`
+
+### 📚 Documentation
+
+- 添加 `THIRD_PARTY_NOTICES.md` 收录移植代码与链接依赖的版权声明与许可证
 
 ## [1.0.0] - 2026-08-03
 

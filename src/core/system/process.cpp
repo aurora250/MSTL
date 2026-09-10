@@ -25,7 +25,6 @@
 #    include <cerrno>
 #    include <csignal>
 #    include <cstdio>
-#    include <cstdlib>
 #    include <sys/select.h>
 #    include <sys/wait.h>
 #endif
@@ -116,7 +115,7 @@ namespace {
         }
     }
 
-    char** build_envp(const unordered_map<string, string>& env_map) {
+    char** build_envp(const flat_unordered_map<string, string>& env_map) {
         auto** const new_env = new char*[env_map.size() + 1];
         int idx = 0;
         for (const auto& entry: env_map) {
@@ -1239,7 +1238,8 @@ string process::name(native_id_type process_id) {
     return {process_name};
 #else
     const path path("/proc/" + to_string(process_id) + "/comm");
-    const file comm_file(path);
+    // set file_access::READ to read readonly process file
+    const file comm_file(path, false, file_access::READ);
 
     if (!comm_file.is_opened()) {
         return "";

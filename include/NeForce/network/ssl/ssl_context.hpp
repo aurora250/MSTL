@@ -266,6 +266,11 @@ public:
      *
      * 设置应用层协议协商（ALPN）支持的协议列表。
      * 用于在TLS握手时协商应用层协议（如HTTP/2）。
+     *
+     * @note 客户端上下文把该列表作为 ClientHello 中通告的协议；
+     * @note 服务端上下文同时按列表顺序选择第一个客户端也支持的协议，因此列表顺序即服务端优先级。
+     * @note 服务端与客户端列表无交集时不协商ALPN，握手继续进行，由应用层回退到默认协议。
+     * @note 传入空列表不做任何设置，已设置的列表保持不变。
      */
     void set_alpn_protos(const vector<string>& protocols);
 

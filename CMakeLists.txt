@@ -117,6 +117,7 @@ else()
     message(FATAL_ERROR "NexusForce: unsupported target architecture")
 endif()
 
+include(cmake/NexusForceSanitizer.cmake)
 include(cmake/NexusForceCompilerOptions.cmake)
 
 string(JSON CONFIG_SIMD_TYPE ERROR_VARIABLE _config_simd_type_error TYPE ${JSON_CONTENT} simd)
@@ -205,6 +206,13 @@ endif()
 option(NEXUSFORCE_FORMAT            "Enable clang-format code formatting"   ON)
 option(NEXUSFORCE_CLANG_TIDY        "Enable clang-tidy static analysis"     ON)
 
+option(NEXUSFORCE_ENABLE_ASAN       "Build with AddressSanitizer"           OFF)
+option(NEXUSFORCE_ENABLE_UBSAN      "Build with UndefinedBehaviorSanitizer" OFF)
+option(NEXUSFORCE_ENABLE_TSAN       "Build with ThreadSanitizer"            OFF)
+
+_nexusforce_validate_sanitizers()
+_nexusforce_sanitizer_summary(NEXUSFORCE_SANITIZER_SUMMARY)
+
 
 message(STATUS "Project Configuration:")
 message(STATUS "")
@@ -235,6 +243,11 @@ message(STATUS "  NEXUSFORCE_BUILD_BENCHMARKS:    ${NEXUSFORCE_BUILD_BENCHMARKS}
 message(STATUS "  NEXUSFORCE_BUILD_DOCS:          ${NEXUSFORCE_BUILD_DOCS}")
 message(STATUS "")
 message(STATUS "  NEXUSFORCE_SIMD_LEVEL:          ${NEXUSFORCE_SIMD_LEVEL}")
+message(STATUS "")
+message(STATUS "  NEXUSFORCE_ENABLE_ASAN:         ${NEXUSFORCE_ENABLE_ASAN}")
+message(STATUS "  NEXUSFORCE_ENABLE_UBSAN:        ${NEXUSFORCE_ENABLE_UBSAN}")
+message(STATUS "  NEXUSFORCE_ENABLE_TSAN:         ${NEXUSFORCE_ENABLE_TSAN}")
+message(STATUS "  Sanitizers active:             ${NEXUSFORCE_SANITIZER_SUMMARY}")
 message(STATUS "")
 
 
@@ -321,6 +334,7 @@ install(FILES
 
 install(FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/NexusForceCompilerOptions.cmake
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/NexusForceSanitizer.cmake
         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/NexusForceReflectScanner.cmake
         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/NexusForceRuntime.cmake
         DESTINATION ${INSTALL_CONFIGDIR}
@@ -336,3 +350,12 @@ install(FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/docs/ai/api_index.jsonl
         DESTINATION ${CMAKE_INSTALL_DATADIR}/ai
 )
+
+# License texts must travel with binary distributions: the MIT LICENSE alone does
+# not satisfy the attribution terms of the ported and linked third-party code.
+install(FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE
+        ${CMAKE_CURRENT_SOURCE_DIR}/THIRD_PARTY_NOTICES.md
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/NexusForce
+)
+

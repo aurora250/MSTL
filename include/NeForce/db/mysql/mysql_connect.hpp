@@ -53,7 +53,7 @@ public:
      *
      * 初始化MySQL连接句柄。
      */
-    mysql_connect() { link_ = ::mysql_init(nullptr); }
+    mysql_connect();
 
     /**
      * @brief 析构函数

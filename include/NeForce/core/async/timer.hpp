@@ -165,8 +165,11 @@ public:
      * @brief 停止调度线程并等待其结束
      */
     void stop() {
-        stopped_.store(true);
-        cv_.notify_one();
+        {
+            unique_lock<mutex> lock(mutex_);
+            stopped_.store(true);
+            cv_.notify_one();
+        }
         if (thread_.joinable()) {
             thread_.join();
         }

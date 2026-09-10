@@ -15,7 +15,7 @@ using namespace neforce;
 namespace {
     bool has_root() {
 #ifdef NEFORCE_PLATFORM_LINUX
-        return process::current_privilege_level() == privilege_level::privileged;
+        return process::current_privilege_level() == process::privilege_level::privileged;
 #else
         return true;
 #endif

@@ -170,15 +170,15 @@ bool filesystem::create_directories(const path& p) {
         return true;
     }
 
-    const string_view ps = p.view();
+    const string& ps = p.str();
     size_t pos = 0;
-    string_view subdir;
+    string subdir;
 
 #ifdef NEFORCE_PLATFORM_WINDOWS
     while ((pos = ps.find_first_of(path::spliter, pos + 1)) != string::npos) {
         subdir = ps.head(pos);
-        if (!subdir.empty() && !path(subdir).is_directory()) {
-            wstring wsubdir = character::to_wstring(subdir);
+        if (!subdir.empty() && !path::is_directory(subdir)) {
+            wstring wsubdir = character::to_wstring(subdir.view());
             if (::CreateDirectoryW(wsubdir.data(), nullptr) == FALSE && ::GetLastError() != ERROR_ALREADY_EXISTS) {
                 return false;
             }
@@ -380,7 +380,7 @@ bool filesystem::copy(const path& from, const path& to, const bool overwrite) {
     for (;;) {
         if (use_range) {
             // fall back to the user-space loop when unsupported.
-            const ssize_t copied = ::copy_file_range(src_fd, nullptr, dst_fd, nullptr, 64u << 20, 0);
+            const ssize_t copied = ::copy_file_range(src_fd, nullptr, dst_fd, nullptr, 64U << 20, 0);
             if (copied > 0) {
                 continue;
             }
@@ -395,7 +395,7 @@ bool filesystem::copy(const path& from, const path& to, const bool overwrite) {
             break;
         }
 
-        char buf[256u << 10];
+        char buf[256U << 10];
         for (;;) {
             const ssize_t r = ::read(src_fd, buf, sizeof(buf));
             if (r == -1) {
@@ -603,9 +603,9 @@ bool filesystem::create_and_write(const path& p, const string& content, const bo
         return false;
     }
 
-    const ::ssize_t written = ::write(fd, content.data(), content.size());
+    const ssize_t written = ::write(fd, content.data(), content.size());
     ::close(fd);
-    return written == static_cast<::ssize_t>(content.size());
+    return written == static_cast<ssize_t>(content.size());
 #endif
 }
 

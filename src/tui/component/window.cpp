@@ -66,7 +66,10 @@ namespace {
         bool on_key(const key_event& e) override {
             using K = key_event::type;
 
-            if ((e.mods & key_modifier::ctrl) != key_modifier::none) {
+            // Shift is excluded here: Ctrl+Shift+arrow is the resize gesture handled below,
+            // and this branch would otherwise consume it and move the window.
+            if ((e.mods & key_modifier::ctrl) != key_modifier::none &&
+                (e.mods & key_modifier::shift) == key_modifier::none) {
                 int dx = 0, dy = 0;
                 if (e.key == K::left) {
                     dx = -1;

@@ -1,16 +1,14 @@
-#include <NeForce/core/file/path.hpp>
+#include <NeForce/core/file/path_tree.hpp>
 #include <NeForce/plugin/plugin_manager.hpp>
 NEFORCE_BEGIN_NAMESPACE__
 
 namespace {
-    bool is_plugin_file(const string_view p) {
-        const auto ext = path::extension(p);
+    constexpr string_view plugin_extension =
 #ifdef NEFORCE_PLATFORM_WINDOWS
-        return (ext == ".dll");
+            "dll";
 #else
-        return (ext == ".so");
+            "so";
 #endif
-    }
 } // namespace
 
 
@@ -23,11 +21,18 @@ size_t plugin_manager::load_plugins(const string& pth) {
         NEFORCE_THROW_EXCEPTION(value_exception("Invalid plugin directory"));
     }
 
-    const path pths(pth);
+    path_tree::scan_options options;
+    options.max_depth = 1;
+    options.extensions.emplace_back(plugin_extension);
 
-    for (const auto& entry: pths) {
-        if (is_plugin_file(entry)) {
-            load_plugin(entry);
+    const path_tree tree = path_tree::scan(path(pth), options);
+    if (tree.empty() || tree.root() == nullptr) {
+        return count;
+    }
+
+    for (const auto& child: tree.root()->children()) {
+        if (child != nullptr && child->is_file()) {
+            load_plugin(child->get_path().to_string().view());
             ++count;
         }
     }
@@ -43,9 +48,7 @@ void plugin_manager::load_plugin(const string_view pth) {
 
     auto lib = make_unique<dynamic_library>(pth);
 
-    // clang-format off
-    const auto create_func = lib->to_symbol<iplugin* (*)()>(NEFORCE_PLUGIN_CREATE_FUNC);
-    // clang-format on
+    const auto create_func = lib->to_symbol<iplugin* (*) ()>(NEFORCE_PLUGIN_CREATE_FUNC);
     const auto destroy_func = lib->to_symbol<void (*)(iplugin*)>(NEFORCE_PLUGIN_DESTROY_FUNC);
 
     iplugin* raw_ptr = create_func();

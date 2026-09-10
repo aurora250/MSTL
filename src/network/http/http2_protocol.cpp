@@ -187,7 +187,8 @@ namespace {
             return first;
         }
 
-        uint32_t value = max_prefix;
+        constexpr uint64_t limit = 0xFFFFFFFFULL;
+        uint64_t value = max_prefix;
         uint32_t m = 0;
         constexpr int max_octets = 10;
         for (int i = 0; i < max_octets; ++i) {
@@ -196,13 +197,16 @@ namespace {
                 break;
             }
             const uint8_t b = *b_opt;
-            value += (b & 0x7F) << m;
+            value += static_cast<uint64_t>(b & 0x7F) << m;
             m += 7;
+            if (value > limit) {
+                return static_cast<uint32_t>(limit);
+            }
             if ((b & 0x80) == 0) {
-                return value;
+                return static_cast<uint32_t>(value);
             }
         }
-        return value;
+        return static_cast<uint32_t>(value);
     }
 
     string decode_huffman(cbyte_view input) {

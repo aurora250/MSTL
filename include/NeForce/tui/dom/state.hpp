@@ -5,11 +5,10 @@
  * @file state.hpp
  * @brief 响应式状态变量
  *
- * 提供响应式状态模板类，写入状态时自动通过 strand 调度组件重渲染。
+ * 提供响应式状态模板类，写入状态时自动通知所属组件调度重渲染。
  */
 
 #include "NeForce/core/async/signals.hpp"
-#include "NeForce/core/async/strand.hpp"
 NEFORCE_BEGIN_NAMESPACE__
 NEFORCE_BEGIN_TUI__
 
@@ -27,7 +26,7 @@ class component_base;
  * @brief 响应式状态变量
  * @tparam T 值类型
  *
- * 写入时自动通过 strand 调度组件重渲染，
+ * 写入时自动通知所属组件调度重渲染，
  * 支持读取、整值替换、就地修改和批量静默更新四种模式。
  *
  * @note 必须在 component::create_state() 中创建，通过组件生命周期管理。
@@ -41,12 +40,10 @@ public:
     /**
      * @brief 构造函数
      * @param owner 所属组件
-     * @param s 串行执行器引用
      * @param initial 初始值
      */
-    state(component_base* owner, strand& s, T initial) :
+    state(component_base* owner, T initial) :
     value_(_NEFORCE move(initial)),
-    strand_(&s),
     owner_(owner) {}
 
     ~state() = default;
@@ -130,7 +127,6 @@ public:
 private:
     T value_;
     changed_signal on_changed_;
-    strand* strand_;
     component_base* owner_;
     bool dirty_ = false;
 

@@ -473,7 +473,7 @@ void icmp_socket::async_ping(io_context& ctx, const ip_address& dest, const mill
         return;
     }
 
-    const uint16_t id = static_cast<uint16_t>(process::current_id());
+    const auto id = static_cast<uint16_t>(process::current_id());
     try {
         send_echo_request(dest, id, sequence, 64, data, data_len);
     } catch (const system_exception& e) {
@@ -509,7 +509,7 @@ void icmp_socket::async_ping(io_context& ctx, const ip_address& dest, const mill
         return;
     }
 
-    const uint16_t id = static_cast<uint16_t>(process::current_id());
+    const auto id = static_cast<uint16_t>(process::current_id());
     try {
         send_echo_request(dest, id, sequence, 64, data, data_len);
     } catch (const system_exception& e) {

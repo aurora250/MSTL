@@ -1577,12 +1577,25 @@ TEST(TimerScheduler, ImmediateTask) {
     EXPECT_EQ(done.get_future().wait_for(500_ms), future_status::ready);
 }
 
-TEST(TimerScheduler, DestructorStopsThread) { // may block
-    {
+TEST(TimerScheduler, DestructorStopsThread) {
+    atomic<bool> finished{false};
+    thread stopper([&finished] {
         steady_scheduler sched;
         sched.add_task(steady_clock::now() + 1_h, [] {});
+        finished.store(true);
+    });
+
+    const auto deadline = steady_clock::now() + 5_s;
+    while (!finished.load(memory_order_acquire) && steady_clock::now() < deadline) {
+        this_thread::sleep_for(10_ms);
     }
-    SUCCEED();
+
+    EXPECT_TRUE(finished.load(memory_order_acquire));
+    if (finished.load(memory_order_acquire)) {
+        stopper.join();
+    } else {
+        stopper.detach();
+    }
 }
 
 TEST(BasicTimer, AsyncWait) {
@@ -1934,6 +1947,17 @@ TEST(ThreadPool, WaitMultipleFutures) {
 
 #ifdef NEFORCE_STANDARD_20
 
+namespace {
+    template <typename Task>
+    bool task_done_within(Task& task, const int64_t timeout_ms = 5000) {
+        const auto deadline = steady_clock::now() + milliseconds(timeout_ms);
+        while (!task.is_done() && steady_clock::now() < deadline) {
+            this_thread::sleep_for(1_ms);
+        }
+        return task.is_done();
+    }
+} // namespace
+
 class VirtualThreadEnvironment : public ::testing::Environment {
 public:
     void SetUp() override { virtual_thread::initialize(4); }
@@ -1952,12 +1976,14 @@ TEST(VirtualThread, StartBasic) {
 TEST(VirtualThread, Yield) {
     atomic<int> sequence{0};
     atomic<int> result{0};
-    virtual_thread::start([&]() -> virtual_thread_task<void> {
+    auto task_body = [&]() -> virtual_thread_task<void> {
         sequence.store(sequence.load() + 1);
         co_await virtual_thread::yield();
         result.store(sequence.load());
-    });
-    this_thread::sleep_for(50_ms);
+    };
+    auto task = virtual_thread::start(task_body);
+    ASSERT_TRUE(task_done_within(task));
+    task.get_result();
     EXPECT_EQ(result.load(), 1);
 }
 
@@ -1979,11 +2005,13 @@ TEST(VirtualThread, ExceptionInFireAndForget) {
 
 TEST(VirtualThread, Sleep) {
     atomic<bool> done{false};
-    virtual_thread::start([&]() -> virtual_thread_task<void> {
+    auto task_body = [&]() -> virtual_thread_task<void> {
         co_await virtual_thread::sleep(10);
         done.store(true);
-    });
-    this_thread::sleep_for(50_ms);
+    };
+    auto task = virtual_thread::start(task_body);
+    ASSERT_TRUE(task_done_within(task));
+    task.get_result();
     EXPECT_TRUE(done.load());
 }
 
@@ -2010,10 +2038,11 @@ TEST(VirtualThread, ReturnValueAfterYield) {
 
 TEST(VirtualThread, VoidTaskGetResult) {
     atomic<bool> ran{false};
-    auto task = virtual_thread::start([&]() -> virtual_thread_task<void> {
+    auto task_body = [&]() -> virtual_thread_task<void> {
         ran.store(true);
         co_return;
-    });
+    };
+    auto task = virtual_thread::start(task_body);
     task.get_result();
     EXPECT_TRUE(ran.load());
 }
@@ -2041,14 +2070,15 @@ TEST(VirtualThread, AwaitSubtaskWithYield) {
 
 TEST(VirtualThread, AwaitVoidSubtask) {
     atomic<bool> innerRan{false};
-    auto task = virtual_thread::start([&]() -> virtual_thread_task<int> {
+    auto task_body = [&]() -> virtual_thread_task<int> {
         auto sub = [&]() -> virtual_thread_task<void> {
             innerRan.store(true);
             co_return;
         };
         co_await sub();
         co_return 1;
-    });
+    };
+    auto task = virtual_thread::start(task_body);
     EXPECT_EQ(task.get_result(), 1);
     EXPECT_TRUE(innerRan.load());
 }
@@ -2128,7 +2158,7 @@ TEST(VirtualThreadTask, MoveFireAndForget) {
     EXPECT_TRUE(ran.load());
 }
 
-TEST(VirtualThread, ConcurrentTasks) { // may block
+TEST(VirtualThread, ConcurrentTasks) {
     auto t1 = virtual_thread::start([]() -> virtual_thread_task<int> {
         co_await virtual_thread::yield();
         co_return 1;
@@ -2137,6 +2167,8 @@ TEST(VirtualThread, ConcurrentTasks) { // may block
         co_await virtual_thread::yield();
         co_return 2;
     });
+    ASSERT_TRUE(task_done_within(t1));
+    ASSERT_TRUE(task_done_within(t2));
     EXPECT_EQ(t1.get_result(), 1);
     EXPECT_EQ(t2.get_result(), 2);
 }
@@ -2150,11 +2182,12 @@ TEST(VirtualThread, SequentialAwaitConcurrent) {
         co_await virtual_thread::yield();
         co_return 20;
     });
-    auto wrapper = virtual_thread::start([&]() -> virtual_thread_task<int> {
+    auto wrapper_body = [&]() -> virtual_thread_task<int> {
         int a = co_await t1;
         int b = co_await t2;
         co_return a + b;
-    });
+    };
+    auto wrapper = virtual_thread::start(wrapper_body);
     EXPECT_EQ(wrapper.get_result(), 30);
 }
 
@@ -2166,13 +2199,14 @@ TEST(VirtualThread, SynchronousCompletion) {
 
 TEST(VirtualThread, MultipleYields) {
     atomic<int> counter{0};
-    auto task = virtual_thread::start([&]() -> virtual_thread_task<int> {
+    auto task_body = [&]() -> virtual_thread_task<int> {
         for (int i = 0; i < 5; ++i) {
             counter.fetch_add(1);
             co_await virtual_thread::yield();
         }
         co_return counter.load();
-    });
+    };
+    auto task = virtual_thread::start(task_body);
     EXPECT_EQ(task.get_result(), 5);
 }
 
@@ -2272,11 +2306,12 @@ TEST(VirtualThread, ExceptionTypePreservationAfterYield) {
 
 TEST(VirtualThread, SleepZero) {
     atomic<bool> done{false};
-    auto task = virtual_thread::start([&]() -> virtual_thread_task<void> {
+    auto task_body = [&]() -> virtual_thread_task<void> {
         co_await virtual_thread::sleep(0);
         done.store(true);
         co_return;
-    });
+    };
+    auto task = virtual_thread::start(task_body);
     task.get_result();
     EXPECT_TRUE(done.load());
 }
@@ -2292,7 +2327,7 @@ TEST(VirtualThread, MultipleSleeps) {
 
 TEST(VirtualThread, MixYieldAndSleep) {
     atomic<int> phase{0};
-    auto task = virtual_thread::start([&]() -> virtual_thread_task<int> {
+    auto task_body = [&]() -> virtual_thread_task<int> {
         phase.store(1);
         co_await virtual_thread::yield();
         phase.store(2);
@@ -2301,7 +2336,8 @@ TEST(VirtualThread, MixYieldAndSleep) {
         co_await virtual_thread::yield();
         phase.store(4);
         co_return 42;
-    });
+    };
+    auto task = virtual_thread::start(task_body);
     EXPECT_EQ(task.get_result(), 42);
     EXPECT_EQ(phase.load(), 4);
 }
@@ -2316,7 +2352,7 @@ TEST(VirtualThreadTask, MoveAssignToNonEmpty) {
     EXPECT_EQ(task2.get_result(), 42);
 }
 
-TEST(VirtualThreadTask, MoveAssignToNonEmptyWithYield) { // may block
+TEST(VirtualThreadTask, MoveAssignToNonEmptyWithYield) {
     auto task1 = virtual_thread::start([]() -> virtual_thread_task<int> {
         co_await virtual_thread::yield();
         co_return 77;
@@ -2325,11 +2361,32 @@ TEST(VirtualThreadTask, MoveAssignToNonEmptyWithYield) { // may block
         co_await virtual_thread::yield();
         co_return 200;
     });
+    ASSERT_TRUE(task_done_within(task2));
     EXPECT_EQ(task2.get_result(), 200);
     task2 = move(task1);
     EXPECT_FALSE(task1.valid());
     EXPECT_TRUE(task2.valid());
+    ASSERT_TRUE(task_done_within(task2));
     EXPECT_EQ(task2.get_result(), 77);
+}
+
+TEST(VirtualThreadTask, DestroyAwaitingTaskWhileSuspendedAsContinuation) {
+    auto inner = virtual_thread::start([]() -> virtual_thread_task<int> {
+        co_await virtual_thread::sleep(50);
+        co_return 5;
+    });
+    EXPECT_FALSE(inner.is_done());
+    {
+        auto wrapper_body = [&]() -> virtual_thread_task<int> {
+            const int value = co_await inner;
+            co_return value;
+        };
+        auto wrapper = virtual_thread::start(wrapper_body);
+        EXPECT_FALSE(wrapper.is_done());
+    }
+
+    ASSERT_TRUE(task_done_within(inner));
+    EXPECT_EQ(inner.get_result(), 5);
 }
 
 TEST(VirtualThreadTask, SelfMoveAssignment) {
@@ -3025,6 +3082,40 @@ TEST(IoContextTest, DefaultConstruct) {
     io_context ctx;
     EXPECT_FALSE(ctx.stopped());
 }
+
+#ifdef NEFORCE_PLATFORM_LINUX
+
+TEST(IoContextTest, AddFdAgainOnSameFdUpdatesTheWatchedDirection) {
+    // Regression: the second registration on one fd used to hit EPOLL_CTL_ADD's EEXIST
+    // and was dropped, leaving the kernel watching the first direction. Components
+    // re-register the same fd once per direction (connect waits for writability, the
+    // following read waits for readability), so the read callback never fired.
+    int fds[2] = {-1, -1};
+    ASSERT_EQ(::pipe(fds), 0);
+
+    io_context ctx;
+    int write_ready_calls = 0;
+    int read_ready_calls = 0;
+
+    // A pipe's read end is never writable, so the first direction is registered but inert.
+    ctx.add_fd(fds[0], epoll_out, [&](int, uint32_t, error_code) { ++write_ready_calls; });
+
+    const char payload = 'x';
+    ASSERT_EQ(::write(fds[1], &payload, 1), 1);
+
+    // Re-register the same fd for readability while a byte is already buffered.
+    ctx.add_fd(fds[0], epoll_in, [&](int, uint32_t, error_code) { ++read_ready_calls; });
+
+    for (int i = 0; i < 10 && read_ready_calls == 0; ++i) {
+        ctx.run_one(50);
+    }
+
+    EXPECT_EQ(read_ready_calls, 1);
+    ::close(fds[0]);
+    ::close(fds[1]);
+}
+
+#endif
 
 TEST(IoContextTest, RunOneReturnsImmediatelyWhenIdle) {
     io_context ctx;

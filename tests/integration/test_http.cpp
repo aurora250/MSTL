@@ -29,6 +29,7 @@
 #include <NeForce/network/tcp/tcp_client.hpp>
 #include <NeForce/core/time/datetime.hpp>
 #include <gtest/gtest.h>
+#include "utils.hpp"
 using namespace neforce;
 using namespace neforce::http;
 
@@ -1686,14 +1687,6 @@ TEST_F(ChunkedReaderIntegrationTest, ConfigurableLimits) {
 
 class H2TlsIntegrationTest : public ::testing::Test {
 protected:
-#ifdef NEFORCE_PLATFORM_WINDOWS
-    const char* cert_path = "D:/OpenSSL/server.crt";
-    const char* key_path = "D:/OpenSSL/server.key";
-#else
-    const char* cert_path = "/tmp/h2test.crt";
-    const char* key_path = "/tmp/h2test.key";
-#endif
-
     void SetUp() override {}
     void TearDown() override {}
 
@@ -1702,23 +1695,34 @@ protected:
 
 TEST_F(H2TlsIntegrationTest, H2AlpnNegotiationServerClient) {
     ssl_context server_ctx(ssl_method::TLS_SERVER);
-    if (!server_ctx.load_certificate(cert_path, key_path)) {
-        GTEST_SKIP() << "Test certificate not found at " << cert_path;
+    if (!server_ctx.load_certificate(SERVER_CERT, SERVER_KEY)) {
+        GTEST_SKIP() << "Test certificate not found at " << SERVER_CERT;
     }
 
-    http_server server(ports(8443), ctx_, move(server_ctx), 1);
-    server.start();
-    this_thread::sleep_for(milliseconds(200));
+    // Bind an ephemeral port. A hardcoded one collides with anything else already
+    // listening (examples/network/http2_server.cpp uses 8443 too), and the failed bind
+    // used to be invisible because start()'s result was discarded.
+    http_server server(ports(0), ctx_, move(server_ctx), 1);
+    ASSERT_TRUE(server.start());
+    const ports server_port = server.port();
+    ASSERT_NE(server_port.value(), 0);
 
     ssl_context client_ctx(ssl_method::TLS_CLIENT);
     client_ctx.set_alpn_protos({"h2"});
 
-    ssl_client client(ctx_, move(client_ctx));
+    // The client gets its own io_context: the server occupies ctx_'s first worker thread
+    // with its accept loop, and sharing one context between the two ends made the client's
+    // TLS connect fail every time.
+    io_context client_ioc;
+    ssl_client client(client_ioc, move(client_ctx));
     client.set_verify_peer(false);
-    if (!client.connect(ip_address::loopback().to_string(), ports(8443))) {
-        server.stop();
-        GTEST_SKIP() << "TLS connection failed (port 8443 may be unavailable)";
-    }
+    // connect() performs the TLS handshake as well, so a failure here is a real defect
+    // rather than a reason to skip. start() already bound and listened synchronously.
+    // ip_address::to_string() renders "address:port" (see ip_address.hpp), so it must not be fed
+    // back to connect() as a host name: parse() rejects it, connect() falls through to the DNS
+    // branch and fails. That silent failure is why this test used to skip instead of asserting.
+    ASSERT_TRUE(client.connect("127.0.0.1", server_port))
+            << "TLS connect to the freshly started server on port " << server_port.value() << " failed";
 
     auto* ssl_sock = dynamic_cast<ssl_socket*>(&client.socket());
     ASSERT_NE(ssl_sock, nullptr);
@@ -1731,23 +1735,27 @@ TEST_F(H2TlsIntegrationTest, H2AlpnNegotiationServerClient) {
 
 TEST_F(H2TlsIntegrationTest, Http11AlpnFallback) {
     ssl_context server_ctx(ssl_method::TLS_SERVER);
-    if (!server_ctx.load_certificate(cert_path, key_path)) {
-        GTEST_SKIP() << "Test certificate not found at " << cert_path;
+    if (!server_ctx.load_certificate(SERVER_CERT, SERVER_KEY)) {
+        GTEST_SKIP() << "Test certificate not found at " << SERVER_CERT;
     }
 
-    http_server server(ports(8444), ctx_, move(server_ctx), 1);
-    server.start();
-    this_thread::sleep_for(milliseconds(200));
+    http_server server(ports(0), ctx_, move(server_ctx), 1);
+    ASSERT_TRUE(server.start());
+    const ports server_port = server.port();
+    ASSERT_NE(server_port.value(), 0);
 
     ssl_context client_ctx(ssl_method::TLS_CLIENT);
     client_ctx.set_alpn_protos({"http/1.1"});
 
-    ssl_client client(ctx_, move(client_ctx));
+    // Own context for the client, for the same reason as above.
+    io_context client_ioc;
+    ssl_client client(client_ioc, move(client_ctx));
     client.set_verify_peer(false);
-    if (!client.connect(ip_address::loopback().to_string(), ports(8444))) {
-        server.stop();
-        GTEST_SKIP() << "TLS connection failed (port 8444 may be unavailable)";
-    }
+    // ip_address::to_string() renders "address:port" (see ip_address.hpp), so it must not be fed
+    // back to connect() as a host name: parse() rejects it, connect() falls through to the DNS
+    // branch and fails. That silent failure is why this test used to skip instead of asserting.
+    ASSERT_TRUE(client.connect("127.0.0.1", server_port))
+            << "TLS connect to the freshly started server on port " << server_port.value() << " failed";
 
     auto* ssl_sock = dynamic_cast<ssl_socket*>(&client.socket());
     ASSERT_NE(ssl_sock, nullptr);

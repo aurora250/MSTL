@@ -22,7 +22,7 @@ TEST_F(RegexConstructionTest, ValidPattern) { EXPECT_NO_THROW(regex re("hello"))
 
 TEST_F(RegexConstructionTest, ValidPatternWithGroups) { EXPECT_NO_THROW(regex re("(\\w+)=(\\d+)")); }
 
-TEST_F(RegexConstructionTest, ValidPatternWithOptions) { EXPECT_NO_THROW(regex re("hello", PCRE2_CASELESS)); }
+TEST_F(RegexConstructionTest, ValidPatternWithOptions) { EXPECT_NO_THROW(regex re("hello", regex_option::caseless)); }
 
 TEST_F(RegexConstructionTest, InvalidPattern) { EXPECT_THROW(regex re("[invalid"), regex_exception); }
 

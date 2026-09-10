@@ -25,7 +25,7 @@ namespace {
     // remembering the relative prefix of each watch so events can be reported with the correct full path.
     // Symbolic links are not followed (cycle safety).
     void add_subdir_watches(const int inotify_fd, const uint32_t mask, const string& root,
-                            unordered_map<int, string>& watch_map) {
+                            flat_unordered_map<int, string>& watch_map) {
         vector<string> pending;
         pending.emplace_back();
         while (!pending.empty()) {
@@ -43,6 +43,7 @@ namespace {
                 continue;
             }
             const ::dirent* entry = nullptr;
+            // NOLINTNEXTLINE(concurrency-mt-unsafe)
             while ((entry = ::readdir(dir)) != nullptr) {
                 const string_view name(entry->d_name);
                 if (name == "." || name == "..") {

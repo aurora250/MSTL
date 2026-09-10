@@ -239,10 +239,12 @@ public:
      */
     class NEFORCE_API stream_compressor {
     private:
-        void* stream_;             ///< zlib流对象
+        void* stream_ = nullptr;   ///< zlib流对象
         bool initialized_ = false; ///< 是否已初始化
         size_t bytes_input_ = 0;   ///< 输入字节计数
         size_t bytes_output_ = 0;  ///< 输出字节计数
+
+        void free_stream() noexcept;
 
     public:
         /**
@@ -351,10 +353,12 @@ public:
      */
     class NEFORCE_API stream_decompressor {
     private:
-        void* stream_;             ///< zlib流对象
+        void* stream_ = nullptr;   ///< zlib流对象
         bool initialized_ = false; ///< 是否已初始化
         size_t bytes_input_ = 0;   ///< 输入字节计数
         size_t bytes_output_ = 0;  ///< 输出字节计数
+
+        void free_stream() noexcept;
 
     public:
         /**

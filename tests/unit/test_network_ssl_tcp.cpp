@@ -1007,6 +1007,22 @@ TEST_F(SslAlpnNegotiateTest, ContextSetAlpnProtosEmpty) {
     EXPECT_NO_THROW(ctx.set_alpn_protos({}));
 }
 
+TEST_F(SslAlpnNegotiateTest, ContextSetAlpnProtosTwiceKeepsContextValid) {
+    ssl_context ctx(ssl_method::TLS_SERVER);
+    EXPECT_NO_THROW(ctx.set_alpn_protos({"h2", "http/1.1"}));
+    EXPECT_NO_THROW(ctx.set_alpn_protos({"h2"}));
+    EXPECT_TRUE(ctx.is_valid());
+    EXPECT_NE(ctx.native_handle(), nullptr);
+}
+
+TEST_F(SslAlpnNegotiateTest, ContextSetAlpnProtosEmptyKeepsContextValid) {
+    ssl_context ctx(ssl_method::TLS_SERVER);
+    ctx.set_alpn_protos({"h2"});
+    EXPECT_NO_THROW(ctx.set_alpn_protos({}));
+    EXPECT_TRUE(ctx.is_valid());
+    EXPECT_NE(ctx.native_handle(), nullptr);
+}
+
 TEST_F(SslSocketTest, PrepareServerSslWithoutOpenThrows) {
     ssl_socket sock;
     ssl_context ctx(ssl_method::TLS_SERVER);

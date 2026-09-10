@@ -142,14 +142,18 @@ zlib_compressor::stream_compressor::stream_compressor(const compress_level level
     reset(level, strategy, format);
 }
 
-zlib_compressor::stream_compressor::~stream_compressor() {
-    if (stream_ != nullptr) {
-        auto* stream = static_cast<::z_stream*>(stream_);
+zlib_compressor::stream_compressor::~stream_compressor() { free_stream(); }
+
+void zlib_compressor::stream_compressor::free_stream() noexcept {
+    auto* stream = static_cast<::z_stream*>(stream_);
+    if (stream != nullptr) {
         if (stream->state != nullptr) {
             ::deflateEnd(stream);
         }
         delete stream;
     }
+    stream_ = nullptr;
+    initialized_ = false;
 }
 
 zlib_compressor::stream_compressor::stream_compressor(stream_compressor&& other) noexcept :
@@ -167,6 +171,8 @@ zlib_compressor::stream_compressor& zlib_compressor::stream_compressor::operator
     if (addressof(other) == this) {
         return *this;
     }
+
+    free_stream();
 
     stream_ = other.stream_;
     initialized_ = other.initialized_;
@@ -199,11 +205,17 @@ void zlib_compressor::stream_compressor::reset(compress_level level, compress_st
             unreachable();
     }
 
-    stream_ = new ::z_stream{};
-    const int result = ::deflateInit2(static_cast<::z_stream*>(stream_), static_cast<int>(level), Z_DEFLATED,
-                                      window_bits, MAX_MEM_LEVEL, static_cast<int>(strategy));
+    auto* fresh = new ::z_stream{};
+    const int result = ::deflateInit2(fresh, static_cast<int>(level), Z_DEFLATED, window_bits, MAX_MEM_LEVEL,
+                                      static_cast<int>(strategy));
 
-    check_zlib_error(result);
+    if (result != Z_OK) {
+        delete fresh;
+        check_zlib_error(result);
+    }
+
+    free_stream();
+    stream_ = fresh;
     initialized_ = true;
     bytes_input_ = 0;
     bytes_output_ = 0;
@@ -266,7 +278,9 @@ byte_vector zlib_compressor::stream_compressor::finish() { return compress(cbyte
 
 zlib_compressor::stream_decompressor::stream_decompressor(const compress_format format) { reset(format); }
 
-zlib_compressor::stream_decompressor::~stream_decompressor() {
+zlib_compressor::stream_decompressor::~stream_decompressor() { free_stream(); }
+
+void zlib_compressor::stream_decompressor::free_stream() noexcept {
     auto* stream = static_cast<::z_stream*>(stream_);
     if (stream != nullptr) {
         if (stream->state != nullptr) {
@@ -274,6 +288,8 @@ zlib_compressor::stream_decompressor::~stream_decompressor() {
         }
         delete stream;
     }
+    stream_ = nullptr;
+    initialized_ = false;
 }
 
 zlib_compressor::stream_decompressor::stream_decompressor(stream_decompressor&& other) noexcept :
@@ -292,6 +308,8 @@ zlib_compressor::stream_decompressor::operator=(stream_decompressor&& other) noe
     if (addressof(other) == this) {
         return *this;
     }
+
+    free_stream();
 
     stream_ = other.stream_;
     initialized_ = other.initialized_;
@@ -323,9 +341,15 @@ void zlib_compressor::stream_decompressor::reset(const compress_format format) {
             unreachable();
     }
 
-    stream_ = new ::z_stream{};
-    const int result = ::inflateInit2(static_cast<::z_stream*>(stream_), window_bits);
-    check_zlib_error(result);
+    auto* fresh = new ::z_stream{};
+    const int result = ::inflateInit2(fresh, window_bits);
+    if (result != Z_OK) {
+        delete fresh;
+        check_zlib_error(result);
+    }
+
+    free_stream();
+    stream_ = fresh;
     initialized_ = true;
     bytes_input_ = 0;
     bytes_output_ = 0;

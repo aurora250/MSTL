@@ -81,6 +81,7 @@ jobs:
       - name: Run Valgrind Memcheck
         run: |
           cd build
+          set +e
           valgrind \
             --suppressions=../valgrind.supp \
             --leak-check=full \
@@ -88,6 +89,9 @@ jobs:
             --errors-for-leak-kinds=definite,indirect \
             --error-exitcode=1 \
             ./bin/NexusForceUnitTests 2>&1 | tee valgrind_output.txt
+          VALGRIND_EXIT=${PIPESTATUS[0]}
+          echo "valgrind exit code: ${VALGRIND_EXIT}"
+          exit ${VALGRIND_EXIT}
 
       - name: Check Leak Summary
         if: always()

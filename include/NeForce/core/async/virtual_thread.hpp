@@ -60,7 +60,9 @@ constexpr bool is_virtual_thread_task_v = is_virtual_thread_task<T>::value;
 NEFORCE_BEGIN_INNER__
 
 struct task_shared_state_base {
-    atomic<bool> scheduled_{false};
+    /// @brief 帧所有权标记
+    /// @note 任何把帧交给第三方的挂起点都必须置位，否则拥有者可能销毁一个仍会被恢复的帧
+    atomic<bool> detached_{false};
 };
 
 template <typename T>
@@ -69,7 +71,8 @@ struct task_shared_state : task_shared_state_base {
     bool has_value_{false};
     exception_ptr exception_{nullptr};
 
-    atomic<coroutine_handle<>> continuation_{nullptr};
+    /// 等待此任务的协程句柄
+    coroutine_handle<> continuation_{nullptr};
     atomic<bool> completed_{false};
     mutex mtx_;
     condition_variable cv_;
@@ -93,7 +96,8 @@ template <>
 struct task_shared_state<void> : task_shared_state_base {
     exception_ptr exception_{nullptr};
 
-    atomic<coroutine_handle<>> continuation_{nullptr};
+    /// 等待此任务的协程句柄
+    coroutine_handle<> continuation_{nullptr};
     atomic<bool> completed_{false};
     mutex mtx_;
     condition_variable cv_;
@@ -262,7 +266,6 @@ struct virtual_thread_task<void> {
          * @brief 最终挂起点
          *
          * 任务完成时标记 completed_、通知等待者，并将 continuation 送入调度器。
-         * 返回 void 而非 coroutine_handle，避免对称转移导致的 use-after-free。
          */
         auto final_suspend() noexcept {
             struct final_awaiter {
@@ -271,14 +274,22 @@ struct virtual_thread_task<void> {
                 bool await_suspend(coroutine_handle<promise_type> h) noexcept {
                     auto& p = h.promise();
                     auto* state = p.shared_state_;
+                    coroutine_handle<> cont{nullptr};
 
-                    state->completed_.store(true, memory_order_release);
-                    state->cv_.notify_all();
+                    {
+                        lock<mutex> lock(state->mtx_);
+                        state->completed_.store(true, memory_order_release);
+                        state->cv_.notify_all();
 
-                    auto cont = state->continuation_.exchange(nullptr, memory_order_acq_rel);
+                        cont = state->continuation_;
+                        state->continuation_ = nullptr;
+                        if (cont) {
+                            inner::mark_continuation_scheduled(cont);
+                        }
+                    }
+
                     if (cont) {
                         try {
-                            inner::mark_continuation_scheduled(cont);
                             virtual_thread_scheduler::get_instance().schedule(cont);
                             // NOLINTNEXTLINE(bugprone-empty-catch)
                         } catch (...) {
@@ -304,7 +315,7 @@ struct virtual_thread_task<void> {
                 NEFORCE_NODISCARD bool await_ready() const noexcept { return false; }
 
                 void await_suspend(coroutine_handle<> handle) const {
-                    shared_state_->scheduled_.store(true, memory_order_release);
+                    shared_state_->detached_.store(true, memory_order_release);
                     virtual_thread_scheduler::get_instance().schedule(handle);
                 }
 
@@ -326,7 +337,7 @@ struct virtual_thread_task<void> {
                 NEFORCE_NODISCARD bool await_ready() const noexcept { return ms_ <= 0; }
 
                 void await_suspend(coroutine_handle<> handle) const {
-                    shared_state_->scheduled_.store(true, memory_order_release);
+                    shared_state_->detached_.store(true, memory_order_release);
                     thread([handle, ms = ms_] {
                         this_thread::sleep_for(milliseconds(ms));
                         virtual_thread_scheduler::get_instance().schedule(handle);
@@ -395,9 +406,9 @@ struct virtual_thread_task<void> {
      */
     ~virtual_thread_task() {
         if (handle_) {
-            bool completed = shared_state_ != nullptr && shared_state_->completed_.load(memory_order_acquire);
-            bool was_scheduled = shared_state_ != nullptr && shared_state_->scheduled_.load(memory_order_acquire);
-            if (!completed && !was_scheduled) {
+            const bool completed = shared_state_ != nullptr && shared_state_->completed_.load(memory_order_acquire);
+            const bool detached = shared_state_ != nullptr && shared_state_->detached_.load(memory_order_acquire);
+            if (!completed && !detached) {
                 handle_.destroy();
             }
         }
@@ -424,9 +435,9 @@ struct virtual_thread_task<void> {
             return *this;
         }
         if (handle_) {
-            bool completed = shared_state_ != nullptr && shared_state_->completed_.load(memory_order_acquire);
-            bool was_scheduled = shared_state_ != nullptr && shared_state_->scheduled_.load(memory_order_acquire);
-            if (!completed && !was_scheduled) {
+            const bool completed = shared_state_ != nullptr && shared_state_->completed_.load(memory_order_acquire);
+            const bool detached = shared_state_ != nullptr && shared_state_->detached_.load(memory_order_acquire);
+            if (!completed && !detached) {
                 handle_.destroy();
             }
         }
@@ -452,13 +463,12 @@ struct virtual_thread_task<void> {
      * @return true 需要挂起，false 已可继续
      */
     bool await_suspend(coroutine_handle<> caller) noexcept {
-        shared_state_->continuation_.store(caller, memory_order_release);
-
+        lock<mutex> lock(shared_state_->mtx_);
         if (shared_state_->completed_.load(memory_order_acquire)) {
-            if (shared_state_->continuation_.exchange(nullptr, memory_order_acq_rel)) {
-                return false;
-            }
+            return false;
         }
+        inner::mark_continuation_scheduled(caller);
+        shared_state_->continuation_ = caller;
         return true;
     }
 
@@ -505,7 +515,7 @@ NEFORCE_BEGIN_INNER__
 
 inline void mark_continuation_scheduled(coroutine_handle<> cont) {
     auto vh = coroutine_handle<virtual_thread_task<void>::promise_type>::from_address(cont.address());
-    vh.promise().shared_state_->scheduled_.store(true, memory_order_release);
+    vh.promise().shared_state_->detached_.store(true, memory_order_release);
 }
 
 NEFORCE_END_INNER__
@@ -551,14 +561,22 @@ struct virtual_thread_task {
                 bool await_suspend(coroutine_handle<promise_type> h) noexcept {
                     auto& p = h.promise();
                     auto* state = p.shared_state_;
+                    coroutine_handle<> cont{nullptr};
 
-                    state->completed_.store(true, memory_order_release);
-                    state->cv_.notify_all();
+                    {
+                        lock<mutex> lock(state->mtx_);
+                        state->completed_.store(true, memory_order_release);
+                        state->cv_.notify_all();
 
-                    auto cont = state->continuation_.exchange(nullptr, memory_order_acq_rel);
+                        cont = state->continuation_;
+                        state->continuation_ = nullptr;
+                        if (cont) {
+                            inner::mark_continuation_scheduled(cont);
+                        }
+                    }
+
                     if (cont) {
                         try {
-                            inner::mark_continuation_scheduled(cont);
                             virtual_thread_scheduler::get_instance().schedule(cont);
                             // NOLINTNEXTLINE(bugprone-empty-catch)
                         } catch (...) {
@@ -583,7 +601,7 @@ struct virtual_thread_task {
                 NEFORCE_NODISCARD bool await_ready() const noexcept { return false; }
 
                 void await_suspend(coroutine_handle<> handle) const {
-                    shared_state_->scheduled_.store(true, memory_order_release);
+                    shared_state_->detached_.store(true, memory_order_release);
                     virtual_thread_scheduler::get_instance().schedule(handle);
                 }
 
@@ -604,7 +622,7 @@ struct virtual_thread_task {
                 NEFORCE_NODISCARD bool await_ready() const noexcept { return ms_ <= 0; }
 
                 void await_suspend(coroutine_handle<> handle) const {
-                    shared_state_->scheduled_.store(true, memory_order_release);
+                    shared_state_->detached_.store(true, memory_order_release);
                     thread([handle, ms = ms_] {
                         this_thread::sleep_for(milliseconds(ms));
                         virtual_thread_scheduler::get_instance().schedule(handle);
@@ -681,9 +699,9 @@ struct virtual_thread_task {
      */
     ~virtual_thread_task() {
         if (handle_) {
-            bool completed = shared_state_ && shared_state_->completed_.load(memory_order_acquire);
-            bool was_scheduled = shared_state_ && shared_state_->scheduled_.load(memory_order_acquire);
-            if (!completed && !was_scheduled) {
+            const bool completed = shared_state_ && shared_state_->completed_.load(memory_order_acquire);
+            const bool detached = shared_state_ && shared_state_->detached_.load(memory_order_acquire);
+            if (!completed && !detached) {
                 handle_.destroy();
             }
         }
@@ -710,9 +728,9 @@ struct virtual_thread_task {
             return *this;
         }
         if (handle_) {
-            bool completed = shared_state_ && shared_state_->completed_.load(memory_order_acquire);
-            bool was_scheduled = shared_state_ && shared_state_->scheduled_.load(memory_order_acquire);
-            if (!completed && !was_scheduled) {
+            const bool completed = shared_state_ && shared_state_->completed_.load(memory_order_acquire);
+            const bool detached = shared_state_ && shared_state_->detached_.load(memory_order_acquire);
+            if (!completed && !detached) {
                 handle_.destroy();
             }
         }
@@ -734,13 +752,12 @@ struct virtual_thread_task {
      * @brief co_await 挂起时注册 continuation
      */
     bool await_suspend(coroutine_handle<> caller) noexcept {
-        shared_state_->continuation_.store(caller, memory_order_release);
-
+        lock<mutex> lock(shared_state_->mtx_);
         if (shared_state_->completed_.load(memory_order_acquire)) {
-            if (shared_state_->continuation_.exchange(nullptr, memory_order_acq_rel)) {
-                return false;
-            }
+            return false;
         }
+        inner::mark_continuation_scheduled(caller);
+        shared_state_->continuation_ = caller;
         return true;
     }
 
@@ -817,6 +834,10 @@ public:
     static auto start(Func&& func) {
         using result_type = invoke_result_t<decay_t<Func>>;
         if constexpr (is_virtual_thread_task_v<result_type>) {
+            static_assert(!is_rvalue_reference_v<Func&&> || is_empty_v<decay_t<Func>>,
+                          "virtual_thread::start() was given a temporary coroutine callable that captures state. "
+                          "A coroutine frame reaches its captures through `this`, so the closure must outlive the "
+                          "coroutine: bind the lambda to a named local and pass that lvalue instead.");
             return _NEFORCE forward<Func>(func)();
         } else {
             return create_task(_NEFORCE forward<Func>(func));

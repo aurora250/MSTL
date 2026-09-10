@@ -1,5 +1,7 @@
 #include <NeForce/core/string/regex.hpp>
 #include <NeForce/core/utility/packages.hpp>
+#include <NeForce/core/utility/scope.hpp>
+#include <pcre2.h>
 NEFORCE_BEGIN_NAMESPACE__
 
 match_result::match_result(string subject, const size_t pos, const size_t len, const vector<string>& groups,
@@ -71,48 +73,42 @@ string match_result::format(const string_view fmt) const {
     return result;
 }
 
-void regex::compile(const string& pattern, const uint32_t options) {
+void regex::compile(const string& pattern, const regex_option options) {
     int error_code = 0;
     ::PCRE2_SIZE error_offset = 0;
 
-    code_.reset(::pcre2_compile(reinterpret_cast<::PCRE2_SPTR>(pattern.data()), pattern.length(), options, &error_code,
-                                &error_offset, nullptr));
+    reset();
+    code_ = ::pcre2_compile(reinterpret_cast<::PCRE2_SPTR>(pattern.data()), pattern.length(),
+                            static_cast<uint32_t>(options), &error_code, &error_offset, nullptr);
 
-    if (!code_) {
+    if (code_ == nullptr) {
         char error_message[256];
         ::pcre2_get_error_message(error_code, reinterpret_cast<::PCRE2_UCHAR*>(error_message), sizeof(error_message));
         NEFORCE_THROW_EXCEPTION(regex_exception(error_message));
     }
 
-    ::pcre2_pattern_info(code_.get(), PCRE2_INFO_CAPTURECOUNT, &capture_count_);
+    ::pcre2_pattern_info(static_cast<::pcre2_code*>(code_), PCRE2_INFO_CAPTURECOUNT, &capture_count_);
 
     pattern_ = pattern;
     options_ = options;
 }
 
-match_result regex::do_match(const ::PCRE2_SPTR subject, const size_t length, const size_t start_offset,
+match_result regex::do_match(const void* subject, const size_t length, const size_t start_offset,
                              const uint32_t options, const string& subject_str) const {
-
-    struct pcre2_match_data_deleter {
-        void operator()(::pcre2_match_data* data) const noexcept {
-            if (data != nullptr) {
-                ::pcre2_match_data_free(data);
-            }
-        }
-    };
-
-    if (!code_) {
+    if (code_ == nullptr) {
         NEFORCE_THROW_EXCEPTION(regex_exception("Uninitialized regex object"));
     }
 
-    const unique_ptr<::pcre2_match_data, pcre2_match_data_deleter> match_data(
-            ::pcre2_match_data_create_from_pattern(code_.get(), nullptr));
+    ::pcre2_match_data* match_data = ::pcre2_match_data_create_from_pattern(static_cast<::pcre2_code*>(code_), nullptr);
 
-    if (!match_data) {
+    if (match_data == nullptr) {
         NEFORCE_THROW_EXCEPTION(regex_exception("Failed to create match data"));
     }
+    const scope_exit match_data_guard([match_data]() noexcept { ::pcre2_match_data_free(match_data); });
 
-    const int rc = ::pcre2_match(code_.get(), subject, length, start_offset, options, match_data.get(), nullptr);
+    const auto* const subject_sptr = static_cast<::PCRE2_SPTR>(subject);
+    const int rc = ::pcre2_match(static_cast<::pcre2_code*>(code_), subject_sptr, length, start_offset, options,
+                                 match_data, nullptr);
 
     if (rc < 0) {
         if (rc == PCRE2_ERROR_NOMATCH) {
@@ -123,7 +119,7 @@ match_result regex::do_match(const ::PCRE2_SPTR subject, const size_t length, co
         NEFORCE_THROW_EXCEPTION(regex_exception(error_message));
     }
 
-    const ::PCRE2_SIZE* ovector = ::pcre2_get_ovector_pointer(match_data.get());
+    const ::PCRE2_SIZE* ovector = ::pcre2_get_ovector_pointer(match_data);
 
     vector<string> groups;
     vector<pair<size_t, size_t>> group_positions;
@@ -134,7 +130,7 @@ match_result regex::do_match(const ::PCRE2_SPTR subject, const size_t length, co
         if (ovector[i * 2] != PCRE2_UNSET) {
             const size_t start = ovector[i * 2];
             const size_t end = ovector[i * 2 + 1];
-            groups.emplace_back(reinterpret_cast<const char*>(subject + start), end - start);
+            groups.emplace_back(reinterpret_cast<const char*>(subject_sptr + start), end - start);
             group_positions.emplace_back(start, end - start);
         } else {
             groups.emplace_back();
@@ -142,26 +138,37 @@ match_result regex::do_match(const ::PCRE2_SPTR subject, const size_t length, co
         }
     }
 
-    return {subject_str, ovector[0], ovector[1] - ovector[0], groups, group_positions};
+    const match_result res{subject_str, ovector[0], ovector[1] - ovector[0], groups, group_positions};
+    return move(res);
 }
 
-regex::regex(const string& pattern, const uint32_t options) { compile(pattern, options); }
+regex::regex(const string& pattern, const regex_option options) { compile(pattern, options); }
 
 regex::regex(regex&& other) noexcept :
-code_(move(other.code_)),
+code_(other.code_),
 pattern_(move(other.pattern_)),
 options_(other.options_),
-capture_count_(other.capture_count_) {}
+capture_count_(other.capture_count_) {
+    other.code_ = nullptr;
+    other.options_ = regex_option::none;
+    other.capture_count_ = 0;
+}
 
 regex& regex::operator=(regex&& other) noexcept {
     if (addressof(other) == this) {
         return *this;
     }
 
-    code_ = move(other.code_);
+    reset();
+
+    code_ = other.code_;
     pattern_ = move(other.pattern_);
     options_ = other.options_;
     capture_count_ = other.capture_count_;
+
+    other.code_ = nullptr;
+    other.options_ = regex_option::none;
+    other.capture_count_ = 0;
 
     return *this;
 }
@@ -177,14 +184,13 @@ regex& regex::operator=(const regex& other) {
         if (!other.pattern_.empty()) {
             compile(other.pattern_, other.options_);
         } else {
-            code_.reset();
-            pattern_.clear();
-            options_ = 0;
-            capture_count_ = 0;
+            reset();
         }
     }
     return *this;
 }
+
+regex::~regex() { reset(); }
 
 match_result regex::do_match(const string& str) const {
     return do_match(reinterpret_cast<::PCRE2_SPTR>(str.data()), str.length(), 0, PCRE2_ANCHORED | PCRE2_ENDANCHORED,
@@ -303,6 +309,16 @@ vector<string> regex::split(const string& str, const int max_splits) const {
     return parts;
 }
 
+void regex::reset() noexcept {
+    if (code_ != nullptr) {
+        ::pcre2_code_free(static_cast<::pcre2_code*>(code_));
+    }
+    code_ = nullptr;
+    pattern_.clear();
+    options_ = regex_option::none;
+    capture_count_ = 0;
+}
+
 void regex_iterator::find_next() {
     if (regex_ == nullptr || !regex_->valid() || next_pos_ > subject_.length()) {
         current_ = match_result{};
@@ -312,7 +328,7 @@ void regex_iterator::find_next() {
 
     auto result = regex_->search(subject_, next_pos_);
     if (result.matched()) {
-        next_pos_ = result.position() + _NEFORCE max(result.length(), size_t(1));
+        next_pos_ = result.position() + _NEFORCE max(result.length(), static_cast<size_t>(1));
         if (next_pos_ > subject_.length()) {
             next_pos_ = subject_.length() + 1;
         }

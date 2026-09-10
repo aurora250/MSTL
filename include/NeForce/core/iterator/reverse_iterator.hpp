@@ -209,8 +209,7 @@ public:
      * @param n 偏移量
      * @return 偏移n个位置后的元素引用
      */
-    constexpr reference operator[](const difference_type n) const
-            noexcept(noexcept(_NEFORCE declcopy<reference>(reverse_iterator(current_ - n)))) {
+    constexpr reference operator[](const difference_type n) const noexcept(noexcept(*(*this + n))) {
         return *(*this + n);
     }
 

@@ -290,8 +290,9 @@ uint64_t wyhash(const void* key, const size_t len, uint64_t seed) noexcept {
     if (len <= 16) {
         if (len >= 4) {
             const size_t half_offset = (len >> 3) << 2;
-            a = (endian::read_le64(p) << 32) | endian::read_le64(p + half_offset);
-            b = (endian::read_le64(p + len - 4) << 32) | endian::read_le64(p + len - 4 - half_offset);
+            a = (static_cast<uint64_t>(endian::read_le32(p)) << 32) | endian::read_le32(p + half_offset);
+            b = (static_cast<uint64_t>(endian::read_le32(p + len - 4)) << 32) |
+                endian::read_le32(p + len - 4 - half_offset);
         } else if (len > 0) {
             const uint8_t c1 = p[0];
             const uint8_t c2 = p[len >> 1];

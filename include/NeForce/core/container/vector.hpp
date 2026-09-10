@@ -118,7 +118,9 @@ public:
      * @param off 偏移量
      * @return 偏移位置元素的引用
      */
-    NEFORCE_NODISCARD NEFORCE_CONSTEXPR20 reference operator[](difference_type off) noexcept { return *(*this + off); }
+    NEFORCE_NODISCARD NEFORCE_CONSTEXPR20 reference operator[](difference_type off) const noexcept {
+        return *(*this + off);
+    }
 
     /**
      * @brief 相等比较

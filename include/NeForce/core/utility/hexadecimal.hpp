@@ -121,8 +121,14 @@ private:
         }
 
         if (negative) {
-            if (result > static_cast<uint64_t>(numeric_traits<int64_t>::max()) + 1) {
+            constexpr uint64_t min_magnitude = static_cast<uint64_t>(numeric_traits<int64_t>::max()) + 1;
+            if (result > min_magnitude) {
                 NEFORCE_THROW_EXCEPTION(value_exception("Hexadecimal value out of range"));
+            }
+            if (result == min_magnitude) {
+                // -2^63 has no positive counterpart, so it is returned as the minimum directly:
+                // converting 2^63 to int64_t and negating it is signed overflow.
+                return numeric_traits<int64_t>::min();
             }
             return -static_cast<int64_t>(result);
         }

@@ -1,5 +1,6 @@
 #include <NeForce/core/async/io_context.hpp>
 #include <NeForce/core/async/thread.hpp>
+#include <NeForce/core/exception/terminate.hpp>
 #include <NeForce/core/time/clocks.hpp>
 #ifdef NEFORCE_PLATFORM_LINUX
 #    include <cerrno>
@@ -273,13 +274,27 @@ void io_context::add_fd(native_handle_type fd, uint32_t events, fd_callback cb, 
     ::epoll_event ev{};
     ev.events = events | (edge_triggered ? epoll_et : 0U);
     ev.data.fd = fd;
-    ::epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, fd, &ev);
+
+    lock<mutex> lk(fd_mutex_);
+
+    // Re-registering a fd must MOD its existing epoll entry. EPOLL_CTL_ADD fails with
+    // EEXIST once the fd is registered, and ignoring that leaves the kernel watching the
+    // *old* event mask while fd_map_ already holds the new callback, so the new callback
+    // never receives anything. Components register the same fd once per direction
+    // (connect: epoll_out, then read: epoll_in), so this is a routine transition, not an
+    // error case.
+    const int ctl_op = (fd_map_.contains(fd)) ? EPOLL_CTL_MOD : EPOLL_CTL_ADD;
+    if (::epoll_ctl(epoll_fd_, ctl_op, fd, &ev) != 0) {
+        // Silently dropping the registration would make the callback unreachable, which
+        // shows up much later as an operation that never completes.
+        terminate();
+    }
 
     fd_info info{};
     info.fd = fd;
     info.events = events;
     info.callback = move(cb);
-    if (fd_map_.find(fd) == fd_map_.end()) {
+    if (!fd_map_.contains(fd)) {
         registered_fds_.fetch_add(1, memory_order_relaxed);
     }
     fd_map_[fd] = move(info);
@@ -303,22 +318,23 @@ void io_context::add_fd(native_handle_type fd, uint32_t events, fd_callback cb, 
         } else {
             fd_events_[fd] = wevent;
         }
-    }
 
-    fd_info info{};
-    info.fd = fd;
-    info.events = events;
-    info.callback = move(cb);
-    if (fd_map_.find(fd) == fd_map_.end()) {
-        registered_fds_.fetch_add(1, memory_order_relaxed);
+        fd_info info{};
+        info.fd = fd;
+        info.events = events;
+        info.callback = move(cb);
+        if (fd_map_.find(fd) == fd_map_.end()) {
+            registered_fds_.fetch_add(1, memory_order_relaxed);
+        }
+        fd_map_[fd] = move(info);
     }
-    fd_map_[fd] = move(info);
 
     ::SetEvent(wake_event_);
 #endif
 }
 
 void io_context::mod_fd(native_handle_type fd, uint32_t events, bool edge_triggered) {
+    lock<mutex> lk(fd_mutex_);
 #ifdef NEFORCE_PLATFORM_LINUX
     auto it = fd_map_.find(fd);
     if (it == fd_map_.end()) {
@@ -337,7 +353,6 @@ void io_context::mod_fd(native_handle_type fd, uint32_t events, bool edge_trigge
     }
     it->second.events = events;
 
-    lock<mutex> lk(fd_mutex_);
     const auto eit = fd_events_.find(fd);
     if (eit != fd_events_.end() && eit->second != nullptr) {
         ::WSAEventSelect(fd, eit->second, to_wsa_events(events));
@@ -347,7 +362,8 @@ void io_context::mod_fd(native_handle_type fd, uint32_t events, bool edge_trigge
 
 void io_context::remove_fd(native_handle_type fd) {
 #ifdef NEFORCE_PLATFORM_LINUX
-    if (fd_map_.find(fd) != fd_map_.end()) {
+    lock<mutex> lk(fd_mutex_);
+    if (fd_map_.contains(fd)) {
         fd_map_.erase(fd);
         // The internal wake fd lives in fd_map_ but was never counted.
         if (fd != wake_fd_) {
@@ -356,12 +372,12 @@ void io_context::remove_fd(native_handle_type fd) {
     }
     ::epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, fd, nullptr);
 #else
+    lock<mutex> lk(fd_mutex_);
     if (fd_map_.find(fd) != fd_map_.end()) {
         fd_map_.erase(fd);
         registered_fds_.fetch_sub(1, memory_order_relaxed);
     }
 
-    lock<mutex> lk(fd_mutex_);
     const auto eit = fd_events_.find(fd);
     if (eit != fd_events_.end()) {
         ::WSAEventSelect(fd, nullptr, 0);
@@ -544,11 +560,17 @@ size_t io_context::run_one(int timeout_ms) {
                 ::read(wake_fd_, &dummy, sizeof(dummy));
                 continue;
             }
-            auto it = fd_map_.find(fd);
-            if (it != fd_map_.end() && it->second.callback) {
-                // Dispatch on a copy: the callback may call remove_fd() or re-register the same fd from inside the callback,
-                // which erases/replaces the stored callback and would otherwise destroy the object currently executing.
-                const auto cb = it->second.callback;
+            // Dispatch on a copy: the callback may call remove_fd() or re-register the same fd from inside the callback,
+            // which erases/replaces the stored callback and would otherwise destroy the object currently executing.
+            fd_callback cb;
+            {
+                lock<mutex> lk(fd_mutex_);
+                const auto it = fd_map_.find(fd);
+                if (it != fd_map_.end()) {
+                    cb = it->second.callback;
+                }
+            }
+            if (cb) {
                 cb(fd, events[i].events, error_code{});
                 ++count;
             }
@@ -577,10 +599,17 @@ size_t io_context::run_one(int timeout_ms) {
             const int fd = static_cast<int>(key);
             const auto events = static_cast<uint32_t>(bytes);
 
-            const auto it = fd_map_.find(fd);
-            if (it != fd_map_.end() && it->second.callback) {
-                // Dispatch on a copy
-                const auto cb = it->second.callback;
+            // Dispatch on a copy, taken under fd_mutex_ so a concurrent add_fd()/remove_fd()
+            // cannot free the entry while it is being copied; see the Linux branch above.
+            fd_callback cb;
+            {
+                lock<mutex> lk(fd_mutex_);
+                const auto it = fd_map_.find(fd);
+                if (it != fd_map_.end()) {
+                    cb = it->second.callback;
+                }
+            }
+            if (cb) {
                 cb(fd, events, error_code{});
                 ++count;
             }

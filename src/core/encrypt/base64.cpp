@@ -1,4 +1,5 @@
 #include <NeForce/core/encrypt/base64.hpp>
+#include <NeForce/core/memory/memory.hpp>
 #include <NeForce/core/simd/types.hpp>
 NEFORCE_BEGIN_NAMESPACE__
 
@@ -67,8 +68,15 @@ namespace {
         return ::_mm_or_si128(::_mm_andnot_si128(m3, result), ::_mm_and_si128(m3, r3));
     }
 
+    NEFORCE_ALWAYS_INLINE_INLINE simd::vec128_t load_12_bytes(const byte_t* src) {
+        uint32_t tail = 0;
+        memory_copy(&tail, src + 8, sizeof(tail));
+        return ::_mm_unpacklo_epi64(::_mm_loadl_epi64(reinterpret_cast<const simd::vec128_t*>(src)),
+                                    ::_mm_cvtsi32_si128(static_cast<int>(tail)));
+    }
+
     NEFORCE_ALWAYS_INLINE_INLINE void base64_encode_12bytes(const byte_t* src, char* dst, const char* alphabet) {
-        simd::vec128_t v = ::_mm_loadu_si128(reinterpret_cast<const simd::vec128_t*>(src));
+        simd::vec128_t v = load_12_bytes(src);
 
         const simd::vec128_t be_mask = ::_mm_set_epi8(-1, 9, 10, 11, -1, 6, 7, 8, -1, 3, 4, 5, -1, 0, 1, 2);
         v = ::_mm_shuffle_epi8(v, be_mask);

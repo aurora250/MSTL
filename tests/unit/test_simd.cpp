@@ -179,11 +179,8 @@ TEST_F(SimdUtilTest, LoadAndMatchAtVariousOffsets) {
 }
 
 TEST_F(SimdUtilTest, ContainsByteFound) {
-    simd::vec128_t v = simd::fill_i8(0x00);
-    const byte_t b = byte_t{0x00};
-    v = simd::load_unaligned(&b);
     byte_t data[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x7F, 0, 0};
-    v = simd::load_unaligned(data);
+    const simd::vec128_t v = simd::load_unaligned(data);
     EXPECT_TRUE(simd::contains_byte(v, 0x7F));
 }
 
@@ -1618,6 +1615,133 @@ TEST_F(SimdUtilTest, NeonAddI8MatchesIntrinsic) {
     simd::vec128_t sr = simd::add_i8(sa, sb);
     simd::vec128_t matched = simd::match_bytes(sr, vreinterpretq_u8_s8(ref));
     EXPECT_EQ(simd::to_bitmask(matched), 0xFFFF);
+}
+
+#endif
+
+
+#if defined(NEFORCE_PLATFORM_LINUX) && !defined(NEFORCE_SANITIZED_SCAN)
+
+#    include <NeForce/core/string/string.hpp>
+#    include <sys/mman.h>
+#    include <unistd.h>
+
+namespace {
+    // A NUL-terminated string that ends flush against an unmapped page. Any block
+    // read that starts at the string origin and steps by 16 bytes will run off the
+    // mapped page as soon as the terminator sits in the last 15 bytes, which is
+    // exactly the case the aligned scan has to survive.
+    class guard_page_string {
+    public:
+        explicit guard_page_string(const size_t length) {
+            page_size_ = static_cast<size_t>(::sysconf(_SC_PAGESIZE));
+            const size_t total = page_size_ * 2;
+            mapping_ = ::mmap(nullptr, total, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+            if (mapping_ == MAP_FAILED) {
+                mapping_ = nullptr;
+                return;
+            }
+
+            auto* bytes = static_cast<char*>(mapping_);
+            ::memset(bytes, 'a', total);
+            if (::mprotect(bytes + page_size_, page_size_, PROT_NONE) != 0) {
+                ::munmap(mapping_, total);
+                mapping_ = nullptr;
+                return;
+            }
+
+            // Terminator is the final byte of the mapped page.
+            start_ = bytes + page_size_ - length - 1;
+            start_[length] = '\0';
+            length_ = length;
+        }
+
+        ~guard_page_string() {
+            if (mapping_ != nullptr) {
+                ::munmap(mapping_, page_size_ * 2);
+            }
+        }
+
+        guard_page_string(const guard_page_string&) = delete;
+        guard_page_string& operator=(const guard_page_string&) = delete;
+
+        NEFORCE_NODISCARD bool valid() const noexcept { return mapping_ != nullptr; }
+        NEFORCE_NODISCARD const char* data() const noexcept { return start_; }
+        NEFORCE_NODISCARD size_t length() const noexcept { return length_; }
+
+    private:
+        void* mapping_ = nullptr;
+        char* start_ = nullptr;
+        size_t length_ = 0;
+        size_t page_size_ = 0;
+    };
+
+    class SimdGuardPageTest : public ::testing::Test {
+    protected:
+        static void expect_length_within(const size_t length) {
+            const guard_page_string guarded(length);
+            if (!guarded.valid()) {
+                GTEST_SKIP() << "mmap/mprotect unavailable";
+            }
+            EXPECT_EQ(string_length(guarded.data()), length);
+        }
+    };
+} // namespace
+
+TEST_F(SimdGuardPageTest, StringLengthAcrossShortGuardStrings) {
+    for (size_t length = 1; length <= 20; ++length) {
+        expect_length_within(length);
+    }
+}
+
+TEST_F(SimdGuardPageTest, StringFindHitsLastCharacterBeforeTheGuardPage) {
+    const guard_page_string guarded(9);
+    if (!guarded.valid()) {
+        GTEST_SKIP() << "mmap/mprotect unavailable";
+    }
+
+    EXPECT_EQ(simd::string_find(guarded.data(), 'a'), guarded.data());
+    EXPECT_EQ(simd::string_find(guarded.data(), 'b'), nullptr);
+}
+
+TEST_F(SimdGuardPageTest, StringFindAcrossGuardStrings) {
+    for (size_t length = 1; length <= 20; ++length) {
+        const guard_page_string guarded(length);
+        if (!guarded.valid()) {
+            GTEST_SKIP() << "mmap/mprotect unavailable";
+        }
+        ASSERT_EQ(simd::string_find(guarded.data(), 'a'), guarded.data()) << "length " << length;
+        ASSERT_EQ(simd::string_find(guarded.data(), 'z'), nullptr) << "length " << length;
+    }
+}
+
+TEST_F(SimdGuardPageTest, StringCompareAcrossGuardStrings) {
+    for (size_t length = 1; length <= 20; ++length) {
+        const guard_page_string guarded(length);
+        if (!guarded.valid()) {
+            GTEST_SKIP() << "mmap/mprotect unavailable";
+        }
+
+        const string reference(length, 'a');
+        ASSERT_EQ(simd::string_compare(guarded.data(), reference.data()), 0) << "length " << length;
+        ASSERT_LT(simd::string_compare(guarded.data(), "b"), 0) << "length " << length;
+        ASSERT_GT(simd::string_compare(guarded.data(), string(length - 1, 'a').data()), 0) << "length " << length;
+    }
+}
+
+TEST_F(SimdGuardPageTest, BoundedPrimitivesAcrossGuardStrings) {
+    for (size_t length = 1; length <= 20; ++length) {
+        const guard_page_string guarded(length);
+        if (!guarded.valid()) {
+            GTEST_SKIP() << "mmap/mprotect unavailable";
+        }
+
+        EXPECT_EQ(simd::string_find(guarded.data(), 'a', length), guarded.data()) << "length " << length;
+        EXPECT_EQ(simd::string_find(guarded.data(), 'z', length), nullptr) << "length " << length;
+        EXPECT_EQ(simd::string_compare(guarded.data(), guarded.data(), length), 0) << "length " << length;
+        EXPECT_EQ(simd::memory_find(guarded.data(), static_cast<byte_t>('a'), length), guarded.data())
+                << "length " << length;
+    }
 }
 
 #endif

@@ -72,6 +72,7 @@ public:
 
     NEFORCE_CONSTEXPR20 __unique_ptr_impl& operator=(__unique_ptr_impl&& other) noexcept {
         this->reset(other.release());
+        get_deleter() = _NEFORCE move(other.get_deleter());
         return *this;
     }
 

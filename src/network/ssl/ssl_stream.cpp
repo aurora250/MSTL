@@ -66,10 +66,21 @@ ssl_stream& ssl_stream::operator=(ssl_stream&& other) noexcept {
     if (addressof(other) == this) {
         return *this;
     }
+    free_ssl();
     ssl_ = other.ssl_;
     other.ssl_ = nullptr;
     last_error_ = move(other.last_error_);
     return *this;
+}
+
+ssl_stream::~ssl_stream() { free_ssl(); }
+
+void ssl_stream::free_ssl() noexcept {
+    auto* ssl = static_cast<::SSL*>(ssl_);
+    if (ssl != nullptr) {
+        ::SSL_free(ssl);
+    }
+    ssl_ = nullptr;
 }
 
 void ssl_stream::reset(const ssl_context& ctx) {
@@ -77,6 +88,7 @@ void ssl_stream::reset(const ssl_context& ctx) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("Invalid SSL context"));
     }
 
+    free_ssl();
     ssl_ = ::SSL_new(static_cast<::SSL_CTX*>(ctx.native_handle()));
     if (ssl_ == nullptr) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("SSL_new failed"));
@@ -150,9 +162,8 @@ void ssl_stream::close() noexcept {
     auto* ssl = static_cast<::SSL*>(ssl_);
     if (ssl != nullptr) {
         ::SSL_shutdown(ssl);
-        ::SSL_free(ssl);
     }
-    ssl_ = nullptr;
+    free_ssl();
     last_error_.clear();
 }
 

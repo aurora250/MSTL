@@ -20,7 +20,7 @@ namespace {
         for (int x = 0; x < width; ++x) {
             const size_t idx = static_cast<size_t>(x) * points.size() / width;
             const float ratio = static_cast<float>(points[idx] - y_min) / static_cast<float>(range);
-            scaled[x] = static_cast<int>(ratio) * (height - 1);
+            scaled[x] = static_cast<int>(ratio * static_cast<float>(height - 1));
         }
 
         elements rows;

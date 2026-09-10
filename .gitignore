@@ -16,7 +16,7 @@
 .vscode/
 .cache/
 .clangd/
-.scratch/
+.scratch*/
 .cache
 
 # ====================

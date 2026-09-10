@@ -12,9 +12,7 @@
 
 #include "NeForce/core/container/vector.hpp"
 #include "NeForce/core/functional/function.hpp"
-#include "NeForce/core/memory/unique_ptr.hpp"
 #include "NeForce/core/string/string.hpp"
-#include <pcre2.h>
 NEFORCE_BEGIN_NAMESPACE__
 
 /**
@@ -177,6 +175,52 @@ class NEFORCE_API regex_iterator;
 
 class NEFORCE_API regex_token_iterator;
 
+
+/**
+ * @enum regex_option
+ * @brief 正则表达式选项枚举
+ */
+enum class regex_option : uint32_t {
+    none = 0x00000000U,                ///< 无选项
+    allow_empty_class = 0x00000001U,   ///< 允许空字符类，如 []
+    alt_bsux = 0x00000002U,            ///< 允许 \\u 和 \\x 作为 \\u 和 \\x 替代 PCRE 的 \\u 语法
+    auto_callout = 0x00000004U,        ///< 自动插入调用点
+    caseless = 0x00000008U,            ///< 大小写不敏感匹配
+    dollar_endonly = 0x00000010U,      ///< $ 仅匹配字符串末尾，不匹配换行前
+    dotall = 0x00000020U,              ///< 点号 . 匹配任意字符，包括换行符
+    dupnames = 0x00000040U,            ///< 允许重复的命名捕获组
+    extended = 0x00000080U,            ///< 扩展模式，忽略空白和注释
+    firstline = 0x00000100U,           ///< 仅在第一行内进行匹配
+    match_unset_backref = 0x00000200U, ///< 允许匹配未设置的反向引用
+    multiline = 0x00000400U,           ///< 多行模式，^ 和 $ 匹配行首行尾
+    never_ucp = 0x00000800U,           ///< 禁止使用 Unicode 字符属性
+    never_utf = 0x00001000U,           ///< 禁止使用 UTF 模式
+    no_auto_capture = 0x00002000U,     ///< 禁止自动捕获组，() 不作为捕获组
+    no_auto_possess = 0x00004000U,     ///< 禁止自动优化量词的所有格化
+    no_dotstar_anchor = 0x00008000U,   ///< 禁止对 .* 自动锚定优化
+    no_start_optimize = 0x00010000U,   ///< 禁止起始优化
+    ucp = 0x00020000U,                 ///< 启用 Unicode 字符属性支持
+    ungreedy = 0x00040000U,            ///< 量词默认非贪婪模式
+    utf = 0x00080000U,                 ///< 启用 UTF 模式
+    never_backslash_c = 0x00100000U,   ///< 禁止使用 \\C 转义序列
+    alt_circumflex = 0x00200000U,      ///< ^ 在 UTF 模式下匹配字符串开头
+    alt_verbnames = 0x00400000U,       ///< 允许使用替代动词名称
+    use_offset_limit = 0x00800000U,    ///< 使用起始偏移限制
+    extended_more = 0x01000000U,       ///< 更严格的扩展模式，忽略空格和 # 注释
+    literal = 0x02000000U,             ///< 将模式视为字面量字符串
+    match_invalid_utf = 0x04000000U,   ///< 允许匹配无效的 UTF 序列
+    alt_extended_class = 0x08000000U,  ///< 使用替代的扩展字符类语法
+};
+
+NEFORCE_NODISCARD constexpr regex_option operator|(regex_option lhs, regex_option rhs) noexcept {
+    return static_cast<regex_option>(static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs));
+}
+
+NEFORCE_NODISCARD constexpr regex_option operator&(regex_option lhs, regex_option rhs) noexcept {
+    return static_cast<regex_option>(static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
+}
+
+
 /**
  * @class regex
  * @brief 正则表达式类
@@ -186,36 +230,28 @@ class NEFORCE_API regex_token_iterator;
  */
 class NEFORCE_API regex {
 private:
-    struct pcre2_code_deleter {
-        void operator()(::pcre2_code* code) const noexcept {
-            if (code != nullptr) {
-                ::pcre2_code_free(code);
-            }
-        }
-    };
-
-    unique_ptr<::pcre2_code, pcre2_code_deleter> code_; ///< PCRE2编译后的正则表达式
-    string pattern_;                                    ///< 原始正则表达式模式
-    uint32_t options_;                                  ///< 编译选项
-    int capture_count_ = 0;                             ///< 捕获组数量
+    void* code_{nullptr};                      ///< 正则表达式
+    string pattern_;                           ///< 原始正则表达式模式
+    regex_option options_{regex_option::none}; ///< 编译选项
+    int capture_count_ = 0;                    ///< 捕获组数量
 
     friend class regex_iterator;
     friend class regex_token_iterator;
 
 private:
-    void compile(const string& pattern, uint32_t options = 0);
+    void compile(const string& pattern, regex_option options);
 
-    match_result do_match(::PCRE2_SPTR subject, size_t length, size_t start_offset, uint32_t options,
+    match_result do_match(const void* subject, size_t length, size_t start_offset, uint32_t options,
                           const string& subject_str) const;
 
 public:
     /**
      * @brief 从字符串构造正则表达式
      * @param pattern 正则表达式模式
-     * @param options 编译选项（PCRE2选项标志）
+     * @param options 编译选项
      * @throws regex_exception 编译失败时抛出
      */
-    explicit regex(const string& pattern, uint32_t options = 0);
+    explicit regex(const string& pattern, regex_option options = regex_option::none);
 
     regex(regex&& other) noexcept;
     regex& operator=(regex&& other) noexcept;
@@ -234,6 +270,8 @@ public:
      * @throws regex_exception 编译失败时抛出
      */
     regex& operator=(const regex& other);
+
+    ~regex();
 
     /**
      * @brief 执行完整匹配
@@ -330,6 +368,11 @@ public:
      * @return 匹配迭代器结束位置
      */
     NEFORCE_NODISCARD regex_iterator end(const string& str) const;
+
+    /**
+     * @brief 重置正则表达式指针
+     */
+    void reset() noexcept;
 };
 
 /**

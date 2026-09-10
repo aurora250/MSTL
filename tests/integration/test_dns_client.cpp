@@ -84,18 +84,30 @@ namespace {
         }
     }
 
-    void run_mock_udp(const uint16_t port, const bool drop_first, const bool reply_truncated, const bool mangle_case,
+    udp_socket open_mock_udp(const uint16_t port) {
+        udp_socket sock;
+        sock.open();
+        const auto endpoint = ip_address::parse("127.0.0.1", ports{port});
+        if (!endpoint) {
+            throw value_exception("mock server address is invalid");
+        }
+        sock.bind(*endpoint);
+        sock.set_nonblocking(true);
+        return sock;
+    }
+
+    void open_mock_tcp(tcp_acceptor& acceptor, const uint16_t port) {
+        const auto endpoint = ip_address::parse("127.0.0.1", ports{port});
+        if (!endpoint) {
+            throw value_exception("mock server address is invalid");
+        }
+        acceptor.open(*endpoint, 4);
+        acceptor.set_nonblocking(true);
+    }
+
+    void run_mock_udp(udp_socket& sock, const bool drop_first, const bool reply_truncated, const bool mangle_case,
                       const steady_clock::time_point deadline) {
         try {
-            udp_socket sock;
-            sock.open();
-            const auto endpoint = ip_address::parse("127.0.0.1", ports{port});
-            if (!endpoint) {
-                return;
-            }
-            sock.bind(*endpoint);
-            sock.set_nonblocking(true);
-
             int queries = 0;
             const int expected_queries = drop_first ? 2 : 1;
             while (steady_clock::now() < deadline && queries < expected_queries) {
@@ -131,16 +143,8 @@ namespace {
         }
     }
 
-    void run_mock_tcp(const uint16_t port, const steady_clock::time_point deadline) {
+    void run_mock_tcp(tcp_acceptor& acceptor, const steady_clock::time_point deadline) {
         try {
-            tcp_acceptor acceptor;
-            const auto endpoint = ip_address::parse("127.0.0.1", ports{port});
-            if (!endpoint) {
-                return;
-            }
-            acceptor.open(*endpoint, 4);
-            acceptor.set_nonblocking(true);
-
             while (steady_clock::now() < deadline) {
                 auto client = acceptor.accept_nonblock();
                 if (!client) {
@@ -205,17 +209,8 @@ namespace {
         }
     }
 
-    void run_mock_udp_counting(const uint16_t port, atomic<int>& received, const steady_clock::time_point deadline) {
+    void run_mock_udp_counting(udp_socket& sock, atomic<int>& received, const steady_clock::time_point deadline) {
         try {
-            udp_socket sock;
-            sock.open();
-            const auto endpoint = ip_address::parse("127.0.0.1", ports{port});
-            if (!endpoint) {
-                return;
-            }
-            sock.bind(*endpoint);
-            sock.set_nonblocking(true);
-
             while (steady_clock::now() < deadline && received.load() < 2) {
                 byte_vector buf(65535);
                 try {
@@ -985,7 +980,8 @@ TEST(DnsClientIntegration, MultipleQueriesSameClient) {
 TEST(DnsClientIntegration, UDPRetrySucceedsAfterDrop) {
     const uint16_t port = next_mock_port();
     const auto deadline = steady_clock::now() + seconds(5);
-    thread udp_thread(run_mock_udp, port, true, false, false, deadline);
+    udp_socket mock_udp = open_mock_udp(port);
+    thread udp_thread(run_mock_udp, ref(mock_udp), true, false, false, deadline);
 
     try {
         dns_client::config cfg;
@@ -1009,8 +1005,11 @@ TEST(DnsClientIntegration, UDPRetrySucceedsAfterDrop) {
 TEST(DnsClientIntegration, TCPFallbackOnTruncatedUDP) {
     const uint16_t port = next_mock_port();
     const auto deadline = steady_clock::now() + seconds(5);
-    thread udp_thread(run_mock_udp, port, false, true, false, deadline);
-    thread tcp_thread(run_mock_tcp, port, deadline);
+    udp_socket mock_udp = open_mock_udp(port);
+    thread udp_thread(run_mock_udp, ref(mock_udp), false, true, false, deadline);
+    tcp_acceptor mock_tcp;
+    open_mock_tcp(mock_tcp, port);
+    thread tcp_thread(run_mock_tcp, ref(mock_tcp), deadline);
 
     try {
         dns_client::config cfg;
@@ -1036,7 +1035,9 @@ TEST(DnsClientIntegration, TCPFallbackOnTruncatedUDP) {
 TEST(DnsClientIntegration, ForcedTCPMode) {
     const uint16_t port = next_mock_port();
     const auto deadline = steady_clock::now() + seconds(5);
-    thread tcp_thread(run_mock_tcp, port, deadline);
+    tcp_acceptor mock_tcp;
+    open_mock_tcp(mock_tcp, port);
+    thread tcp_thread(run_mock_tcp, ref(mock_tcp), deadline);
 
     try {
         dns_client::config cfg;
@@ -1073,7 +1074,8 @@ TEST(DnsClientIntegration, ForcedTCPMode) {
 TEST(DnsClientIntegration, ZeroX20MismatchRejected) {
     const uint16_t port = next_mock_port();
     const auto deadline = steady_clock::now() + seconds(5);
-    thread udp_thread(run_mock_udp, port, false, false, true, deadline);
+    udp_socket mock_udp = open_mock_udp(port);
+    thread udp_thread(run_mock_udp, ref(mock_udp), false, false, true, deadline);
 
     try {
         dns_client::config cfg;
@@ -1095,7 +1097,8 @@ TEST(DnsClientIntegration, ZeroX20MismatchRejected) {
 TEST(DnsClientIntegration, AsyncQueryCallbackSucceeds) {
     const uint16_t port = next_mock_port();
     const auto deadline = steady_clock::now() + seconds(5);
-    thread udp_thread(run_mock_udp, port, false, false, false, deadline);
+    udp_socket mock_udp = open_mock_udp(port);
+    thread udp_thread(run_mock_udp, ref(mock_udp), false, false, false, deadline);
 
     try {
         dns_client::config cfg;
@@ -1136,7 +1139,8 @@ TEST(DnsClientIntegration, AsyncQueryCallbackSucceeds) {
 TEST(DnsClientIntegration, AsyncQueryCancellationAborts) {
     const uint16_t port = next_mock_port();
     const auto deadline = steady_clock::now() + seconds(5);
-    thread udp_thread(run_mock_udp, port, false, false, false, deadline);
+    udp_socket mock_udp = open_mock_udp(port);
+    thread udp_thread(run_mock_udp, ref(mock_udp), false, false, false, deadline);
 
     try {
         dns_client::config cfg;
@@ -1196,7 +1200,8 @@ TEST(DnsClientIntegration, AsyncQueryPreCancelledSlot) {
 TEST(DnsClientIntegration, AsyncQueryDetachedCompletes) {
     const uint16_t port = next_mock_port();
     const auto deadline = steady_clock::now() + seconds(5);
-    thread udp_thread(run_mock_udp, port, false, false, false, deadline);
+    udp_socket mock_udp = open_mock_udp(port);
+    thread udp_thread(run_mock_udp, ref(mock_udp), false, false, false, deadline);
 
     dns_client::config cfg;
     cfg.server = "127.0.0.1";
@@ -1217,7 +1222,8 @@ TEST(DnsClientIntegration, AsyncQueryDetachedCompletes) {
 TEST(DnsClientIntegration, CacheHitDefersCallback) {
     const uint16_t port = next_mock_port();
     const auto deadline = steady_clock::now() + seconds(5);
-    thread udp_thread(run_mock_udp, port, false, false, false, deadline);
+    udp_socket mock_udp = open_mock_udp(port);
+    thread udp_thread(run_mock_udp, ref(mock_udp), false, false, false, deadline);
 
     try {
         dns_client::config cfg;
@@ -1254,7 +1260,8 @@ TEST(DnsClientIntegration, CacheTTLExpiryRefetches) {
     const uint16_t port = next_mock_port();
     const auto deadline = steady_clock::now() + seconds(5);
     atomic<int> received{0};
-    thread udp_thread(run_mock_udp_counting, port, ref(received), deadline);
+    udp_socket mock_udp = open_mock_udp(port);
+    thread udp_thread(run_mock_udp_counting, ref(mock_udp), ref(received), deadline);
 
     try {
         dns_client::config cfg;
@@ -1296,7 +1303,8 @@ TEST(DnsClientIntegration, CacheTTLExpiryRefetches) {
 TEST(DnsClientIntegration, RandomizeCaseDisabledAcceptsMismatch) {
     const uint16_t port = next_mock_port();
     const auto deadline = steady_clock::now() + seconds(5);
-    thread udp_thread(run_mock_udp, port, false, false, true, deadline);
+    udp_socket mock_udp = open_mock_udp(port);
+    thread udp_thread(run_mock_udp, ref(mock_udp), false, false, true, deadline);
 
     try {
         dns_client::config cfg;
@@ -1327,7 +1335,8 @@ TEST(DnsClientIntegration, RandomizeCaseDisabledAcceptsMismatch) {
 TEST(DnsClientIntegration, AsyncQueryUseAwaitable) {
     const uint16_t port = next_mock_port();
     const auto deadline = steady_clock::now() + seconds(5);
-    thread udp_thread(run_mock_udp, port, false, false, false, deadline);
+    udp_socket mock_udp = open_mock_udp(port);
+    thread udp_thread(run_mock_udp, ref(mock_udp), false, false, false, deadline);
 
     try {
         dns_client::config cfg;

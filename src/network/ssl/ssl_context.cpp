@@ -1,5 +1,6 @@
 #include <NeForce/network/ssl/ssl_context.hpp>
 #include <NeForce/network/ssl/ssl_exception.hpp>
+#include <NeForce/core/memory/memory.hpp>
 #include <NeForce/core/system/pipe.hpp>
 #include <openssl/ssl.h>
 #ifdef NEFORCE_PLATFORM_WINDOWS
@@ -159,6 +160,67 @@ namespace {
         }
     }
 #endif
+
+    void free_alpn_prefs(void* /*parent*/, void* ptr, ::CRYPTO_EX_DATA* /*ad*/, int /*idx*/, long /*argl*/,
+                         void* /*argp*/) {
+        delete static_cast<byte_vector*>(ptr);
+    }
+
+    int alpn_prefs_ex_index() {
+        static const int index = ::SSL_CTX_get_ex_new_index(0, nullptr, nullptr, nullptr, &free_alpn_prefs);
+        return index;
+    }
+
+    int select_alpn_protocol(::SSL* /*ssl*/, const unsigned char** out, unsigned char* outlen, const unsigned char* in,
+                             unsigned int inlen, void* arg) {
+        const auto* prefs = static_cast<const byte_vector*>(arg);
+        if (prefs == nullptr || in == nullptr || inlen == 0) {
+            return SSL_TLSEXT_ERR_NOACK;
+        }
+
+        size_t pref_offset = 0;
+        while (pref_offset < prefs->size()) {
+            const size_t pref_len = (*prefs)[pref_offset];
+            if (pref_len == 0 || pref_offset + 1 + pref_len > prefs->size()) {
+                break;
+            }
+            const unsigned char* pref_name = prefs->data() + pref_offset + 1;
+
+            size_t offered_offset = 0;
+            while (offered_offset < inlen) {
+                const size_t offered_len = in[offered_offset];
+                if (offered_len == 0 || offered_offset + 1 + offered_len > inlen) {
+                    break;
+                }
+                if (offered_len == pref_len && memory_compare(in + offered_offset + 1, pref_name, pref_len) == 0) {
+                    *out = pref_name;
+                    *outlen = static_cast<unsigned char>(pref_len);
+                    return SSL_TLSEXT_ERR_OK;
+                }
+                offered_offset += 1 + offered_len;
+            }
+            pref_offset += 1 + pref_len;
+        }
+
+        return SSL_TLSEXT_ERR_NOACK;
+    }
+
+    void install_alpn_select_callback(::SSL_CTX* ctx, const byte_vector& prefs) {
+        const int index = alpn_prefs_ex_index();
+        if (index < 0) {
+            NEFORCE_THROW_EXCEPTION(ssl_exception("Failed to set ALPN protocols"));
+        }
+
+        auto* stored = new byte_vector(prefs);
+        void* previous = ::SSL_CTX_get_ex_data(ctx, index);
+        if (::SSL_CTX_set_ex_data(ctx, index, stored) != 1) {
+            delete stored;
+            NEFORCE_THROW_EXCEPTION(ssl_exception("Failed to set ALPN protocols"));
+        }
+        delete static_cast<byte_vector*>(previous);
+
+        ::SSL_CTX_set_alpn_select_cb(ctx, &select_alpn_protocol, stored);
+    }
 } // namespace
 
 
@@ -400,10 +462,11 @@ void ssl_context::set_alpn_protos(const vector<string>& protocols) {
         alpn_data.insert(alpn_data.end(), proto.begin(), proto.end());
     }
 
-    if (::SSL_CTX_set_alpn_protos(static_cast<::SSL_CTX*>(ctx_), alpn_data.data(),
-                                  static_cast<uint32_t>(alpn_data.size())) != 0) {
+    auto* ssl_ctx = static_cast<::SSL_CTX*>(ctx_);
+    if (::SSL_CTX_set_alpn_protos(ssl_ctx, alpn_data.data(), static_cast<uint32_t>(alpn_data.size())) != 0) {
         NEFORCE_THROW_EXCEPTION(ssl_exception("Failed to set ALPN protocols"));
     }
+    install_alpn_select_callback(ssl_ctx, alpn_data);
 }
 
 void ssl_context::reset(void* ctx) noexcept {

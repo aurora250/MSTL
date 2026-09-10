@@ -250,6 +250,8 @@ private:
 
     /// @brief fd → 注册信息映射
     flat_unordered_map<native_handle_type, fd_info> fd_map_;
+    /// @brief 保护 fd_map_ 的互斥锁
+    mutable mutex fd_mutex_;
     /// @brief 定时器 min-heap
     vector<timer_entry> timer_heap_;
     /// @brief 保护 timer_heap_ 的互斥锁
@@ -267,8 +269,6 @@ private:
     void* wake_event_;
     /// @brief fd → WSA 事件句柄映射
     flat_unordered_map<native_handle_type, void*> fd_events_;
-    /// @brief 保护 fd_events_ 的互斥锁
-    mutex fd_mutex_;
     /// @brief 待 monitor 线程安全关闭的 WSAEVENT 句柄
     vector<void*> pending_close_;
     /// @brief 后台 WSA 监控线程

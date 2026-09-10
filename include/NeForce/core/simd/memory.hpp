@@ -808,6 +808,39 @@ NEFORCE_ALWAYS_INLINE_INLINE vec128_t match_lanes<4>(vec128_t a, vec128_t b) noe
 
 NEFORCE_END_INNER__
 
+/// @cond
+NEFORCE_BEGIN_INNER__
+
+/**
+ * @struct block_scan_anchor
+ * @brief 块扫描的向下对齐锚点
+ */
+struct block_scan_anchor {
+    const byte_t* base;  ///< 向下对齐到 16 字节的起始地址
+    int prefix_mask;     ///< 首块中位于目标起始之前的车道掩码
+    size_t prefix_chars; ///< 目标起始之前被跳过的字符数
+};
+
+/**
+ * @brief 计算块扫描锚点
+ * @tparam CharT 字符类型
+ * @param ptr 目标起始地址
+ * @return 锚点结构
+ */
+template <typename CharT>
+NEFORCE_ALWAYS_INLINE_INLINE block_scan_anchor anchor_of(const CharT* const ptr) noexcept {
+    const auto misalign = static_cast<size_t>(reinterpret_cast<uintptr_t>(ptr) & 15U);
+
+    block_scan_anchor anchor;
+    anchor.base = reinterpret_cast<const byte_t*>(reinterpret_cast<uintptr_t>(ptr) - misalign);
+    anchor.prefix_mask = ~((1 << misalign) - 1);
+    anchor.prefix_chars = misalign / sizeof(CharT);
+    return anchor;
+}
+
+NEFORCE_END_INNER__
+/// @endcond
+
 
 /**
  * @brief 计算字符串长度
@@ -822,21 +855,31 @@ NEFORCE_PURE_FUNCTION NEFORCE_ALWAYS_INLINE_INLINE size_t string_length(const Ch
         return 0;
     }
 
-    const auto* p = reinterpret_cast<const byte_t*>(str);
+#ifdef NEFORCE_SANITIZED_SCAN
+    size_t scalar_length = 0;
+    while (str[scalar_length] != CharT(0)) {
+        ++scalar_length;
+    }
+    return scalar_length;
+#else
+    const inner::block_scan_anchor anchor = inner::anchor_of(str);
     const vec128_t zero = simd::fill_i(CharT(0));
-    const int stride = static_cast<int>(sizeof(CharT));
+    const size_t stride = sizeof(CharT);
     size_t char_offset = 0;
 
     while (true) {
-        const vec128_t v = loadu_si128(p);
-        const vec128_t eq = inner::match_lanes<sizeof(CharT)>(v, zero);
-        const int mask = to_bitmask(eq);
-        if (mask != 0) {
-            return char_offset + static_cast<size_t>(countr_zero(static_cast<unsigned>(mask)) / stride);
+        const vec128_t v = load_aligned(anchor.base + (char_offset * stride));
+        int mask = to_bitmask(inner::match_lanes<sizeof(CharT)>(v, zero));
+        if (char_offset == 0) {
+            mask &= anchor.prefix_mask;
         }
-        p += 16;
+        if (mask != 0) {
+            return char_offset + (static_cast<size_t>(countr_zero(static_cast<unsigned>(mask))) / stride) -
+                   anchor.prefix_chars;
+        }
         char_offset += 16 / stride;
     }
+#endif
 }
 
 /**
@@ -854,37 +897,51 @@ NEFORCE_PURE_FUNCTION NEFORCE_ALWAYS_INLINE_INLINE const CharT* string_find(cons
         return nullptr;
     }
 
-    const auto* p = reinterpret_cast<const byte_t*>(str);
+#ifdef NEFORCE_SANITIZED_SCAN
+    for (const CharT* cursor = str; *cursor != CharT(0); ++cursor) {
+        if (*cursor == chr) {
+            return cursor;
+        }
+    }
+    return nullptr;
+#else
+    const inner::block_scan_anchor anchor = inner::anchor_of(str);
     const vec128_t target = simd::fill_i(chr);
     const vec128_t zero = simd::fill_i(CharT(0));
-    const int stride = static_cast<int>(sizeof(CharT));
+    const size_t stride = sizeof(CharT);
     size_t char_offset = 0;
 
     while (true) {
-        const vec128_t v = loadu_si128(p);
+        const vec128_t v = load_aligned(anchor.base + (char_offset * stride));
         int mask_target = simd::to_bitmask(inner::match_lanes<sizeof(CharT)>(v, target));
-        const int mask_zero = simd::to_bitmask(inner::match_lanes<sizeof(CharT)>(v, zero));
+        int mask_zero = simd::to_bitmask(inner::match_lanes<sizeof(CharT)>(v, zero));
+        if (char_offset == 0) {
+            mask_target &= anchor.prefix_mask;
+            mask_zero &= anchor.prefix_mask;
+        }
 
         if (mask_zero != 0) {
             const int first_null_bit = countr_zero(static_cast<unsigned>(mask_zero));
             if ((mask_target & (1 << first_null_bit)) != 0) {
-                return str + char_offset + (first_null_bit / stride);
+                return str + char_offset + (static_cast<size_t>(first_null_bit) / stride) - anchor.prefix_chars;
             }
             mask_target &= (1 << first_null_bit) - 1;
         }
 
         if (mask_target != 0) {
-            return str + char_offset + (countr_zero(static_cast<unsigned>(mask_target)) / stride);
+            return str + char_offset + (static_cast<size_t>(countr_zero(static_cast<unsigned>(mask_target))) / stride) -
+                   anchor.prefix_chars;
         }
 
         if (mask_zero != 0) {
             return nullptr;
         }
 
-        p += 16;
         char_offset += 16 / stride;
     }
+#endif
 }
+
 
 /**
  * @brief 前 n 个字符内查找
@@ -902,47 +959,45 @@ NEFORCE_PURE_FUNCTION NEFORCE_ALWAYS_INLINE_INLINE const CharT* string_find(cons
         return nullptr;
     }
 
-    const auto* p = reinterpret_cast<const byte_t*>(str);
+    const auto* const p = reinterpret_cast<const byte_t*>(str);
     const vec128_t target = fill_i(chr);
     const vec128_t zero = fill_i(CharT(0));
-    const int stride = static_cast<int>(sizeof(CharT));
+    const size_t stride = sizeof(CharT);
     const size_t byte_limit = count * stride;
     size_t offset = 0;
 
-    while (offset < byte_limit) {
+    while (byte_limit - offset >= 16) {
         const vec128_t v = loadu_si128(p + offset);
-        const size_t remaining = byte_limit - offset;
 
         int mask_target = simd::to_bitmask(inner::match_lanes<sizeof(CharT)>(v, target));
         const int mask_zero = simd::to_bitmask(inner::match_lanes<sizeof(CharT)>(v, zero));
 
-        if (remaining < 16) {
-            const int keep_mask = (1 << remaining) - 1;
-            mask_target &= keep_mask;
-        }
-
         if (mask_zero != 0) {
             const int first_null_bit = countr_zero(static_cast<unsigned>(mask_zero));
-            if (first_null_bit < remaining) {
-                if ((mask_target & (1 << first_null_bit)) != 0) {
-                    return str + (offset / stride) + (first_null_bit / stride);
-                }
-                mask_target &= (1 << first_null_bit) - 1;
+            if ((mask_target & (1 << first_null_bit)) != 0) {
+                return str + ((offset + static_cast<size_t>(first_null_bit)) / stride);
             }
+            mask_target &= (1 << first_null_bit) - 1;
         }
 
         if (mask_target != 0) {
-            return str + (offset / stride) + (countr_zero(static_cast<unsigned>(mask_target)) / stride);
+            return str + ((offset + static_cast<size_t>(countr_zero(static_cast<unsigned>(mask_target)))) / stride);
         }
 
         if (mask_zero != 0) {
-            const int first_null_bit = countr_zero(static_cast<unsigned>(mask_zero));
-            if (first_null_bit < remaining) {
-                break;
-            }
+            return nullptr;
         }
 
         offset += 16;
+    }
+
+    for (size_t i = offset / stride; i < count; ++i) {
+        if (str[i] == chr) {
+            return str + i;
+        }
+        if (str[i] == CharT(0)) {
+            return nullptr;
+        }
     }
     return nullptr;
 }
@@ -967,41 +1022,22 @@ NEFORCE_PURE_FUNCTION NEFORCE_ALWAYS_INLINE_INLINE int string_compare(const Char
         return 1;
     }
 
-    const auto* p1 = reinterpret_cast<const byte_t*>(s1);
-    const auto* p2 = reinterpret_cast<const byte_t*>(s2);
-    const vec128_t zero = fill_i(CharT(0));
-    const int stride = static_cast<int>(sizeof(CharT));
+    const size_t length1 = string_length(s1);
+    const size_t length2 = string_length(s2);
+    const size_t common = (length1 < length2) ? length1 : length2;
 
-    while (true) {
-        const vec128_t v1 = loadu_si128(p1);
-        const vec128_t v2 = loadu_si128(p2);
-        const vec128_t eq = inner::match_lanes<sizeof(CharT)>(v1, v2);
-        const vec128_t z1 = inner::match_lanes<sizeof(CharT)>(v1, zero);
-        const vec128_t z2 = inner::match_lanes<sizeof(CharT)>(v2, zero);
-
-        const int eq_mask = to_bitmask(eq);
-        const int null_mask = to_bitmask(z1) | to_bitmask(z2);
-
-        const int diff_mask = (~eq_mask) | null_mask;
-
-        if ((diff_mask & 0xFFFF) != 0) {
-            const int first_byte = countr_zero(static_cast<unsigned>(diff_mask));
-            const int lane = first_byte / stride;
-
-            const auto* cs1 = reinterpret_cast<const CharT*>(p1);
-            const auto* cs2 = reinterpret_cast<const CharT*>(p2);
-            const CharT c1 = cs1[lane];
-            const CharT c2 = cs2[lane];
-
-            if (c1 != c2) {
-                return c1 < c2 ? -1 : 1;
+    if (common != 0 && memory_compare(s1, s2, common * sizeof(CharT)) != 0) {
+        for (size_t i = 0; i < common; ++i) {
+            if (s1[i] != s2[i]) {
+                return s1[i] < s2[i] ? -1 : 1;
             }
-            return 0;
         }
-
-        p1 += 16;
-        p2 += 16;
     }
+
+    if (length1 == length2) {
+        return 0;
+    }
+    return (length1 < length2) ? -1 : 1;
 }
 
 /**
@@ -1029,35 +1065,25 @@ NEFORCE_PURE_FUNCTION NEFORCE_ALWAYS_INLINE_INLINE int string_compare(const Char
         return 0;
     }
 
-    const auto* p1 = reinterpret_cast<const byte_t*>(s1);
-    const auto* p2 = reinterpret_cast<const byte_t*>(s2);
+    const auto* const p1 = reinterpret_cast<const byte_t*>(s1);
+    const auto* const p2 = reinterpret_cast<const byte_t*>(s2);
     const vec128_t zero = simd::fill_i(CharT(0));
-    const int stride = static_cast<int>(sizeof(CharT));
+    const size_t stride = sizeof(CharT);
     const size_t byte_limit = count * stride;
     size_t offset = 0;
 
-    while (offset < byte_limit) {
+    while (byte_limit - offset >= 16) {
         const vec128_t v1 = loadu_si128(p1 + offset);
         const vec128_t v2 = loadu_si128(p2 + offset);
-        const vec128_t eq = inner::match_lanes<sizeof(CharT)>(v1, v2);
-        const vec128_t z1 = inner::match_lanes<sizeof(CharT)>(v1, zero);
-        const vec128_t z2 = inner::match_lanes<sizeof(CharT)>(v2, zero);
 
-        int eq_mask = to_bitmask(eq);
-        int null_mask = to_bitmask(z1) | to_bitmask(z2);
-
-        const size_t remaining = byte_limit - offset;
-        if (remaining < 16) {
-            const int keep_mask = (1 << remaining) - 1;
-            eq_mask |= ~keep_mask;
-            null_mask &= keep_mask;
-        }
+        const int eq_mask = to_bitmask(inner::match_lanes<sizeof(CharT)>(v1, v2));
+        const int null_mask = to_bitmask(inner::match_lanes<sizeof(CharT)>(v1, zero)) |
+                              to_bitmask(inner::match_lanes<sizeof(CharT)>(v2, zero));
 
         if (null_mask != 0 || (eq_mask & 0xFFFF) != 0xFFFF) {
-            const auto* cs1 = reinterpret_cast<const CharT*>(p1 + offset);
-            const auto* cs2 = reinterpret_cast<const CharT*>(p2 + offset);
-            const size_t lanes = remaining < 16 ? remaining / stride : static_cast<size_t>(16 / stride);
-            for (size_t i = 0; i < lanes; ++i) {
+            const auto* const cs1 = reinterpret_cast<const CharT*>(p1 + offset);
+            const auto* const cs2 = reinterpret_cast<const CharT*>(p2 + offset);
+            for (size_t i = 0; i < 16 / stride; ++i) {
                 if (cs1[i] != cs2[i]) {
                     return cs1[i] < cs2[i] ? -1 : 1;
                 }
@@ -1065,12 +1091,20 @@ NEFORCE_PURE_FUNCTION NEFORCE_ALWAYS_INLINE_INLINE int string_compare(const Char
                     return 0;
                 }
             }
-            if (remaining < 16) {
-                return 0;
-            }
         }
 
         offset += 16;
+    }
+
+    for (size_t i = offset / stride; i < count; ++i) {
+        const CharT c1 = s1[i];
+        const CharT c2 = s2[i];
+        if (c1 != c2) {
+            return c1 < c2 ? -1 : 1;
+        }
+        if (c1 == CharT(0)) {
+            return 0;
+        }
     }
     return 0;
 }

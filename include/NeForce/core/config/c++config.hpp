@@ -739,6 +739,8 @@
  */
 #ifdef NEFORCE_COMPILER_CLANG
 #    define NEFORCE_NO_TSAN __attribute__((no_sanitize("thread")))
+#elif defined(NEFORCE_COMPILER_GCC)
+#    define NEFORCE_NO_TSAN __attribute__((no_sanitize_thread))
 #else
 #    define NEFORCE_NO_TSAN
 #endif
@@ -749,6 +751,8 @@
  */
 #ifdef NEFORCE_COMPILER_CLANG
 #    define NEFORCE_NO_ASAN __attribute__((no_sanitize("address")))
+#elif defined(NEFORCE_COMPILER_GCC)
+#    define NEFORCE_NO_ASAN __attribute__((no_sanitize_address))
 #else
 #    define NEFORCE_NO_ASAN
 #endif
@@ -769,8 +773,40 @@
  */
 #ifdef NEFORCE_COMPILER_CLANG
 #    define NEFORCE_NO_UBSAN __attribute__((no_sanitize("undefined")))
+#elif defined(NEFORCE_COMPILER_GCC)
+#    define NEFORCE_NO_UBSAN __attribute__((no_sanitize_undefined))
 #else
 #    define NEFORCE_NO_UBSAN
+#endif
+
+/**
+ * @def NEFORCE_HAS_ADDRESS_SANITIZER
+ * @brief 是否由 AddressSanitizer 插桩
+ */
+#if defined(__SANITIZE_ADDRESS__)
+#    define NEFORCE_HAS_ADDRESS_SANITIZER 1
+#elif defined(__has_feature)
+#    if __has_feature(address_sanitizer)
+#        define NEFORCE_HAS_ADDRESS_SANITIZER 1
+#    endif
+#endif
+
+/**
+ * @def NEFORCE_HAS_MEMORY_SANITIZER
+ * @brief 是否由 MemorySanitizer 插桩
+ */
+#if defined(__has_feature)
+#    if __has_feature(memory_sanitizer)
+#        define NEFORCE_HAS_MEMORY_SANITIZER 1
+#    endif
+#endif
+
+/**
+ * @def NEFORCE_SANITIZED_SCAN
+ * @brief 是否需要使用不越界的标量扫描实现
+ */
+#if defined(NEFORCE_HAS_ADDRESS_SANITIZER) || defined(NEFORCE_HAS_MEMORY_SANITIZER)
+#    define NEFORCE_SANITIZED_SCAN 1
 #endif
 
 /** @} */ // PerformanceHints

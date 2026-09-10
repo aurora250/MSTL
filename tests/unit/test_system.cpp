@@ -1293,8 +1293,15 @@ TEST_F(DynamicLibraryTest, LoadMode_Global_LoadsSuccessfully) {
 }
 
 TEST_F(DynamicLibraryTest, LoadMode_DeepBind_LoadsSuccessfully) {
+    // RTLD_DEEPBIND cannot be supported by the AddressSanitizer runtime: it aborts the
+    // process when a library is dlopened with that flag (google/sanitizers#611), so the
+    // mode is only exercised in builds without ASan.
+#    ifdef NEFORCE_HAS_ADDRESS_SANITIZER
+    GTEST_SKIP() << "RTLD_DEEPBIND is incompatible with the AddressSanitizer runtime";
+#    else
     dynamic_library lib(get_test_library_path(), dynamic_library::load_mode::deep_bind);
     EXPECT_TRUE(lib.is_open());
+#    endif
 }
 #endif
 

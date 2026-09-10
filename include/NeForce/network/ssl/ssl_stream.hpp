@@ -54,6 +54,7 @@ private:
     string last_error_;  ///< 最后错误信息
 
     void handle_ssl_error(int ret, const char* operation);
+    void free_ssl() noexcept;
 
 public:
     /**
@@ -81,12 +82,17 @@ public:
     ssl_stream& operator=(ssl_stream&& other) noexcept;
 
     /**
+     * @brief 析构函数
+     * @note 释放SSL对象不会关闭底层文件描述符，socket的关闭仍由 socket 自身负责
+     */
+    ~ssl_stream() override;
+
+    /**
      * @brief 重置SSL流
      * @param ctx SSL上下文
      * @throws ssl_exception SSL对象创建失败时抛出
      *
      * 创建新的SSL对象并关联到指定的上下文。
-     * 如果已有SSL对象，会先关闭并释放。
      */
     void reset(const ssl_context& ctx);
 

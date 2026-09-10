@@ -12,6 +12,7 @@ add_executable(NexusForceUnitTests
         test_file.cpp
         test_functional.cpp
         test_http.cpp
+        test_iterator.cpp
         test_logging.cpp
         test_memory.cpp
         test_network.cpp
@@ -19,6 +20,7 @@ add_executable(NexusForceUnitTests
         test_network_util.cpp
         test_nfrs.cpp
         test_numeric.cpp
+        test_plugin.cpp
         test_ranges.cpp
         test_reflect.cpp
         test_simd.cpp
@@ -30,6 +32,8 @@ add_executable(NexusForceUnitTests
         test_system.cpp
         test_time.cpp
         test_tui.cpp
+        test_tui_component.cpp
+        test_tui_dom.cpp
         test_util_container.cpp
         test_utility.cpp
 )
@@ -42,6 +46,21 @@ else()
 endif()
 nexusforce_compiler_options(NexusForceUnitTests)
 target_link_libraries(NexusForceUnitTests PRIVATE GTest::gtest)
+
+# Real loadable plugin used to exercise plugin_manager end to end: the module
+# exports the create_plugin / destroy_plugin entry points the manager resolves
+# via dynamic_library. Its path is handed to the test as a compile definition.
+add_library(NexusForceTestPlugin MODULE plugin_test_module.cpp)
+target_link_libraries(NexusForceTestPlugin PRIVATE NexusForce::NexusForce)
+nexusforce_compiler_options(NexusForceTestPlugin)
+set_target_properties(NexusForceTestPlugin PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/$<CONFIG>/plugins"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/plugins"
+        PREFIX ""
+        FOLDER "tests"
+)
+add_dependencies(NexusForceUnitTests NexusForceTestPlugin)
+target_compile_definitions(NexusForceUnitTests PRIVATE NEFORCE_TEST_PLUGIN_PATH="$<TARGET_FILE:NexusForceTestPlugin>")
 
 enable_testing()
 add_test(NAME NexusForceUnitTests COMMAND NexusForceUnitTests)

@@ -35,12 +35,11 @@ namespace {
         }
 
         template <typename T>
-        state<T>& createPublicState(T initial) {
+        state<T>& createPublicState(strand& s, io_context& c, T initial) {
+            strand_ = &s;
+            ctx_ = &c;
             return this->create_state<T>(_NEFORCE move(initial));
         }
-
-        void setStrand(strand& s) { strand_ = &s; }
-        void setCtx(io_context& c) { ctx_ = &c; }
     };
 } // namespace
 
@@ -445,7 +444,7 @@ TEST(TuiStateTest, InitialValue) {
     io_context ctx;
     strand s{ctx};
     TestComponent comp;
-    auto& state = comp.createPublicState<int>(7);
+    auto& state = comp.createPublicState<int>(s, ctx, 7);
     EXPECT_EQ(state.value(), 7);
     EXPECT_EQ(*state, 7);
 }
@@ -454,9 +453,7 @@ TEST(TuiStateTest, OperatorEqualsChangesValue) {
     io_context ctx;
     strand s{ctx};
     TestComponent comp;
-    auto& state = comp.createPublicState<int>(1);
-    comp.setStrand(s);
-    comp.setCtx(ctx);
+    auto& state = comp.createPublicState<int>(s, ctx, 1);
 
     state = 42;
     EXPECT_EQ(state.value(), 42);
@@ -466,9 +463,7 @@ TEST(TuiStateTest, ModifyChangesValue) {
     io_context ctx;
     strand s{ctx};
     TestComponent comp;
-    auto& state = comp.createPublicState<_NEFORCE string>("hello");
-    comp.setStrand(s);
-    comp.setCtx(ctx);
+    auto& state = comp.createPublicState<_NEFORCE string>(s, ctx, "hello");
 
     state.modify([](_NEFORCE string& v) { v += " world"; });
     EXPECT_EQ(state.value(), "hello world");
@@ -478,9 +473,7 @@ TEST(TuiStateTest, SetQuietAndNotify) {
     io_context ctx;
     strand s{ctx};
     TestComponent comp;
-    auto& state = comp.createPublicState<int>(0);
-    comp.setStrand(s);
-    comp.setCtx(ctx);
+    auto& state = comp.createPublicState<int>(s, ctx, 0);
 
     state.set_quiet(100);
     EXPECT_EQ(state.value(), 100);
@@ -490,9 +483,7 @@ TEST(TuiStateTest, OnChangeSignal) {
     io_context ctx;
     strand s{ctx};
     TestComponent comp;
-    auto& state = comp.createPublicState<int>(0);
-    comp.setStrand(s);
-    comp.setCtx(ctx);
+    auto& state = comp.createPublicState<int>(s, ctx, 0);
 
     int received = -1;
     state.on_change([&](const int& v) { received = v; });
@@ -505,9 +496,7 @@ TEST(TuiStateTest, BoolState) {
     io_context ctx;
     strand s{ctx};
     TestComponent comp;
-    auto& checked = comp.createPublicState<bool>(false);
-    comp.setStrand(s);
-    comp.setCtx(ctx);
+    auto& checked = comp.createPublicState<bool>(s, ctx, false);
 
     EXPECT_FALSE(checked.value());
     checked = true;

@@ -8,11 +8,11 @@ element vscroll_indicator(const int total, const int visible, const int offset, 
     }
 
     const float ratio = static_cast<float>(visible) / static_cast<float>(total);
-    const int thumb_size = static_cast<int>(ratio) * height;
+    const int thumb_size = static_cast<int>(ratio * static_cast<float>(height));
     const int clamped_thumb = (thumb_size < 1) ? 1 : thumb_size;
     const int max_offset = total - visible;
     const float offset_ratio = static_cast<float>(offset) / static_cast<float>(max_offset);
-    const int thumb_pos = static_cast<int>(offset_ratio) * (height - clamped_thumb);
+    const int thumb_pos = static_cast<int>(offset_ratio * static_cast<float>(height - clamped_thumb));
 
     elements rows;
     for (int i = 0; i < height; ++i) {
@@ -31,11 +31,11 @@ element hscroll_indicator(const int total, const int visible, const int offset, 
     }
 
     const float ratio = static_cast<float>(visible) / static_cast<float>(total);
-    const int thumb_size = static_cast<int>(ratio) * width;
+    const int thumb_size = static_cast<int>(ratio * static_cast<float>(width));
     const int clamped_thumb = (thumb_size < 1) ? 1 : thumb_size;
     const int max_offset = total - visible;
     const float offset_ratio = static_cast<float>(offset) / static_cast<float>(max_offset);
-    const int thumb_pos = static_cast<int>(offset_ratio) * (width - clamped_thumb);
+    const int thumb_pos = static_cast<int>(offset_ratio * static_cast<float>(width - clamped_thumb));
 
     string bar;
     bar.reserve(width);

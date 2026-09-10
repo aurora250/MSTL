@@ -155,7 +155,7 @@ using iter_map_value_t = typename iter_value_t<Iterator>::second_type;
 NEFORCE_BEGIN_INNER__
 
 template <typename Ptr, enable_if_t<is_pointer<Ptr>::value, int> = 0>
-static constexpr decltype(auto) __to_address(const Ptr& ptr) noexcept {
+static constexpr Ptr __to_address(const Ptr& ptr) noexcept {
     static_assert(!is_function<Ptr>::value, "should not be a function pointer");
     return ptr;
 }

@@ -1,0 +1,111 @@
+name: "Sanitizer Check"
+
+on:
+  push:
+    branches: [ dev ]
+    paths:
+      - 'src/**'
+      - 'include/**'
+      - 'tests/**'
+      - 'cmake/**'
+      - 'CMakeLists.txt'
+      - 'vcpkg.json'
+      - 'config.json'
+      - '.github/workflows/sanitizer.yml'
+  pull_request:
+    branches: [ dev ]
+    paths:
+      - 'src/**'
+      - 'include/**'
+      - 'tests/**'
+      - 'cmake/**'
+      - 'CMakeLists.txt'
+      - 'vcpkg.json'
+      - 'config.json'
+      - '.github/workflows/sanitizer.yml'
+  workflow_dispatch:
+
+jobs:
+  sanitizer:
+    name: "${{ matrix.sanitizer }} · ${{ matrix.compiler }}"
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - sanitizer: asan+ubsan
+            compiler: clang
+            cmake_flags: '-DNEXUSFORCE_ENABLE_ASAN=ON -DNEXUSFORCE_ENABLE_UBSAN=ON'
+          - sanitizer: tsan
+            compiler: clang
+            cmake_flags: '-DNEXUSFORCE_ENABLE_TSAN=ON'
+
+    env:
+      ASAN_OPTIONS: 'detect_leaks=1:strict_string_checks=1:detect_stack_use_after_return=1'
+      UBSAN_OPTIONS: 'print_stacktrace=1'
+      TSAN_OPTIONS: 'halt_on_error=1:second_deadlock_stack=1:print_stacktrace=1'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build libtirpc-dev libc++abi-dev liburing-dev
+
+      - name: Cache vcpkg
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/vcpkg
+            ~/.cache/vcpkg
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
+
+      - name: Setup vcpkg
+        run: |
+          if [ ! -d "$HOME/vcpkg" ]; then
+            git clone https://github.com/Microsoft/vcpkg.git $HOME/vcpkg
+            $HOME/vcpkg/bootstrap-vcpkg.sh
+          fi
+          echo "VCPKG_ROOT=$HOME/vcpkg" >> $GITHUB_ENV
+          echo "$HOME/vcpkg" >> $GITHUB_PATH
+
+      - name: Configure
+        run: |
+          if [ "${{ matrix.compiler }}" = "clang" ]; then
+            ARCH_FLAGS="-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++"
+          else
+            ARCH_FLAGS="-DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++"
+          fi
+
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_TOOLCHAIN_FILE=$HOME/vcpkg/scripts/buildsystems/vcpkg.cmake \
+            -DVCPKG_TARGET_TRIPLET=x64-linux \
+            -DNEXUSFORCE_BUILD_DOCS=OFF \
+            -DNEXUSFORCE_BUILD_EXAMPLES=OFF \
+            -DNEXUSFORCE_BUILD_BENCHMARKS=OFF \
+            -DNEXUSFORCE_BUILD_TESTS=ON \
+            -DNEXUSFORCE_CLANG_TIDY=OFF \
+            -DNEXUSFORCE_FORMAT=OFF \
+            $ARCH_FLAGS \
+            ${{ matrix.cmake_flags }}
+
+      - name: Build
+        run: cmake --build build --parallel 2
+
+      - name: Run unit tests
+        working-directory: build
+        run: ctest -R NexusForceUnitTests --output-on-failure --timeout 600
+
+      - name: Upload test logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sanitizer-logs-${{ matrix.sanitizer }}-${{ matrix.compiler }}
+          path: build/Testing/Temporary/
+          retention-days: 7

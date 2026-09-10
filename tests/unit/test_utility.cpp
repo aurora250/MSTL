@@ -1062,7 +1062,8 @@ TEST(VariantExternalGetTest, ConstLvalueRef) {
 }
 
 TEST(VariantExternalGetTest, RvalueRef) {
-    auto&& val = get<0>(variant<int, string>(10));
+    variant<int, string> source(10);
+    auto&& val = get<0>(_NEFORCE move(source));
     static_assert(is_same_v<decltype(val), int&&>);
     EXPECT_EQ(val, 10);
 }

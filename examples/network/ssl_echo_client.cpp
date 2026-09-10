@@ -21,7 +21,7 @@ int main() {
     ssl_context ctx(ssl_method::TLS_CLIENT);
 
     // 自签名证书测试：跳过服务器证书验证
-    ctx.set_verify_mode(SSL_VERIFY_NONE);
+    ctx.set_verify_mode(ssl_verify::NONE);
 
     // 创建SSL Socket
     ssl_socket client;

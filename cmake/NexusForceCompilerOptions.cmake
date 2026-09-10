@@ -203,4 +203,8 @@ function(nexusforce_compiler_options target)
     else()
         message(FATAL_ERROR "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}")
     endif()
+
+    if(COMMAND nexusforce_sanitizer_options)
+        nexusforce_sanitizer_options(${target})
+    endif()
 endfunction()

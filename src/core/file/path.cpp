@@ -300,6 +300,7 @@ path path::current_executable_path() {
     if (len == 0) {
         return {};
     }
+    return path{wcharacter::to_string({buf, len})};
 #else
     char buf[PATH_MAX];
     ssize_t len = ::readlink("/proc/self/exe", buf, sizeof(buf) - 1);
@@ -307,8 +308,8 @@ path path::current_executable_path() {
         return {};
     }
     buf[len] = '\0';
+    return path{string_view{buf, static_cast<size_t>(len)}};
 #endif
-    return path{wcharacter::to_string({buf, len})};
 }
 
 path& path::operator/=(const path& other) {

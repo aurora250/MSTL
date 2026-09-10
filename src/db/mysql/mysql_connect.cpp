@@ -4,6 +4,22 @@
 #    include <NeForce/db/mysql/mysql_result.hpp>
 NEFORCE_BEGIN_NAMESPACE__
 
+namespace {
+    // The MySQL client allocates thread-local state (my_thread_init) on the first call made from a thread
+    // and only releases it through mysql_thread_end(). a thread that exits without that call leaks the state.
+    struct mysql_thread_cleanup {
+        ~mysql_thread_cleanup() { ::mysql_thread_end(); }
+    };
+
+    void ensure_mysql_thread_cleanup() { thread_local mysql_thread_cleanup guard; }
+} // namespace
+
+
+mysql_connect::mysql_connect() {
+    ensure_mysql_thread_cleanup();
+    link_ = ::mysql_init(nullptr);
+}
+
 bool mysql_connect::connect(const db_config& config) {
     last_error_.clear();
     last_errno_ = 0;
@@ -21,6 +37,7 @@ bool mysql_connect::connect(const db_config& config) {
 bool mysql_connect::reconnect(const db_config& config) {
     if (connected()) {
         ::mysql_close(link_);
+        ensure_mysql_thread_cleanup();
         link_ = ::mysql_init(nullptr);
         return connect(config);
     }

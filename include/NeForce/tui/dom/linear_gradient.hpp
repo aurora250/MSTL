@@ -68,7 +68,7 @@ public:
 
     /**
      * @brief 设置渐变角度
-     * @param a 角度（度）
+     * @param a 角度
      * @return 自身引用
      */
     linear_gradient& angle(const float a) {
@@ -79,11 +79,24 @@ public:
     /**
      * @brief 添加色标
      * @param c 颜色
-     * @param pos 位置（none 自动分配）
+     * @param pos 位置（none 表示跟随前一个色标的位置）
      * @return 自身引用
      */
     linear_gradient& add_stop(const struct color& c, optional<float> pos = none) {
-        stops_.push_back(color_stop(c, pos));
+        if (!pos.has_value()) {
+            stops_.push_back(color_stop(c, none));
+            return *this;
+        }
+
+        auto where = stops_.begin();
+        while (where != stops_.end()) {
+            const optional<float>& existing = where->position;
+            if (existing.has_value() && existing.value() > pos.value()) {
+                break;
+            }
+            ++where;
+        }
+        stops_.emplace(where, c, _NEFORCE move(pos));
         return *this;
     }
 
@@ -100,24 +113,21 @@ public:
             return stops_[0].color;
         }
 
-        size_t idx = 0;
-        for (size_t i = 0; i < stops_.size() - 1; ++i) {
-            const float p1 = stops_[i].position.value_or(0.0F);
-            const float p2 = stops_[i + 1].position.value_or(1.0F);
-            if (t >= p1 && t <= p2) {
-                idx = i;
-                break;
+        const float position = (t < 0.0F) ? 0.0F : ((t > 1.0F) ? 1.0F : t);
+        float p1 = stops_[0].position.value_or(0.0F);
+
+        for (size_t i = 0; i + 1 < stops_.size(); ++i) {
+            const float p2 = stops_[i + 1].position.value_or(p1);
+            if (position < p2) {
+                if (p2 <= p1) {
+                    return stops_[i + 1].color;
+                }
+                return color::lerp(stops_[i].color, stops_[i + 1].color, (position - p1) / (p2 - p1));
             }
+            p1 = p2;
         }
 
-        const color_stop& s1 = stops_[idx];
-        const color_stop& s2 = stops_[idx + 1];
-        const float p1 = s1.position.value_or(0.0F);
-        const float p2 = s2.position.value_or(1.0F);
-        const float range = p2 - p1;
-        const float factor = (range > 0.0F) ? (t - p1) / range : 0.0F;
-
-        return color::lerp(s1.color, s2.color, factor);
+        return stops_[stops_.size() - 1].color;
     }
 };
 

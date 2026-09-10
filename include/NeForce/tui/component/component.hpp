@@ -10,6 +10,8 @@
  * 通过 render() 返回声明式元素树。
  */
 
+#include "NeForce/core/async/io_context.hpp"
+#include "NeForce/core/async/strand.hpp"
 #include "NeForce/core/container/unordered_map.hpp"
 #include "NeForce/core/memory/unique_ptr.hpp"
 #include "NeForce/tui/dom/element.hpp"
@@ -173,12 +175,18 @@ public:
      * 父组件接管子组件生命周期。注册后子组件将参与焦点链遍历和生命周期管理。
      */
     void add_child(unique_ptr<component_base> child) {
+        if (child == nullptr) {
+            return;
+        }
         child->parent_ = this;
         child->strand_ = strand_;
         child->ctx_ = ctx_;
         child->schedule_render_cb_ = schedule_render_cb_;
         auto* raw = child.get();
         children_.push_back(move(child));
+        if (active_child_ == nullptr) {
+            active_child_ = raw;
+        }
         raw->setup();
     }
 
@@ -376,7 +384,7 @@ protected:
      */
     template <typename T>
     state<T>& create_state(T initial) {
-        auto s = _NEFORCE make_shared<state<T>>(this, *strand_, _NEFORCE move(initial));
+        auto s = _NEFORCE make_shared<state<T>>(this, _NEFORCE move(initial));
         states_.push_back(s);
         return *s;
     }
