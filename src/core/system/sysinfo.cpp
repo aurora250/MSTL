@@ -2,6 +2,7 @@
 #include <NeForce/core/string/to_string.hpp>
 #include <NeForce/core/system/sysinfo.hpp>
 #include <NeForce/core/utility/packages.hpp>
+#include <NeForce/core/numeric/math.hpp>
 #ifdef NEFORCE_PLATFORM_WINDOWS
 #    include <NeForce/core/memory/bit.hpp>
 #    include <WinSock2.h>
@@ -25,6 +26,9 @@
 #    include <sys/utsname.h>
 #    include <unistd.h>
 #    include <cstdio>
+#    ifdef NEFORCE_ARCH_X86
+#        include <cpuid.h>
+#    endif
 #endif
 NEFORCE_BEGIN_NAMESPACE__
 
@@ -32,6 +36,32 @@ namespace {
     mutex& sysinfo_mutex() {
         static mutex sysmutex;
         return sysmutex;
+    }
+
+    bool char_equals_ignored_case(const char lhs, const char rhs) noexcept {
+        const auto fold = [](const char c) noexcept -> char {
+            return (c >= 'A' && c <= 'Z') ? static_cast<char>(c + ('a' - 'A')) : c;
+        };
+        return fold(lhs) == fold(rhs);
+    }
+
+    size_t find_ignored_case(const string_view text, const string_view needle) noexcept {
+        if (needle.empty() || text.size() < needle.size()) {
+            return string_view::npos;
+        }
+
+        for (size_t i = 0; i + needle.size() <= text.size(); ++i) {
+            size_t j = 0;
+            while (j < needle.size() && char_equals_ignored_case(text[i + j], needle[j])) {
+                ++j;
+            }
+
+            if (j == needle.size()) {
+                return i;
+            }
+        }
+
+        return string_view::npos;
     }
 
 #ifdef NEFORCE_PLATFORM_LINUX
@@ -213,47 +243,9 @@ namespace {
 #    endif
 
         if (cpu_info.max_MHz == 0) {
-            const char* ghz_pos = string_find_pattern(brand, "GHz");
-            if (ghz_pos != nullptr) {
-                const char* num_start = ghz_pos - 1;
-                while (num_start >= brand && (is_digit(*num_start) || *num_start == '.')) {
-                    num_start--;
-                }
-                num_start++;
-
-                if (num_start < ghz_pos) {
-                    try {
-                        const float freq_ghz = float32::parse(num_start).value();
-                        cpu_info.max_MHz = static_cast<uint32_t>(freq_ghz * 1000);
-                        if (cpu_info.current_MHz == 0) {
-                            cpu_info.current_MHz = cpu_info.max_MHz;
-                        }
-                        // NOLINTNEXTLINE(bugprone-empty-catch)
-                    } catch (...) {
-                        // ignore
-                    }
-                }
-            } else {
-                const char* mhz_pos = string_find_pattern(brand, "MHz");
-                if (mhz_pos != nullptr) {
-                    const char* num_start = mhz_pos - 1;
-                    while (num_start >= brand && is_digit(*num_start)) {
-                        num_start--;
-                    }
-                    num_start++;
-
-                    if (num_start < mhz_pos) {
-                        try {
-                            cpu_info.max_MHz = uinteger32::parse(num_start).value();
-                            if (cpu_info.current_MHz == 0) {
-                                cpu_info.current_MHz = cpu_info.max_MHz;
-                            }
-                            // NOLINTNEXTLINE(bugprone-empty-catch)
-                        } catch (...) {
-                            // ignore
-                        }
-                    }
-                }
+            cpu_info.max_MHz = sysinfo::parse_brand_frequency(brand);
+            if (cpu_info.max_MHz != 0 && cpu_info.current_MHz == 0) {
+                cpu_info.current_MHz = cpu_info.max_MHz;
             }
         }
 
@@ -400,46 +392,30 @@ namespace {
             try_sysfs();
         }
 
+#    ifdef NEFORCE_ARCH_X86
+        if (cpu_info.max_MHz == 0) {
+            unsigned int leaf_16[4] = {0, 0, 0, 0};
+            if (::__get_cpuid(0x16, &leaf_16[0], &leaf_16[1], &leaf_16[2], &leaf_16[3]) != 0) {
+                cpu_info.max_MHz = (leaf_16[1] != 0) ? leaf_16[1] : leaf_16[0];
+                if (cpu_info.current_MHz == 0) {
+                    cpu_info.current_MHz = leaf_16[0];
+                }
+            }
+        }
+
+        if (cpu_info.max_MHz == 0) {
+            unsigned int leaf_15[4] = {0, 0, 0, 0};
+            if (::__get_cpuid(0x15, &leaf_15[0], &leaf_15[1], &leaf_15[2], &leaf_15[3]) != 0 && leaf_15[0] != 0 &&
+                leaf_15[1] != 0 && leaf_15[2] != 0) {
+                cpu_info.max_MHz = (leaf_15[2] / 1000000) * leaf_15[1] / leaf_15[0];
+            }
+        }
+#    endif
+
         if (cpu_info.max_MHz == 0 && !cpu_info.brand.empty()) {
-            const char* ghz_pos = string_find_pattern(cpu_info.brand.data(), "GHz");
-            if (ghz_pos != nullptr) {
-                const char* num_start = ghz_pos - 1;
-                while (num_start >= cpu_info.brand.data() && (is_digit(*num_start) || *num_start == '.')) {
-                    num_start--;
-                }
-                num_start++;
-                if (num_start < ghz_pos) {
-                    try {
-                        const float freq_ghz = float32::parse(num_start).value();
-                        cpu_info.max_MHz = static_cast<uint32_t>(freq_ghz * 1000);
-                        if (cpu_info.current_MHz == 0) {
-                            cpu_info.current_MHz = cpu_info.max_MHz;
-                        }
-                        // NOLINTNEXTLINE(bugprone-empty-catch)
-                    } catch (...) {
-                        // ignore
-                    }
-                }
-            } else {
-                const char* mhz_pos = string_find_pattern(cpu_info.brand.data(), "MHz");
-                if (mhz_pos != nullptr) {
-                    const char* num_start = mhz_pos - 1;
-                    while (num_start >= cpu_info.brand.data() && is_digit(*num_start)) {
-                        num_start--;
-                    }
-                    num_start++;
-                    if (num_start < mhz_pos) {
-                        try {
-                            cpu_info.max_MHz = uinteger32::parse(num_start).value();
-                            if (cpu_info.current_MHz == 0) {
-                                cpu_info.current_MHz = cpu_info.max_MHz;
-                            }
-                            // NOLINTNEXTLINE(bugprone-empty-catch)
-                        } catch (...) {
-                            // ignore
-                        }
-                    }
-                }
+            cpu_info.max_MHz = sysinfo::parse_brand_frequency(cpu_info.brand.view());
+            if (cpu_info.max_MHz != 0 && cpu_info.current_MHz == 0) {
+                cpu_info.current_MHz = cpu_info.max_MHz;
             }
         }
 #endif
@@ -547,6 +523,45 @@ namespace {
     }
 } // namespace
 
+uint32_t sysinfo::parse_brand_frequency(const string_view brand) noexcept {
+    const auto digits_before = [&brand](const size_t unit_pos) noexcept -> size_t {
+        size_t start = unit_pos;
+        while (start > 0 && (is_digit(brand[start - 1]) || brand[start - 1] == '.')) {
+            --start;
+        }
+        return start;
+    };
+
+    const size_t ghz_pos = find_ignored_case(brand, "ghz");
+    if (ghz_pos != string_view::npos) {
+        const size_t start = digits_before(ghz_pos);
+        if (start < ghz_pos) {
+            try {
+                const float32_t freq_ghz = float32::parse(brand.substr(start, ghz_pos - start)).value();
+                return static_cast<uint32_t>(_NEFORCE round(freq_ghz * 1000.0F));
+                // NOLINTNEXTLINE(bugprone-empty-catch)
+            } catch (...) {
+                // ignore
+            }
+        }
+        return 0;
+    }
+
+    const size_t mhz_pos = find_ignored_case(brand, "mhz");
+    if (mhz_pos != string_view::npos) {
+        const size_t start = digits_before(mhz_pos);
+        if (start < mhz_pos) {
+            try {
+                return uinteger32::parse(brand.substr(start, mhz_pos - start)).value();
+                // NOLINTNEXTLINE(bugprone-empty-catch)
+            } catch (...) {
+                // ignore
+            }
+        }
+    }
+
+    return 0;
+}
 
 string sysinfo::os_version_info::version() const {
     return to_string(major) + "." + to_string(minor) + "." + to_string(build);

@@ -87,11 +87,18 @@ jobs:
             --leak-check=full \
             --show-leak-kinds=definite,indirect,possible \
             --errors-for-leak-kinds=definite,indirect \
-            --error-exitcode=1 \
+            --error-exitcode=99 \
             ./bin/Debug/NexusForceUnitTests 2>&1 | tee valgrind_output.txt
           VALGRIND_EXIT=${PIPESTATUS[0]}
           echo "valgrind exit code: ${VALGRIND_EXIT}"
-          exit ${VALGRIND_EXIT}
+          if [ "${VALGRIND_EXIT}" -eq 99 ]; then
+            echo "::error::Valgrind reported memory errors or leaks"
+            exit 1
+          fi
+          if [ "${VALGRIND_EXIT}" -ne 0 ]; then
+            echo "::error::Unit tests failed; valgrind itself reported no memory errors"
+            exit "${VALGRIND_EXIT}"
+          fi
 
       - name: Check Leak Summary
         if: always()

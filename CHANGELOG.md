@@ -10,6 +10,7 @@
 - 添加 PCLMULQDQ 指令集检测宏 `NEFORCE_SIMD_PCLMUL`
 - 添加 Sanitizer 构建配置项 `NEXUSFORCE_ENABLE_ASAN` / `NEXUSFORCE_ENABLE_UBSAN` / `NEXUSFORCE_ENABLE_TSAN`
 - 添加 Sanitizer CI 工作流 `.github/workflows/sanitizer.yml`
+- 添加 `sysinfo::parse_brand_frequency()` 从 CPU 型号字符串解析标称频率
 
 ### 🔧 Improvements
 
@@ -95,7 +96,7 @@
 - 修复 valgrind CI 门禁失效问题，`valgrind ... | tee` 的管道退出码取 `tee` 的 0，导致 `--error-exitcode=1` 永远无法让 CI 失败
 - 修复 `VirtualThreadTask.DestroyAwaitingTaskWhileSuspendedAsContinuation` 等待器悬垂：`co_await task` 以任务对象自身为等待器，恢复时仍要读取它，而用例只等到 `inner.is_done()` 便退出作用域，被 detach 的等待方帧恢复时读到已析构的等待器；现改为在作用域内等待该帧执行完毕并断言其返回值
 - 修复 `http_session` 的并发数据竞争：`session_manager::cleanup_expired_sessions()` 在清理线程上读取会话状态，而请求线程经 `csrf_filter`、`add_session_cookie`、`session_store` 直接读写，现为会话加入内部互斥量并补充加锁入口
-- 修复 `plugin_entry.hpp` 把 `create_plugin` / `destroy_plugin` 声明在 `neforce` 命名空间内、而插件模块按惯例在全局作用域定义导致的 MSVC 编译失败（C2375 / C2733），两处声明移到全局命名空间
+- 修复 `plugin_entry.hpp` 声明 `create_plugin` / `destroy_plugin` 导致的 MSVC 编译失败（C2375 / C2733）：入口函数由插件实现并导出，带导出属性的定义与不带导出属性的声明在 MSVC 下被判为重定义，现移除该声明并改为提供 `NEFORCE_PLUGIN_EXPORT` 导出属性宏
 - 修复 `unique_ptr` 同类型移动赋值丢失删除器问题，`__unique_ptr_impl::operator=` 只搬运指针而保留目标自身的删除器
 - 修复 `pointer_traits` 对智能指针的 `to_address()` 返回悬垂引用，指针特化用 `decltype(auto)` 推导出 `const Ptr&`
 - 修复 `plugin_manager::load_plugins()` 完全不可用问题，现改用 `path_tree::scan()` 扫描目录并按裸扩展名过滤
@@ -136,6 +137,9 @@
 - 修复 MySQL 客户端线程局部状态泄漏：libmysqlclient 在某个线程首次调用 C API 时分配线程局部数据，现于 `mysql_connect` 的各入口注册一个函数内 `thread_local` 守护对象，在线程结束时调用
 - 修复 `tui::state<T>` 在 `strand` 注入前构造导致的空指针解引用，现移除该参数与成员
 - 修复 `hexadecimal` 解析 `-0x8000000000000000` 时转成 `int64_t` 再取负，属未定义行为；现在直接返回 `numeric_traits<int64_t>::min()`
+- 修复 Linux 上 CPU 最大频率缺少 `CPUID` 兜底
+- 修复型号字符串中 `GHz` 频率的截断：`2.40GHz` / `3.70GHz` 因十进制不可精确表示又被直接截断，改为四舍五入
+- 修复 valgrind 工作流把单元测试失败误报为内存泄漏：`--error-exitcode=1` 在 valgrind 未发现错误时会透传被测程序的退出码，任一用例失败即表现为"内存泄漏检查失败"，现改用 `99` 作为泄漏专用退出码并分别报错
 
 ### 📚 Documentation
 

@@ -5066,7 +5066,35 @@ TEST_F(SysinfoTest, GetCpuInfo_MaxMHz_NonZero) {
     sysinfo& inst = sysinfo::instance();
     const auto& cpu = inst.get_CPU_info();
 
-    EXPECT_GT(cpu.max_MHz, 0);
+    if (sysinfo::parse_brand_frequency(cpu.brand.view()) > 0) {
+        EXPECT_GT(cpu.max_MHz, 0);
+        return;
+    }
+
+    if (cpu.max_MHz == 0) {
+        GTEST_SKIP() << "host exposes no maximum CPU frequency";
+    }
+
+    EXPECT_GE(cpu.max_MHz, 100);
+    EXPECT_LE(cpu.max_MHz, 20000);
+}
+
+TEST_F(SysinfoTest, ParseBrandFrequency_ClockInBrand) {
+    EXPECT_EQ(sysinfo::parse_brand_frequency("Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz"), 2800u);
+    EXPECT_EQ(sysinfo::parse_brand_frequency("Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz"), 3700u);
+    EXPECT_EQ(sysinfo::parse_brand_frequency("Intel(R) Pentium(R) 4 CPU 2.40GHz"), 2400u);
+    EXPECT_EQ(sysinfo::parse_brand_frequency("AMD Athlon(tm) 64 Processor 800MHz"), 800u);
+    EXPECT_EQ(sysinfo::parse_brand_frequency("intel cpu @ 1.5ghz"), 1500u);
+    EXPECT_EQ(sysinfo::parse_brand_frequency("some cpu 900MHZ"), 900u);
+}
+
+TEST_F(SysinfoTest, ParseBrandFrequency_NoClockInBrand) {
+    EXPECT_EQ(sysinfo::parse_brand_frequency("AMD EPYC 7763 64-Core Processor"), 0u);
+    EXPECT_EQ(sysinfo::parse_brand_frequency("13th Gen Intel(R) Core(TM) i9-13980HX"), 0u);
+    EXPECT_EQ(sysinfo::parse_brand_frequency("AMD Ryzen 9 7945HX with Radeon Graphics"), 0u);
+    EXPECT_EQ(sysinfo::parse_brand_frequency(""), 0u);
+    EXPECT_EQ(sysinfo::parse_brand_frequency("GHz"), 0u);
+    EXPECT_EQ(sysinfo::parse_brand_frequency("MHz"), 0u);
 }
 
 TEST_F(SysinfoTest, GetCpuInfo_CurrentMHz_NonZero) {

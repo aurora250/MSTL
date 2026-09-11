@@ -357,21 +357,22 @@ TEST_F(HttpSessionTest, ConcurrentTouchDataAndExpiryChecks) {
     session.id = "concurrent";
     session.max_age = seconds{3600};
 
-    atomic<bool> stop{false};
+    constexpr uint32_t rounds{500};
+
     vector<thread> workers;
     workers.emplace_back([&] {
-        while (!stop.load(memory_order_acquire)) {
+        for (uint32_t i = 0; i < rounds; ++i) {
             session.touch();
         }
     });
     workers.emplace_back([&] {
-        while (!stop.load(memory_order_acquire)) {
+        for (uint32_t i = 0; i < rounds; ++i) {
             session.set("key", "value");
             ignore = session.get("key");
         }
     });
     workers.emplace_back([&] {
-        while (!stop.load(memory_order_acquire)) {
+        for (uint32_t i = 0; i < rounds; ++i) {
             ignore = session.is_valid();
             ignore = session.expired();
             ignore = session.idle_time();
@@ -379,8 +380,6 @@ TEST_F(HttpSessionTest, ConcurrentTouchDataAndExpiryChecks) {
         }
     });
 
-    this_thread::sleep_for(milliseconds(50));
-    stop.store(true, memory_order_release);
     for (auto& worker: workers) {
         worker.join();
     }

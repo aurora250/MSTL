@@ -5,7 +5,7 @@
  * @file plugin_entry.hpp
  * @brief 插件入口点定义
  *
- * 此文件定义了插件必须实现的入口函数。
+ * 此文件定义了插件必须实现的入口函数的名称与导出属性。
  * 插件需要导出 create_plugin 和 destroy_plugin 函数，
  * 供插件管理器加载和卸载插件。
  */
@@ -23,6 +23,7 @@
  * @brief 插件创建函数名称
  *
  * 插件必须导出的创建函数名，用于实例化插件对象。
+ * 该函数无参数，返回新创建的插件对象指针，指针所有权移交插件管理器。
  */
 #define NEFORCE_PLUGIN_CREATE_FUNC "create_plugin"
 
@@ -31,26 +32,23 @@
  * @brief 插件销毁函数名称
  *
  * 插件必须导出的销毁函数名，用于释放插件对象。
+ * 该函数接收创建函数返回的指针并释放其全部资源。
  */
 #define NEFORCE_PLUGIN_DESTROY_FUNC "destroy_plugin"
 
 /**
- * @brief 创建插件实例
- * @return 指向新创建的插件对象的指针
+ * @def NEFORCE_PLUGIN_EXPORT
+ * @brief 插件入口点导出属性
  *
- * 此函数必须由插件实现并导出，用于创建插件实例。
- * 返回的指针将由 destroy_plugin 函数销毁。
- */
-extern "C" _NEFORCE iplugin* create_plugin();
-
-/**
- * @brief 销毁插件实例
- * @param p 要销毁的插件对象指针
+ * 同时给出 C 链接与动态库导出属性，插件定义入口函数时必须使用。
  *
- * 此函数必须由插件实现并导出，用于销毁通过 create_plugin
- * 创建的插件对象。释放所有相关资源。
+ * @note 缺少该属性时符号名会被修饰或对外不可见，插件管理器将无法解析入口点。
  */
-extern "C" void destroy_plugin(_NEFORCE iplugin* p);
+#if defined(NEFORCE_PLATFORM_WINDOWS)
+#    define NEFORCE_PLUGIN_EXPORT extern "C" __declspec(dllexport)
+#else
+#    define NEFORCE_PLUGIN_EXPORT extern "C" __attribute__((visibility("default")))
+#endif
 
 /** @} */ // Plugin
 
