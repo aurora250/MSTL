@@ -185,7 +185,7 @@ bool filesystem::create_directories(const path& p) {
         }
     }
 
-    const wstring wps = character::to_wstring(ps);
+    const wstring wps = character::to_wstring(ps.view());
     return ::CreateDirectoryW(wps.data(), nullptr) == TRUE || ::GetLastError() == ERROR_ALREADY_EXISTS;
 
 #else
