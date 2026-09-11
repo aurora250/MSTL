@@ -171,7 +171,7 @@ dynamic_library dynamic_library::load_by_name(const string& name, load_mode mode
         if (!name.starts_with("lib")) {
             resolved_name = "lib" + name;
         }
-        if (name.size() < 3 || (!name.ends_with(".so") && name.find(".so.") == string::npos)) {
+        if (name.size() < 3 || (!name.ends_with(".so") && !name.contains(".so."))) {
             resolved_name += ".so";
         }
 #endif
@@ -188,15 +188,15 @@ vector<string> dynamic_library::list_symbols(const string& name_filter) const {
 #ifdef NEFORCE_PLATFORM_LINUX
     ::link_map* lm = nullptr;
     // NOLINTNEXTLINE(bugprone-multi-level-implicit-pointer-conversion)
-    if (::dlinfo(handle_, RTLD_DI_LINKMAP, static_cast<void*>(&lm)) != 0 || lm == nullptr) {
+    if (::dlinfo(handle_, ::RTLD_DI_LINKMAP, static_cast<void*>(&lm)) != 0 || lm == nullptr) {
         return symbols;
     }
 
     const auto* dyn = reinterpret_cast<const ElfW(Dyn)*>(lm->l_ld);
     const char* strtab = nullptr;
-    const ElfW(Sym)* symtab = nullptr;
-    const ElfW(Word)* hash_table = nullptr;
-    const ElfW(Word)* gnu_hash_table = nullptr;
+    const ::ElfW(Sym)* symtab = nullptr;
+    const ::ElfW(Word)* hash_table = nullptr;
+    const ::ElfW(Word)* gnu_hash_table = nullptr;
     size_t syment = 0;
 
     for (; dyn->d_tag != DT_NULL; ++dyn) {
@@ -245,7 +245,7 @@ vector<string> dynamic_library::list_symbols(const string& name_filter) const {
 
     if (strtab != nullptr && symtab != nullptr && syment > 0 && nchain > 0) {
         for (size_t i = 1; i < nchain; ++i) {
-            const auto* sym = reinterpret_cast<const ElfW(Sym)*>(reinterpret_cast<const char*>(symtab) + i * syment);
+            const auto* sym = reinterpret_cast<const ::ElfW(Sym)*>(reinterpret_cast<const char*>(symtab) + i * syment);
             string_view sym_name = strtab + sym->st_name;
             if (sym_name[0] != '\0' && ELF32_ST_TYPE(sym->st_info) == STT_FUNC) {
                 if (name_filter.empty() || sym_name.contains(name_filter.view())) {

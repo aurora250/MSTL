@@ -156,7 +156,7 @@ public:
         string name;       ///< 接口名称
         string address;    ///< IP 地址
         string netmask;    ///< 子网掩码
-        string mac;        ///< MAC 地址（格式 xx:xx:xx:xx:xx:xx）
+        string mac;        ///< MAC 地址
         bool is_up{false}; ///< 接口是否启用
     };
 

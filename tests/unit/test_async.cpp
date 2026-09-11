@@ -26,7 +26,7 @@
 #include <NeForce/core/iterator/move_iterator.hpp>
 #include <NeForce/core/time/clocks.hpp>
 #include <NeForce/core/utility/tuple.hpp>
-#include <iterator>
+#include <NeForce/core/file/file.hpp>
 #include <gtest/gtest.h>
 using namespace neforce;
 
@@ -2371,6 +2371,9 @@ TEST(VirtualThreadTask, MoveAssignToNonEmptyWithYield) {
 }
 
 TEST(VirtualThreadTask, DestroyAwaitingTaskWhileSuspendedAsContinuation) {
+    atomic<bool> wrapper_finished{false};
+    atomic<int> wrapper_value{-1};
+
     auto inner = virtual_thread::start([]() -> virtual_thread_task<int> {
         co_await virtual_thread::sleep(50);
         co_return 5;
@@ -2379,6 +2382,8 @@ TEST(VirtualThreadTask, DestroyAwaitingTaskWhileSuspendedAsContinuation) {
     {
         auto wrapper_body = [&]() -> virtual_thread_task<int> {
             const int value = co_await inner;
+            wrapper_value.store(value, memory_order_release);
+            wrapper_finished.store(true, memory_order_release);
             co_return value;
         };
         auto wrapper = virtual_thread::start(wrapper_body);
@@ -2387,6 +2392,13 @@ TEST(VirtualThreadTask, DestroyAwaitingTaskWhileSuspendedAsContinuation) {
 
     ASSERT_TRUE(task_done_within(inner));
     EXPECT_EQ(inner.get_result(), 5);
+
+    const auto deadline = steady_clock::now() + milliseconds(5000);
+    while (!wrapper_finished.load(memory_order_acquire) && steady_clock::now() < deadline) {
+        this_thread::sleep_for(1_ms);
+    }
+    EXPECT_TRUE(wrapper_finished.load(memory_order_acquire));
+    EXPECT_EQ(wrapper_value.load(memory_order_acquire), 5);
 }
 
 TEST(VirtualThreadTask, SelfMoveAssignment) {
@@ -2407,6 +2419,84 @@ TEST(VirtualThreadTask, MoveAfterGetResult) {
     EXPECT_FALSE(task1.valid());
     EXPECT_TRUE(task2.valid());
     EXPECT_TRUE(task2.is_done());
+}
+
+TEST(VirtualThreadTask, AwaitTaskDestroyedWhilePending) {
+    atomic<bool> finished{false};
+    atomic<int> observed{-1};
+
+    {
+        auto inner = virtual_thread::start([]() -> virtual_thread_task<int> {
+            co_await virtual_thread::sleep(20);
+            co_return 7;
+        });
+        auto wrapper_body = [&]() -> virtual_thread_task<int> {
+            const int value = co_await inner;
+            observed.store(value, memory_order_release);
+            finished.store(true, memory_order_release);
+            co_return value;
+        };
+        auto wrapper = virtual_thread::start(wrapper_body);
+        EXPECT_FALSE(wrapper.is_done());
+    }
+
+    const auto deadline = steady_clock::now() + milliseconds(5000);
+    while (!finished.load(memory_order_acquire) && steady_clock::now() < deadline) {
+        this_thread::sleep_for(1_ms);
+    }
+    EXPECT_TRUE(finished.load(memory_order_acquire));
+    EXPECT_EQ(observed.load(memory_order_acquire), 7);
+}
+
+TEST(VirtualThreadTask, AwaitRvalueTask) {
+    atomic<int> observed{-1};
+    auto wrapper_body = [&]() -> virtual_thread_task<int> {
+        const int value = co_await virtual_thread::start([]() -> virtual_thread_task<int> {
+            co_await virtual_thread::yield();
+            co_return 21;
+        });
+        observed.store(value, memory_order_release);
+        co_return value * 2;
+    };
+    auto wrapper = virtual_thread::start(wrapper_body);
+    ASSERT_TRUE(task_done_within(wrapper));
+    EXPECT_EQ(wrapper.get_result(), 42);
+    EXPECT_EQ(observed.load(memory_order_acquire), 21);
+}
+
+TEST(VirtualThreadSleep, ManySleepersDoNotCreateThreads) {
+    const int before = thread_tracker::thread_count();
+
+    vector<virtual_thread_task<int>> tasks;
+    tasks.reserve(64);
+    for (int i = 0; i < 64; ++i) {
+        tasks.emplace_back(virtual_thread::start([]() -> virtual_thread_task<int> {
+            co_await virtual_thread::sleep(60);
+            co_return 10;
+        }));
+    }
+
+    this_thread::sleep_for(milliseconds(10));
+    const int during = thread_tracker::thread_count();
+    EXPECT_LT(during, before + 8) << "sleep is expected to use the scheduler timer heap, not one thread per wait";
+
+    for (auto& task: tasks) {
+        ASSERT_TRUE(task_done_within(task));
+        EXPECT_EQ(task.get_result(), 10);
+    }
+}
+
+TEST(VirtualThreadSleep, TimingIsRoughlyHonored) {
+    const auto begin = steady_clock::now();
+    auto task = virtual_thread::start([]() -> virtual_thread_task<int> {
+        co_await virtual_thread::sleep(60);
+        co_return 1;
+    });
+    ASSERT_TRUE(task_done_within(task));
+    EXPECT_EQ(task.get_result(), 1);
+    const auto elapsed = (steady_clock::now() - begin).count() / 1000000; // ns -> ms
+    EXPECT_GE(elapsed, 50);
+    EXPECT_LT(elapsed, 2000);
 }
 
 TEST(VirtualThreadTask, MoveChain) {

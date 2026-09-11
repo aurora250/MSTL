@@ -1293,11 +1293,12 @@ TEST_F(DynamicLibraryTest, LoadMode_Global_LoadsSuccessfully) {
 }
 
 TEST_F(DynamicLibraryTest, LoadMode_DeepBind_LoadsSuccessfully) {
-    // RTLD_DEEPBIND cannot be supported by the AddressSanitizer runtime: it aborts the
-    // process when a library is dlopened with that flag (google/sanitizers#611), so the
-    // mode is only exercised in builds without ASan.
-#    ifdef NEFORCE_HAS_ADDRESS_SANITIZER
-    GTEST_SKIP() << "RTLD_DEEPBIND is incompatible with the AddressSanitizer runtime";
+    // RTLD_DEEPBIND cannot be supported by any sanitizer runtime: it aborts the process when a
+    // library is dlopened with that flag (google/sanitizers#611), so the mode is only exercised
+    // in unsanitized builds.
+#    if defined(NEFORCE_HAS_ADDRESS_SANITIZER) || defined(NEFORCE_HAS_MEMORY_SANITIZER) || \
+            defined(NEFORCE_HAS_THREAD_SANITIZER)
+    GTEST_SKIP() << "RTLD_DEEPBIND is incompatible with the sanitizer runtime";
 #    else
     dynamic_library lib(get_test_library_path(), dynamic_library::load_mode::deep_bind);
     EXPECT_TRUE(lib.is_open());
@@ -5988,7 +5989,7 @@ TEST_F(SignalManagerTest, StopMonitoring_AlreadyStopped_NoEffect) {
 
 TEST_F(SignalManagerTest, RegisterHandler_ValidHandler_Success) {
     system_signal_manager& mgr = system_signal_manager::instance();
-    bool was_called = false;
+    atomic<bool> was_called{false};
 
     mgr.register_handler(system_signal_manager::event::CUSTOM_1,
                          [&was_called](system_signal_manager::event, void*) -> bool {
@@ -6000,7 +6001,7 @@ TEST_F(SignalManagerTest, RegisterHandler_ValidHandler_Success) {
     mgr.send_signal(system_signal_manager::event::CUSTOM_1);
 
     this_thread::sleep_for(200_ms);
-    EXPECT_TRUE(was_called);
+    EXPECT_TRUE(was_called.load());
 
     mgr.stop_monitoring();
 }
@@ -6090,12 +6091,12 @@ TEST_F(SignalManagerTest, RemoveHandler_NonExistent_NoThrow) {
 
 TEST_F(SignalManagerTest, SendSignal_HasContext_ContextReceived) {
     system_signal_manager& mgr = system_signal_manager::instance();
-    void* received_context = nullptr;
+    atomic<void*> received_context{nullptr};
     int test_value = 42;
 
     mgr.register_handler(system_signal_manager::event::CUSTOM_1,
                          [&received_context](system_signal_manager::event, void* ctx) -> bool {
-                             received_context = ctx;
+                             received_context.store(ctx, memory_order_release);
                              return true;
                          });
 
@@ -6103,7 +6104,7 @@ TEST_F(SignalManagerTest, SendSignal_HasContext_ContextReceived) {
     mgr.send_signal(system_signal_manager::event::CUSTOM_1, &test_value);
 
     this_thread::sleep_for(200_ms);
-    EXPECT_EQ(received_context, &test_value);
+    EXPECT_EQ(received_context.load(memory_order_acquire), &test_value);
 
     mgr.stop_monitoring();
 }

@@ -352,35 +352,73 @@ TEST_F(HttpSessionTest, CustomMaxInactiveOverridesDefault) {
     EXPECT_TRUE(s.expired(seconds{1}));
 }
 
+TEST_F(HttpSessionTest, ConcurrentTouchDataAndExpiryChecks) {
+    http_session session;
+    session.id = "concurrent";
+    session.max_age = seconds{3600};
+
+    atomic<bool> stop{false};
+    vector<thread> workers;
+    workers.emplace_back([&] {
+        while (!stop.load(memory_order_acquire)) {
+            session.touch();
+        }
+    });
+    workers.emplace_back([&] {
+        while (!stop.load(memory_order_acquire)) {
+            session.set("key", "value");
+            ignore = session.get("key");
+        }
+    });
+    workers.emplace_back([&] {
+        while (!stop.load(memory_order_acquire)) {
+            ignore = session.is_valid();
+            ignore = session.expired();
+            ignore = session.idle_time();
+            ignore = session.session_id();
+        }
+    });
+
+    this_thread::sleep_for(milliseconds(50));
+    stop.store(true, memory_order_release);
+    for (auto& worker: workers) {
+        worker.join();
+    }
+
+    EXPECT_TRUE(session.is_valid());
+    EXPECT_FALSE(session.is_new_session());
+    EXPECT_EQ(session.get("key"), "value");
+}
+
 TEST_F(HttpSessionTest, SessionEvictionByOldest) {
     http_server::session_manager mgr;
     mgr.set_max_sessions(2);
 
     auto* s1 = mgr.get_session("", true);
     ASSERT_NE(s1, nullptr);
-    s1->max_age = seconds{86400};
-    string id1 = s1->id;
+    s1->set_max_age(seconds{86400});
+    string id1 = s1->session_id();
 
     auto* s2 = mgr.get_session("", true);
     ASSERT_NE(s2, nullptr);
-    s2->max_age = seconds{86400};
-    string id2 = s2->id;
+    s2->set_max_age(seconds{86400});
+    string id2 = s2->session_id();
 
     ASSERT_NE(id1, id2);
     ASSERT_EQ(mgr.session_count(), 2u);
 
-    s1->last_access = datetime::now() - 10000;
+    s1->set_last_access(datetime::now() - 10000);
 
     auto* s3 = mgr.get_session("", true);
     ASSERT_NE(s3, nullptr);
-    s3->max_age = seconds{86400};
+    s3->set_max_age(seconds{86400});
 
     bool s1_exists = mgr.session_exists(id1);
     bool s2_exists = mgr.session_exists(id2);
     EXPECT_EQ(mgr.session_count(), 2u);
     EXPECT_FALSE(s1_exists);
     EXPECT_TRUE(s2_exists);
-    EXPECT_TRUE(mgr.session_exists(s3->id));
+    EXPECT_TRUE(mgr.session_exists(s3->session_id()));
 }
 
 class HttpRequestParseTest : public ::testing::Test {

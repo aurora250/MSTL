@@ -74,7 +74,7 @@ NexusForce 严格遵循现代 C++ 工程最佳实践，通过多层次自动化�
 | 🔒 **CodeQL 安全分析**       | **0 漏洞**   | 全规则集                                              |
 | 🔍 **Clang-Tidy 静态检查**   | **零警告**   | 全规则集                                              |
 | 🎨 **Clang-Format 代码风格** | **强制统一** | 配置严格，格式统一                                    |
-| 💧 **动态内存检查**          | **0 泄漏**   | 全量测试                                              |
+| 💧 **valgrind 内存检查**     | **0 泄漏**   | 全量测试                                              |
 | 🧪 **Sanitizer 检查**        | **已接入**   | ASan / UBSan / TSan 独立 CI 矩阵，编译与运行双覆盖    |
 
 > [`.clang-tidy`](.clang-tidy) 包含约 60 项显式豁免，[`.clang-format`](.clang-format) 包含多项风格定制。

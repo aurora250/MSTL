@@ -624,7 +624,7 @@ void system_signal_manager::send_signal_nolock(event event, void* context) {
 #endif
 }
 
-bool system_signal_manager::block_signals(const vector<event>& signals_to_block) const {
+bool system_signal_manager::block_signals(const vector<event>& signals_to_block) {
 #ifdef NEFORCE_PLATFORM_LINUX
     ::sigset_t mask;
     ::sigemptyset(&mask);
@@ -641,7 +641,7 @@ bool system_signal_manager::block_signals(const vector<event>& signals_to_block)
 #endif
 }
 
-bool system_signal_manager::unblock_signals(const vector<event>& signals_to_unblock) const {
+bool system_signal_manager::unblock_signals(const vector<event>& signals_to_unblock) {
 #ifdef NEFORCE_PLATFORM_LINUX
     ::sigset_t mask;
     ::sigemptyset(&mask);

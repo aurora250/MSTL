@@ -6,8 +6,9 @@ NEFORCE_BEGIN_HTTP__
 
 namespace {
     string serialize(const http_session& session) {
+        const auto snapshot = session.data_snapshot();
         string result;
-        for (const auto& pair: session.data) {
+        for (const auto& pair: snapshot) {
             if (!result.empty()) {
                 result += '&';
             }
@@ -53,7 +54,7 @@ optional<http_session> redis_session_store::load(const string& id) {
 }
 
 void redis_session_store::save(const http_session& session) {
-    const string key = prefix_ + session.id;
+    const string key = prefix_ + session.session_id();
     const string data = serialize(session);
     conn_->setex(key, data, static_cast<int>(session.max_age.count()));
 }

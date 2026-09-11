@@ -70,13 +70,13 @@ Starting from v1.0.0, we commit to: **minor version updates maintain API compati
 
 NexusForce strictly adheres to modern C++ engineering best practices, ensuring code robustness and readability through multi-layered automated checks.
 
-| Metric                            | Status                | Description                                                        |
-|-----------------------------------|-----------------------|--------------------------------------------------------------------|
+| Metric                            | Status                | Description                                                         |
+|-----------------------------------|-----------------------|---------------------------------------------------------------------|
 | 📊 **Codebase Size**              | 300k+ Lines           | Core library source and headers 200k+ lines, test code 80k+ lines   |
-| 🔒 **CodeQL Security Analysis**   | **0 Vulnerabilities** | Full ruleset                                                       |
-| 🔍 **Clang-Tidy Static Analysis** | **Zero Warnings**     | Full ruleset                                                       |
-| 🎨 **Clang-Format Code Style**    | **Strictly Enforced** | Strict configuration, uniform formatting                           |
-| 💧 **Dynamic Memory Check**       | **0 Leaks**           | Full test suite                                                    |
+| 🔒 **CodeQL Security Analysis**   | **0 Vulnerabilities** | Full ruleset                                                        |
+| 🔍 **Clang-Tidy Static Analysis** | **Zero Warnings**     | Full ruleset                                                        |
+| 🎨 **Clang-Format Code Style**    | **Strictly Enforced** | Strict configuration, uniform formatting                            |
+| 💧 **valgrind Memory Check**      | **0 Leaks**           | Full test suite                                                     |
 | 🧪 **Sanitizer Check**            | **Enabled**           | Dedicated ASan / UBSan / TSan CI matrix, covering build and runtime |
 
 > [`.clang-tidy`](.clang-tidy) contains approximately 60 explicit exemptions, and [`.clang-format`](.clang-format) includes several style customizations. Each exemption addresses inherent requirements of low-level system programming, adhering to the principle of "strict by default, relaxed as needed."

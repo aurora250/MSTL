@@ -802,10 +802,23 @@
 #endif
 
 /**
+ * @def NEFORCE_HAS_THREAD_SANITIZER
+ * @brief 是否由 ThreadSanitizer 插桩
+ */
+#if defined(__SANITIZE_THREAD__)
+#    define NEFORCE_HAS_THREAD_SANITIZER 1
+#elif defined(__has_feature)
+#    if __has_feature(thread_sanitizer)
+#        define NEFORCE_HAS_THREAD_SANITIZER 1
+#    endif
+#endif
+
+/**
  * @def NEFORCE_SANITIZED_SCAN
  * @brief 是否需要使用不越界的标量扫描实现
  */
-#if defined(NEFORCE_HAS_ADDRESS_SANITIZER) || defined(NEFORCE_HAS_MEMORY_SANITIZER)
+#if defined(NEFORCE_HAS_ADDRESS_SANITIZER) || defined(NEFORCE_HAS_MEMORY_SANITIZER) || \
+        defined(NEFORCE_HAS_THREAD_SANITIZER)
 #    define NEFORCE_SANITIZED_SCAN 1
 #endif
 

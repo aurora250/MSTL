@@ -5,6 +5,8 @@
 # 1. glibc TLS 误报 — pthread_create / aio_create_helper_thread 内部分配
 # 2. GTest 死亡测试产物 — fork()子进程中未清理的 VirtualThreadEnvironment 线程资源
 # 3. glibc wcsxfrm_l 内部 AVX2 越界读取 — 仅在 clang++ 构建中出现
+# 4. glibc 动态加载器 _dl_find_object 查找表缓存 — dlopen 后由 ld.so 持有且从不释放
+# 5. glibc setenv/__add_to_environ 环境表簿记 — unsetenv 后查找树残留的内部指针
 
 # =============================================================================
 # glibc TLS (Thread Local Storage) 误报
@@ -117,4 +119,48 @@
    fun:__wcpncpy_avx2
    fun:wcsxfrm_l
    fun:_ZNK7neforce6locale13collation_key*
+}
+
+# =============================================================================
+# glibc 动态加载器 _dl_find_object 查找表缓存
+# =============================================================================
+# plugin_manager::load_plugin -> dynamic_library::open -> dlopen 会让 ld.so 扩展
+# 其 _dl_find_object 地址查找表：dl-find-object.c 的 _dl_find_object_update() 通过
+# _dlfo_mappings_segment_allocate() 追加映射段，这些段由加载器自身持有且从不释放
+# (进程生命周期缓存，glibc 有意不回收)，Valgrind 只看到加载器内部的间接引用，
+# 因而报 possibly lost (实测 full suite 中 11 个进程各 4,608 字节 / 2 块)。
+# 非项目代码可释放，且仅在 dlopen 之后出现。
+# =============================================================================
+
+{
+   glibc_dlopen_find_object_cache
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:_dlfo_mappings_segment_allocate
+   ...
+   fun:dl_open_worker*
+   ...
+}
+
+# =============================================================================
+# glibc setenv / __add_to_environ 环境表簿记
+# =============================================================================
+# environment::set -> setenv 在 glibc 内部维护 "NAME=VALUE" 字符串以及用于加速
+# getenv 的 known_values 查找树 (setenv.c: __add_to_environ -> tsearch)。变量被
+# unsetenv 从 environ 移除后，树中残留的指针指向块的中部，Valgrind 只能看到
+# interior pointer，故报 possibly lost；并发反复 set/unset 时更易累积
+# (实测 EnvironmentTest.ThreadSafety_ConcurrentGetSet 所在进程 8,317 字节 / 124 块)。
+# 属 glibc 内部簿记，与项目代码无关；本项目测试均成对调用 set/unset。
+# =============================================================================
+
+{
+   glibc_setenv_environ_bookkeeping
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:__add_to_environ
+   ...
+   fun:setenv
+   ...
 }

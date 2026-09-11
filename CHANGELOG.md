@@ -93,6 +93,9 @@
 - 修复 `temp_file` 构造时先创建文件再换用另一候选，导致每次构造泄漏一个临时文件的问题
 - 修复 Windows 文件模块使用 ANSI API 导致非 ASCII 路径失败的问题，改用 Unicode API
 - 修复 valgrind CI 门禁失效问题，`valgrind ... | tee` 的管道退出码取 `tee` 的 0，导致 `--error-exitcode=1` 永远无法让 CI 失败
+- 修复 `VirtualThreadTask.DestroyAwaitingTaskWhileSuspendedAsContinuation` 等待器悬垂：`co_await task` 以任务对象自身为等待器，恢复时仍要读取它，而用例只等到 `inner.is_done()` 便退出作用域，被 detach 的等待方帧恢复时读到已析构的等待器；现改为在作用域内等待该帧执行完毕并断言其返回值
+- 修复 `http_session` 的并发数据竞争：`session_manager::cleanup_expired_sessions()` 在清理线程上读取会话状态，而请求线程经 `csrf_filter`、`add_session_cookie`、`session_store` 直接读写，现为会话加入内部互斥量并补充加锁入口
+- 修复 `plugin_entry.hpp` 把 `create_plugin` / `destroy_plugin` 声明在 `neforce` 命名空间内、而插件模块按惯例在全局作用域定义导致的 MSVC 编译失败（C2375 / C2733），两处声明移到全局命名空间
 - 修复 `unique_ptr` 同类型移动赋值丢失删除器问题，`__unique_ptr_impl::operator=` 只搬运指针而保留目标自身的删除器
 - 修复 `pointer_traits` 对智能指针的 `to_address()` 返回悬垂引用，指针特化用 `decltype(auto)` 推导出 `const Ptr&`
 - 修复 `plugin_manager::load_plugins()` 完全不可用问题，现改用 `path_tree::scan()` 扫描目录并按裸扩展名过滤
@@ -115,6 +118,11 @@
   等待方任务的析构就可能释放它，随后对方恢复一个已释放的帧。现将该标记更名为语义准确的 `detached_`，
   并在 `await_suspend()` 登记 continuation 时置位，析构与移动赋值的判据仍为"未完成且未交付"才回收帧
 - 修复 `virtual_thread::start()` 的闭包生命周期陷阱，现在以 `static_assert` 拒绝 "右值 + 非空闭包" 的协程可调用对象
+- 修复 `co_await virtual_thread_task` 的等待器悬垂：等待器原先是任务对象自身，等待方恢复时会去读被等待的任务对象，而库既不持有其所有权也不约束其生命周期，被等待任务对象提前销毁即读到垃圾。现在改为 `operator co_await()` 返回独立的等待器，等待器自身持有共享状态引用，等待方与被等待任务对象的生命周期解耦
+- 修复等待方协程帧的 detach 标记写入未知内存：`mark_continuation_scheduled()` 把任意 continuation 句柄都当作 `virtual_thread_task<void>::promise_type` 访问其 `shared_state_`，现改为模板化的 `await_suspend(coroutine_handle<Promise>)`，编译期通过 `is_virtual_thread_promise` 判定等待方是否为任务协程
+- 修复 `virtual_thread::sleep()` 每次等待创建一个分离线程：现改为调度器内的定时器最小堆，`shutdown()` 会把未到期定时器执行完，避免已交付调度器的协程帧既不恢复也不释放
+- 修复 TSan 下 SIMD 块扫描被误报为 use-after-free 的问题：`NEFORCE_SANITIZED_SCAN` 原先只覆盖 ASan/MSan，现新增 `NEFORCE_HAS_THREAD_SANITIZER` 并一并纳入
+- 修复线程 hook 的静态析构顺序问题：hook 表与其互斥量改为不做静态析构，线程对象在静态析构阶段被销毁时不再操作已析构的互斥量
 - 修复 `wyhash` 短输入分支的越界读取：`len <= 16` 分支本应做 32 位读，写成 64 位读后长度在 [4, 16] 的输入最多越界 4 字节（16 字节键的第二次读从 `p + 12` 起就越界），且多出的高位来自越界内存，导致哈希不可复现
 - 修复 `base64_encode_12bytes` 的越界读取：调用方只保证 12 字节可读，函数却直接读取 16 字节；改为 `_mm_loadl_epi64` + 4 字节尾读拼装
 - 修复 `dns_client` 的未对齐读取：6 处把字节指针直接重解释为 `uint16_t*`，偏移为奇数时即为未对齐加载，改为逐字节拼装大端字段

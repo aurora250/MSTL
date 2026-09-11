@@ -55,14 +55,15 @@ public:
         shared_lock<shared_mutex> lk(mutex_);
         auto it = sessions_.find(id);
         if (it != sessions_.end() && it->second.is_valid()) {
-            return optional<http_session>{it->second};
+            return optional<http_session>{it->second.clone()};
         }
         return none;
     }
 
     void save(const http_session& session) override {
+        auto copy = session.clone();
         lock<shared_mutex> lk(mutex_);
-        sessions_[session.id] = session;
+        sessions_[copy.id] = move(copy);
     }
 
     void remove(const string& id) override {

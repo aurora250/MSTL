@@ -289,7 +289,7 @@ void share_memory::open(const string& name, size_t size, open_mode mode, access_
             const auto error = last_error();
             ::close(handle_);
             handle_ = g_invalid_handle;
-            NEFORCE_THROW_EXCEPTION(share_memory_exception(error.message().data()));
+            NEFORCE_THROW_EXCEPTION(share_memory_exception(error));
         }
 
         if (stat_buf.st_size <= static_cast<::off_t>(data_offset_)) {
@@ -445,7 +445,7 @@ void share_memory::grow(size_t new_size) {
 
     if (mapped_addr_ != nullptr) {
         void* old_addr = original_mapped_addr_;
-        size_t old_size = internal_mapped_size_;
+        const size_t old_size = internal_mapped_size_;
 
         original_mapped_addr_ = ::mremap(old_addr, old_size, fd_new_size, MREMAP_MAYMOVE);
         if (original_mapped_addr_ == MAP_FAILED) {
@@ -473,7 +473,7 @@ void share_memory::lock() {
     ::WaitForSingleObject(mutex_handle_, INFINITE);
 #else
     auto* header = static_cast<shm_header*>(original_mapped_addr_);
-    int ret = ::pthread_mutex_lock(&header->mutex);
+    const int ret = ::pthread_mutex_lock(&header->mutex);
     if (ret == EOWNERDEAD) {
         ::pthread_mutex_consistent(&header->mutex);
     }
@@ -506,7 +506,7 @@ bool share_memory::try_lock() {
     return ::WaitForSingleObject(mutex_handle_, 0) == WAIT_OBJECT_0;
 #else
     auto* header = static_cast<shm_header*>(original_mapped_addr_);
-    int ret = ::pthread_mutex_trylock(&header->mutex);
+    const int ret = ::pthread_mutex_trylock(&header->mutex);
     if (ret == EBUSY) {
         return false;
     }
@@ -566,9 +566,8 @@ void* share_memory::map(size_t offset, const size_t length) {
         mutex_handle_ = ::CreateMutexW(nullptr, FALSE, mutex_name.data());
     }
 #else
-    int prot = (access_mode_ == access_mode::read_only) ? PROT_READ : (PROT_READ | PROT_WRITE);
+    const int prot = (access_mode_ == access_mode::read_only) ? PROT_READ : (PROT_READ | PROT_WRITE);
 
-    // Always map from file offset 0 to include the shared-memory header
     const size_t total_map = data_offset_ + offset + map_length;
     original_mapped_addr_ = ::mmap(nullptr, total_map, prot, MAP_SHARED, handle_, 0);
 
@@ -578,7 +577,6 @@ void* share_memory::map(size_t offset, const size_t length) {
         NEFORCE_THROW_EXCEPTION(share_memory_exception(error));
     }
 
-    // Initialize the process-shared mutex using CAS to elect a single initializer
     {
         auto* header = static_cast<shm_header*>(original_mapped_addr_);
         if (access_mode_ == access_mode::read_only) {

@@ -19,10 +19,13 @@
 #    include "NeForce/core/async/condition_variable.hpp"
 #    include "NeForce/core/async/mutex.hpp"
 #    include "NeForce/core/async/thread.hpp"
+#    include "NeForce/core/container/priority_queue.hpp"
 #    include "NeForce/core/container/queue.hpp"
 #    include "NeForce/core/container/vector.hpp"
 #    include "NeForce/core/exception/exception_ptr.hpp"
+#    include "NeForce/core/functional/functor.hpp"
 #    include "NeForce/core/memory/aligned_buffer.hpp"
+#    include "NeForce/core/time/clocks.hpp"
 NEFORCE_BEGIN_NAMESPACE__
 
 /**
@@ -120,17 +123,41 @@ NEFORCE_END_INNER__
 /**
  * @class virtual_thread_scheduler
  * @brief 虚拟线程调度器
- *
- * 管理协程任务的调度和执行，全局统一调度。
- * 内部维护一个任务队列和一组工作线程，工作线程从队列中取出协程并执行。
  */
 class virtual_thread_scheduler {
 private:
-    queue<coroutine_handle<>> task_queue_; ///< 协程任务队列
-    vector<thread> workers_;               ///< 工作线程池
-    mutex mutex_;                          ///< 保护任务队列的互斥锁
-    condition_variable cv_;                ///< 任务通知条件变量
-    atomic<bool> shutdown_{false};         ///< 关闭标志
+    /**
+     * @struct timer_entry
+     * @brief 定时器条目
+     */
+    struct timer_entry {
+        steady_clock::time_point deadline; ///< 绝对到期时间
+        uint64_t sequence;                 ///< 入队序号
+        coroutine_handle<> handle;         ///< 需要恢复的协程
+
+        NEFORCE_NODISCARD bool operator>(const timer_entry& other) const noexcept {
+            if (deadline != other.deadline) {
+                return deadline > other.deadline;
+            }
+            return sequence > other.sequence;
+        }
+    };
+
+    queue<coroutine_handle<>> task_queue_;                                          ///< 协程任务队列
+    priority_queue<timer_entry, vector<timer_entry>, greater<timer_entry>> timers_; ///< 定时器最小堆
+    uint64_t next_timer_sequence_{0};                                               ///< 定时器序号计数器
+    vector<thread> workers_;                                                        ///< 工作线程池
+    mutex mutex_;                                                                   ///< 保护任务队列与定时器堆的互斥锁
+    condition_variable cv_;                                                         ///< 任务/定时器通知条件变量
+    atomic<bool> shutdown_{false};                                                  ///< 关闭标志
+
+    void pop_expired_timers_locked() {
+        const auto now = steady_clock::now();
+        while (!timers_.empty() && timers_.top().deadline <= now) {
+            task_queue_.push(timers_.top().handle);
+            timers_.pop();
+        }
+    }
 
 public:
     /**
@@ -152,6 +179,23 @@ public:
             task_queue_.push(handle);
         }
         cv_.notify_one();
+    }
+
+    /**
+     * @brief 将协程延迟指定毫秒后加入调度队列
+     * @param handle 协程句柄
+     * @param delay_ms 延迟毫秒数，非正数表示立即调度
+     */
+    void schedule_after(coroutine_handle<> handle, const int64_t delay_ms) {
+        if (delay_ms <= 0) {
+            schedule(handle);
+            return;
+        }
+        {
+            lock<mutex> lock(mutex_);
+            timers_.push(timer_entry{steady_clock::now() + milliseconds(delay_ms), next_timer_sequence_++, handle});
+        }
+        cv_.notify_all();
     }
 
     /**
@@ -193,7 +237,6 @@ private:
      * @brief 工作线程主循环
      *
      * 循环等待任务队列中的协程，取出并恢复执行。
-     * 若协程执行完毕则销毁帧，否则等待下次调度。
      */
     void worker_loop() {
         while (true) {
@@ -201,15 +244,29 @@ private:
 
             {
                 unique_lock<mutex> lock(mutex_);
-                cv_.wait(lock, [this] { return shutdown_ || !task_queue_.empty(); });
+                for (;;) {
+                    pop_expired_timers_locked();
 
-                if (shutdown_ && task_queue_.empty()) {
-                    return;
-                }
+                    if (shutdown_ && task_queue_.empty() && timers_.empty()) {
+                        return;
+                    }
 
-                if (!task_queue_.empty()) {
-                    handle = task_queue_.front();
-                    task_queue_.pop();
+                    if (!task_queue_.empty()) {
+                        handle = task_queue_.front();
+                        task_queue_.pop();
+                        break;
+                    }
+
+                    if (timers_.empty()) {
+                        cv_.wait(lock, [this] { return shutdown_ || !task_queue_.empty() || !timers_.empty(); });
+                        continue;
+                    }
+
+                    const auto deadline = timers_.top().deadline;
+                    cv_.wait_until(lock, deadline, [this, deadline] {
+                        return shutdown_ || !task_queue_.empty() || timers_.empty() ||
+                               timers_.top().deadline != deadline;
+                    });
                 }
             }
 
@@ -229,7 +286,38 @@ struct sleep_tag {
     int64_t ms_;
 };
 
-void mark_continuation_scheduled(coroutine_handle<> cont);
+/**
+ * @brief 判断某个 promise 是否属于 virtual_thread_task 协程
+ * @tparam Promise 待检查的 promise 类型
+ */
+template <typename Promise, typename = void>
+struct is_virtual_thread_promise : false_type {};
+
+/// @cond
+template <typename Promise>
+struct is_virtual_thread_promise<Promise, void_t<decltype(Promise::is_virtual_thread_task_promise)>>
+: bool_constant<Promise::is_virtual_thread_task_promise> {};
+/// @endcond
+
+/**
+ * @brief is_virtual_thread_promise 的便捷变量模板
+ */
+template <typename Promise>
+constexpr bool is_virtual_thread_promise_v = is_virtual_thread_promise<Promise>::value;
+
+/**
+ * @brief 把等待方的协程帧标记为已交付他人调度
+ * @tparam Promise 等待方的 promise 类型
+ * @param caller 等待方的协程句柄
+ *
+ * 仅当等待方是 virtual_thread_task 协程时置位其共享状态的 detached 标记
+ */
+template <typename Promise>
+void detach_continuation_frame(coroutine_handle<Promise> caller) noexcept {
+    if constexpr (is_virtual_thread_promise_v<Promise>) {
+        caller.promise().shared_state_->detached_.store(true, memory_order_release);
+    }
+}
 
 NEFORCE_END_INNER__
 
@@ -246,6 +334,9 @@ struct virtual_thread_task<void> {
      * @brief 协程 promise_type，管理任务生命周期与状态
      */
     struct promise_type {
+        /// @brief 标记本 promise 属于 virtual_thread_task
+        static constexpr bool is_virtual_thread_task_promise = true;
+
         inner::task_shared_state<void>* shared_state_{inner::task_shared_state<void>::create()};
 
         /**
@@ -283,9 +374,6 @@ struct virtual_thread_task<void> {
 
                         cont = state->continuation_;
                         state->continuation_ = nullptr;
-                        if (cont) {
-                            inner::mark_continuation_scheduled(cont);
-                        }
                     }
 
                     if (cont) {
@@ -338,10 +426,7 @@ struct virtual_thread_task<void> {
 
                 void await_suspend(coroutine_handle<> handle) const {
                     shared_state_->detached_.store(true, memory_order_release);
-                    thread([handle, ms = ms_] {
-                        this_thread::sleep_for(milliseconds(ms));
-                        virtual_thread_scheduler::get_instance().schedule(handle);
-                    }).detach();
+                    virtual_thread_scheduler::get_instance().schedule_after(handle, ms_);
                 }
 
                 void await_resume() const noexcept {}
@@ -450,36 +535,93 @@ struct virtual_thread_task<void> {
     }
 
     /**
-     * @brief co_await 就绪检查
-     * @return 任务是否已完成
+     * @class awaiter
+     * @brief co_await 使用的等待器
      */
-    bool await_ready() noexcept {
-        return shared_state_ != nullptr && shared_state_->completed_.load(memory_order_acquire);
-    }
+    class awaiter {
+    private:
+        inner::task_shared_state<void>* state_{nullptr};
+
+        void release() noexcept {
+            if (state_ != nullptr) {
+                auto* state = _NEFORCE exchange(state_, nullptr);
+                state->release();
+            }
+        }
+
+    public:
+        explicit awaiter(inner::task_shared_state<void>* state) noexcept :
+        state_(state) {
+            if (state_ != nullptr) {
+                state_->add_ref();
+            }
+        }
+
+        ~awaiter() { release(); }
+
+        awaiter(const awaiter&) = delete;
+        awaiter& operator=(const awaiter&) = delete;
+
+        awaiter(awaiter&& other) noexcept :
+        state_(_NEFORCE exchange(other.state_, nullptr)) {}
+
+        awaiter& operator=(awaiter&& other) noexcept {
+            if (addressof(other) != this) {
+                release();
+                state_ = _NEFORCE exchange(other.state_, nullptr);
+            }
+            return *this;
+        }
+
+        /**
+         * @brief co_await 就绪检查
+         * @return 任务是否已完成
+         */
+        NEFORCE_NODISCARD bool await_ready() const noexcept {
+            return state_ == nullptr || state_->completed_.load(memory_order_acquire);
+        }
+
+        /**
+         * @brief co_await 挂起时注册 continuation
+         * @tparam Promise 等待方协程的 promise 类型
+         * @param caller 等待此任务的协程句柄
+         * @return true 需要挂起，false 已可继续
+         */
+        template <typename Promise>
+        bool await_suspend(coroutine_handle<Promise> caller) noexcept {
+            if (state_ == nullptr) {
+                return false;
+            }
+            lock<mutex> lock(state_->mtx_);
+            if (state_->completed_.load(memory_order_acquire)) {
+                return false;
+            }
+            inner::detach_continuation_frame(caller);
+            state_->continuation_ = caller;
+            return true;
+        }
+
+        /**
+         * @brief co_await 恢复时检查异常
+         */
+        void await_resume() const {
+            if (state_ != nullptr && state_->exception_) {
+                rethrow_exception(state_->exception_);
+            }
+        }
+    };
 
     /**
-     * @brief co_await 挂起时注册 continuation
-     * @param caller 等待此任务的协程句柄
-     * @return true 需要挂起，false 已可继续
+     * @brief 获取 co_await 等待器
+     * @return 持有共享状态引用的等待器
      */
-    bool await_suspend(coroutine_handle<> caller) noexcept {
-        lock<mutex> lock(shared_state_->mtx_);
-        if (shared_state_->completed_.load(memory_order_acquire)) {
-            return false;
-        }
-        inner::mark_continuation_scheduled(caller);
-        shared_state_->continuation_ = caller;
-        return true;
-    }
+    NEFORCE_NODISCARD awaiter operator co_await() const& noexcept { return awaiter{shared_state_}; }
 
     /**
-     * @brief co_await 恢复时检查异常
+     * @brief 获取 co_await 等待器
+     * @return 持有共享状态引用的等待器
      */
-    void await_resume() {
-        if (shared_state_->exception_) {
-            rethrow_exception(shared_state_->exception_);
-        }
-    }
+    NEFORCE_NODISCARD awaiter operator co_await() && noexcept { return awaiter{shared_state_}; }
 
     /**
      * @brief 阻塞等待任务完成并获取结果
@@ -511,22 +653,12 @@ struct virtual_thread_task<void> {
 };
 
 
-NEFORCE_BEGIN_INNER__
-
-inline void mark_continuation_scheduled(coroutine_handle<> cont) {
-    auto vh = coroutine_handle<virtual_thread_task<void>::promise_type>::from_address(cont.address());
-    vh.promise().shared_state_->detached_.store(true, memory_order_release);
-}
-
-NEFORCE_END_INNER__
-
-
 /**
  * @brief virtual_thread_task 的类型化版本
  * @tparam T 任务返回值类型
  *
  * 表示一个返回 T 类型值的异步任务。
- * 提供带返回值的 get_result() 和 await_resume()。
+ * 提供带返回值的 get_result() 与 co_await 等待。
  */
 template <typename T>
 struct virtual_thread_task {
@@ -534,6 +666,9 @@ struct virtual_thread_task {
      * @brief 协程 promise_type，管理任务生命周期与返回值存储
      */
     struct promise_type {
+        /// @brief 标记本 promise 属于 virtual_thread_task
+        static constexpr bool is_virtual_thread_task_promise = true;
+
         inner::task_shared_state<T>* shared_state_{inner::task_shared_state<T>::create()};
 
         /**
@@ -570,9 +705,6 @@ struct virtual_thread_task {
 
                         cont = state->continuation_;
                         state->continuation_ = nullptr;
-                        if (cont) {
-                            inner::mark_continuation_scheduled(cont);
-                        }
                     }
 
                     if (cont) {
@@ -623,10 +755,7 @@ struct virtual_thread_task {
 
                 void await_suspend(coroutine_handle<> handle) const {
                     shared_state_->detached_.store(true, memory_order_release);
-                    thread([handle, ms = ms_] {
-                        this_thread::sleep_for(milliseconds(ms));
-                        virtual_thread_scheduler::get_instance().schedule(handle);
-                    }).detach();
+                    virtual_thread_scheduler::get_instance().schedule_after(handle, ms_);
                 }
 
                 void await_resume() const noexcept {}
@@ -743,34 +872,98 @@ struct virtual_thread_task {
     }
 
     /**
-     * @brief co_await 就绪检查
-     * @return 任务是否已完成
+     * @class awaiter
+     * @brief co_await 使用的等待器
      */
-    bool await_ready() noexcept { return shared_state_ && shared_state_->completed_.load(memory_order_acquire); }
+    class awaiter {
+    private:
+        inner::task_shared_state<T>* state_{nullptr};
+
+        void release() noexcept {
+            if (state_ != nullptr) {
+                auto* state = _NEFORCE exchange(state_, nullptr);
+                state->release();
+            }
+        }
+
+    public:
+        explicit awaiter(inner::task_shared_state<T>* state) noexcept :
+        state_(state) {
+            if (state_ != nullptr) {
+                state_->add_ref();
+            }
+        }
+
+        ~awaiter() { release(); }
+
+        awaiter(const awaiter&) = delete;
+        awaiter& operator=(const awaiter&) = delete;
+
+        awaiter(awaiter&& other) noexcept :
+        state_(_NEFORCE exchange(other.state_, nullptr)) {}
+
+        awaiter& operator=(awaiter&& other) noexcept {
+            if (addressof(other) != this) {
+                release();
+                state_ = _NEFORCE exchange(other.state_, nullptr);
+            }
+            return *this;
+        }
+
+        /**
+         * @brief co_await 就绪检查
+         * @return 任务是否已完成
+         */
+        NEFORCE_NODISCARD bool await_ready() const noexcept {
+            return state_ == nullptr || state_->completed_.load(memory_order_acquire);
+        }
+
+        /**
+         * @brief co_await 挂起时注册 continuation
+         * @tparam Promise 等待方协程的 promise 类型
+         * @param caller 等待此任务的协程句柄
+         * @return true 需要挂起，false 已可继续
+         */
+        template <typename Promise>
+        bool await_suspend(coroutine_handle<Promise> caller) noexcept {
+            if (state_ == nullptr) {
+                return false;
+            }
+            lock<mutex> lock(state_->mtx_);
+            if (state_->completed_.load(memory_order_acquire)) {
+                return false;
+            }
+            inner::detach_continuation_frame(caller);
+            state_->continuation_ = caller;
+            return true;
+        }
+
+        /**
+         * @brief co_await 恢复时返回结果或抛出异常
+         * @return 任务的返回值
+         */
+        T await_resume() const {
+            if (state_ == nullptr) {
+                return T{};
+            }
+            if (state_->exception_) {
+                rethrow_exception(state_->exception_);
+            }
+            return move(*state_->result_buffer_.ptr());
+        }
+    };
 
     /**
-     * @brief co_await 挂起时注册 continuation
+     * @brief 获取 co_await 等待器
+     * @return 持有共享状态引用的等待器
      */
-    bool await_suspend(coroutine_handle<> caller) noexcept {
-        lock<mutex> lock(shared_state_->mtx_);
-        if (shared_state_->completed_.load(memory_order_acquire)) {
-            return false;
-        }
-        inner::mark_continuation_scheduled(caller);
-        shared_state_->continuation_ = caller;
-        return true;
-    }
+    NEFORCE_NODISCARD awaiter operator co_await() const& noexcept { return awaiter{shared_state_}; }
 
     /**
-     * @brief co_await 恢复时返回结果或抛出异常
-     * @return 任务的返回值
+     * @brief 获取 co_await 等待器
+     * @return 持有共享状态引用的等待器
      */
-    T await_resume() {
-        if (shared_state_->exception_) {
-            rethrow_exception(shared_state_->exception_);
-        }
-        return move(*shared_state_->result_buffer_.ptr());
-    }
+    NEFORCE_NODISCARD awaiter operator co_await() && noexcept { return awaiter{shared_state_}; }
 
     /**
      * @brief 阻塞获取任务结果

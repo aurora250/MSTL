@@ -8,7 +8,9 @@
  * 此文件提供了HTTP Cookie的序列化和Session管理功能。
  */
 
+#include "NeForce/core/async/mutex.hpp"
 #include "NeForce/core/container/unordered_map.hpp"
+#include "NeForce/core/memory/shared_ptr.hpp"
 #include "NeForce/core/time/datetime.hpp"
 #include "NeForce/core/time/duration.hpp"
 #include "NeForce/network/http/http_constants.hpp"
@@ -129,10 +131,6 @@ struct NEFORCE_API http_cookie : iobject<http_cookie> {
  *
  * 表示一个服务器端HTTP会话，用于存储用户会话数据。
  * 每个会话有唯一的ID，可以存储键值对数据。
- *
- * @note 此类不是线程安全的。session_manager::get_session()
- * 返回的裸指针仅在调用者持有 session_manager 锁时有效。
- * 不要在锁外缓存或跨线程共享该指针。
  *
  * 使用示例：
  * @code
@@ -258,19 +256,83 @@ struct NEFORCE_API http_session : istringify<http_session> {
      * @brief 获取会话年龄
      * @return 从创建到现在的秒数
      */
-    NEFORCE_NODISCARD seconds age() const noexcept { return seconds{datetime::now() - create_time}; }
+    NEFORCE_NODISCARD seconds age() const noexcept;
 
     /**
      * @brief 获取空闲时间
      * @return 从最后访问到现在的秒数
      */
-    NEFORCE_NODISCARD seconds idle_time() const noexcept { return seconds{datetime::now() - last_access}; }
+    NEFORCE_NODISCARD seconds idle_time() const noexcept;
 
     /**
      * @brief 序列化为字符串
      * @return 会话信息的字符串表示
      */
     NEFORCE_NODISCARD string to_string() const;
+
+    /**
+     * @brief 获取会话ID的副本
+     * @return 会话ID
+     */
+    NEFORCE_NODISCARD string session_id() const;
+
+    /**
+     * @brief 会话是否为新创建且尚未下发 Cookie
+     * @return 新会话返回true
+     */
+    NEFORCE_NODISCARD bool is_new_session() const noexcept;
+
+    /**
+     * @brief 获取会话数据的快照
+     * @return 数据副本
+     */
+    NEFORCE_NODISCARD unordered_map<string, string> data_snapshot() const;
+
+    /**
+     * @brief 复制会话
+     * @return 内容一致、拥有独立互斥量的会话副本
+     */
+    NEFORCE_NODISCARD http_session clone() const;
+
+    /**
+     * @brief 设置最大空闲时间
+     * @param age 最大空闲时间
+     */
+    void set_max_age(seconds age) noexcept;
+
+    /**
+     * @brief 设置最后访问时间
+     * @param time 最后访问时间
+     */
+    void set_last_access(datetime time) noexcept;
+
+private:
+    shared_ptr<mutex> mtx_{make_shared<mutex>()}; ///< 保护会话可变状态的互斥量
+
+    void touch_locked() noexcept {
+        last_access = datetime::now();
+        is_new = false;
+    }
+
+    NEFORCE_NODISCARD bool is_valid_locked() const noexcept {
+        if (invalidated) {
+            return false;
+        }
+        if (id.empty()) {
+            return false;
+        }
+        return !expired_locked(0_s);
+    }
+
+    NEFORCE_NODISCARD bool expired_locked(seconds max_inactive) const noexcept {
+        if (max_inactive <= 0_s) {
+            max_inactive = max_age;
+        }
+        if (max_inactive <= 0_s) {
+            return false;
+        }
+        return seconds{datetime::now() - last_access} > max_inactive;
+    }
 };
 
 /** @} */ // HTTP

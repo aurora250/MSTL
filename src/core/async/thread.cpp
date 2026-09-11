@@ -59,14 +59,18 @@ namespace {
 
 #endif
 
+    // The Hook table and its mutex are deliberately not given static destructors,
+    // because thread objects might be destroyed during static destruction,
+    // and by then, static variables inside functions might have already been destroyed,
+    // so calling hook::invoke() would operate on a mutex that has already been destroyed.
     vector<thread::hook::callback_t>& thread_hook_hooks() {
-        static vector<thread::hook::callback_t> hooks;
-        return hooks;
+        static auto* hooks = new vector<thread::hook::callback_t>();
+        return *hooks;
     }
 
     mutex& thread_hook_mutex() {
-        static mutex mtx;
-        return mtx;
+        static auto* mtx = new mutex();
+        return *mtx;
     }
 } // namespace
 

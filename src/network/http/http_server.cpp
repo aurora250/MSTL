@@ -405,13 +405,13 @@ void send_response(tcp_socket* client_socket, const http_response& response) {
 void add_session_cookie(const http_request& request, http_response& response, http_session* session,
                         const http_cookie_name& name) {
 
-    if (session == nullptr || !session->is_new) {
+    if (session == nullptr || !session->is_new_session()) {
         return;
     }
 
     http_cookie session_cookie;
     session_cookie.name = name;
-    session_cookie.value = session->id;
+    session_cookie.value = session->session_id();
     session_cookie.http_only = true;
 
     const bool is_https = request.header(http_key::X_Forwarded_Proto()) == "https";
@@ -419,7 +419,7 @@ void add_session_cookie(const http_request& request, http_response& response, ht
     session_cookie.same_site = is_https ? http_key::Strict() : http_key::Lax();
 
     response.cookies.emplace_back(move(session_cookie));
-    session->is_new = false;
+    session->touch();
 }
 
 void send_error_response(tcp_socket* client_socket, const http_status status, const string& message) {

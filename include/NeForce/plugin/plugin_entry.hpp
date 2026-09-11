@@ -11,7 +11,6 @@
  */
 
 #include "NeForce/plugin/iplugin.hpp"
-NEFORCE_BEGIN_NAMESPACE__
 
 /**
  * @defgroup Plugin 插件
@@ -42,7 +41,7 @@ NEFORCE_BEGIN_NAMESPACE__
  * 此函数必须由插件实现并导出，用于创建插件实例。
  * 返回的指针将由 destroy_plugin 函数销毁。
  */
-extern "C" iplugin* create_plugin();
+extern "C" _NEFORCE iplugin* create_plugin();
 
 /**
  * @brief 销毁插件实例
@@ -51,9 +50,8 @@ extern "C" iplugin* create_plugin();
  * 此函数必须由插件实现并导出，用于销毁通过 create_plugin
  * 创建的插件对象。释放所有相关资源。
  */
-extern "C" void destroy_plugin(iplugin* p);
+extern "C" void destroy_plugin(_NEFORCE iplugin* p);
 
 /** @} */ // Plugin
 
-NEFORCE_END_NAMESPACE__
 #endif // NEFORCE_PLUGIN_PLUGIN_ENTRY_HPP__

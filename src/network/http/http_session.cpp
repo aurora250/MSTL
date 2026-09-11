@@ -154,11 +154,13 @@ void http_cookie::set_expires_from_now(const seconds sec) {
 }
 
 string& http_session::operator[](const string& key) {
-    touch();
+    lock<mutex> lk(*mtx_);
+    touch_locked();
     return data[key];
 }
 
 string_view http_session::get(const string& key) const {
+    lock<mutex> lk(*mtx_);
     const auto it = data.find(key);
     if (it != data.end()) {
         return it->second.view();
@@ -167,63 +169,107 @@ string_view http_session::get(const string& key) const {
 }
 
 void http_session::set(const string& key, string value) {
-    touch();
+    lock<mutex> lk(*mtx_);
+    touch_locked();
     data[key] = move(value);
 }
 
 bool http_session::remove(const string& key) {
-    touch();
+    lock<mutex> lk(*mtx_);
+    touch_locked();
     return data.erase(key) > 0;
 }
 
 void http_session::clear() {
-    touch();
+    lock<mutex> lk(*mtx_);
+    touch_locked();
     data.clear();
 }
 
 void http_session::invalidate() noexcept {
+    lock<mutex> lk(*mtx_);
     invalidated = true;
     data.clear();
 }
 
 void http_session::regenerate_id() {
+    lock<mutex> lk(*mtx_);
     string new_id;
     new_id.reserve(32);
     for (int i = 0; i < 32; ++i) {
         new_id += format("{:x}", secret::next_int<uint32_t>(16));
     }
     id = move(new_id);
-    touch();
+    touch_locked();
     is_new = true;
 }
 
 void http_session::touch() noexcept {
-    last_access = datetime::now();
-    is_new = false;
+    lock<mutex> lk(*mtx_);
+    touch_locked();
 }
 
-bool http_session::contains(const string& key) const noexcept { return data.find(key) != data.end(); }
+bool http_session::contains(const string& key) const noexcept {
+    lock<mutex> lk(*mtx_);
+    return data.find(key) != data.end();
+}
 
 bool http_session::is_valid() const noexcept {
-    if (invalidated) {
-        return false;
-    }
-
-    if (id.empty()) {
-        return false;
-    }
-
-    return !expired();
+    lock<mutex> lk(*mtx_);
+    return is_valid_locked();
 }
 
 bool http_session::expired(seconds max_inactive) const noexcept {
-    if (max_inactive <= 0_s) {
-        max_inactive = max_age;
-    }
-    if (max_inactive <= 0_s) {
-        return false;
-    }
-    return idle_time() > max_inactive;
+    lock<mutex> lk(*mtx_);
+    return expired_locked(max_inactive);
+}
+
+seconds http_session::age() const noexcept {
+    lock<mutex> lk(*mtx_);
+    return seconds{datetime::now() - create_time};
+}
+
+seconds http_session::idle_time() const noexcept {
+    lock<mutex> lk(*mtx_);
+    return seconds{datetime::now() - last_access};
+}
+
+string http_session::session_id() const {
+    lock<mutex> lk(*mtx_);
+    return id;
+}
+
+bool http_session::is_new_session() const noexcept {
+    lock<mutex> lk(*mtx_);
+    return is_new;
+}
+
+unordered_map<string, string> http_session::data_snapshot() const {
+    lock<mutex> lk(*mtx_);
+    return data;
+}
+
+void http_session::set_max_age(const seconds age) noexcept {
+    lock<mutex> lk(*mtx_);
+    max_age = age;
+}
+
+void http_session::set_last_access(const datetime time) noexcept {
+    lock<mutex> lk(*mtx_);
+    last_access = time;
+}
+
+http_session http_session::clone() const {
+    lock<mutex> lk(*mtx_);
+    http_session copy;
+    copy.id = id;
+    copy.data = data;
+    copy.last_access = last_access;
+    copy.create_time = create_time;
+    copy.max_age = max_age;
+    copy.is_new = is_new;
+    copy.invalidated = invalidated;
+    return copy;
 }
 
 string http_session::to_string() const {
@@ -233,11 +279,13 @@ string http_session::to_string() const {
     result += "Session ID: [" + id + "]\n";
     result += "Created: " + create_time.to_string() + "\n";
     result += "Last Access: " + last_access.to_string() + "\n";
-    result += "Age: " + _NEFORCE to_string(age().count()) + "s\n";
-    result += "Idle: " + _NEFORCE to_string(idle_time().count()) + "s\n";
+    const seconds age{datetime::now() - last_access};
+    result += "Age: " + _NEFORCE to_string(age.count()) + "s\n";
+    const seconds idle{datetime::now() - last_access};
+    result += "Idle: " + _NEFORCE to_string(idle.count()) + "s\n";
     result += "Max Age: " + _NEFORCE to_string(max_age.count()) + "s\n";
     result += "Is New: " + _NEFORCE to_string(is_new) + "\n";
-    result += "Valid: " + _NEFORCE to_string(is_valid()) + "\n";
+    result += "Valid: " + _NEFORCE to_string(is_valid_locked()) + "\n";
     result += "Data Count: " + _NEFORCE to_string(data.size()) + "\n";
 
     if (!data.empty()) {

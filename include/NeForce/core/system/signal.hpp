@@ -270,18 +270,20 @@ public:
     NEFORCE_NODISCARD bool is_running() const;
 
     /**
-     * @brief 阻塞指定信号（仅Linux）
+     * @brief 阻塞指定信号
      * @param signals_to_block 要阻塞的信号集合
      * @return 是否成功
+     * @note 仅Linux支持
      */
-    bool block_signals(const vector<event>& signals_to_block) const;
+    static bool block_signals(const vector<event>& signals_to_block);
 
     /**
-     * @brief 解除阻塞指定信号（仅Linux）
+     * @brief 解除阻塞指定信号
      * @param signals_to_unblock 要解除的信号集合
      * @return 是否成功
+     * @note 仅Linux支持
      */
-    bool unblock_signals(const vector<event>& signals_to_unblock) const;
+    static bool unblock_signals(const vector<event>& signals_to_unblock);
 
     /**
      * @brief 判断事件是否为平台原生信号

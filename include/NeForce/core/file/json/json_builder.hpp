@@ -259,12 +259,24 @@ public:
     json_builder& value(const double value) { return value_impl(make_unique<json_number>(value)); }
 
     /**
-     * @brief 设置整数值
+     * @brief 设置32位整数值
      * @param value 整数
      * @return 自身引用，支持链式调用
      * @throws json_exception 当上下文无效或键名缺失时抛出
      */
-    json_builder& value(const int value) { return value_impl(make_unique<json_number>(static_cast<double>(value))); }
+    json_builder& value(const int32_t value) {
+        return value_impl(make_unique<json_number>(static_cast<double>(value)));
+    }
+
+    /**
+     * @brief 设置64位整数值
+     * @param value 双精度浮点数
+     * @return 自身引用，支持链式调用
+     * @throws json_exception 当上下文无效或键名缺失时抛出
+     */
+    json_builder& value(const int64_t value) {
+        return value_impl(make_unique<json_number>(static_cast<double>(value)));
+    }
 
     /**
      * @brief 设置布尔值

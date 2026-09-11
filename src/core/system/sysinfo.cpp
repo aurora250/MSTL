@@ -794,7 +794,7 @@ void sysinfo::init() {
             for (uint32_t core = start_core; core <= end_core; core++) {
                 info.core_list.push_back(core);
                 if (core < 64) {
-                    info.core_mask |= (uint64_t(1) << core);
+                    info.core_mask |= (static_cast<uint64_t>(1) << core);
                 }
             }
         }
@@ -972,7 +972,7 @@ sysinfo::disk_info sysinfo::get_disk_info(const char* path) {
     struct ::statvfs stat = {};
     if (::statvfs(target_path, &stat) == 0) {
         info.path = target_path;
-        unsigned long block_size = stat.f_frsize;
+        const unsigned long block_size = stat.f_frsize;
         info.total_bytes = static_cast<uint64_t>(stat.f_blocks) * block_size;
         info.free_bytes = static_cast<uint64_t>(stat.f_bavail) * block_size;
         info.used_bytes = info.total_bytes - info.free_bytes;
@@ -1030,7 +1030,7 @@ vector<sysinfo::network_interface> sysinfo::network_interfaces() {
         return result;
     }
 
-    for (::ifaddrs* p = ifa; p != nullptr; p = p->ifa_next) {
+    for (const ::ifaddrs* p = ifa; p != nullptr; p = p->ifa_next) {
         if (p->ifa_addr == nullptr) {
             continue;
         }

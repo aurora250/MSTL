@@ -35,7 +35,7 @@ unique_ptr<http_server> start_backend(const string& name, uint16_t port) {
         jb.begin_object();
         jb.key("backend").value(name);
         jb.key("port").value(static_cast<double>(port));
-        jb.key("timestamp").value(static_cast<double>(::time(nullptr)));
+        jb.key("timestamp").value(timestamp::now().value());
         jb.end_object();
         res.body = jb.build()->to_string();
         res.set_content_type(http_content::JSON_APP());
