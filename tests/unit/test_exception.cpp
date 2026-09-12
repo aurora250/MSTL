@@ -673,4 +673,6 @@ TEST(SourceLocationTest, CurrentProvidesPosition) {
     EXPECT_STRNE(loc.file_name(), "");
     EXPECT_STRNE(loc.func_name(), "");
     EXPECT_NE(loc.line(), 0u);
+    EXPECT_TRUE(string(loc.file_name()).find("test_exception") != string::npos);
+    EXPECT_EQ(string(loc.func_name()).find("source_location"), string::npos);
 }

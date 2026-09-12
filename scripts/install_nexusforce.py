@@ -73,15 +73,65 @@ def detect_vcpkg_toolchain(cfg: dict) -> Any | None:
     return None
 
 
+# Visual Studio 的安装版本决定生成器名：Visual Studio 18 2026 只在较新的 CMake 中存在，
+# 因此不能把生成器名写死，否则在 windows-latest 这类已升级镜像的环境中会找不到实例。
+VS_GENERATORS = {
+    "16": "Visual Studio 16 2019",
+    "17": "Visual Studio 17 2022",
+    "18": "Visual Studio 18 2026",
+}
+
+
+def cmake_supports_generator(name: str) -> bool:
+    """判断当前 CMake 是否认识指定生成器"""
+    try:
+        result = subprocess.run(["cmake", "--help"], capture_output=True, text=True, check=False)
+    except OSError:
+        return False
+
+    return name in result.stdout
+
+
+def detect_visual_studio() -> str | None:
+    """经 vswhere 探测已安装的 Visual Studio，返回可用的 CMake 生成器名"""
+    program_files = os.environ.get("ProgramFiles(x86)") or r"C:\Program Files (x86)"
+    vswhere = Path(program_files) / "Microsoft Visual Studio" / "Installer" / "vswhere.exe"
+    if not vswhere.exists():
+        return None
+
+    try:
+        result = subprocess.run(
+            [
+                str(vswhere),
+                "-latest", "-products", "*",
+                "-requires", "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+                "-property", "installationVersion",
+            ],
+            capture_output=True, text=True, check=False,
+        )
+    except OSError:
+        return None
+
+    major = result.stdout.strip().split(".")[0]
+    generator = VS_GENERATORS.get(major)
+    if generator and cmake_supports_generator(generator):
+        return generator
+
+    return None
+
+
 def get_generator() -> str | None:
     """为当前平台选择合适的 CMake 生成器"""
-    system = platform.system()
-    if system == "Windows":
-        for vs in ("Visual Studio 17 2022", "Visual Studio 16 2019"):
-            if shutil.which("msbuild"):
-                return vs
-        if shutil.which("ninja") and shutil.which("rc"):
-            return "Ninja"
+    if platform.system() != "Windows":
+        return None
+
+    generator = detect_visual_studio()
+    if generator:
+        return generator
+
+    if shutil.which("ninja") and shutil.which("rc"):
+        return "Ninja"
+
     return None
 
 
@@ -103,7 +153,7 @@ def cmake_configure(args: argparse.Namespace, toolchain: Path | None) -> int:
     if gen:
         cmd += ["-G", gen]
 
-    is_multi = gen and ("Visual Studio" in gen or "Xcode" in gen)
+    is_multi = gen and ("Visual Studio" in gen or "Xcode" in gen or "Multi-Config" in gen)
     if not is_multi:
         cmd += [f"-DCMAKE_BUILD_TYPE={args.config}"]
 

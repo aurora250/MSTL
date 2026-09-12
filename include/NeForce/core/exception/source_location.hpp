@@ -57,18 +57,37 @@ public:
      */
     NEFORCE_NODISCARD constexpr uint32_t column() const noexcept { return column_; }
 
+#ifdef NEFORCE_COMPILER_GCC
     /**
      * @brief 当前源码位置
+     * @param file 文件名
+     * @param func 函数名
+     * @param line 行号
+     * @param column 列号
+     * @return 调用点的源码位置
+     * @note GCC 不支持获取列号
      */
-    NEFORCE_NODISCARD static NEFORCE_CONSTEVAL20 source_location current() noexcept {
-#ifdef NEFORCE_COMPILER_GCC
-        return source_location{__builtin_FILE(), __builtin_FUNCTION(), __builtin_LINE(), 0};
-#elif defined(NEFORCE_COMPILER_CLANG)
-        return source_location{__builtin_FILE(), __builtin_FUNCTION(), __builtin_LINE(), __builtin_COLUMN()};
-#elif defined(NEFORCE_COMPILER_MSVC)
-        return source_location{__builtin_FILE(), __builtin_FUNCSIG(), __builtin_LINE(), __builtin_COLUMN()};
-#endif
+    NEFORCE_NODISCARD static NEFORCE_CONSTEVAL20 source_location current(const char* file = __builtin_FILE(),
+                                                                         const char* func = __builtin_FUNCTION(),
+                                                                         const uint32_t line = __builtin_LINE(),
+                                                                         const uint32_t column = 0) noexcept {
+        return source_location{file, func, line, column};
     }
+#else
+    /**
+     * @brief 当前源码位置
+     * @param file 文件名
+     * @param func 函数名
+     * @param line 行号
+     * @param column 列号
+     * @return 调用点的源码位置
+     */
+    NEFORCE_NODISCARD static NEFORCE_CONSTEVAL20 source_location
+    current(const char* file = __builtin_FILE(), const char* func = __builtin_FUNCTION(),
+            const uint32_t line = __builtin_LINE(), const uint32_t column = __builtin_COLUMN()) noexcept {
+        return source_location{file, func, line, column};
+    }
+#endif
 };
 
 /** @} */ // DebugAAssertionsAOptimize

@@ -76,8 +76,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build clang libtirpc-dev libc++abi-dev liburing-dev
 
-      # Everything the consumer needs is staged outside the workspace: the package prefix, the
-      # consumer's own copy of its sources and its build directories.
+      - name: Setup MSVC environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
+
+      - name: Install Ninja (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: pip install ninja
+
       - name: Stage the third-party workspace
         shell: bash
         run: |
@@ -153,12 +162,8 @@ jobs:
 
           PY=$(command -v python3 || command -v python)
 
-          # Visual Studio needs no developer prompt for MSVC; Ninja Multi-Config takes the compiler
-          # from the environment, which the installer forwards to CMake unchanged.
-          if [ "$RUNNER_OS" = "Windows" ]; then
-            generator=(-G "Visual Studio 17 2022")
-          else
-            generator=(-G "Ninja Multi-Config")
+          generator=(-G "Ninja Multi-Config")
+          if [ "$RUNNER_OS" != "Windows" ]; then
             export CC=clang
             export CXX=clang++
           fi
@@ -291,7 +296,7 @@ jobs:
             build_dir="$NF_OUTSIDE/consumer-$lower"
 
             if [ "$RUNNER_OS" = "Windows" ]; then
-              generator=(-G "Visual Studio 17 2022")
+              generator=(-G "Ninja Multi-Config")
               configure_args=()
               build_args=(--config "$config")
               exe="$build_dir/bin/$config/install_consumer.exe"
