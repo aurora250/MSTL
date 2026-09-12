@@ -1,0 +1,56 @@
+name: "Save vcpkg cache"
+description: >-
+  Save the binary archive cache that setup-vcpkg restored, once the build has populated it. Only
+  the default branch writes entries: caches written by a pull request are invisible to every other
+  run, yet they count against the same repository cache quota, so writing them evicts the entries
+  the default branch depends on.
+
+inputs:
+  cache-key:
+    description: "Key reported by setup-vcpkg"
+    required: true
+  cache-hit:
+    description: "cache-hit reported by setup-vcpkg; an exact hit needs no save"
+    required: false
+    default: "false"
+  binary-cache:
+    description: "binary-cache reported by setup-vcpkg, so the cached path has a single definition"
+    required: true
+  enabled:
+    description: "Whether this run may write a cache entry"
+    required: false
+    default: "true"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Decide whether to save
+      id: gate
+      shell: bash
+      env:
+        CACHE_HIT: ${{ inputs.cache-hit }}
+        ENABLED: ${{ inputs.enabled }}
+        DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        CACHE_KEY: ${{ inputs.cache-key }}
+      run: |
+        set -euo pipefail
+        if [ "$ENABLED" != "true" ]; then
+          echo "save=false" >> "$GITHUB_OUTPUT"
+          echo "cache save disabled for this run"
+        elif [ "$CACHE_HIT" = "true" ]; then
+          echo "save=false" >> "$GITHUB_OUTPUT"
+          echo "exact cache hit for $GITHUB_REF, nothing to save"
+        elif [ "$GITHUB_REF" != "refs/heads/$DEFAULT_BRANCH" ]; then
+          echo "save=false" >> "$GITHUB_OUTPUT"
+          echo "$GITHUB_REF is not the default branch, restore-only run"
+        else
+          echo "save=true" >> "$GITHUB_OUTPUT"
+          echo "saving cache key: $CACHE_KEY"
+        fi
+
+    - name: Save vcpkg binary cache
+      if: steps.gate.outputs.save == 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ inputs.binary-cache }}
+        key: ${{ inputs.cache-key }}

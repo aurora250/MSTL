@@ -50,24 +50,9 @@ jobs:
       - name: Install Dependencies
         run: sudo apt-get update && sudo apt-get install -y bear libtirpc-dev libc++abi-dev liburing-dev
 
-      - name: Cache vcpkg
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/vcpkg
-            ~/.cache/vcpkg
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-
-
       - name: Setup vcpkg
-        run: |
-          if [ ! -d "$HOME/vcpkg" ]; then
-            git clone https://github.com/Microsoft/vcpkg.git $HOME/vcpkg
-            $HOME/vcpkg/bootstrap-vcpkg.sh
-          fi
-          echo "VCPKG_ROOT=$HOME/vcpkg" >> $GITHUB_ENV
-          echo "$HOME/vcpkg" >> $GITHUB_PATH
+        id: vcpkg
+        uses: ./.github/actions/setup-vcpkg
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
@@ -85,7 +70,7 @@ jobs:
 
           bear -- cmake -S . -B "$BUILD_DIR" \
             -DCMAKE_BUILD_TYPE=Debug \
-            -DCMAKE_TOOLCHAIN_FILE=$HOME/vcpkg/scripts/buildsystems/vcpkg.cmake \
+            -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake \
             -DVCPKG_TARGET_TRIPLET=x64-linux \
             -DNEXUSFORCE_BUILD_DOCS=OFF \
             -DNEXUSFORCE_BUILD_TESTS=OFF || true
@@ -109,6 +94,13 @@ jobs:
 
           rm -rf "$BUILD_DIR"
         shell: bash
+
+      - name: Save vcpkg binary cache
+        uses: ./.github/actions/save-vcpkg-cache
+        with:
+          cache-key: ${{ steps.vcpkg.outputs.cache-key }}
+          cache-hit: ${{ steps.vcpkg.outputs.cache-hit }}
+          binary-cache: ${{ steps.vcpkg.outputs.binary-cache }}
 
       - name: Clean Environment for CodeQL
         run: |

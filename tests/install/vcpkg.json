@@ -1,0 +1,120 @@
+{
+  "name": "nexusforce-install-consumer",
+  "version": "1.0.1",
+  "description": "Third-party consumer used by .github/workflows/install.yml",
+  "builtin-baseline": "62159a45e18f3a9ac0548628dcaf74fcb60c6ff9",
+  "dependencies": [
+    {
+      "name": "openssl",
+      "features": [
+        "tools"
+      ]
+    },
+    "libpq",
+    "libmysql",
+    "zlib",
+    "lz4",
+    "sqlite3",
+    {
+      "name": "sqlcipher",
+      "platform": "windows & !arm"
+    },
+    "hiredis",
+    {
+      "name": "pcre2",
+      "features": [
+        "jit"
+      ]
+    },
+    "icu",
+    "gtest",
+    "benchmark"
+  ],
+  "features": {
+    "postgresql": {
+      "description": "PostgreSQL support",
+      "dependencies": [
+        "libpq"
+      ]
+    },
+    "mysql": {
+      "description": "MySQL support",
+      "dependencies": [
+        "libmysql"
+      ]
+    },
+    "sqlite3": {
+      "description": "SQLite3 support",
+      "dependencies": [
+        "sqlite3"
+      ]
+    },
+    "sqlcipher": {
+      "description": "Encrypted SQLite3 support",
+      "dependencies": [
+        "sqlcipher"
+      ]
+    },
+    "redis": {
+      "description": "Redis support",
+      "dependencies": [
+        "hiredis"
+      ]
+    },
+    "zlib": {
+      "description": "zlib compression support",
+      "dependencies": [
+        "zlib"
+      ]
+    },
+    "lz4": {
+      "description": "lz4 compression support",
+      "dependencies": [
+        "lz4"
+      ]
+    },
+    "openssl": {
+      "description": "OpenSSL support",
+      "dependencies": [
+        "openssl"
+      ]
+    },
+    "pcre2": {
+      "description": "pcre2 support",
+      "dependencies": [
+        "pcre2"
+      ]
+    },
+    "gtest": {
+      "description": "gtest support",
+      "dependencies": [
+        "gtest"
+      ]
+    },
+    "benchmark": {
+      "description": "Google Benchmark support",
+      "dependencies": [
+        "benchmark"
+      ]
+    },
+    "icu": {
+      "description": "ICU4C locale and Unicode support",
+      "dependencies": [
+        "icu"
+      ]
+    }
+  },
+  "default-features": [
+    "postgresql",
+    "mysql",
+    "sqlite3",
+    "redis",
+    "zlib",
+    "lz4",
+    "openssl",
+    "pcre2",
+    "icu",
+    "gtest",
+    "benchmark"
+  ]
+}

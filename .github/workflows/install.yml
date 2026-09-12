@@ -1,0 +1,397 @@
+name: "Install Check"
+
+# Verifies the packaged artifacts rather than the build tree: scripts/install_nexusforce.py has to
+# produce a prefix that a third-party project can find, link and use, including every public tool
+# (NFRS) and every installed CMake helper (nexusforce_compiler_options, nexusforce_sanitizer_options,
+# nexusforce_deploy_runtime, nexusforce_reflect_scan).
+#
+# Both the installed prefix and the consumer live outside the checked-out workspace: a prefix inside
+# the source tree, or a consumer built next to it, could reach the development tree and the test
+# would no longer prove that NexusForce is usable as an installed package. Only the consumer project
+# itself is copied out of the repository, so nothing else from the repository is reachable from it.
+#
+# NFRS is installed for Release only, so every job installs Release as well as Debug - in one job,
+# into one prefix - and then configures the consumer once per configuration. Debug is installed and
+# checked first because the Release install is what makes NexusForce::NFRS available to both
+# consumers.
+
+on:
+  push:
+    branches: [ dev ]
+    paths:
+      - 'src/**'
+      - 'include/**'
+      - 'tests/install/**'
+      - 'tools/**'
+      - 'cmake/**'
+      - 'scripts/install_nexusforce.py'
+      - 'CMakeLists.txt'
+      - 'NexusForceConfig.cmake.in'
+      - 'vcpkg.json'
+      - 'config.json'
+      - '.github/workflows/install.yml'
+      - '.github/actions/setup-vcpkg/**'
+  pull_request:
+    branches: [ dev ]
+    paths:
+      - 'src/**'
+      - 'include/**'
+      - 'tests/install/**'
+      - 'tools/**'
+      - 'cmake/**'
+      - 'scripts/install_nexusforce.py'
+      - 'CMakeLists.txt'
+      - 'NexusForceConfig.cmake.in'
+      - 'vcpkg.json'
+      - 'config.json'
+      - '.github/workflows/install.yml'
+      - '.github/actions/setup-vcpkg/**'
+  workflow_dispatch:
+
+jobs:
+  install:
+    name: "${{ matrix.os }} · ${{ matrix.compiler }}"
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            compiler: clang
+          - os: windows-latest
+            compiler: msvc
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup vcpkg
+        id: vcpkg
+        uses: ./.github/actions/setup-vcpkg
+
+      - name: Install toolchain
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build clang libtirpc-dev libc++abi-dev liburing-dev
+
+      # Everything the consumer needs is staged outside the workspace: the package prefix, the
+      # consumer's own copy of its sources and its build directories.
+      - name: Stage the third-party workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Git Bash hands out native paths; the rest of the workflow uses shell paths.
+          if command -v cygpath >/dev/null 2>&1; then
+            temp=$(cygpath -u "$RUNNER_TEMP")
+            workspace=$(cygpath -u "$GITHUB_WORKSPACE")
+          else
+            temp="$RUNNER_TEMP"
+            workspace="$GITHUB_WORKSPACE"
+          fi
+
+          outside="$temp/nexusforce-install-check"
+          rm -rf "$outside"
+          mkdir -p "$outside"
+
+          case "$outside" in
+            "$workspace"/*)
+              echo "::error::staging directory $outside is inside the workspace $workspace"
+              exit 1
+              ;;
+          esac
+
+          cp -r tests/install "$outside/consumer"
+
+          {
+            echo "NF_PREFIX=$outside/prefix"
+            echo "NF_CONSUMER=$outside/consumer"
+            echo "NF_OUTSIDE=$outside"
+          } >> "$GITHUB_ENV"
+
+          echo "package prefix: $outside/prefix"
+          echo "consumer:       $outside/consumer"
+          ls "$outside/consumer"
+
+      # The consumer declares its own dependencies; a drift between the two manifests would stay
+      # invisible until the consumer failed to resolve a dependency, so compare them first.
+      - name: Check the staged consumer manifest matches the library manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PY=$(command -v python3 || command -v python)
+
+          LIBRARY_MANIFEST="$GITHUB_WORKSPACE/vcpkg.json" CONSUMER_MANIFEST="$NF_CONSUMER/vcpkg.json" \
+            "$PY" - <<'PY'
+          import json, os, sys
+
+          library = json.load(open(os.environ["LIBRARY_MANIFEST"], encoding="utf-8"))
+          consumer = json.load(open(os.environ["CONSUMER_MANIFEST"], encoding="utf-8"))
+
+          for field in ("builtin-baseline", "dependencies", "default-features"):
+              if library.get(field) != consumer.get(field):
+                  print(f"::error::the consumer manifest differs from vcpkg.json in '{field}'")
+                  sys.exit(1)
+
+          print("consumer manifest matches the library manifest")
+          PY
+
+      # Release is installed after Debug so that one prefix carries both the Debug library and the
+      # Release-only NFRS tool.
+      #
+      # A multi-configuration generator is required. Every install rewrites the exported target file
+      # and deletes the per-configuration files of the configurations it does not install, so two
+      # single-configuration installs into one prefix leave only the last configuration declared in
+      # the export: a Debug consumer would then silently link the Release library. One
+      # multi-configuration configure installs both and keeps both listed.
+      - name: Install NexusForce with scripts/install_nexusforce.py
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PY=$(command -v python3 || command -v python)
+
+          # Visual Studio needs no developer prompt for MSVC; Ninja Multi-Config takes the compiler
+          # from the environment, which the installer forwards to CMake unchanged.
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            generator=(-G "Visual Studio 17 2022")
+          else
+            generator=(-G "Ninja Multi-Config")
+            export CC=clang
+            export CXX=clang++
+          fi
+
+          for config in Debug Release; do
+            "$PY" scripts/install_nexusforce.py \
+              "${generator[@]}" \
+              --build-dir "$NF_OUTSIDE/build" \
+              --config "$config" \
+              --prefix "$NF_PREFIX" \
+              --parallel 4
+          done
+
+      - name: Check the exported package declares both configurations
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          export_file="$NF_PREFIX/lib/cmake/NexusForce/NexusForceTargets.cmake"
+
+          for config in DEBUG RELEASE; do
+            if ! grep -q "IMPORTED_CONFIGURATIONS ${config}" \
+              "$NF_PREFIX"/lib/cmake/NexusForce/NexusForceTargets-*.cmake; then
+              echo "::error::the exported package does not declare ${config}; a consumer of that" \
+                   "configuration would fall back to another configuration's library"
+              exit 1
+            fi
+            echo "$export_file declares ${config}"
+          done
+
+      - name: Check the installed layout
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          status=0
+
+          require() {
+            if [ -e "$1" ]; then
+              echo "found $1"
+            else
+              echo "::error::missing installed artifact: $1"
+              status=1
+            fi
+          }
+
+          require "$NF_PREFIX/include/NeForce/core/reflect/registry.hpp"
+          require "$NF_PREFIX/lib/cmake/NexusForce/NexusForceConfig.cmake"
+          require "$NF_PREFIX/lib/cmake/NexusForce/NexusForceTargets.cmake"
+          require "$NF_PREFIX/lib/cmake/NexusForce/NexusForceTargets-debug.cmake"
+          require "$NF_PREFIX/lib/cmake/NexusForce/NexusForceTargets-release.cmake"
+          require "$NF_PREFIX/lib/cmake/NexusForce/NexusForceCompilerOptions.cmake"
+          require "$NF_PREFIX/lib/cmake/NexusForce/NexusForceSanitizer.cmake"
+          require "$NF_PREFIX/lib/cmake/NexusForce/NexusForceReflectScanner.cmake"
+          require "$NF_PREFIX/lib/cmake/NexusForce/NexusForceRuntime.cmake"
+
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            require "$NF_PREFIX/bin/NFRS.exe"
+            require "$NF_PREFIX/bin/Debug/NexusForce.dll"
+            require "$NF_PREFIX/bin/Release/NexusForce.dll"
+          else
+            require "$NF_PREFIX/bin/NFRS"
+            require "$NF_PREFIX/lib/Debug/libNexusForce.so"
+            require "$NF_PREFIX/lib/Release/libNexusForce.so"
+          fi
+
+          exit $status
+
+      # NFRS as a standalone tool: it has to run from the prefix and produce registration code for
+      # the consumer's headers.
+      - name: Run the installed NFRS
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            nfrs="$NF_PREFIX/bin/NFRS.exe"
+          else
+            nfrs="$NF_PREFIX/bin/NFRS"
+          fi
+
+          output="$NF_OUTSIDE/nfrs-standalone.cpp"
+          "$nfrs" "$NF_CONSUMER" -o "$output"
+
+          if [ ! -s "$output" ]; then
+            echo "::error::NFRS produced no output"
+            exit 1
+          fi
+
+          for symbol in InstallConsumerColor InstallConsumerOrder InstallConsumerWorker InstallConsumerEmitter; do
+            if ! grep -q "$symbol" "$output"; then
+              echo "::error::NFRS output does not mention $symbol"
+              exit 1
+            fi
+          done
+
+          echo "NFRS generated $(wc -l < "$output") lines for the consumer's reflected types"
+
+      - name: Build and run the consumer (Debug then Release)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for config in Debug Release; do
+            lower=$(echo "$config" | tr 'A-Z' 'a-z')
+            build_dir="$NF_OUTSIDE/consumer-$lower"
+
+            if [ "$RUNNER_OS" = "Windows" ]; then
+              generator=(-G "Visual Studio 17 2022")
+              configure_args=()
+              build_args=(--config "$config")
+              exe="$build_dir/bin/$config/install_consumer.exe"
+            else
+              generator=(-G Ninja)
+              configure_args=(-DCMAKE_BUILD_TYPE="$config" -DCMAKE_CXX_COMPILER=clang++)
+              build_args=()
+              exe="$build_dir/bin/$config/install_consumer"
+            fi
+
+            cmake -S "$NF_CONSUMER" -B "$build_dir" \
+              "${generator[@]}" \
+              "${configure_args[@]}" \
+              -DCMAKE_PREFIX_PATH="$NF_PREFIX" \
+              -DNEXUSFORCE_EXPECTED_PREFIX="$NF_PREFIX" \
+              -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+
+            cmake --build "$build_dir" "${build_args[@]}" --parallel 4
+
+            generated="$build_dir/_nfrs_gen_install_consumer.cpp"
+            if [ ! -s "$generated" ]; then
+              echo "::error::nexusforce_reflect_scan() generated nothing for the $config consumer"
+              exit 1
+            fi
+
+            echo "running $exe"
+            "$exe"
+          done
+
+      # nexusforce_sanitizer_options() is a no-op unless the consumer enables sanitizers, and the
+      # installed module rejects compilers that cannot take -fsanitize, so its active path is only
+      # reachable on the Linux leg. The consumer is compiled but not run: the installed library is
+      # not instrumented, and leaking library state is sanitizer.yml's subject, not this workflow's.
+      - name: Check the installed sanitizer helper applies its flags
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          build_dir="$NF_OUTSIDE/consumer-sanitized"
+
+          cmake -S "$NF_CONSUMER" -B "$build_dir" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DNEXUSFORCE_ENABLE_ASAN=ON \
+            -DNEXUSFORCE_ENABLE_UBSAN=ON \
+            -DCMAKE_PREFIX_PATH="$NF_PREFIX" \
+            -DNEXUSFORCE_EXPECTED_PREFIX="$NF_PREFIX" \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+
+          cmake --build "$build_dir" --parallel 4
+
+          for flag in "-fsanitize=address" "-fsanitize=undefined"; do
+            if ! grep -q -- "$flag" "$build_dir/compile_commands.json"; then
+              echo "::error::nexusforce_sanitizer_options() did not apply $flag"
+              exit 1
+            fi
+            echo "consumer compiled with $flag"
+          done
+
+      # Each consumer has to link the library of its own configuration, and on Windows
+      # nexusforce_deploy_runtime() has to place that configuration's DLL next to the executable. A
+      # Debug and a Release install share one prefix, so a mix-up would otherwise stay invisible.
+      - name: Check each consumer resolved its own configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            debug_dll="$NF_OUTSIDE/consumer-debug/bin/Debug/NexusForce.dll"
+            release_dll="$NF_OUTSIDE/consumer-release/bin/Release/NexusForce.dll"
+
+            for dll in "$debug_dll" "$release_dll"; do
+              if [ ! -f "$dll" ]; then
+                echo "::error::nexusforce_deploy_runtime() did not deploy $dll"
+                exit 1
+              fi
+            done
+
+            debug_installed=$(wc -c < "$NF_PREFIX/bin/Debug/NexusForce.dll")
+            release_installed=$(wc -c < "$NF_PREFIX/bin/Release/NexusForce.dll")
+            debug_deployed=$(wc -c < "$debug_dll")
+            release_deployed=$(wc -c < "$release_dll")
+
+            if [ "$debug_deployed" -eq "$release_deployed" ]; then
+              echo "::error::the deployed NexusForce.dll is identical for Debug and Release"
+              exit 1
+            fi
+
+            if [ "$debug_deployed" -ne "$debug_installed" ] || [ "$release_deployed" -ne "$release_installed" ]; then
+              echo "::error::a consumer deployed a NexusForce.dll that is not the one installed for its configuration"
+              exit 1
+            fi
+
+            echo "deployed NexusForce.dll: Debug ${debug_deployed} bytes, Release ${release_deployed} bytes"
+          else
+            for pair in "consumer-debug/bin/Debug/install_consumer Debug" \
+                        "consumer-release/bin/Release/install_consumer Release"; do
+              set -- $pair
+              resolved=$(ldd "$NF_OUTSIDE/$1" | grep libNexusForce | head -1)
+
+              case "$resolved" in
+                *"$NF_PREFIX/lib/$2/"*)
+                  echo "$1 -> $resolved"
+                  ;;
+                *)
+                  echo "::error::$1 did not resolve the $2 library from the prefix: $resolved"
+                  exit 1
+                  ;;
+              esac
+            done
+          fi
+
+      - name: Upload install logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: install-logs-${{ matrix.os }}-${{ matrix.compiler }}
+          path: |
+            ${{ env.NF_OUTSIDE }}/build/CMakeFiles/CMakeConfigureLog.yaml
+            ${{ env.NF_OUTSIDE }}/consumer-debug/CMakeFiles/CMakeConfigureLog.yaml
+            ${{ env.NF_OUTSIDE }}/consumer-release/CMakeFiles/CMakeConfigureLog.yaml
+            ${{ env.NF_OUTSIDE }}/consumer-sanitized/CMakeFiles/CMakeConfigureLog.yaml
+          retention-days: 7
+          if-no-files-found: ignore

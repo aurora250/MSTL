@@ -158,55 +158,9 @@ jobs:
           sudo rm -f /usr/bin/loongarch64-linux-gnu-ld
           sudo ln -sf loongarch64-linux-gnu-ld.bfd /usr/bin/loongarch64-linux-gnu-ld
 
-      - name: Set vcpkg paths
-        shell: bash
-        run: |
-          echo "VCPKG_ROOT=${HOME}/vcpkg" >> $GITHUB_ENV
-          echo "VCPKG_CACHE=${HOME}/.cache/vcpkg" >> $GITHUB_ENV
-
-      - name: Cache vcpkg tools
-        uses: actions/cache@v4
-        id: cache-vcpkg-tools
-        with:
-          path: |
-            ${{ env.VCPKG_ROOT }}
-            ${{ env.VCPKG_CACHE }}
-          key: ${{ runner.os }}-${{ runner.arch }}-vcpkg-tools-v2
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-vcpkg-tools-
-
-      - name: Cache vcpkg installed packages
-        uses: actions/cache@v4
-        id: cache-vcpkg-pkgs
-        with:
-          path: ${{ github.workspace }}/build/vcpkg_installed
-          key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.compiler }}-${{ matrix.config }}-vcpkg-pkgs-${{ hashFiles('vcpkg.json', 'config.json') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-${{ matrix.compiler }}-${{ matrix.config }}-vcpkg-pkgs-
-
       - name: Setup vcpkg
-        if: steps.cache-vcpkg-tools.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          if [ ! -d "$VCPKG_ROOT" ]; then
-            git clone https://github.com/Microsoft/vcpkg.git "$VCPKG_ROOT"
-          fi
-          if [ ! -f "$VCPKG_ROOT/vcpkg" ] && [ ! -f "$VCPKG_ROOT/vcpkg.exe" ]; then
-            "$VCPKG_ROOT/bootstrap-vcpkg.sh"
-          fi
-
-      - name: Setup vcpkg (cache hit — unshallow + bootstrap)
-        if: steps.cache-vcpkg-tools.outputs.cache-hit == 'true'
-        shell: bash
-        run: |
-          git -C "$VCPKG_ROOT" fetch --unshallow 2>/dev/null || true
-          if [ ! -f "$VCPKG_ROOT/vcpkg" ] && [ ! -f "$VCPKG_ROOT/vcpkg.exe" ]; then
-            "$VCPKG_ROOT/bootstrap-vcpkg.sh"
-          fi
-
-      - name: Export vcpkg to PATH
-        shell: bash
-        run: echo "$VCPKG_ROOT" >> $GITHUB_PATH
+        id: vcpkg
+        uses: ./.github/actions/setup-vcpkg
 
       - name: Setup vcpkg cross-compilation patches
         if: runner.os == 'Linux' && startsWith(matrix.config, 'cross-')
@@ -386,6 +340,13 @@ jobs:
           fi
 
           exit $BUILD_EXIT
+
+      - name: Save vcpkg binary cache
+        uses: ./.github/actions/save-vcpkg-cache
+        with:
+          cache-key: ${{ steps.vcpkg.outputs.cache-key }}
+          cache-hit: ${{ steps.vcpkg.outputs.cache-hit }}
+          binary-cache: ${{ steps.vcpkg.outputs.binary-cache }}
 
       - name: Summary
         if: always()

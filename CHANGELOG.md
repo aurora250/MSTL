@@ -57,6 +57,8 @@
 - `filesystem::copy()` Windows 侧补充最后访问/修改时间保留，与 Linux 侧 `fchmod` / `futimens` 行为对齐
 - `file_async` 在无 io_uring 的 Linux 上阻塞 `pread` / `pwrite` 下沉到工作线程并以 io_context 投递完成，不再占用事件循环线程
 - `file_async` io_uring 路径显式解析不再依赖内核对 `UINT64_MAX` 偏移的处理
+- 统一各工作流的 vcpkg 缓存：抽出 `.github/actions/setup-vcpkg` 与 `save-vcpkg-cache` 复合 Action，缓存键与缓存路径只定义一处
+- vcpkg 工具改为按 `vcpkg.json` 的 `builtin-baseline` 浅克隆检出，替代缓存整棵工具树
 
 ### 🐛 Bug Fixes
 
@@ -138,6 +140,7 @@
 - 修复 `tui::state<T>` 在 `strand` 注入前构造导致的空指针解引用，现移除该参数与成员
 - 修复 `hexadecimal` 解析 `-0x8000000000000000` 时转成 `int64_t` 再取负，属未定义行为；现在直接返回 `numeric_traits<int64_t>::min()`
 - 修复 Linux 上 CPU 最大频率缺少 `CPUID` 兜底
+- 修复安装包 `NEXUSFORCE_AI_API_INDEX` 指向错误前缀：该变量原先在 `find_dependency` 之后取值，而依赖包的配置文件会用自身前缀覆盖 `PACKAGE_PREFIX_DIR`，于是变量指向依赖包的安装位置而非 NexusForce 的安装位置
 - 修复型号字符串中 `GHz` 频率的截断：`2.40GHz` / `3.70GHz` 因十进制不可精确表示又被直接截断，改为四舍五入
 - 修复 valgrind 工作流把单元测试失败误报为内存泄漏：`--error-exitcode=1` 在 valgrind 未发现错误时会透传被测程序的退出码，任一用例失败即表现为"内存泄漏检查失败"，现改用 `99` 作为泄漏专用退出码并分别报错
 
