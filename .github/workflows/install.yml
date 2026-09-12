@@ -83,10 +83,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Git Bash hands out native paths; the rest of the workflow uses shell paths.
           if command -v cygpath >/dev/null 2>&1; then
-            temp=$(cygpath -u "$RUNNER_TEMP")
-            workspace=$(cygpath -u "$GITHUB_WORKSPACE")
+            temp=$(cygpath -m "$RUNNER_TEMP")
+            workspace=$(cygpath -m "$GITHUB_WORKSPACE")
           else
             temp="$RUNNER_TEMP"
             workspace="$GITHUB_WORKSPACE"
@@ -110,6 +109,10 @@ jobs:
             echo "NF_CONSUMER=$outside/consumer"
             echo "NF_OUTSIDE=$outside"
           } >> "$GITHUB_ENV"
+
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            echo "$outside/build/vcpkg_installed/x64-windows/bin" >> "$GITHUB_PATH"
+          fi
 
           echo "package prefix: $outside/prefix"
           echo "consumer:       $outside/consumer"
@@ -218,12 +221,12 @@ jobs:
 
           if [ "$RUNNER_OS" = "Windows" ]; then
             require "$NF_PREFIX/bin/NFRS.exe"
-            require "$NF_PREFIX/bin/Debug/NexusForce.dll"
-            require "$NF_PREFIX/bin/Release/NexusForce.dll"
+            require "$NF_PREFIX/bin/NexusForce.dll"
+            require "$NF_PREFIX/bin/NexusForced.dll"
           else
             require "$NF_PREFIX/bin/NFRS"
-            require "$NF_PREFIX/lib/Debug/libNexusForce.so"
-            require "$NF_PREFIX/lib/Release/libNexusForce.so"
+            require "$NF_PREFIX/lib/libNexusForce.so"
+            require "$NF_PREFIX/lib/libNexusForced.so"
           fi
 
           exit $status
@@ -330,16 +333,13 @@ jobs:
             echo "consumer compiled with $flag"
           done
 
-      # Each consumer has to link the library of its own configuration, and on Windows
-      # nexusforce_deploy_runtime() has to place that configuration's DLL next to the executable. A
-      # Debug and a Release install share one prefix, so a mix-up would otherwise stay invisible.
       - name: Check each consumer resolved its own configuration
         shell: bash
         run: |
           set -euo pipefail
 
           if [ "$RUNNER_OS" = "Windows" ]; then
-            debug_dll="$NF_OUTSIDE/consumer-debug/bin/Debug/NexusForce.dll"
+            debug_dll="$NF_OUTSIDE/consumer-debug/bin/Debug/NexusForced.dll"
             release_dll="$NF_OUTSIDE/consumer-release/bin/Release/NexusForce.dll"
 
             for dll in "$debug_dll" "$release_dll"; do
@@ -349,34 +349,29 @@ jobs:
               fi
             done
 
-            debug_installed=$(wc -c < "$NF_PREFIX/bin/Debug/NexusForce.dll")
-            release_installed=$(wc -c < "$NF_PREFIX/bin/Release/NexusForce.dll")
+            debug_installed=$(wc -c < "$NF_PREFIX/bin/NexusForced.dll")
+            release_installed=$(wc -c < "$NF_PREFIX/bin/NexusForce.dll")
             debug_deployed=$(wc -c < "$debug_dll")
             release_deployed=$(wc -c < "$release_dll")
 
-            if [ "$debug_deployed" -eq "$release_deployed" ]; then
-              echo "::error::the deployed NexusForce.dll is identical for Debug and Release"
-              exit 1
-            fi
-
             if [ "$debug_deployed" -ne "$debug_installed" ] || [ "$release_deployed" -ne "$release_installed" ]; then
-              echo "::error::a consumer deployed a NexusForce.dll that is not the one installed for its configuration"
+              echo "::error::a consumer deployed a NexusForce DLL that is not the one installed for its configuration"
               exit 1
             fi
 
-            echo "deployed NexusForce.dll: Debug ${debug_deployed} bytes, Release ${release_deployed} bytes"
+            echo "deployed NexusForce DLLs: Debug ${debug_deployed} bytes, Release ${release_deployed} bytes"
           else
-            for pair in "consumer-debug/bin/Debug/install_consumer Debug" \
-                        "consumer-release/bin/Release/install_consumer Release"; do
+            for pair in "consumer-debug/bin/Debug/install_consumer Debug libNexusForced.so" \
+                        "consumer-release/bin/Release/install_consumer Release libNexusForce.so"; do
               set -- $pair
-              resolved=$(ldd "$NF_OUTSIDE/$1" | grep libNexusForce | head -1)
+              resolved=$(ldd "$NF_OUTSIDE/$1" | grep "$3" | head -1)
 
               case "$resolved" in
-                *"$NF_PREFIX/lib/$2/"*)
+                *"$NF_PREFIX/lib/$3"*)
                   echo "$1 -> $resolved"
                   ;;
                 *)
-                  echo "::error::$1 did not resolve the $2 library from the prefix: $resolved"
+                  echo "::error::$1 did not resolve $3 from the prefix: $resolved"
                   exit 1
                   ;;
               esac

@@ -33,6 +33,17 @@ DEFAULT_CONFIG = "Debug"
 CONFIG_FILE = PROJECT_ROOT / "config.json"
 
 
+def use_utf8_output() -> None:
+    """把标准输出与标准错误切换到 UTF-8"""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(encoding="utf-8", errors="replace")
+
+
+use_utf8_output()
+
+
 def load_config() -> dict:
     """读取项目 config.json"""
     if not CONFIG_FILE.exists():

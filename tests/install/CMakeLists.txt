@@ -25,12 +25,19 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(NexusForce REQUIRED)
 
 if(NEXUSFORCE_EXPECTED_PREFIX)
-    file(REAL_PATH "${NEXUSFORCE_EXPECTED_PREFIX}" _expected_prefix)
-    if(NOT NexusForce_DIR MATCHES "^${_expected_prefix}")
+    file(TO_CMAKE_PATH "${NEXUSFORCE_EXPECTED_PREFIX}" _expected_prefix)
+    file(TO_CMAKE_PATH "${NexusForce_DIR}" _found_dir)
+    string(REGEX REPLACE "/+$" "" _expected_prefix "${_expected_prefix}")
+    if(WIN32)
+        string(TOLOWER "${_expected_prefix}" _expected_prefix)
+        string(TOLOWER "${_found_dir}" _found_dir)
+    endif()
+
+    if(NOT _found_dir MATCHES "^${_expected_prefix}/")
         message(FATAL_ERROR
                 "NexusForce was found at ${NexusForce_DIR}, which is outside the expected prefix "
-                "${_expected_prefix}: the consumer would be linking something other than the "
-                "installed package")
+                "${NEXUSFORCE_EXPECTED_PREFIX}: the consumer would be linking something other than "
+                "the installed package")
     endif()
     message(STATUS "using the installed package from ${NexusForce_DIR}")
 endif()

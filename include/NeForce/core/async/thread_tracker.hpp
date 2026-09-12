@@ -33,7 +33,7 @@ NEFORCE_BEGIN_NAMESPACE__
  */
 class thread_tracker {
 private:
-    static atomic<int> count_; ///< 当前活动的线程计数
+    static NEFORCE_API atomic<int> count_; ///< 当前活动的线程计数
 
     friend class thread;
 

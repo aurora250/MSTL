@@ -140,6 +140,7 @@
 - 修复 `hexadecimal` 解析 `-0x8000000000000000` 时转成 `int64_t` 再取负，属未定义行为；现在直接返回 `numeric_traits<int64_t>::min()`
 - 修复 Linux 上 CPU 最大频率缺少 `CPUID` 兜底
 - 修复安装包 `NEXUSFORCE_AI_API_INDEX` 指向错误前缀：该变量原先在 `find_dependency` 之后取值，而依赖包的配置文件会用自身前缀覆盖 `PACKAGE_PREFIX_DIR`，于是变量指向依赖包的安装位置而非 NexusForce 的安装位置
+- 修复 `scripts/install_nexusforce.py` 在 Windows 控制台上因中文提示触发 `UnicodeEncodeError` 而中断安装：脚本启动时把标准输出与标准错误切换到 UTF-8
 - 修复型号字符串中 `GHz` 频率的截断：`2.40GHz` / `3.70GHz` 因十进制不可精确表示又被直接截断，改为四舍五入
 - 修复 valgrind 工作流把单元测试失败误报为内存泄漏：`--error-exitcode=1` 在 valgrind 未发现错误时会透传被测程序的退出码，任一用例失败即表现为"内存泄漏检查失败"，现改用 `99` 作为泄漏专用退出码并分别报错
 

@@ -6,10 +6,6 @@
 #   add_executable(my_app main.cpp)
 #   target_link_libraries(my_app PRIVATE NexusForce::NexusForce)
 #   nexusforce_deploy_runtime(my_app)
-#
-# 该函数在 Windows 上将 NexusForce.dll 复制到目标的输出目录，
-# 确保构建后可直接运行（无需手动设置 PATH）。
-# 在 Linux 上此函数为空操作（由 RPATH 机制处理）。
 
 function(nexusforce_deploy_runtime target)
     if(NOT TARGET ${target})

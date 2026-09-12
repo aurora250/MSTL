@@ -6,7 +6,7 @@ target_link_libraries(NFRS PRIVATE NexusForce::NexusForce)
 nexusforce_compiler_options(NFRS)
 
 set_target_properties(NFRS PROPERTIES
-    INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}/Release"
+    INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}"
 )
 set_target_properties(NFRS PROPERTIES FOLDER "tools")
 

@@ -256,6 +256,8 @@ elseif(UNIX AND NOT APPLE)
     )
 endif()
 
+set_target_properties(NexusForce PROPERTIES DEBUG_POSTFIX "d")
+
 # 链接头文件
 target_include_directories(NexusForce
         PUBLIC
@@ -435,18 +437,6 @@ install(TARGETS NexusForce
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-
-        LIBRARY
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/$<CONFIG>
-        CONFIGURATIONS Debug Release RelWithDebInfo MinSizeRel
-
-        ARCHIVE
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/$<CONFIG>
-        CONFIGURATIONS Debug Release RelWithDebInfo MinSizeRel
-
-        RUNTIME
-        DESTINATION ${CMAKE_INSTALL_BINDIR}/$<CONFIG>
-        CONFIGURATIONS Debug Release RelWithDebInfo MinSizeRel
 
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )

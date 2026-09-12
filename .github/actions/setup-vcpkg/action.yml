@@ -123,13 +123,20 @@ runs:
 
         mkdir -p "$cache"
 
+        # Values written to GITHUB_ENV and GITHUB_PATH are handed to native processes verbatim - the
+        # shell only rewrites command line arguments - so on Windows both the tool root and the cache
+        # have to be exported in Windows form. Tools that read VCPKG_ROOT from the environment
+        # (scripts/install_nexusforce.py) would otherwise look for the toolchain under an MSYS path
+        # that does not exist for them.
+        export_root="$root"
         if command -v cygpath >/dev/null 2>&1; then
+          export_root=$(cygpath -m "$root")
           cache=$(cygpath -w "$cache")
         fi
 
-        echo "VCPKG_ROOT=$root" >> "$GITHUB_ENV"
+        echo "VCPKG_ROOT=$export_root" >> "$GITHUB_ENV"
         echo "VCPKG_DEFAULT_BINARY_CACHE=$cache" >> "$GITHUB_ENV"
-        echo "$root" >> "$GITHUB_PATH"
+        echo "$export_root" >> "$GITHUB_PATH"
         echo "vcpkg-root=$root" >> "$GITHUB_OUTPUT"
-        echo "vcpkg root: $root at $(git -C "$root" rev-parse --short HEAD)"
+        echo "vcpkg root: $export_root at $(git -C "$root" rev-parse --short HEAD)"
         echo "vcpkg binary cache: $cache"
