@@ -1,13 +1,13 @@
 name: "Setup vcpkg"
 description: >-
-  Restore vcpkg's binary archive cache, then fetch vcpkg at the baseline pinned in vcpkg.json and
-  bootstrap it. Every workflow must use this action instead of its own cache step: the cache key and
-  the cached path then have exactly one definition, which keeps all workflows sharing a single
-  archive cache entry instead of writing competing ones.
+  Restore vcpkg's tool tree and binary archive cache, then check the tool out at the baseline pinned
+  in vcpkg.json and bootstrap it. Every workflow must use this action instead of its own cache step:
+  the cache keys and the cached paths then have exactly one definition, which keeps all workflows
+  sharing single entries instead of writing competing ones.
 
 inputs:
   vcpkg-root:
-    description: "Directory the vcpkg tool is fetched into"
+    description: "Directory the vcpkg tool is checked out into"
     required: false
     default: "~/vcpkg"
   binary-cache:
@@ -17,28 +17,52 @@ inputs:
 
 outputs:
   cache-key:
-    description: "Key of the binary cache entry, to be handed to save-vcpkg-cache"
+    description: "Key of the binary archive cache entry, to be handed to save-vcpkg-cache"
     value: "${{ steps.key.outputs.cache-key }}"
   cache-hit:
-    description: "Whether the exact binary cache entry was restored"
+    description: "Whether the exact binary archive cache entry was restored"
     value: "${{ steps.restore.outputs.cache-hit }}"
+  tool-cache-key:
+    description: "Key of the tool tree cache entry, to be handed to save-vcpkg-cache"
+    value: "${{ steps.key.outputs.tool-cache-key }}"
+  tool-cache-hit:
+    description: "Whether the tool tree cache entry was restored"
+    value: "${{ steps.restore-tool.outputs.cache-hit }}"
   vcpkg-root:
     description: "Resolved vcpkg root directory"
     value: "${{ steps.prepare.outputs.vcpkg-root }}"
   binary-cache:
     description: "Cached directory, to be handed to save-vcpkg-cache so the path is defined once"
     value: "${{ inputs.binary-cache }}"
+  vcpkg-tool-cache-path:
+    description: "Cached directory of the tool tree, to be handed to save-vcpkg-cache"
+    value: "${{ inputs.vcpkg-root }}"
 
 runs:
   using: "composite"
   steps:
-    - name: Resolve binary cache key
+    # Archives change with the manifest: builtin-baseline selects the port versions and dependencies
+    # select the ports. Triplets are deliberately absent from that key - one archives directory holds
+    # the archives of every triplet, so a single entry per runner platform serves native and cross
+    # builds alike.
+    #
+    # The tool tree is keyed by platform only and versioned by hand: its content does not depend on
+    # the manifest, so keying it by one would store another full clone per vcpkg.json edit.
+    - name: Resolve cache keys
       id: key
       shell: bash
       run: |
         set -euo pipefail
         hash=$(sha256sum "$GITHUB_WORKSPACE/vcpkg.json" | cut -c1-16)
         echo "cache-key=${RUNNER_OS}-${RUNNER_ARCH}-vcpkg-archives-${hash}" >> "$GITHUB_OUTPUT"
+        echo "tool-cache-key=${RUNNER_OS}-${RUNNER_ARCH}-vcpkg-tool-v3" >> "$GITHUB_OUTPUT"
+
+    - name: Restore vcpkg tool tree
+      id: restore-tool
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ inputs.vcpkg-root }}
+        key: ${{ steps.key.outputs.tool-cache-key }}
 
     - name: Restore vcpkg binary cache
       id: restore
@@ -49,7 +73,7 @@ runs:
         restore-keys: |
           ${{ runner.os }}-${{ runner.arch }}-vcpkg-archives-
 
-    - name: Fetch vcpkg at the pinned baseline
+    - name: Check out vcpkg at the pinned baseline
       id: prepare
       shell: bash
       env:
@@ -68,28 +92,37 @@ runs:
           exit 1
         fi
 
-        # A fresh checkout pinned to the baseline is deterministic and small; caching the tool tree
-        # instead would freeze the tool version (cache entries are immutable) and drag a full
-        # upstream history into the cache.
-        if [ ! -x "$root/vcpkg" ] && [ ! -f "$root/vcpkg.exe" ]; then
+        if [ ! -d "$root/.git" ]; then
           rm -rf "$root"
-          git clone --depth 1 https://github.com/microsoft/vcpkg.git "$root"
-          if git -C "$root" fetch --depth 1 origin "$baseline" 2>/dev/null; then
-            git -C "$root" checkout --detach "$baseline"
-          else
-            # A server that refuses to serve a commit by id needs the history after all.
-            git -C "$root" fetch --unshallow origin
-            git -C "$root" checkout --detach "$baseline"
-          fi
+          git clone https://github.com/microsoft/vcpkg.git "$root"
+        fi
+
+        if git -C "$root" rev-parse --is-shallow-repository 2>/dev/null | grep -q true; then
+          # A tree left behind by an older revision of this action, or by a self-hosted runner.
+          git -C "$root" fetch --unshallow
+        fi
+
+        if ! git -C "$root" checkout --detach "$baseline" 2>/dev/null; then
+          git -C "$root" fetch origin "$baseline"
+          git -C "$root" checkout --detach "$baseline"
+        fi
+
+        marker="$root/.neforce-bootstrap-baseline"
+        need_bootstrap=false
+        if [ ! -x "$root/vcpkg" ] && [ ! -f "$root/vcpkg.exe" ]; then
+          need_bootstrap=true
+        fi
+        if [ "$(cat "$marker" 2>/dev/null || true)" != "$baseline" ]; then
+          need_bootstrap=true
+        fi
+
+        if [ "$need_bootstrap" = true ]; then
           "$root/bootstrap-vcpkg.sh"
+          printf '%s' "$baseline" > "$marker"
         fi
 
         mkdir -p "$cache"
 
-        # vcpkg's default location is platform specific (%LOCALAPPDATA%\vcpkg\archives on Windows,
-        # ~/.cache/vcpkg/archives elsewhere), so pin it and keep it identical on every runner.
-        # vcpkg is a native executable and reads the environment verbatim, hence the Windows path
-        # has to be translated out of MSYS form.
         if command -v cygpath >/dev/null 2>&1; then
           cache=$(cygpath -w "$cache")
         fi
@@ -98,5 +131,5 @@ runs:
         echo "VCPKG_DEFAULT_BINARY_CACHE=$cache" >> "$GITHUB_ENV"
         echo "$root" >> "$GITHUB_PATH"
         echo "vcpkg-root=$root" >> "$GITHUB_OUTPUT"
-        echo "vcpkg root: $root"
+        echo "vcpkg root: $root at $(git -C "$root" rev-parse --short HEAD)"
         echo "vcpkg binary cache: $cache"

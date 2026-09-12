@@ -383,6 +383,16 @@ jobs:
             done
           fi
 
+      - name: Save vcpkg caches
+        uses: ./.github/actions/save-vcpkg-cache
+        with:
+          cache-key: ${{ steps.vcpkg.outputs.cache-key }}
+          cache-hit: ${{ steps.vcpkg.outputs.cache-hit }}
+          binary-cache: ${{ steps.vcpkg.outputs.binary-cache }}
+          tool-cache-key: ${{ steps.vcpkg.outputs.tool-cache-key }}
+          tool-cache-hit: ${{ steps.vcpkg.outputs.tool-cache-hit }}
+          vcpkg-tool-cache-path: ${{ steps.vcpkg.outputs.vcpkg-tool-cache-path }}
+
       - name: Upload install logs
         if: failure()
         uses: actions/upload-artifact@v4

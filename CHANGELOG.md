@@ -57,8 +57,7 @@
 - `filesystem::copy()` Windows 侧补充最后访问/修改时间保留，与 Linux 侧 `fchmod` / `futimens` 行为对齐
 - `file_async` 在无 io_uring 的 Linux 上阻塞 `pread` / `pwrite` 下沉到工作线程并以 io_context 投递完成，不再占用事件循环线程
 - `file_async` io_uring 路径显式解析不再依赖内核对 `UINT64_MAX` 偏移的处理
-- 统一各工作流的 vcpkg 缓存：抽出 `.github/actions/setup-vcpkg` 与 `save-vcpkg-cache` 复合 Action，缓存键与缓存路径只定义一处
-- vcpkg 工具改为按 `vcpkg.json` 的 `builtin-baseline` 浅克隆检出，替代缓存整棵工具树
+- 统一各工作流的 vcpkg 缓存：抽出 `.github/actions/setup-vcpkg` 与 `save-vcpkg-cache` 复合 Action，缓存键与缓存路径只定义一处；二进制归档按 `vcpkg.json` 哈希建键、工具树按平台建键，并显式固定 `VCPKG_DEFAULT_BINARY_CACHE`（Windows 上的默认位置为 `%LOCALAPPDATA%\vcpkg\archives`，与各工作流此前缓存的 `~/.cache/vcpkg` 并非同一目录），不再缓存按矩阵分裂的 15 份 `vcpkg_installed`，PR 运行只读取不写入
 
 ### 🐛 Bug Fixes
 
