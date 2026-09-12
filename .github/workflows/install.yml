@@ -110,10 +110,6 @@ jobs:
             echo "NF_OUTSIDE=$outside"
           } >> "$GITHUB_ENV"
 
-          if [ "$RUNNER_OS" = "Windows" ]; then
-            echo "$outside/build/vcpkg_installed/x64-windows/bin" >> "$GITHUB_PATH"
-          fi
-
           echo "package prefix: $outside/prefix"
           echo "consumer:       $outside/consumer"
           ls "$outside/consumer"
@@ -209,6 +205,15 @@ jobs:
             fi
           }
 
+          require_glob() {
+            if ls "$1" >/dev/null 2>&1; then
+              echo "found $1"
+            else
+              echo "::error::missing installed runtime dependency: $1"
+              status=1
+            fi
+          }
+
           require "$NF_PREFIX/include/NeForce/core/reflect/registry.hpp"
           require "$NF_PREFIX/lib/cmake/NexusForce/NexusForceConfig.cmake"
           require "$NF_PREFIX/lib/cmake/NexusForce/NexusForceTargets.cmake"
@@ -223,6 +228,23 @@ jobs:
             require "$NF_PREFIX/bin/NFRS.exe"
             require "$NF_PREFIX/bin/NexusForce.dll"
             require "$NF_PREFIX/bin/NexusForced.dll"
+
+            # NFRS.exe and every executable the consumer builds load NexusForce.dll, whose
+            # third-party dependencies have to sit in the same directory: Windows has no RPATH.
+            for pattern in \
+              'pcre2-8*.dll' \
+              'icuuc*.dll' \
+              'icudt*.dll' \
+              'libcrypto-3-x64.dll' \
+              'libssl-3-x64.dll' \
+              'hiredis*.dll' \
+              'zlib*.dll' \
+              'lz4*.dll' \
+              'sqlcipher.dll' \
+              'libmysql.dll' \
+              'LIBPQ.dll'; do
+              require_glob "$NF_PREFIX/bin/$pattern"
+            done
           else
             require "$NF_PREFIX/bin/NFRS"
             require "$NF_PREFIX/lib/libNexusForce.so"
@@ -231,8 +253,6 @@ jobs:
 
           exit $status
 
-      # NFRS as a standalone tool: it has to run from the prefix and produce registration code for
-      # the consumer's headers.
       - name: Run the installed NFRS
         shell: bash
         run: |
@@ -345,6 +365,15 @@ jobs:
             for dll in "$debug_dll" "$release_dll"; do
               if [ ! -f "$dll" ]; then
                 echo "::error::nexusforce_deploy_runtime() did not deploy $dll"
+                exit 1
+              fi
+            done
+
+            for runtime_dir in "$NF_OUTSIDE/consumer-debug/bin/Debug" "$NF_OUTSIDE/consumer-release/bin/Release"; do
+              if ls "$runtime_dir/"pcre2-8*.dll >/dev/null 2>&1; then
+                echo "deployed third-party runtime dependencies into $runtime_dir"
+              else
+                echo "::error::nexusforce_deploy_runtime() did not deploy the third-party runtime dependencies into $runtime_dir"
                 exit 1
               fi
             done

@@ -283,7 +283,7 @@ def main() -> int:
         return rc
 
     builtins.print(f"\n✓ NexusForce 安装完成 → {args.prefix}")
-    builtins.print(f"  ├── bin/  可执行文件与 DLL")
+    builtins.print(f"  ├── bin/  可执行文件、库文件与运行时依赖")
     builtins.print(f"  ├── lib/  cmake 配置与库文件")
     builtins.print(f"  └── include/NeForce/  头文件")
     return 0

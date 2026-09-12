@@ -12,7 +12,7 @@
 NEFORCE_BEGIN_NAMESPACE__
 
 /**
- * @addtogroup DebugAndAssertions 调试与断言
+ * @addtogroup DebugAAssertionsAOptimize 调试、断言与优化
  * @{
  */
 
@@ -71,7 +71,7 @@ public:
     }
 };
 
-/** @} */ // DebugAndAssertions
+/** @} */ // DebugAAssertionsAOptimize
 
 NEFORCE_END_NAMESPACE__
 #endif // NEXUSFORCE_CORE_EXCEPTION_SOURCE_LOCATION_HPP__

@@ -293,8 +293,6 @@ public:
     /**
      * @brief 从uint32_t构造码点
      * @param value 原始码点值
-     *
-     * 如果值非法，自动替换为U+FFFD。
      */
     constexpr explicit codepoint(const uint32_t value) noexcept :
     value_(is_valid_codepoint(value) ? value : REPLACEMENT_VALUE) {}
@@ -302,8 +300,6 @@ public:
     /**
      * @brief 从int32_t构造码点
      * @param value 原始码点值
-     *
-     * 如果值非法，自动替换为U+FFFD。
      */
     constexpr explicit codepoint(const int32_t value) noexcept :
     codepoint(static_cast<uint32_t>(value)) {}
@@ -329,7 +325,7 @@ public:
     /**
      * @brief 获取码点在终端中的显示宽度
      * @return 宽度值：0（不可见/零宽）、1（半角）、2（全角）
-     * @note 参照 East Asian Width 标准及常见零宽字符规则。
+     * @note 参照 East Asian Width 标准及常见零宽字符规则
      */
     NEFORCE_NODISCARD int display_width() const noexcept;
 
@@ -373,7 +369,7 @@ public:
 
     /**
      * @brief UTF-8编码后的字节数
-     * @return 字节数（1~4）
+     * @return 字节数
      *
      * 根据码点值计算所需UTF-8编码长度：
      * - U+0000 ~ U+007F: 1字节
@@ -405,8 +401,6 @@ public:
     /**
      * @brief 追加UTF-8编码到string
      * @param result 目标字符串
-     *
-     * 将码点以UTF-8编码追加到string中。
      */
     void append_to(string& result) const;
 
@@ -414,8 +408,6 @@ public:
     /**
      * @brief 追加UTF-8编码到u8string
      * @param result 目标UTF-8字符串
-     *
-     * 将码点以UTF-8编码追加到u8string中。
      */
     void append_to(u8string& result) const;
 #endif
@@ -424,7 +416,6 @@ public:
      * @brief 追加UTF-16编码到u16string
      * @param result 目标UTF-16字符串
      *
-     * 将码点以UTF-16编码追加到u16string中。
      * BMP字符追加单个码元，辅助平面字符追加代理对。
      */
     void append_to(u16string& result) const;
@@ -432,8 +423,6 @@ public:
     /**
      * @brief 追加UTF-32编码到u32string
      * @param result 目标UTF-32字符串
-     *
-     * 将码点直接追加到u32string中（一个码元）。
      */
     void append_to(u32string& result) const { result.push_back(static_cast<char32_t>(value_)); }
 

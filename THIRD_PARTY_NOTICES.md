@@ -65,21 +65,21 @@ NexusForce binaries and the corresponding license text must be reproduced by the
 distributor. When they are linked dynamically, they are separate works and their
 licenses apply to those libraries themselves.
 
-| Library | Used for | License |
-|---|---|---|
-| OpenSSL  | TLS, X.509, crypto primitives | Apache-2.0 |
-| ICU (ICU4C) | Locale and Unicode support | Unicode-DFS-2016 |
-| PCRE2  | Regular expressions | BSD-3-Clause |
-| zlib | Deflate compression | Zlib |
-| LZ4 | Fast compression | BSD-2-Clause |
-| SQLite3 | Embedded database | Public Domain |
-| SQLCipher | Encrypted SQLite | BSD-style (Zetetic LLC) |
-| hiredis | Redis client protocol | BSD-3-Clause |
-| libpq | PostgreSQL client | PostgreSQL License |
-| libmysql | MySQL client | GPL-2.0-only WITH Universal-FOSS-exception-1.0 |
-| GoogleTest | Unit and integration tests (not shipped) | BSD-3-Clause |
-| Google Benchmark | Benchmarks (not shipped) | Apache-2.0 |
-| liburing  | io_uring bindings (Linux) | MIT |
+| Library          | Used for                                 | License                                        |
+|------------------|------------------------------------------|------------------------------------------------|
+| OpenSSL          | TLS, X.509, crypto primitives            | Apache-2.0                                     |
+| ICU (ICU4C)      | Locale and Unicode support               | Unicode-DFS-2016                               |
+| PCRE2            | Regular expressions                      | BSD-3-Clause                                   |
+| zlib             | Deflate compression                      | Zlib                                           |
+| LZ4              | Fast compression                         | BSD-2-Clause                                   |
+| SQLite3          | Embedded database                        | Public Domain                                  |
+| SQLCipher        | Encrypted SQLite                         | BSD-style (Zetetic LLC)                        |
+| hiredis          | Redis client protocol                    | BSD-3-Clause                                   |
+| libpq            | PostgreSQL client                        | PostgreSQL License                             |
+| libmysql         | MySQL client                             | GPL-2.0-only WITH Universal-FOSS-exception-1.0 |
+| GoogleTest       | Unit and integration tests (not shipped) | BSD-3-Clause                                   |
+| Google Benchmark | Benchmarks (not shipped)                 | Apache-2.0                                     |
+| liburing         | io_uring bindings (Linux)                | MIT                                            |
 
 ### Note on libmysql
 

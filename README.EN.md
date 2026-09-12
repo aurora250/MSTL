@@ -485,11 +485,18 @@ Parameter description:
 
 #### Runtime DLL Deployment
 
-On Windows, after linking shared libraries, you need to deploy the DLLs to the executable directory to run directly. Use `nexusforce_deploy_runtime()` to automate this:
+Windows has no RPATH: the loader looks for a DLL only in the directory of the module that loads it, in the system directories and on `PATH`. Therefore:
+
+- The install packages every third-party dependency of NexusForce.dll (ICU, PCRE2, OpenSSL, zlib, lz4, hiredis, sqlcipher, libmysql, LIBPQ, ...) into `<prefix>/bin`, so the installed `NFRS.exe` runs from any working directory and `nexusforce_reflect_scan()` needs no further setup.
+- Your own executables need those DLLs as well; use `nexusforce_deploy_runtime()` to copy them next to the target:
 
 ```cmake
+add_executable(my_app main.cpp)
+target_link_libraries(my_app PRIVATE NexusForce::NexusForce)
 nexusforce_deploy_runtime(my_app)
 ```
+
+It copies `NexusForce.dll` for the target's configuration (`NexusForced.dll` for Debug) and the remaining third-party dependencies from `<prefix>/bin`; it is a no-op on Linux. Adding `<prefix>/bin` to `PATH` is an alternative when the call is not used.
 
 ---
 

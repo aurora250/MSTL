@@ -481,11 +481,18 @@ nexusforce_reflect_scan(
 
 #### 运行时 DLL 部署
 
-在 Windows 上，链接共享库后需要将 DLL 部署到可执行文件所在目录才能直接运行。使用 `nexusforce_deploy_runtime()` 自动完成：
+Windows 没有 RPATH，加载器只会从**加载方模块自身所在目录**、系统目录与 `PATH` 中查找 DLL。因此：
+
+- 安装时会把 NexusForce.dll 的全部第三方依赖（ICU、PCRE2、OpenSSL、zlib、lz4、hiredis、sqlcipher、libmysql、LIBPQ 等）一并打包进 `<prefix>/bin`，安装后的 `NFRS.exe` 在任意工作目录下都能直接运行，`nexusforce_reflect_scan()` 无需额外处理。
+- 你自己的可执行文件同样需要这些 DLL 才能启动，用 `nexusforce_deploy_runtime()` 把它们复制到目标构建目录：
 
 ```cmake
+add_executable(my_app main.cpp)
+target_link_libraries(my_app PRIVATE NexusForce::NexusForce)
 nexusforce_deploy_runtime(my_app)
 ```
+
+该函数按目标配置复制 `NexusForce.dll`（Debug 为 `NexusForced.dll`），再从 `<prefix>/bin` 复制其余第三方依赖；Linux 上为空操作。若未调用，也可以把 `<prefix>/bin` 加入 `PATH`。
 
 ---
 
