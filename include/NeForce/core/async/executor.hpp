@@ -60,10 +60,10 @@ public:
     template <typename Exec, enable_if_t<!is_same_v<decay_t<Exec>, executor>, int> = 0>
     executor(Exec exec) {
         struct wrapper final : executor_base {
-            Exec exec_;
+            Exec exec;
             explicit wrapper(Exec e) :
-            exec_(move(e)) {}
-            void execute(handler_type handler) override { exec_.execute(move(handler)); }
+            exec(_NEFORCE move(e)) {}
+            void execute(handler_type handler) override { exec.execute(move(handler)); }
         };
         exec_ = _NEFORCE make_shared<wrapper>(_NEFORCE move(exec));
     }

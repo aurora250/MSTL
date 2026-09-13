@@ -191,6 +191,9 @@ CheckOptions:
   - key: readability-identifier-naming.FunctionCase
     value: lower_case
 
+  - key: readability-identifier-naming.FunctionIgnoredRegexp
+    value: '^__.*'
+
   - key: readability-identifier-naming.MethodCase
     value: lower_case
 
@@ -203,8 +206,8 @@ CheckOptions:
   - key: readability-identifier-naming.MacroDefinitionCase
     value: UPPER_CASE
 
-  - key: readability-identifier-naming.MacroDefinitionPrefix
-    value: ''
+  - key: readability-identifier-naming.MacroDefinitionIgnoredRegexp
+    value: '.*_HPP_*'
 
   - key: readability-identifier-naming.TypedefCase
     value: ''

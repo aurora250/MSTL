@@ -131,8 +131,8 @@ struct uint128_t : icommon<uint128_t>, iarithmetic<uint128_t>, ibinary<uint128_t
         lo += other.lo;
         hi += other.hi + static_cast<uint64_t>(lo < old_lo);
 #else
-        const byte_t carry = _NEFORCE _addcarry_u64(0, lo, other.lo, &lo);
-        _NEFORCE _addcarry_u64(carry, hi, other.hi, &hi);
+        const byte_t carry = _NEFORCE __addcarry_u64(0, lo, other.lo, &lo);
+        _NEFORCE __addcarry_u64(carry, hi, other.hi, &hi);
 #endif
         return *this;
     }
@@ -148,8 +148,8 @@ struct uint128_t : icommon<uint128_t>, iarithmetic<uint128_t>, ibinary<uint128_t
         lo -= other.lo;
         hi -= other.hi + static_cast<uint64_t>(old_lo < other.lo);
 #else
-        const byte_t borrow = _NEFORCE _subborrow_u64(0, lo, other.lo, &lo);
-        _NEFORCE _subborrow_u64(borrow, hi, other.hi, &hi);
+        const byte_t borrow = _NEFORCE __subborrow_u64(0, lo, other.lo, &lo);
+        _NEFORCE __subborrow_u64(borrow, hi, other.hi, &hi);
 #endif
         return *this;
     }
@@ -289,7 +289,7 @@ struct uint128_t : icommon<uint128_t>, iarithmetic<uint128_t>, ibinary<uint128_t
         res.lo = static_cast<uint64_t>(prod);
         res.hi = static_cast<uint64_t>(prod >> 64);
 #else
-        res.lo = _NEFORCE _umul128(a, b, &res.hi);
+        res.lo = _NEFORCE __umul128(a, b, &res.hi);
 #endif
         return res;
     }
@@ -315,7 +315,7 @@ struct uint128_t : icommon<uint128_t>, iarithmetic<uint128_t>, ibinary<uint128_t
         }
         return quot;
 #else
-        return _NEFORCE _udiv128(hi, lo, divisor, remainder);
+        return _NEFORCE __udiv128(hi, lo, divisor, remainder);
 #endif
     }
 
@@ -344,14 +344,14 @@ struct uint128_t : icommon<uint128_t>, iarithmetic<uint128_t>, ibinary<uint128_t
         result.lo = static_cast<uint64_t>(prod);
         result.hi = static_cast<uint64_t>(prod >> 64);
 #else
-        result.lo = _NEFORCE _umul128(a.lo, b.lo, &result.hi);
+        result.lo = _NEFORCE __umul128(a.lo, b.lo, &result.hi);
         uint64_t t1_hi = 0, t2_hi = 0;
-        const uint64_t t1_lo = _NEFORCE _umul128(a.lo, b.hi, &t1_hi);
-        const uint64_t t2_lo = _NEFORCE _umul128(a.hi, b.lo, &t2_hi);
+        const uint64_t t1_lo = _NEFORCE __umul128(a.lo, b.hi, &t1_hi);
+        const uint64_t t2_lo = _NEFORCE __umul128(a.hi, b.lo, &t2_hi);
         uint64_t carry_hi = result.hi;
-        const byte_t c1 = _NEFORCE _addcarry_u64(0, carry_hi, t1_lo, &carry_hi);
+        const byte_t c1 = _NEFORCE __addcarry_u64(0, carry_hi, t1_lo, &carry_hi);
         uint64_t final_hi = 0;
-        _NEFORCE _addcarry_u64(c1, carry_hi, t2_lo, &final_hi);
+        _NEFORCE __addcarry_u64(c1, carry_hi, t2_lo, &final_hi);
         result.hi = final_hi;
 #endif
         return result;

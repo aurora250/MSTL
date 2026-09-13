@@ -33,8 +33,8 @@ NEFORCE_BEGIN_NAMESPACE__
  *
  * 计算 a + b + carry_in，结果存入out，返回进位标志。
  */
-NEFORCE_CONSTEXPR14 uint8_t _addcarry_u64(const uint8_t carry_in, const uint64_t a, const uint64_t b,
-                                          uint64_t* out) noexcept {
+NEFORCE_CONSTEXPR14 uint8_t __addcarry_u64(const uint8_t carry_in, const uint64_t a, const uint64_t b,
+                                           uint64_t* out) noexcept {
     const auto a_lo = static_cast<uint32_t>(a);
     const auto a_hi = static_cast<uint32_t>(a >> 32);
     const auto b_lo = static_cast<uint32_t>(b);
@@ -57,8 +57,8 @@ NEFORCE_CONSTEXPR14 uint8_t _addcarry_u64(const uint8_t carry_in, const uint64_t
  *
  * 计算 a - b - borrow_in，结果存入out，返回借位标志。
  */
-NEFORCE_CONSTEXPR14 uint8_t _subborrow_u64(const uint8_t borrow_in, const uint64_t a, const uint64_t b,
-                                           uint64_t* out) noexcept {
+NEFORCE_CONSTEXPR14 uint8_t __subborrow_u64(const uint8_t borrow_in, const uint64_t a, const uint64_t b,
+                                            uint64_t* out) noexcept {
     const auto a_lo = static_cast<uint32_t>(a);
     const auto a_hi = static_cast<uint32_t>(a >> 32);
     const auto b_lo = static_cast<uint32_t>(b);
@@ -83,7 +83,7 @@ NEFORCE_CONSTEXPR14 uint8_t _subborrow_u64(const uint8_t borrow_in, const uint64
  *
  * 计算 a * b 的128位结果，低64位作为返回值，高64位存入hi_out。
  */
-NEFORCE_CONSTEXPR14 uint64_t _umul128(const uint64_t a, const uint64_t b, uint64_t* hi_out) noexcept {
+NEFORCE_CONSTEXPR14 uint64_t __umul128(const uint64_t a, const uint64_t b, uint64_t* hi_out) noexcept {
     const auto a_lo = static_cast<uint32_t>(a);
     const auto a_hi = static_cast<uint32_t>(a >> 32);
     const auto b_lo = static_cast<uint32_t>(b);
@@ -110,8 +110,8 @@ NEFORCE_CONSTEXPR14 uint64_t _umul128(const uint64_t a, const uint64_t b, uint64
  * @param remainder 输出余数（可为空）
  * @return 商（64位）
  */
-NEFORCE_CONSTEXPR14 uint64_t _udiv128(const uint64_t dividend_hi, const uint64_t dividend_lo, const uint64_t divisor,
-                                      uint64_t* remainder) noexcept {
+NEFORCE_CONSTEXPR14 uint64_t __udiv128(const uint64_t dividend_hi, const uint64_t dividend_lo, const uint64_t divisor,
+                                       uint64_t* remainder) noexcept {
     if (dividend_hi == 0) {
         if (remainder != nullptr) {
             *remainder = dividend_lo % divisor;
@@ -148,7 +148,7 @@ NEFORCE_CONSTEXPR14 uint64_t _udiv128(const uint64_t dividend_hi, const uint64_t
     }
 
     uint64_t prod_hi = 0;
-    uint64_t prod_lo = _NEFORCE _umul128(q1, d, &prod_hi);
+    uint64_t prod_lo = _NEFORCE __umul128(q1, d, &prod_hi);
     uint64_t rem_hi = u2 - prod_hi;
     uint64_t rem_lo = u1 - prod_lo;
     if (u1 < prod_lo) {
@@ -175,7 +175,7 @@ NEFORCE_CONSTEXPR14 uint64_t _udiv128(const uint64_t dividend_hi, const uint64_t
         }
     }
 
-    prod_lo = _NEFORCE _umul128(q0, d, &prod_hi);
+    prod_lo = _NEFORCE __umul128(q0, d, &prod_hi);
     uint64_t rem_mid_hi = 0 - prod_hi;
     uint64_t rem_mid_lo = rem_lo - prod_lo;
     if (rem_lo < prod_lo) {

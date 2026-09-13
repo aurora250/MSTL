@@ -60,6 +60,7 @@
 - 统一各工作流的 vcpkg 缓存：抽出 `.github/actions/setup-vcpkg` 与 `save-vcpkg-cache` 复合 Action，缓存键与缓存路径只定义一处；二进制归档按 `vcpkg.json` 哈希建键、工具树按平台建键，并显式固定 `VCPKG_DEFAULT_BINARY_CACHE`（Windows 上的默认位置为 `%LOCALAPPDATA%\vcpkg\archives`，与各工作流此前缓存的 `~/.cache/vcpkg` 并非同一目录），不再缓存按矩阵分裂的 15 份 `vcpkg_installed`，PR 运行只读取不写入
 - `nexusforce_deploy_runtime()` 从仅部署 NexusForce.dll 扩展为部署完整运行时依赖闭包：按目标配置复制库文件本身，再复制安装前缀 bin 目录下的第三方依赖；安装前缀缺少依赖时退化为旧行为并提示重新安装
 - `scripts/install_nexusforce.py` 的生成器探测不再写死 Visual Studio 2022：改为经 `vswhere` 读取已安装 Visual Studio 的主版本（16/17/18）映射到生成器名，并校验当前 CMake 是否认识该生成器，探测不到时回退 Ninja
+- `nexusforce_install_runtime_dependencies()` 的依赖搜索范围扩展到目标所链接的每个导入目标（vcpkg 端口）自身的目录与 vcpkg 已安装目录，并对解析器未解析出的依赖按文件名再做一次大小写不敏感查找：只靠构建输出目录解析在 app-local deps 未复制全部端口时会漏依赖
 
 ### 🐛 Bug Fixes
 

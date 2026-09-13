@@ -210,15 +210,6 @@ jobs:
             fi
           }
 
-          require_glob() {
-            if ls "$1" >/dev/null 2>&1; then
-              echo "found $1"
-            else
-              echo "::error::missing installed runtime dependency: $1"
-              status=1
-            fi
-          }
-
           require "$NF_PREFIX/include/NeForce/core/reflect/registry.hpp"
           require "$NF_PREFIX/lib/cmake/NexusForce/NexusForceConfig.cmake"
           require "$NF_PREFIX/lib/cmake/NexusForce/NexusForceTargets.cmake"
@@ -234,21 +225,22 @@ jobs:
             require "$NF_PREFIX/bin/NexusForce.dll"
             require "$NF_PREFIX/bin/NexusForced.dll"
 
-            # NFRS.exe and every executable the consumer builds load NexusForce.dll, whose
-            # third-party dependencies have to sit in the same directory: Windows has no RPATH.
-            for pattern in \
-              'pcre2-8*.dll' \
-              'icuuc*.dll' \
-              'icudt*.dll' \
-              'libcrypto-3-x64.dll' \
-              'libssl-3-x64.dll' \
-              'hiredis*.dll' \
-              'zlib*.dll' \
-              'lz4*.dll' \
-              'sqlcipher.dll' \
-              'libmysql.dll' \
-              'LIBPQ.dll'; do
-              require_glob "$NF_PREFIX/bin/$pattern"
+            if ! command -v dumpbin >/dev/null 2>&1; then
+              echo "::error::dumpbin is unavailable; the installed runtime layout cannot be verified"
+              exit 1
+            fi
+
+            for library in "$NF_PREFIX/bin/NexusForce.dll" "$NF_PREFIX/bin/NexusForced.dll"; do
+              while read -r import; do
+                [ -n "$import" ] || continue
+                case "$import" in
+                  api-ms-*|ext-ms-*|vcruntime140*|msvcp140*|concrt140*|ucrtbase.dll) continue ;;
+                esac
+                if [ -f "/c/Windows/System32/$import" ]; then
+                  continue
+                fi
+                require "$NF_PREFIX/bin/$import"
+              done < <(dumpbin -dependents "$library" | tr -d '\r' | sed -n 's/^ *\([A-Za-z0-9._-]*\.dll\)$/\1/p')
             done
           else
             require "$NF_PREFIX/bin/NFRS"
@@ -375,12 +367,12 @@ jobs:
             done
 
             for runtime_dir in "$NF_OUTSIDE/consumer-debug/bin/Debug" "$NF_OUTSIDE/consumer-release/bin/Release"; do
-              if ls "$runtime_dir/"pcre2-8*.dll >/dev/null 2>&1; then
-                echo "deployed third-party runtime dependencies into $runtime_dir"
-              else
-                echo "::error::nexusforce_deploy_runtime() did not deploy the third-party runtime dependencies into $runtime_dir"
+              deployed=$(ls "$runtime_dir"/*.dll 2>/dev/null | wc -l || true)
+              if [ "$deployed" -le 2 ]; then
+                echo "::error::nexusforce_deploy_runtime() deployed $deployed DLL(s) into $runtime_dir, no more than the NexusForce pair"
                 exit 1
               fi
+              echo "deployed $deployed DLLs into $runtime_dir"
             done
 
             debug_installed=$(wc -c < "$NF_PREFIX/bin/NexusForced.dll")

@@ -28,7 +28,7 @@ NEFORCE_BEGIN_NAMESPACE__
  */
 struct co_spawn_task {
     struct promise_type {
-        exception_ptr exception_;
+        exception_ptr exp_ptr;
 
         co_spawn_task get_return_object() { return co_spawn_task{coroutine_handle<promise_type>::from_promise(*this)}; }
         suspend_always initial_suspend() noexcept { return {}; }
@@ -41,7 +41,7 @@ struct co_spawn_task {
             return final_awaiter{};
         }
         void return_void() noexcept {}
-        void unhandled_exception() { exception_ = current_exception(); }
+        void unhandled_exception() { exp_ptr = current_exception(); }
 
         template <typename U>
         auto await_transform(U&& u) {
@@ -49,10 +49,10 @@ struct co_spawn_task {
         }
     };
 
-    coroutine_handle<promise_type> handle_;
+    coroutine_handle<promise_type> handle;
 
     explicit co_spawn_task(coroutine_handle<promise_type> h) :
-    handle_(h) {}
+    handle(h) {}
 };
 
 /**
@@ -72,8 +72,8 @@ struct co_spawn_task {
 template <typename Executor, typename Func>
 void co_spawn(Executor&& exec, Func func) {
     auto inner = [](Func f) -> co_spawn_task { co_await f(); };
-    auto task = inner(func);
-    exec.execute([h = task.handle_]() mutable { h.resume(); });
+    co_spawn_task task = inner(func);
+    exec.execute([h = task.handle]() mutable { h.resume(); });
 }
 
 /** @} */ // CoroutineSpawn

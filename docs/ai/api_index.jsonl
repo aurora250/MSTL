@@ -122,6 +122,7 @@
 {"name": "NEFORCE_PLATFORM_WINDOWS64", "kind": "macro", "ns": "neforce", "header": "NeForce/core/config/c++config.hpp", "brief": "定义在64位Windows平台编译"}
 {"name": "NEFORCE_PLUGIN_CREATE_FUNC", "kind": "macro", "ns": "neforce", "header": "NeForce/plugin/plugin_entry.hpp", "brief": "插件创建函数名称"}
 {"name": "NEFORCE_PLUGIN_DESTROY_FUNC", "kind": "macro", "ns": "neforce", "header": "NeForce/plugin/plugin_entry.hpp", "brief": "插件销毁函数名称"}
+{"name": "NEFORCE_PLUGIN_EXPORT", "kind": "macro", "ns": "neforce", "header": "NeForce/plugin/plugin_entry.hpp", "brief": "插件入口点导出属性"}
 {"name": "NEFORCE_PURE_FUNCTION", "kind": "macro", "ns": "neforce", "header": "NeForce/core/config/c++config.hpp", "brief": "标记函数为纯函数（仅依赖参数）"}
 {"name": "NEFORCE_REFLECT_ENUM", "kind": "macro", "ns": "neforce", "header": "NeForce/core/reflect/reflect_macros.hpp", "brief": "标记枚举类型需要反射注册"}
 {"name": "NEFORCE_REFLECT_ENUM_VAL", "kind": "macro", "ns": "neforce", "header": "NeForce/core/reflect/reflect_macros.hpp", "brief": "标记枚举值条目"}
@@ -625,7 +626,6 @@
 {"name": "cpu_times", "kind": "struct", "ns": "neforce", "header": "NeForce/core/async/this_thread.hpp", "brief": "CPU时间信息类"}
 {"name": "crbegin", "kind": "function", "ns": "neforce", "header": "NeForce/core/algorithm/type_erase.hpp", "brief": "获取const容器的const反向起始迭代器"}
 {"name": "crbegin", "kind": "function", "ns": "neforce", "header": "NeForce/core/algorithm/type_erase.hpp", "brief": "获取const数组的const反向起始迭代器"}
-{"name": "create_plugin", "kind": "function", "ns": "neforce", "header": "NeForce/plugin/plugin_entry.hpp", "brief": "创建插件实例"}
 {"name": "cref", "kind": "function", "ns": "neforce", "header": "NeForce/core/utility/reference_wrapper.hpp", "brief": "创建const引用包装器"}
 {"name": "cref", "kind": "function", "ns": "neforce", "header": "NeForce/core/utility/reference_wrapper.hpp", "brief": "删除const右值的cref重载"}
 {"name": "cref", "kind": "function", "ns": "neforce", "header": "NeForce/core/utility/reference_wrapper.hpp", "brief": "重新包装为const引用包装器"}
@@ -682,7 +682,7 @@
 {"name": "deserialize_exception", "kind": "struct", "ns": "neforce", "header": "NeForce/core/serialize/serialize_exception.hpp", "brief": "反序列化异常"}
 {"name": "destroy", "kind": "function", "ns": "neforce", "header": "NeForce/core/memory/construct.hpp", "brief": "销毁单个对象"}
 {"name": "destroy", "kind": "function", "ns": "neforce", "header": "NeForce/core/memory/construct.hpp", "brief": "销毁迭代器范围内的对象序列"}
-{"name": "destroy_plugin", "kind": "function", "ns": "neforce", "header": "NeForce/plugin/plugin_entry.hpp", "brief": "销毁插件实例"}
+{"name": "detach_continuation_frame", "kind": "function", "ns": "neforce", "header": "NeForce/core/async/virtual_thread.hpp", "brief": "把等待方的协程帧标记为已交付他人调度"}
 {"name": "detached_t", "kind": "struct", "ns": "neforce", "header": "NeForce/core/async/async_result.hpp", "brief": "fire-and-forget 完成令牌"}
 {"name": "detected_or", "kind": "typedef", "ns": "neforce", "header": "NeForce/core/typeinfo/type_traits.hpp", "brief": "检测Op<Args...>是否有效，如果无效则使用Default类型"}
 {"name": "detected_or_t", "kind": "typedef", "ns": "neforce", "header": "NeForce/core/typeinfo/type_traits.hpp", "brief": "detected_or的便捷别名，返回检测到的类型或默认类型"}
@@ -1344,6 +1344,7 @@
 {"name": "is_valid_cmpexch_failure_order", "kind": "function", "ns": "neforce", "header": "NeForce/core/async/memory_order.hpp", "brief": "检查比较交换失败内存顺序是否有效"}
 {"name": "is_view", "kind": "struct", "ns": "neforce", "header": "NeForce/core/typeinfo/concepts.hpp", "brief": "检查类型是否为视图"}
 {"name": "is_view< ranges::view_base< D > >", "kind": "struct", "ns": "neforce", "header": "NeForce/core/typeinfo/concepts.hpp", "brief": "view_base特化的视图检查"}
+{"name": "is_virtual_thread_promise", "kind": "struct", "ns": "neforce", "header": "NeForce/core/async/virtual_thread.hpp", "brief": "判断某个 promise 是否属于 virtual_thread_task 协程"}
 {"name": "is_virtual_thread_task", "kind": "struct", "ns": "neforce", "header": "NeForce/core/async/virtual_thread.hpp", "brief": "判断类型是否为 virtual_thread_task 特化"}
 {"name": "is_void", "kind": "struct", "ns": "neforce", "header": "NeForce/core/typeinfo/type_traits.hpp", "brief": "判断类型是否为void"}
 {"name": "is_volatile", "kind": "struct", "ns": "neforce", "header": "NeForce/core/typeinfo/type_traits.hpp", "brief": "判断类型是否被volatile限定"}
@@ -1486,7 +1487,6 @@
 {"name": "map", "kind": "function", "ns": "neforce", "header": "NeForce/core/container/map.hpp", "brief": ""}
 {"name": "map", "kind": "function", "ns": "neforce", "header": "NeForce/core/container/map.hpp", "brief": ""}
 {"name": "map::value_compare", "kind": "struct", "ns": "neforce", "header": "NeForce/core/container/map.hpp", "brief": "值比较函数对象"}
-{"name": "mark_continuation_scheduled", "kind": "function", "ns": "neforce", "header": "NeForce/core/async/virtual_thread.hpp", "brief": ""}
 {"name": "mask_from_to", "kind": "function", "ns": "neforce", "header": "NeForce/core/memory/bit.hpp", "brief": "生成从from到to的位掩码"}
 {"name": "match_bytes", "kind": "function", "ns": "neforce::simd", "header": "NeForce/core/simd/bytes.hpp", "brief": "逐字节比较两个 128-bit SIMD 向量的相等性"}
 {"name": "match_lanes", "kind": "function", "ns": "neforce::simd", "header": "NeForce/core/simd/memory.hpp", "brief": ""}
@@ -1772,6 +1772,7 @@
 {"name": "operator&", "kind": "function", "ns": "neforce", "header": "NeForce/core/file/file_constants.hpp", "brief": ""}
 {"name": "operator&", "kind": "function", "ns": "neforce", "header": "NeForce/core/file/file_constants.hpp", "brief": ""}
 {"name": "operator&", "kind": "function", "ns": "neforce", "header": "NeForce/core/file/file_constants.hpp", "brief": ""}
+{"name": "operator&", "kind": "function", "ns": "neforce", "header": "NeForce/core/string/regex.hpp", "brief": ""}
 {"name": "operator&", "kind": "function", "ns": "neforce", "header": "NeForce/network/ssl/ssl_context.hpp", "brief": ""}
 {"name": "operator&", "kind": "function", "ns": "neforce", "header": "NeForce/network/ssl/ssl_context.hpp", "brief": ""}
 {"name": "operator&", "kind": "function", "ns": "neforce::tui", "header": "NeForce/tui/events.hpp", "brief": ""}
@@ -1904,6 +1905,7 @@
 {"name": "operator|", "kind": "function", "ns": "neforce", "header": "NeForce/core/file/file_constants.hpp", "brief": ""}
 {"name": "operator|", "kind": "function", "ns": "neforce", "header": "NeForce/core/file/file_constants.hpp", "brief": ""}
 {"name": "operator|", "kind": "function", "ns": "neforce", "header": "NeForce/core/file/file_constants.hpp", "brief": ""}
+{"name": "operator|", "kind": "function", "ns": "neforce", "header": "NeForce/core/string/regex.hpp", "brief": ""}
 {"name": "operator|", "kind": "function", "ns": "neforce", "header": "NeForce/network/ssl/ssl_context.hpp", "brief": ""}
 {"name": "operator|", "kind": "function", "ns": "neforce", "header": "NeForce/network/ssl/ssl_context.hpp", "brief": ""}
 {"name": "operator|", "kind": "function", "ns": "neforce::tui", "header": "NeForce/tui/dom/element.hpp", "brief": "将装饰器应用于元素"}
@@ -2099,6 +2101,7 @@
 {"name": "regex", "kind": "class", "ns": "neforce", "header": "NeForce/core/string/regex.hpp", "brief": "正则表达式类"}
 {"name": "regex_exception", "kind": "struct", "ns": "neforce", "header": "NeForce/core/string/regex.hpp", "brief": "正则操作异常"}
 {"name": "regex_iterator", "kind": "class", "ns": "neforce", "header": "NeForce/core/string/regex.hpp", "brief": "正则表达式匹配迭代器"}
+{"name": "regex_option", "kind": "enum", "ns": "neforce", "header": "NeForce/core/string/regex.hpp", "brief": "正则表达式选项枚举"}
 {"name": "regex_token_iterator", "kind": "class", "ns": "neforce", "header": "NeForce/core/string/regex.hpp", "brief": "正则表达式令牌迭代器"}
 {"name": "registry", "kind": "class", "ns": "neforce::reflect", "header": "NeForce/core/reflect/registry.hpp", "brief": "反射类型注册表"}
 {"name": "registry_key", "kind": "class", "ns": "neforce", "header": "NeForce/core/system/registry_key.hpp", "brief": "系统注册表项类"}
@@ -2858,8 +2861,10 @@
 {"name": "virtual_thread", "kind": "class", "ns": "neforce", "header": "NeForce/core/async/virtual_thread.hpp", "brief": "虚拟线程用户门面类"}
 {"name": "virtual_thread_scheduler", "kind": "class", "ns": "neforce", "header": "NeForce/core/async/virtual_thread.hpp", "brief": "虚拟线程调度器"}
 {"name": "virtual_thread_task", "kind": "struct", "ns": "neforce", "header": "NeForce/core/async/virtual_thread.hpp", "brief": "异步任务主模板"}
+{"name": "virtual_thread_task::awaiter", "kind": "class", "ns": "neforce", "header": "NeForce/core/async/virtual_thread.hpp", "brief": "co_await 使用的等待器"}
 {"name": "virtual_thread_task::promise_type", "kind": "struct", "ns": "neforce", "header": "NeForce/core/async/virtual_thread.hpp", "brief": "协程 promise_type，管理任务生命周期与返回值存储"}
 {"name": "virtual_thread_task< void >", "kind": "struct", "ns": "neforce", "header": "NeForce/core/async/virtual_thread.hpp", "brief": "virtual_thread_task 的 void 特化版本"}
+{"name": "virtual_thread_task< void >::awaiter", "kind": "class", "ns": "neforce", "header": "NeForce/core/async/virtual_thread.hpp", "brief": "co_await 使用的等待器"}
 {"name": "virtual_thread_task< void >::promise_type", "kind": "struct", "ns": "neforce", "header": "NeForce/core/async/virtual_thread.hpp", "brief": "协程 promise_type，管理任务生命周期与状态"}
 {"name": "void_t", "kind": "typedef", "ns": "neforce", "header": "NeForce/core/typeinfo/type_traits.hpp", "brief": "将任意类型映射为void"}
 {"name": "vscroll_indicator", "kind": "function", "ns": "neforce::tui", "header": "NeForce/tui/dom/scroll_indicator.hpp", "brief": "创建垂直滚动指示器"}

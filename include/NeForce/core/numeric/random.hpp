@@ -66,7 +66,7 @@ NEFORCE_BEGIN_NAMESPACE__
 template <typename Generator>
 uint64_t lemire_bounded(Generator&& gen, const uint64_t max) noexcept(noexcept(gen())) {
     uint64_t hi = 0;
-    uint64_t lo = _NEFORCE _umul128(gen(), max, &hi);
+    uint64_t lo = _NEFORCE __umul128(gen(), max, &hi);
 
     if (lo >= max) {
         return hi;
@@ -74,7 +74,7 @@ uint64_t lemire_bounded(Generator&& gen, const uint64_t max) noexcept(noexcept(g
 
     const uint64_t threshold = (static_cast<uint64_t>(0) - max) % max;
     while (lo < threshold) {
-        lo = _NEFORCE _umul128(gen(), max, &hi);
+        lo = _NEFORCE __umul128(gen(), max, &hi);
     }
     return hi;
 }

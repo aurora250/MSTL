@@ -192,8 +192,8 @@ public:
  */
 class __future_base::async_state_common : public __future_base::state_base {
 protected:
-    _NEFORCE thread thread;
-    once_flag flag;
+    _NEFORCE thread thread_;
+    once_flag flag_;
 
 public:
     ~async_state_common() override = default;
@@ -201,7 +201,7 @@ public:
 protected:
     void complete_async() override { join(); }
 
-    void join() { _NEFORCE call_once(flag, &_NEFORCE thread::join, &thread); }
+    void join() { _NEFORCE call_once(flag_, &_NEFORCE thread::join, &thread_); }
 };
 
 /**
@@ -216,15 +216,15 @@ class __future_base::async_state_impl final : public __future_base::async_state_
 private:
     using PtrType = __future_base::Ptr<basic_result<Res>>;
 
-    PtrType result_storage;
-    Func function;
+    PtrType result_storage_;
+    Func function_;
 
     void run() {
         try {
-            state_base::set_result(__future_base::create_task_setter(result_storage, function));
+            state_base::set_result(__future_base::create_task_setter(result_storage_, function_));
         } catch (...) {
-            if (static_cast<bool>(result_storage)) {
-                state_base::break_promise(_NEFORCE move(result_storage));
+            if (static_cast<bool>(result_storage_)) {
+                state_base::break_promise(_NEFORCE move(result_storage_));
             }
             throw;
         }
@@ -233,14 +233,14 @@ private:
 public:
     template <typename... Args>
     explicit async_state_impl(Args&&... args) :
-    result_storage(new basic_result<Res>()),
-    function(_NEFORCE forward<Args>(args)...) {
-        thread = _NEFORCE thread{&async_state_impl::run, this};
+    result_storage_(new basic_result<Res>()),
+    function_(_NEFORCE forward<Args>(args)...) {
+        thread_ = _NEFORCE thread{&async_state_impl::run, this};
     }
 
     ~async_state_impl() override {
-        if (thread.joinable()) {
-            thread.join();
+        if (thread_.joinable()) {
+            thread_.join();
         }
     }
 };
